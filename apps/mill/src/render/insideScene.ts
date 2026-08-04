@@ -53,6 +53,8 @@ import type { solo } from "@mill/sim";
 
 import {
   HOIST_CAGE,
+  PACK_COATS,
+  PACK_POSES,
   PUPPY_SPRITE,
   PRODUCER_MARKS,
   SHAFT_CREW_UP,
@@ -67,6 +69,12 @@ import {
   rgba,
   yardLayout,
   type MillView,
+  PACK_CAP,
+  PACK_LEFT,
+  PACK_RIGHT,
+  PACK_STRIDE,
+  pickAction,
+  type PackPup,
 } from "./millScene.js";
 import { artCanvas, artTinted, type Art } from "./pixel.js";
 
@@ -658,51 +666,16 @@ const SLIDE_SPEED = 34;
 /**
  * The hoard, as a mound.
  *
- * Deliberately the same pile in the same corner as the outside yard's, because
+ * Deliberately the same crowd in the same corner as the outside yard's, because
  * it is the same puppies — the fold doesn't take your money off you, and the
  * one thing that should carry between the two pictures unchanged is the number
- * you're spending. The build-out around it doesn't carry: kennels and crate stacks are
- * things you put up on a mill, and there's nothing to build them out of down
- * here. What the sump gets instead is the blanket growing storage for you.
+ * you're spending. The build-out around it doesn't carry: kennels and crate
+ * stacks are things you put up on a mill, and there's nothing to build them out
+ * of down here. What the sump gets instead is the blanket closing round them.
  */
-const HEAP_BASE = 11;
-const HEAP_COURSES = 10;
-const HEAP_X = -14;
-const HEAP_STEP = 5;
-const HEAP_CLIMB = 1.15;
 
-/**
- * How many puppies the slot table above can hold — derived here rather than
- * imported from the outside scene, which has its own copy of these constants.
- * Importing its cap while keeping our own courses is how the two silently
- * disagree the first time either mound is retuned.
- */
-const HEAP_CAP = ((HEAP_BASE + (HEAP_BASE - HEAP_COURSES + 1)) * HEAP_COURSES) / 2;
-
-let heapCache: { x: number; y: number }[] | null = null;
-
-function heapSlots(): { x: number; y: number }[] {
-  if (!heapCache) {
-    const h = artCanvas(PUPPY_SPRITE).h;
-    const slots: { x: number; y: number; key: number }[] = [];
-    for (let course = 0; course < HEAP_COURSES; course++) {
-      const n = HEAP_BASE - course;
-      for (let i = 0; i < n; i++) {
-        slots.push({
-          x: HEAP_X + Math.round(course * (HEAP_STEP / 2)) + i * HEAP_STEP,
-          y: -h - course * 3 - (i % 2),
-          key: Math.abs(i - (n - 1) / 2) + course * HEAP_CLIMB,
-        });
-      }
-    }
-    slots.sort((a, b) => a.key - b.key);
-    heapCache = slots.map(({ x, y }) => ({ x, y }));
-  }
-  return heapCache;
-}
-
-/** Where a sliding puppy is aiming, and where the pile's shoulder is. */
-const HEAP_CROWN_X = HEAP_X + Math.round((HEAP_COURSES - 1) * (HEAP_STEP / 2)) + 3;
+/** Where a sliding puppy is aiming, and where the crowd is thickest. */
+const HEAP_CROWN_X = 12;
 
 /**
  * A pocket: a fold of blanket that has closed around what you're holding, and
@@ -750,6 +723,7 @@ export class InsideScene {
   private whistled: Whistled[] = [];
   private puffs: Puff[] = [];
   private pup: Pup[] = [];
+  private pack: PackPup[] = [];
   private crew: Crew[] = [];
   private hoists: Hoist[] = [];
   /**
@@ -2025,12 +1999,11 @@ export class InsideScene {
    * The hoard: a mound of puppies at the front, with the blanket folding up
    * around it into cysts as you get richer.
    *
-   * The mound chases the real number rather than snapping to it, which is what
-   * makes spending look like spending — buy a rung and you watch the pile come
-   * down.
+   * The count chases the real number rather than snapping to it, which is what
+   * makes spending look like spending — buy a rung and you watch the yard walk
+   * out of the gate.
    */
   private drawHoard(sumpTop: number): void {
-    const ctx = this.ctx;
     const target = Math.max(0, this.view.hoard);
     if (this.shown < 0) this.shown = target;
     // Exponential chase on the magnitude, so it takes about the same moment to
@@ -2039,18 +2012,101 @@ export class InsideScene {
     this.shown += (target - this.shown) * k;
     const layout = yardLayout(this.shown);
 
-    // The cysts first: the mound is heaped in front of them.
+    // The pockets first: the pack mills about in front of them.
     const cysts = Math.min(CYST_SLOTS.length, Math.floor(layout.stage / CYST_EVERY));
     for (let i = 0; i < cysts; i++) this.drawCyst(CYST_SLOTS[i]!, sumpTop, i);
 
-    const puppy = artCanvas(PUPPY_SPRITE);
-    const slots = heapSlots();
-    const heap = Math.min(HEAP_CAP, Math.max(0, Math.round(layout.heap)));
-    const foot = this.sh - 3;
-    for (let i = 0; i < heap; i++) {
-      const slot = slots[i];
-      if (!slot) break;
-      ctx.drawImage(puppy.canvas, slot.x, foot + slot.y);
+    this.stepPack(layout.pack, sumpTop);
+  }
+
+  /**
+   * The sump's pack, on the same terms as the yard's — see `millScene.ts`,
+   * which owns the argument for why neither of these is a pile any more.
+   *
+   * The sump is shallower than the yard and there's nothing standing in it, so
+   * this is the same behaviour with the depth sort taken out: nothing down here
+   * can be in front of or behind a dog except another dog, and sorting on feet
+   * is enough for that.
+   */
+  private stepPack(want: number, sumpTop: number): void {
+    const ctx = this.ctx;
+    const target = Math.min(PACK_CAP, Math.max(0, Math.round(want)));
+    const back = sumpTop + 3;
+    const front = this.sh - 3;
+
+    let here = 0;
+    for (const dog of this.pack) if (!dog.leaving) here++;
+    if (here < target) {
+      const scatter = target - here > 3;
+      for (let i = 0; i < (scatter ? target - here : Math.min(3, target - here)); i++) {
+        this.pack.push({
+          x: scatter
+            ? PACK_LEFT + Math.random() * (PACK_RIGHT - PACK_LEFT)
+            : HEAP_CROWN_X + Math.random() * 16 - 8,
+          y: back + Math.random() * Math.max(1, front - back),
+          home: PACK_LEFT + Math.random() * (PACK_RIGHT - PACK_LEFT),
+          vx: 0,
+          vy: 0,
+          doing: "stand",
+          until: 0,
+          walked: Math.random() * 40,
+          coat: Math.floor(Math.random() * PACK_COATS),
+          leaving: false,
+        });
+      }
+    } else if (here > target) {
+      let over = here - target;
+      for (const dog of this.pack) {
+        if (over <= 0) break;
+        if (dog.leaving) continue;
+        dog.leaving = true;
+        dog.doing = "trot";
+        dog.vx = 26 + Math.random() * 10;
+        dog.vy = 0;
+        dog.until = this.clock + 60;
+        over--;
+      }
+    }
+
+    const kept: PackPup[] = [];
+    for (const dog of this.pack) {
+      if (this.clock >= dog.until) pickAction(dog, this.clock);
+      if (dog.doing === "trot") {
+        dog.x += dog.vx * this.dt;
+        dog.y += dog.vy * this.dt;
+        dog.walked += Math.abs(dog.vx) * this.dt;
+        if (dog.y < back) {
+          dog.y = back;
+          dog.vy = Math.abs(dog.vy);
+        } else if (dog.y > front) {
+          dog.y = front;
+          dog.vy = -Math.abs(dog.vy);
+        }
+        if (!dog.leaving) {
+          if (dog.x < PACK_LEFT) {
+            dog.x = PACK_LEFT;
+            dog.vx = Math.abs(dog.vx);
+          } else if (dog.x > PACK_RIGHT) {
+            dog.x = PACK_RIGHT;
+            dog.vx = -Math.abs(dog.vx);
+          }
+        }
+      }
+      if (dog.leaving && dog.x > SCENE_W + 2) continue;
+      kept.push(dog);
+    }
+    this.pack = kept;
+
+    for (const dog of [...this.pack].sort((a, b) => a.y - b.y)) {
+      const step = Math.floor(dog.walked / PACK_STRIDE) % 2;
+      const sprite = artCanvas(PACK_POSES[dog.coat]![dog.vx < 0 ? 1 : 0]![dog.doing === "sit" ? 2 : step]!);
+      const x = Math.round(dog.x);
+      const y = Math.round(dog.y);
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(x + 1, y - 1, sprite.w - 2, 1);
+      ctx.globalAlpha = 1;
+      ctx.drawImage(sprite.canvas, x, y - sprite.h - (dog.doing === "trot" && step === 1 ? 1 : 0));
     }
   }
 

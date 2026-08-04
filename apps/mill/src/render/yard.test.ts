@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildHidden, HEAP_CAP, SCENE_W, YARD, yardLayout } from "./millScene.js";
+import { buildHidden, PACK_CAP, SCENE_W, YARD, yardLayout } from "./millScene.js";
 
 /** Sprite width straight off the char grid, since there's no canvas out here. */
 function artWidth(rows: readonly string[]): number {
@@ -33,27 +33,27 @@ describe("the yard", () => {
     }
   });
 
-  it("counts the first few puppies one for one, then keeps the heap in bounds", () => {
-    expect(yardLayout(0).heap).toBe(0);
-    expect(yardLayout(1).heap).toBe(1);
-    expect(yardLayout(2).heap).toBe(2);
+  it("counts the first few puppies one for one, then keeps the pack in bounds", () => {
+    expect(yardLayout(0).pack).toBe(0);
+    expect(yardLayout(1).pack).toBe(1);
+    expect(yardLayout(2).pack).toBe(2);
     for (let l = 0; l <= 15; l += 0.01) {
-      const { stage, heap } = yardLayout(10 ** l);
-      expect(heap).toBeGreaterThanOrEqual(0);
-      expect(heap).toBeLessThanOrEqual(Math.min(HEAP_CAP, YARD[stage]!.heap));
+      const { stage, pack } = yardLayout(10 ** l);
+      expect(pack).toBeGreaterThanOrEqual(0);
+      expect(pack).toBeLessThanOrEqual(Math.min(PACK_CAP, YARD[stage]!.pack));
     }
   });
 
-  it("only ever shrinks the heap because something carried it away", () => {
-    // The heap used to reset to nothing at every stage, including the four
+  it("only ever shrinks the pack because something carried it away", () => {
+    // The pack used to reset to nothing at every stage, including the four
     // early ones that add nothing to the yard — so a mill pouring puppies in
     // spent long stretches with one puppy on the ground.
     let last = yardLayout(1);
     for (let l = 0.05; l <= 17.5; l += 0.005) {
       const now = yardLayout(10 ** l);
-      if (now.heap < last.heap) {
-        expect(now.stage, `heap fell at 1e${l.toFixed(2)}`).toBeGreaterThan(last.stage);
-        expect(YARD[now.stage]!.add, `heap fell at 1e${l.toFixed(2)}`).toBeDefined();
+      if (now.pack < last.pack) {
+        expect(now.stage, `pack fell at 1e${l.toFixed(2)}`).toBeGreaterThan(last.stage);
+        expect(YARD[now.stage]!.add, `pack fell at 1e${l.toFixed(2)}`).toBeDefined();
       }
       last = now;
     }
@@ -61,7 +61,7 @@ describe("the yard", () => {
 
   it("leaves a decent pile standing once the yard is building", () => {
     for (let l = Math.log10(200); l <= 17.5; l += 0.005) {
-      expect(yardLayout(10 ** l).heap).toBeGreaterThanOrEqual(Math.round(HEAP_CAP * 0.4));
+      expect(yardLayout(10 ** l).pack).toBeGreaterThanOrEqual(Math.round(PACK_CAP * 0.4));
     }
   });
 

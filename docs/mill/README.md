@@ -47,15 +47,20 @@ npm test
 - **`apps/web/src/render`** — the pixel-art layer. Art is authored as char grids
   (`art.ts`), painted once into cached canvases (`pixel.ts`), and blitted onto a
   low-res buffer that CSS scales up crisply (`millScene.ts`). The scene is the
-  mill screen: the yard behind the fence is every producer you own, and the
-  ground in front of it is the puppies you're holding, so the two numbers the
-  game is about are the picture rather than two figures in a panel. The front
-  yard counts the hoard out like money — three denominations side by side, each
-  worth ten of the one to its right — and bundles ten of one into one of the
-  next as you cross it, in either direction. After the Convergence you're
+  mill screen: the yard behind the chain-link is every producer you own, and the
+  concrete in front of it is the puppies you're holding, so the two numbers the
+  game is about are the picture rather than two figures in a panel.
+
+  **The hoard is a crowd, not a pile.** It was a heap for one afternoon — sixty
+  sprites stacked into a pyramid, which is the right shape for potatoes and a
+  pile of bodies when it isn't. So every puppy you're holding is out on the
+  concrete instead, trotting, sitting and getting under things, and the yard
+  builds out around them: a basket arrives, then a crate, a wagon, a kennel,
+  eventually a sorting tower over the fence line. You don't read the yard, you
+  recognise it. After the Convergence you're
   standing in a second scene (`insideScene.ts`), which is a **descent**: you're
   cutting down through the nest and the picture is the cutaway, the hem at the
-  top and your mound in the sump at the bottom. The eight inside rungs sit in
+  top and your pack loose in the sump at the bottom. The eight inside rungs sit in
   four strata of two, shallow above deep, so buying down the shop is buying down
   the shaft — and opening a new stratum breaks the floor. Colour carries the
   depth, running from pale fleece at the hem through cream knit and old seams to
@@ -63,7 +68,8 @@ npm test
   which is what makes an early inside mill read as having a long way to go.
   There's no pipeline and no vessels: one bore down the left, where the
   outside's sorter runs, and everything you gather rolls to the lip, falls the
-  height of the picture and slides into the mound. Gravity is the conveyor.
+  height of the picture and picks itself up at the bottom. Gravity is the
+  conveyor.
 
 Commands go through `applyCommand(state, cmd, now)`, which is the single
 authority for mutations. The local runtime calls it directly; swapping that for
