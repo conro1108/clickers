@@ -1,0 +1,21 @@
+{
+  "name": "puppy-mill",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @mill/web",
+    "build": "npm run build -w @mill/web",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p packages/sim --noEmit && tsc -p apps/web --noEmit"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.62.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}
