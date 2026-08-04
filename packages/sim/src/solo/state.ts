@@ -127,7 +127,7 @@ export type MillCommand =
    * of the seed and `weatherIndex`, so this changes *when* the next one lands
    * and nothing about which one it is — you get the event the mill was always
    * going to get, early. Refused inside the puppy only in the sense that the
-   * tuber's table is what fires there, which is correct: the lever is "send the
+   * nest's table is what fires there, which is correct: the lever is "send the
    * next hazard", not "send rain".
    */
   | { type: "dev_weather" }

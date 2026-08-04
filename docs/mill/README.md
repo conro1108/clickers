@@ -1,12 +1,12 @@
 # Puppy Mill
 
-A puppy clicker where every purchase competes for the same currency, and
+A chihuahua clicker where every purchase competes for the same currency, and
 something is always working against you.
 
 The app opens onto your mill. There are two modes; the second one lives behind
 the House door in the bottom nav, along with the dev tooling:
 
-- **Your mill** — the persistent single-player homestead. Twenty tiers, sixty
+- **Your mill** — the persistent single-player mill. Twenty tiers, sixty
   upgrades, a prestige loop, and weather that damages your land permanently
   whether or not the tab is open. Eight of those tiers and the last of that
   weather only exist after the Convergence, which is below. This is where
@@ -38,7 +38,7 @@ npm test
 - **`packages/sim`** — the whole game, as pure TypeScript with zero I/O. Both
   the client and (eventually) the Edge Function import this, so optimistic
   prediction and server truth can't drift.
-- **`packages/sim/src/solo`** — the homestead, namespaced (`solo.*`) rather than
+- **`packages/sim/src/solo`** — the mill, namespaced (`solo.*`) rather than
   flattened into the same export surface. It has its own producers, its own cost
   curves and its own `clickYield`, and merging them would make it far too easy
   to price a mill with match content.
@@ -47,29 +47,29 @@ npm test
 - **`apps/web/src/render`** — the pixel-art layer. Art is authored as char grids
   (`art.ts`), painted once into cached canvases (`pixel.ts`), and blitted onto a
   low-res buffer that CSS scales up crisply (`millScene.ts`). The scene is the
-  homestead screen: the field behind the fence is every producer you own, and
-  the yard in front of it is the puppies you're holding, so the two numbers the
-  game is about are the picture rather than two figures in a panel. The yard
-  counts the hoard out like money — three denominations side by side, each worth
-  ten of the one to its right — and bundles ten of one into one of the next as
-  you cross it, in either direction. After the Convergence you're standing in a
-  second scene (`insideScene.ts`), which is a **descent**: you're cutting down
-  through a puppy and the picture is the cutaway, lid at the top and your mound
-  in the sump at the bottom. The eight inside rungs sit in four strata of two,
-  shallow above deep, so buying down the shop is buying down the shaft — and
-  opening a new stratum breaks the floor. Colour carries the depth, running from
-  pale gold at the lid through ochre to a near-black core; below your deepest
-  working is solid puppy you haven't touched, which is what makes an early
-  inside mill read as having a long way to go. There's no pipeline and no
-  vessels: one bore down the left, where the outside's sorter runs, and
-  everything you cut rolls to the lip, falls the height of the picture and slides
-  into the mound. Gravity is the conveyor.
+  mill screen: the yard behind the fence is every producer you own, and the
+  ground in front of it is the puppies you're holding, so the two numbers the
+  game is about are the picture rather than two figures in a panel. The front
+  yard counts the hoard out like money — three denominations side by side, each
+  worth ten of the one to its right — and bundles ten of one into one of the
+  next as you cross it, in either direction. After the Convergence you're
+  standing in a second scene (`insideScene.ts`), which is a **descent**: you're
+  cutting down through the nest and the picture is the cutaway, the hem at the
+  top and your mound in the sump at the bottom. The eight inside rungs sit in
+  four strata of two, shallow above deep, so buying down the shop is buying down
+  the shaft — and opening a new stratum breaks the floor. Colour carries the
+  depth, running from pale fleece at the hem through cream knit and old seams to
+  a near-black warm; below your deepest working is blanket you haven't touched,
+  which is what makes an early inside mill read as having a long way to go.
+  There's no pipeline and no vessels: one bore down the left, where the
+  outside's sorter runs, and everything you gather rolls to the lip, falls the
+  height of the picture and slides into the mound. Gravity is the conveyor.
 
 Commands go through `applyCommand(state, cmd, now)`, which is the single
 authority for mutations. The local runtime calls it directly; swapping that for
 a network round-trip shouldn't touch any game logic.
 
-## The homestead
+## The mill
 
 A mill you keep, running against nothing but time and the weather.
 
@@ -94,39 +94,40 @@ levelled and permanent, stack with diminishing returns, and never reach zero
 exposure. They're worth roughly 3x the output of never building them — the
 difference between weather as a 6% running cost and weather as a 65% one.
 
-**The Convergence** fires when you buy The Ur-Chihuahua. The horizon closes: the
-sky band stops being sky and becomes the inside of the tuber, and a ladder of
-eight more rungs arrives that cuts down through the thing you're now standing
-in, a stratum at a time. The flag survives
-prestige, so later generations start in the folded world and re-climb to the
-tiers that only exist inside it.
+**The Convergence** fires when you buy The Ur-Chihuahua. It arrives, it turns
+around three times, and it lies down — and the ground goes with it, because the
+ground was never ground. The horizon closes, the sky band stops being sky and
+becomes the underside of the hem, and a ladder of eight more rungs arrives that
+cuts down through the nest you're now standing in, a stratum at a time. The flag
+survives prestige, so later generations start in the folded world and re-climb
+to the tiers that only exist inside it.
 
-Handing the mill down is the one way back out: the Seeds panel offers the next
-generation either world, defaulting to the one you're standing in. Under the sky
-means no Hem Bed and no Hollow Heart, weather instead of the tuber's
-immune response, and the Convergence to reach all over again. "It happens to you
+Handing the mill down is the one way back out: the Pedigree panel offers the
+next generation either world, defaulting to the one you're standing in. Under
+the sky means no Hem Hollow and no Warm Heart, weather instead of a nest that
+turns over, and the Convergence to reach all over again. "It happens to you
 once" is the right instinct for a first run and the wrong one for a save you keep
 for weeks — the alternative is the best ten seconds in the game locked behind a
 flag you can never clear.
 
 The purchase gets the only cutscene in the game: ten seconds of the screen, the
-tuber approaching out of the dark, and the camera going through the skin into
-the flesh. The canvas holds the old sky underneath it the whole time
-(`FOLD_HOLD_MS`), so what the veil lifts on is a horizon still open — and then
+Ur-Chihuahua approaching out of the dark, and the camera going under the hem
+with it. The canvas holds the old sky underneath it the whole time
+(`FOLD_SWAP_MS`), so what the veil lifts on is a horizon still open — and then
 closing, in front of you. The shop empties down to that one row from the tenth
-Tuber Singularity until it's bought, which is the only place in the game a
+Chihuahua Singularity until it's bought, which is the only place in the game a
 purchase is made the only thing you can do: the tier is a countdown and nothing
 else says so, so a player at the threshold with twelve rows in front of them
 buys another rung and pushes the fold another hour out.
 
-Its mechanical payoff is the weather, not a multiplier. Inside the puppy
-there's no sky, so hail and frost and drought stop and the tuber's immune
-response takes over: same three effect kinds, bedding-heavier mix, two more
-buildings to hold it off. That gives the second axis a second act at the same
-moment the ladder gets one.
+Its mechanical payoff is the weather, not a multiplier. Inside the nest there's
+no sky, so hail and frost and heatwaves stop and the nest itself takes over —
+it settles, it packs down, it turns over, and about once a session it sighs.
+Same three effect kinds, bedding-heavier mix, two more buildings to hold it off.
+That gives the second axis a second act at the same moment the ladder gets one.
 
 **It has to be reachable in a single dedicated run**, on a first save, with no
-prestige and no seeds — that's a decision, not an observation, and
+prestige and no papers — that's a decision, not an observation, and
 `solo.test.ts` pins it. Every check-in cadence clears it inside a week from
 nothing, measured by playing sessions and jumping the clock between them so
 nobody repairs anything in the gaps:
@@ -143,13 +144,13 @@ dwarf whistles almost immediately and offline accrual is unpenalised. Which is w
 knowing before anyone tries to tune the endgame by making it grindier — grinding
 isn't the lever.
 
-**Prestige** hands the mill down for Heirloom Seed, cube-rooted off the run's
-output. Seeds do two jobs and you can't have both: held, they multiply output;
-spent, they buy permanent perks. Same shape as the rest of the game — one pile,
-competing uses.
+**Prestige** retires the line for Pedigree Papers, fourth-rooted off the run's
+output. Papers do two jobs and you can't have both: held, they multiply output —
+a better-bred line is a better line — and spent, they buy permanent perks. Same
+shape as the rest of the game: one pile, competing uses.
 
-The Seeds tab is held until the Convergence has fired, and that's a gating
-decision rather than a cosmetic one. `SEED_DIVISOR` puts the first hand-down in
+The Pedigree tab is held until the Convergence has fired, and that's a gating
+decision rather than a cosmetic one. `PAPER_DIVISOR` puts the first hand-down in
 day 1-2, which is a day or two *before* the world would have folded — so
 revealing prestige when it first pays offers a reset just short of the payoff,
 and a player who takes the hint doesn't see the fold until run 2 at the earliest.
@@ -165,19 +166,22 @@ invisible until a long run was actually measured:
   output. From the *owned* count, 1.15^200 means reassembling a fleet costs more
   than the fleet can ever produce, and insurance payouts on that bill become a
   money printer. Repairs are priced against the production they restore.
-- **Boons have to be small.** At 600s of production, a good year outweighed every
-  storm in a session, which made the entire mitigation half of the game pointless.
+- **Boons have to be small.** At 600s of production, one big litter outweighed
+  every storm in a session, which made the entire mitigation half of the game
+  pointless.
 - **Weather has to cost enough for mitigation to pay for itself.** At a ~7% tax
   no amount of building could earn its price back.
-- **The seed economy is the loose end.** A converged run mints ~37x the seeds an
-  unconverged one did, because output goes up ~52,000x and the cube root of
-  that is 37. There's a post-Convergence perk row priced at the new scale to
-  give that somewhere to go, but the underlying problem is that held seeds
-  multiply output *linearly and without bound* — so each run funds the next one
-  many times over and any perk table clears in a handful of generations.
-  Damping `MULT_PER_UNSPENT_SEED`, or `seedsFor`'s unused `vigor` parameter as a
-  damper below 1, is the actual lever. Not pulled yet, because it changes how
-  every generation after the first one feels.
+- **The paper economy is the loose end.** A converged run mints many times the
+  papers an unconverged one does, because output above the fold runs about a
+  million times a pre-fold run's. The fourth root in `papersFor` is what damps
+  that — a cube root turned a converged week into a x1,100 multiplier handed to
+  a mill starting again at four puppy pens — and there's a post-Convergence perk
+  row priced at the new scale to give the rest somewhere to go. The underlying
+  problem is still that held papers multiply output *linearly and without bound*,
+  so each run funds the next one many times over and any perk table clears in a
+  handful of generations. Damping `MULT_PER_UNSPENT_PAPER`, or `papersFor`'s
+  unused `vigor` parameter as a damper below 1, is the actual lever. Not pulled
+  yet, because it changes how every generation after the first one feels.
 
 ## What's implemented (versus)
 
@@ -187,9 +191,10 @@ no-server-loop model from STACK.md. Offline progression is the same call with a
 bigger elapsed, which is what keeps the sit-down-vs-slow-burn decision genuinely
 deferred.
 
-Sabotage mostly does **persistent damage**: pests and disease break producer
-units, and broken units stay broken until their owner pays to repair them.
-Weather is the exception — Drought is a timed slow that passes on its own.
+Sabotage mostly does **persistent damage**: foxes and kennel cough break
+producer units, and broken units stay broken until their owner pays to repair
+them. Weather is the exception — Heatwave is a timed slow that passes on its
+own.
 
 That split is what makes sabotage a real decision rather than a timing trick.
 When every attack was a temporary rate cut, the victim recovered for free, so
@@ -231,8 +236,8 @@ every seed — the second axis the design rests on didn't exist.
 tell you the economy isn't degenerate; they can't tell you whether `nasty` is
 beatable, and every rung of the ladder turned out to be crushable by an ordinary
 person. So one seat can now be a *reference human* (`reference.ts`), modelled on
-how the game gets played rather than optimally: whistle while whistling is the only
-income, then follow the shop's "best value" badge and keep adding capacity.
+how the game gets played rather than optimally: whistle while whistling is the
+only income, then follow the shop's "best value" badge and keep adding capacity.
 `human.test.ts` grades the ladder against it —
 
 ```

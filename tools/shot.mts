@@ -22,7 +22,7 @@
  *
  * `buy=` takes upgrade ids too, so the Convergence can be photographed
  * mid-arrival. The two wipes work the same way: `down=inside`/`down=outside`
- * hands the mill on, `plough=1` ploughs it all under, and `open=Shop` just
+ * hands the mill on, `shutdown=1` shuts the whole line down, and `open=Shop` just
  * opens a sheet. Watch the namespace — every one of these shares it with the
  * producer ids, which is why handing down isn't `hand=`.
  *
@@ -47,7 +47,7 @@ const out = args.out ?? "/tmp/mill.png";
 const port = args.port ?? "5199";
 
 const now = Date.now();
-const mill = solo.createFarm({ seed: "shot", startedAt: now });
+const mill = solo.createMill({ seed: "shot", startedAt: now });
 
 for (const p of solo.SOLO_PRODUCERS) {
   const n = Number(args[p.id] ?? 0);
@@ -74,7 +74,7 @@ if (args.marks === "all") mill.upgrades = solo.SOLO_UPGRADES.map((u) => u.id);
 // the scene refuses to replay the fold on a restore. `buy=` is how you get at
 // the transition: seed the mill one purchase short of it and make that purchase
 // through the shop.
-mill.converged = args.converged !== "0" && (args.converged === "1" || mill.upgrades.includes("ur_puppy"));
+mill.converged = args.converged !== "0" && (args.converged === "1" || mill.upgrades.includes("ur_chihuahua"));
 // Which of the two mills to stand on. A converged save lands inside by default,
 // because that's where the fold leaves you; `world=outside` is how the old mill
 // gets photographed with its ceiling on.
@@ -108,9 +108,9 @@ await page.goto(`http://localhost:${port}/`);
 await page.evaluate(
   ([key, save]) => {
     localStorage.setItem(key!, save!);
-    localStorage.setItem("puppies-inc:taught-tap", "1");
+    localStorage.setItem("puppy-mill:taught-tap", "1");
   },
-  ["puppies-inc:mill", solo.serializeFarm(mill, now)],
+  ["puppy-mill:mill", solo.serializeMill(mill, now)],
 );
 await page.reload();
 
@@ -148,22 +148,22 @@ if (args.buy) {
   // namespace with sixteen producer ids, and the collision is silent: a mill
   // with `hand=143` on it quietly handed itself down instead.
   page.on("dialog", (d) => void d.accept());
-  await page.getByRole("button", { name: "Seeds", exact: true }).click();
+  await page.getByRole("button", { name: "Pedigree", exact: true }).click();
   if (args.down === "outside") await page.getByRole("button", { name: "Back under the sky" }).click();
   await page.getByRole("button").filter({ hasText: "Hand the mill down" }).first().click();
   const close = page.getByRole("button", { name: "Close" });
   if (await close.isVisible().catch(() => false)) await close.click().catch(() => {});
   await page.waitForTimeout(Number(args.after ?? 2500));
-} else if (args.plough) {
+} else if (args.shutdown) {
   // The other wipe: a new mill on a new seed, keeping nothing.
   page.on("dialog", (d) => void d.accept());
   await openBackRoom();
-  await page.getByRole("button", { name: "Plough it all under" }).click();
+  await page.getByRole("button", { name: "Shut the whole line down" }).click();
   await page.waitForTimeout(Number(args.after ?? 2500));
 } else if (args.open === "back") {
   await openBackRoom();
 } else if (args.open) {
-  // Any of the nav sheets by name: `open=Shop`, `open=Seeds`, `open=Upkeep`.
+  // Any of the nav sheets by name: `open=Shop`, `open=Pedigree`, `open=Upkeep`.
   await page.getByRole("button", { name: args.open, exact: true }).click();
   // The sheet slides up; shooting on the click catches it still off the bottom.
   await page.waitForTimeout(500);

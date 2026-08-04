@@ -805,7 +805,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
                     setSheet(null);
                   }}
                 >
-                  {to === "outside" ? "Out under the sky" : "Inside the puppy"}
+                  {to === "outside" ? "Out under the sky" : "Inside the nest"}
                 </button>
               ))}
             </div>

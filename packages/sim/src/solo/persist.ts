@@ -43,7 +43,7 @@ export function parseMill(raw: string): MillState | null {
   const f = save.mill as Partial<MillState>;
   if (typeof f.seed !== "string" || typeof f.checkpointAt !== "number") return null;
 
-  const upgrades = (Array.isArray(f.upgrades) ? f.upgrades : []).map(renameUpgrade);
+  const upgrades = Array.isArray(f.upgrades) ? (f.upgrades as string[]) : [];
 
   // Saves written before the flag existed still know whether the world folded:
   // they're holding the upgrade that did it. Without this backfill a mill that
@@ -61,8 +61,8 @@ export function parseMill(raw: string): MillState | null {
     puppies: finite(f.puppies),
     raised: finite(f.raised),
     checkpointAt: ms(f.checkpointAt),
-    producers: renameKeys(f.producers),
-    broken: renameKeys(f.broken),
+    producers: { ...(f.producers ?? {}) },
+    broken: { ...(f.broken ?? {}) },
     upgrades,
     land: f.land ?? {},
     bedding: Number.isFinite(f.bedding) ? Math.min(MAX_BEDDING, f.bedding as number) : MAX_BEDDING,
@@ -77,50 +77,6 @@ export function parseMill(raw: string): MillState | null {
     runStartedAt: ms(f.runStartedAt ?? f.startedAt ?? f.checkpointAt),
     log: Array.isArray(f.log) ? f.log.slice(-60) : [],
   };
-}
-
-/**
- * The inside ladder's ids, before the descent.
- *
- * The eight inside rungs used to be named for surfaces of a tuber — a ceiling
- * furrow, a starch seam, a periderm gate — and were renamed when that turned out
- * to be a taxonomy rather than a progression. Rates, costs and gates didn't move,
- * so a save from before the rename is a perfectly good mill with the wrong keys
- * on it; dropping it on the floor would cost a converged player their whole
- * endgame over a fiction change.
- *
- * Slot for slot, so `producers` and `broken` carry over exactly, and so do the
- * three tier upgrades and the two globals hung off each id.
- */
-const RENAMED: Record<string, string> = {
-  furrow: "hem",
-  starch: "fleece",
-  mantle: "well",
-  vein: "seam",
-  skin: "heart",
-  // Rung 2 stopped being the Sprouting Eye and became the Pit Hand, when the
-  // inside turned out to have no people in it until three quarters of the way
-  // up the ladder. Same slot, same numbers — so anyone holding eyes is holding
-  // hands, and their upgrades come with them.
-  eyes: "linthand",
-};
-
-function renameKeys<T>(from: Record<string, T> | undefined): Record<string, T> {
-  const out: Record<string, T> = {};
-  for (const [k, v] of Object.entries(from ?? {})) out[RENAMED[k] ?? k] = v;
-  return out;
-}
-
-/**
- * Tier upgrade ids are `${producer}_x2a|b|c`, so they rename with their producer.
- * The globals (`ceiling_rights`, `mineral_rights`, ...) kept their ids on purpose
- * — only their copy changed — so there's nothing to do for those.
- */
-function renameUpgrade(id: string): string {
-  const cut = id.indexOf("_x2");
-  if (cut < 0) return id;
-  const moved = RENAMED[id.slice(0, cut)];
-  return moved ? moved + id.slice(cut) : id;
 }
 
 function finite(n: unknown): Puppies {

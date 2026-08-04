@@ -4,7 +4,7 @@
 
 The pitch below is the head-to-head game, and it's still the interesting
 long-term idea. But the mode that's now the front door is a **persistent
-single-player homestead**: one mill you keep, growing while you're away, with a
+single-player mill**: one mill you keep, growing while you're away, with a
 prestige loop under it and a much longer upgrade ladder above it.
 
 The competitive version is parked behind a menu rather than deleted. Its sim,
@@ -24,7 +24,7 @@ lands while the tab is closed.
 
 The open questions below are answered for the versus mode and mostly moot for
 solo, which has no clock, no opponent and no fog of war. `README.md` covers how
-the homestead actually works.
+the mill actually works.
 
 ## The pitch
 
@@ -122,12 +122,14 @@ paths.
     both) it wants to be once the fun part is proven out.
 - What's the resource, thematically? Cookies is the reference point but not
   necessarily the skin.
-  - **Answer: puppies.** Milling has a built-in physical world (bedding,
-    weather, pests, storage) that production/sabotage/defense upgrades can
-    hang off naturally — fences, GMO seed, groomers, storage on the
-    production side; blight, moles, ruined bedding on the sabotage side —
-    instead of needing an invented justification the way an abstract
-    "factory" would.
+  - **Answer: chihuahuas.** Specifically chunky ones. Running a kennel has a
+    built-in physical world (bedding, weather, pests, transport, heat) that
+    production/sabotage/defense upgrades can hang off naturally — fences, heat
+    lamps, grooming rigs, vans on the production side; foxes, kennel cough,
+    ruined bedding and a surprise inspection on the sabotage side — instead of
+    needing an invented justification the way an abstract "factory" would.
+    It also gives the fold something to be: a chihuahua burrows, and a thing
+    that burrows implies somewhere to burrow into.
 
 - What exactly is the winner measured on — puppies *held* at the buzzer, or
   puppies *ever raised*?
@@ -142,10 +144,10 @@ paths.
 
 ## Parked ideas
 
-- **Spoilage.** Puppies rot — stored resource decays over time unless you
-  spend on storage. Appealing because it pushes against hoarding: you stay
-  engaged, keep buying, keep ramping instead of sitting on a pile. Fits the
-  milling skin without inventing anything. Not for now.
+- **Rehoming.** The pile wanders off — stored resource decays over time unless
+  you spend on fences and crates. Appealing because it pushes against hoarding:
+  you stay engaged, keep buying, keep ramping instead of sitting on a pile. Fits
+  the skin without inventing anything. Not for now.
   - Worth knowing: this is the one mechanic that couples production rate to
     stockpile size, which costs us the cheap "rate is a sum of terms"
     checkpoint model in STACK.md. Still doable, just a deliberate trade

@@ -64,7 +64,7 @@ export function producerMultiplier(f: MillState, id: SoloProducerId): number {
 }
 
 /**
- * The extra factor of bedding the Taproot Well gets, and that nothing else does.
+ * The extra factor of bedding the Down Well gets, and that nothing else does.
  *
  * Kept out of `producerMultiplier` on purpose: that function is what
  * `cleanRate` and `repairCost` are quoted against, and both of them mean "with
@@ -132,10 +132,10 @@ export function brokenRate(f: MillState): Rate {
  * right would actually give back.
  *
  * Not `rate * (1 - bedding)`. That's only the same thing for producers the bedding
- * multiplies once; the Taproot Well's rate scales with bedding *as well as* being
+ * multiplies once; the Down Well's rate scales with bedding *as well as* being
  * multiplied by it, so what it loses is `1 - bedding²`, and the short version
  * understates it threefold at half health. This is the number the "Restore the
- * bedding" row advertises, and the Taproot Well exists to make that row a decision.
+ * bedding" row advertises, and the Down Well exists to make that row a decision.
  */
 export function beddingLossRate(f: MillState): Rate {
   let lost = 0;
@@ -196,7 +196,7 @@ export function mitigation(f: MillState, role: LandRole): number {
 // The tiers, buildings and perks above the fold don't exist until the world has
 // folded. That's enforced here rather than only in the shop, because the sim is
 // the authority on what a mill can be — a hand-edited save shouldn't be able to
-// buy a Taproot Well into a mill with a sky.
+// buy a Down Well into a mill with a sky.
 
 export function isProducerAvailable(f: MillState, id: SoloProducerId): boolean {
   return f.converged || SOLO_PRODUCER_BY_ID[id].world === "outside";

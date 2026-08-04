@@ -542,24 +542,29 @@ function stack(cap: string[], body: string[], reps: number, base: string[]): str
 }
 
 /**
- * The yard's crate stack is deliberately squat: it has to stand in a band about twenty
- * pixels deep next to crates and baskets, and a true-height feed silo would eat
- * the field above it.
+ * Crates, stacked. Deliberately squat: it has to stand in a band about twenty
+ * pixels deep next to the loose crates and baskets, and anything taller would
+ * eat the yard above it.
+ *
+ * It was a feed silo for about an hour, which was wrong for one reason and it's
+ * the reason the whole yard exists: every prop out here is a *denomination*, so
+ * it has to be something the hoard could plausibly be inside. A sealed metal
+ * cylinder is the one shape on a mill that obviously isn't.
  */
 export const STACK: Art = {
   rows: stack(
     [
-      "....kkkkk....",
-      "..kkmmmmmkk..",
-      ".kmmmmmmmmmk.",
-      "kmmmmmmmmmmmk",
+      "..pp.pp.pp...",
+      ".pp.pp.pp.p..",
       "kkkkkkkkkkkkk",
+      "kwwwwwwwwwwwk",
+      "kwvvwwwwwvvwk",
     ],
-    ["kmmsmmmmmmmmk", "kmmsmmmmmmmmk", "kmmsmmmmmmmmk", "kkkkkkkkkkkkk"],
+    ["kwwwwwwwwwwwk", "kkkkkkkkkkkkk", "kwwwwwwwwwwwk", "kwvvwwwwwvvwk"],
     3,
-    ["kmmsmmmmmmmmk", "kmmsmmmmmmmmk", "kkkkkkkkkkkkk"],
+    ["kwwwwwwwwwwwk", "kkkkkkkkkkkkk", "kkkkkkkkkkkkk"],
   ),
-  palette: { k: K, ...METAL },
+  palette: { k: K, ...WOOD, ...PUPPY },
 };
 
 /**
@@ -652,7 +657,7 @@ export const KENNEL_HAND: Art = {
 };
 
 /**
- * A lamp on a post, throwing down rather than a sprinkler throwing up.
+ * A lamp on a post, throwing down rather than a heat lamp throwing up.
  *
  * The shade is the top two rows and the heat is the four under it, and that
  * order is the whole sprite: light falls. Drawn the other way round — glow

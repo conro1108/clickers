@@ -80,7 +80,7 @@ export const MILLER_STYLES: Record<string, MillerStyle> = {
 /**
  * Production per puppy spent — the only ranking that matters when buying.
  * Measured as what the unit would actually add to the mill's rate as it stands,
- * not its clean rate, so the Taproot Well gets discounted for tired bedding the way
+ * not its clean rate, so the Down Well gets discounted for tired bedding the way
  * a buyer looking at the shop would discount it.
  */
 function valueOf(f: MillState, id: SoloProducerId): number {

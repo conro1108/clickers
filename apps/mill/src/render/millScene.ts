@@ -522,7 +522,7 @@ const PORTER_TIP = 300;
 /**
  * The tiers this scene draws, which is the outside mill and only that.
  *
- * Everything inside the puppy has its own picture — see `insideScene.ts`. So
+ * Everything inside the nest has its own picture — see `insideScene.ts`. So
  * does the ceiling that used to come down over this one: the Convergence opens
  * a second place rather than repainting this one, and a mill you can walk back
  * out to is a mill with its sky still in it.
@@ -554,7 +554,7 @@ interface Placement {
   speed?: number;
   /**
    * How fast the drawn count climbs with the owned count. A long run buys a
-   * hundred and forty kennel hands and only fifty greenhouses, so the tiers you
+   * hundred and forty kennel hands and only fifty orbital kennels, so the tiers you
    * stack deepest need the shallowest curve to keep looking different at
    * twenty, fifty and a hundred.
    */
@@ -633,7 +633,7 @@ const ORDER: OutsideId[] = [
  *
  * The back edge used to be one row of the last few things you'd bought, and
  * when the row filled up the *lowest* tiers were shifted off the left and gone
- * — so the reward for buying a fusion reactor was your tuber labs being
+ * — so the reward for buying a fusion reactor was your nest labs being
  * demolished, and every mill past the middle of the ladder looked like the same
  * four buildings.
  *
@@ -934,9 +934,9 @@ interface Hand {
  * A machine's load, tipped out at the end of the row for somebody to deal with.
  *
  * The machines used to auger straight into the trough from wherever they stood,
- * which meant the puppy left the combine as a thrown object and crossed forty
+ * which meant the puppy left the grooming rig as a thrown object and crossed forty
  * pixels of open air. This is the same journey with the work put back in: the
- * combine fills, tips a basket at the headland, and a hand walks out for it.
+ * grooming rig fills, tips a basket at the headland, and a hand walks out for it.
  */
 interface Basket {
   id: number;
@@ -1022,7 +1022,7 @@ const FLY_HOLD = 3.6;
  *
  * It hangs in its column most of the time, and every half a minute or so it
  * comes down over the mill and goes back up — which is the only way a thing that
- * doesn't travel gets to be watched. On the way it drags: clouds, greenhouses,
+ * doesn't travel gets to be watched. On the way it drags: clouds, orbital kennels,
  * zeppelins and the pups they're dropping all bend toward it as it passes and
  * spring back once it's gone, because a hole in the sky that nothing reacts to
  * is a sticker of a hole in the sky.
@@ -1462,7 +1462,7 @@ export class MillScene {
         }
         case "back": {
           // To the trough, same as the baskets. One deposit point for the whole
-          // mill: what a hand pulls out of a bed goes where a combine's load
+          // mill: what a hand pulls out of a bed goes where a grooming rig's load
           // goes, and the trough empties towards the mound.
           const bin = this.troughBox;
           const bx = bin ? clamp(hand.x, bin.x + 4, bin.x + bin.w - 6) : hand.home;
@@ -1621,7 +1621,7 @@ export class MillScene {
    * Three tiers used to draw their altitude from one range, which is three tiers
    * taking turns being in front of each other. They're stacked by how long an
    * overlap would last instead: the singularities hang and never travel, so they
-   * get the top and everything passes underneath them; the greenhouses cross, so
+   * get the top and everything passes underneath them; the orbital kennels cross, so
    * they get the middle; the zeppelins dash, hold and drip, so they get the
    * bottom, nearest the rows they're stocking.
    */
@@ -1642,7 +1642,7 @@ export class MillScene {
    * and both have to be able to ask where the holes are.
    *
    * A singularity can't be placed by hash the way the travelling tiers are: a
-   * greenhouse that overlaps another one has passed it by the time you look up,
+   * orbital kennel that overlaps another one has passed it by the time you look up,
    * and two of these dealt the same corner are still in that corner ten minutes
    * later. So each one owns a column — `cap` even lots across the width — and
    * everything else it does happens inside that column.
@@ -2977,26 +2977,26 @@ export class MillScene {
       }
     }
 
-    // Heatlamp stands at the ends of the rows it waters, alternating sides,
-    // and throws across them. A rig in the middle of nowhere was just a pole.
-    const sprinklers = shownCount(this.view.working.heatlamp ?? 0, PLACEMENT.heatlamp.cap, PLACEMENT.heatlamp.spread);
-    const sprinkler = artCanvas(this.mark("heatlamp"));
-    for (let i = 0; i < sprinklers; i++) {
+    // A lamp stands at the end of the rows it warms, alternating sides, and
+    // throws across them. A lamp in the middle of nowhere was just a pole.
+    const lamps = shownCount(this.view.working.heatlamp ?? 0, PLACEMENT.heatlamp.cap, PLACEMENT.heatlamp.spread);
+    const lamp = artCanvas(this.mark("heatlamp"));
+    for (let i = 0; i < lamps; i++) {
       const row = this.rows[i % Math.max(1, this.rows.length)];
       const side = i % 2 === 0 ? 1 : -1;
       const x = row
         ? side > 0
-          ? Math.min(SCENE_W - sprinkler.w - 2, row.right + 3)
-          : Math.max(2, row.left - sprinkler.w - 3)
+          ? Math.min(SCENE_W - lamp.w - 2, row.right + 3)
+          : Math.max(2, row.left - lamp.w - 3)
         : 14 + i * 42;
       const ground = row ? row.y : lane(0.2);
-      this.primeGlow("heatlamp", x, ground - sprinkler.h, sprinkler.w, sprinkler.h, t, i);
-      ctx.drawImage(sprinkler.canvas, x, ground - sprinkler.h);
-      // Droplets sweep out over the pup on a slow sine, so the arc reads as
-      // one head turning rather than a static spray.
+      this.primeGlow("heatlamp", x, ground - lamp.h, lamp.w, lamp.h, t, i);
+      ctx.drawImage(lamp.canvas, x, ground - lamp.h);
+      // The warm spills out over the pens on a slow sine, so it reads as
+      // one lamp swinging rather than a static glow.
       if (this.chance(5)) {
         const reach = 10 + (0.5 + 0.5 * Math.sin(t * 0.8 + i)) * 22;
-        this.puff(x + sprinkler.w / 2, ground - sprinkler.h + 2, "water", -side * reach);
+        this.puff(x + lamp.w / 2, ground - lamp.h + 2, "water", -side * reach);
       }
     }
 
@@ -3011,7 +3011,7 @@ export class MillScene {
       const sprite = artCanvas(this.mark(id));
       const span = SCENE_W + sprite.w;
       for (let i = 0; i < n; i++) {
-        // The combine takes the rows from the front, the van from the back,
+        // The grooming rig takes the rows from the front, the van from the back,
         // so on a mill with two rows they aren't nose to tail on the same one.
         // With nothing stocked they fall back to their own lanes on open grass.
         const pick =
@@ -3020,7 +3020,7 @@ export class MillScene {
         const ground = row ? row.y + 5 : lane(fallback);
         // Phase and pace are hashed per machine rather than dealt out evenly.
         // Evenly spaced starts at one shared speed drew two perfect diagonals
-        // — the vans going one way down the rows and the combines the
+        // — the vans going one way down the rows and the grooming rigs the
         // other — and a mill that renders a clean X across itself all day is
         // clearly a formula and not a place where work is happening.
         const h = fract(Math.sin((i + 1) * (id === "groomer" ? 63.7 : 21.3)) * 4375.85);
@@ -3111,7 +3111,7 @@ export class MillScene {
       deck,
     );
 
-    // The greenhouses, crossing. Everything up here gets its own pace, its own
+    // The orbital kennels, crossing. Everything up here gets its own pace, its own
     // altitude and its own slow wander off a hash, so it doesn't fly in
     // formation — but *only* off a hash meant nothing kept two of them apart,
     // and a hash that deals two of them the same corner and near enough the same
@@ -3125,7 +3125,7 @@ export class MillScene {
       const h = skyHash(i, "orbital");
       const h2 = fract(h * 137.7);
       const h3 = fract(h2 * 91.3);
-      // Off `cap` rather than `n`, so buying the fourth greenhouse doesn't
+      // Off `cap` rather than `n`, so buying the fourth orbital kennel doesn't
       // shuffle the three already up there.
       const span = SCENE_W + sprite.w;
       // A tenth either side of the tier's speed. Wide enough that they pull
@@ -3142,7 +3142,7 @@ export class MillScene {
       const room = Math.max(0, deck - sprite.h - 3 - hang);
       const lane = hang + Math.round(h3 * room);
       const gy = lane + Math.round(Math.sin(t * (0.25 + h2 * 0.4) + h * 9) * 3);
-      // And then whatever the sky is doing to it. A greenhouse that passes
+      // And then whatever the sky is doing to it. A orbital kennel that passes
       // under a diving singularity gets leaned on and let go.
       const at = this.warp(gx + sprite.w / 2, gy + sprite.h / 2);
       const x = Math.round(at.x - sprite.w / 2);
@@ -3150,7 +3150,7 @@ export class MillScene {
       this.primeGlow("orbital", x, y, sprite.w, sprite.h, t, i);
       ctx.drawImage(sprite.canvas, x, y);
 
-      // The greenhouse runs a grow-light down onto the rows in sweeps.
+      // The orbital kennel runs a grow-light down onto the rows in sweeps.
       const cycle = (t * 0.14 + i * 0.37) % 1;
       if (cycle < 0.22) this.drawBeam(x + sprite.w / 2, y + sprite.h, t, cycle / 0.22);
     }
@@ -3798,7 +3798,7 @@ export class MillScene {
 
   // --- The trough ----------------------------------------------------------
   //
-  // The field machines' answer to "where does it go". A van and a combine
+  // The field machines' answer to "where does it go". A van and a grooming rig
   // are the two things out there big enough to be carrying a load, and the
   // load has to end up somewhere you can see: a trough across the headland,
   // filled by auger from whatever's working the rows above it, emptying down a

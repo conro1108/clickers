@@ -2102,7 +2102,7 @@ export class InsideScene {
       ctx.fillRect(slot.x + inset, y, span, 1);
     }
 
-    // What it's holding, showing through: packed rounds of pup, in the puppy's
+    // What it's holding, showing through: packed rounds of pup, in the fold's
     // own colour so there's no doubt what's in there.
     const rng = mulberry32(0x9c + i * 71);
     for (let c = 1; c < courses - 1; c += 2) {

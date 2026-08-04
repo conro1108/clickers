@@ -655,7 +655,7 @@ describe("the Convergence", () => {
     expect((res as { mill: MillState }).mill.converged).toBe(false);
   });
 
-  it("swaps the weather for the tuber's immune response", () => {
+  it("swaps the weather for the nest's immune response", () => {
     const base = developedMill("immune", 2 * HOUR);
     const seen = (f: MillState) =>
       new Set(advance(f, ms(f.checkpointAt + 6 * HOUR)).events.map((e) => e.id));
@@ -688,11 +688,11 @@ describe("the Convergence", () => {
   });
 
   /**
-   * The Taproot Well's wrinkle: its rate scales *with* bedding as well as being
+   * The Down Well's wrinkle: its rate scales *with* bedding as well as being
    * multiplied by it, so letting the dirt go costs it twice and restoring the
    * dirt is a live decision at the top instead of a rounding error.
    */
-  it("makes the Taproot Well care about the bedding twice over", () => {
+  it("makes the Down Well care about the bedding twice over", () => {
     const base: MillState = {
       ...developedMill("well"),
       converged: true,
@@ -947,44 +947,6 @@ describe("saving", () => {
     const mill = developedMill("save");
     const restored = parseMill(serializeMill(mill, mill.checkpointAt));
     expect(restored).toEqual(mill);
-  });
-
-  /**
-   * The inside ladder was renamed when it stopped being eight surfaces of a
-   * tuber and became a descent. Nothing about the economy moved, so a save from
-   * before that is a good mill wearing the wrong keys — and a converged player
-   * losing their entire endgame to a fiction change is the one outcome that
-   * makes the rename not worth doing.
-   */
-  it("carries a pre-descent save across the inside ladder's rename", () => {
-    const mill = createMill({ seed: "old", startedAt: ms(0) });
-    const stale = {
-      ...mill,
-      converged: true,
-      world: "inside",
-      producers: { pen: 40, furrow: 12, eyes: 9, mantle: 7, skin: 3 },
-      broken: { furrow: 4, vein: 1 },
-      upgrades: ["pen_x2a", "furrow_x2a", "eyes_x2c", "starch_x2b", "ur_chihuahua", "ceiling_rights"],
-    };
-    const back = parseMill(JSON.stringify({ version: 1, savedAt: 0, mill: stale }))!;
-
-    // Slot for slot, counts intact, and nothing left under an id the shop no
-    // longer sells.
-    expect(back.producers).toEqual({ pen: 40, hem: 12, linthand: 9, well: 7, heart: 3 });
-    expect(back.broken).toEqual({ hem: 4, seam: 1 });
-    // Tier upgrades rename with their producer; the globals kept their ids.
-    expect(back.upgrades).toEqual([
-      "pen_x2a",
-      "hem_x2a",
-      "linthand_x2c",
-      "fleece_x2b",
-      "ur_chihuahua",
-      "ceiling_rights",
-    ]);
-    // Every id it came back with is one the content table still knows.
-    const known = new Set(SOLO_PRODUCERS.map((p) => p.id as string));
-    for (const id of Object.keys(back.producers)) expect(known).toContain(id);
-    for (const id of back.upgrades) expect(SOLO_UPGRADE_BY_ID[id]).toBeTruthy();
   });
 
   it("refuses junk rather than throwing", () => {
