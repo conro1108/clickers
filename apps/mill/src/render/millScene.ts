@@ -30,6 +30,7 @@ import {
   BUNTING,
   FENCE,
   FLAG,
+  KENNEL_HAND,
   HEART,
   growthStages,
   FLOWERS,
@@ -324,7 +325,7 @@ export function mulberry32(seed: number): () => number {
  * number of *readable* dogs, and past it they stop being a crowd and become a
  * texture. Sixty-five eleven-pixel puppies in a thirty-pixel band is a rug.
  */
-export const PACK_CAP = 44;
+export const PACK_CAP = 26;
 
 /** How far in from each edge a puppy will wander before turning round. */
 export const PACK_LEFT = 2;
@@ -342,8 +343,16 @@ const DROP_X = 16;
 /** How much of the yard's depth the pack spreads over, back to front. */
 const PACK_SPILL = 4;
 
-/** Trot speed, buffer pixels a second. Slow: they have nowhere to be. */
-export const PACK_WALK = [7, 18] as const;
+/**
+ * Trot speed, buffer pixels a second.
+ *
+ * Slow, and slower than it looks like it should be on paper. The yard is a
+ * hundred and seventy pixels across, so at this pace crossing it is most of
+ * half a minute — which is the point. Nothing out here has anywhere to be, and
+ * a yard where every dog gets somewhere quickly is a yard you've finished
+ * watching.
+ */
+export const PACK_WALK = [5, 11] as const;
 
 /** Bunting pitch along the fence. */
 const FLAG_STEP = 7;
@@ -362,31 +371,59 @@ const BOWLS: readonly { x: number; d: number }[] = [
 ];
 
 /**
- * The ball.
+ * Fetch: somebody throws the ball, a dog brings it back, repeat.
  *
- * There is exactly one and it never leaves, which is the point: a yard with a
- * ball rolling around it and a dog going after the ball is doing something,
- * and a yard where sixty dogs each have a ball is a ball pit.
+ * The first version of this had no thrower. The ball sat in the yard, whichever
+ * dog was nearest went after it, and on reaching it knocked it somewhere else —
+ * which is a perfectly good simulation of a ball being nosed around a yard and
+ * completely illegible as a *thing that is happening*. You couldn't tell the
+ * chase from the ordinary wandering, because the only difference was the speed.
  *
- * It's thrown rather than simulated — an arc from wherever it is to somewhere
- * else, and then it sits until somebody gets to it. Rolling it properly would
- * need collision against the props and the pack, which is a lot of frame time
- * to spend on a joke.
+ * A game needs the whole loop visible: a person winds up and throws, one dog
+ * breaks off and runs it down, and the same dog carries it back to the same
+ * person. Three beats, one actor each, and the ball in a different place in
+ * every one of them. That's readable at a glance from across a room, which is
+ * the bar for anything on this canvas.
+ *
+ * The handler is a fixture rather than one of the field's kennel hands. Those
+ * are drawn behind the fence and belong to the tier that bought them; this one
+ * stands on the apron and is always there, because the yard has to have a fetch
+ * loop on the very first save, when you own nothing at all.
  */
-interface Ball {
+type FetchPhase = "wait" | "fly" | "chase" | "carry";
+
+interface Fetch {
+  phase: FetchPhase;
+  /** Where the ball is, or where it's flying from. */
   x: number;
   y: number;
-  /** Where it's headed, and when it set off and lands. */
   tx: number;
   ty: number;
   from: number;
   to: number;
-  /** The dog that went after it, if one has. */
-  chaser: PackPup | null;
+  /** Whoever went after it. Null between throws. */
+  dog: PackPup | null;
+  /** When the handler throws next, in the wait phase. */
+  until: number;
 }
 
+/**
+ * Where the handler stands: front left, in the clear.
+ *
+ * The build-out fills the yard from the right, so the left stays open however
+ * rich the mill gets — which is what the fetch loop needs, because a throw that
+ * lands behind a crate stack is a throw nobody saw.
+ */
+const HAND_X = 40;
+
+/** How fast a dog moves when it has a job. Faster than an amble, short of a sprint. */
+const FETCH_SPEED = 30;
+
+/** How long the handler stands there between throws. */
+const FETCH_REST = [2.5, 6] as const;
+
 /** Pixels of ground per animation frame. Ties the step to the walk, not the clock. */
-export const PACK_STRIDE = 5;
+export const PACK_STRIDE = 4;
 
 /**
  * One puppy, doing one thing until it decides to do another.
@@ -424,14 +461,27 @@ export interface PackPup {
   coat: number;
   /** On its way out of the gate because you spent it. Doesn't turn round. */
   leaving: boolean;
+  /**
+   * It has a job on. `pickAction` leaves it alone while this is set, which is
+   * the whole mechanism — a dog carrying a ball back to the handler that
+   * suddenly decides to sit down has broken the only story the yard tells.
+   */
+  fetching: boolean;
 }
 
 /**
  * What a puppy does next, and for how long.
  *
- * Weighted so most of the yard is standing still at any one moment. Sixty
- * dogs all trotting is a screensaver; sixty dogs where a dozen are moving is
- * a yard, and the dozen read as individuals because the rest aren't.
+ * Weighted so most of the yard is standing still at any one moment, and the
+ * durations are long — a flop can run half a minute. A yard where everything
+ * is always trotting is a screensaver; one where two or three things are moving
+ * reads as a place, and those two or three read as individuals because the rest
+ * aren't.
+ *
+ * The timings were all roughly a third of this to begin with, which made the
+ * pack look anxious. Nothing here is in a hurry and the animation shouldn't be
+ * either: the whole point of the yard is that it is somewhere pleasant to leave
+ * a tab open on.
  */
 export function pickAction(dog: PackPup, t: number): void {
   if (dog.leaving) {
@@ -439,7 +489,7 @@ export function pickAction(dog: PackPup, t: number): void {
     return;
   }
   const roll = Math.random();
-  if (roll < 0.03) {
+  if (roll < 0.018) {
     // Zoomies. One dog in thirty decides, for no reason, to go flat out in a
     // straight line for two seconds.
     //
@@ -448,10 +498,10 @@ export function pickAction(dog: PackPup, t: number): void {
     // at a walk. A picture where nothing is ever in a hurry reads as a diorama;
     // one thing sprinting through it every few seconds reads as alive.
     dog.doing = "zoom";
-    dog.vx = (Math.random() < 0.5 ? -1 : 1) * 64;
+    dog.vx = (Math.random() < 0.5 ? -1 : 1) * 52;
     dog.vy = 0;
-    dog.until = t + 0.9 + Math.random() * 1.1;
-  } else if (roll < 0.44) {
+    dog.until = t + 0.8 + Math.random() * 1;
+  } else if (roll < 0.40) {
     dog.doing = "trot";
     // Homeward, and how insistently depends on how far off it is. A long way
     // out it always heads back and at a fair clip, which is what disperses a
@@ -467,24 +517,24 @@ export function pickAction(dog: PackPup, t: number): void {
       : Math.random() < 0.5
         ? -1
         : 1;
-    const pace = far ? 1.6 : 1;
+    const pace = far ? 1.45 : 1;
     dog.vx = dir * pace * (PACK_WALK[0] + Math.random() * (PACK_WALK[1] - PACK_WALK[0]));
     // A tenth of the sideways speed: the yard is about four dogs deep, and
     // anything faster crosses it before you've registered which way it went.
     dog.vy = (Math.random() - 0.5) * 4;
-    dog.until = t + 0.7 + Math.random() * 2.2;
-  } else if (roll < 0.70) {
+    dog.until = t + 1.6 + Math.random() * 4.5;
+  } else if (roll < 0.68) {
     dog.doing = "sit";
-    dog.until = t + 1.4 + Math.random() * 3.4;
-  } else if (roll < 0.86) {
+    dog.until = t + 4 + Math.random() * 9;
+  } else if (roll < 0.88) {
     // Flopped, and for a good while. A puppy that lies down for one second is
     // a puppy that changed its mind; the pose only reads as *settled* if it
     // outlasts a couple of the walks going on around it.
     dog.doing = "flop";
-    dog.until = t + 4 + Math.random() * 7;
+    dog.until = t + 12 + Math.random() * 22;
   } else {
     dog.doing = "stand";
-    dog.until = t + 0.6 + Math.random() * 1.8;
+    dog.until = t + 2 + Math.random() * 4;
   }
 }
 
@@ -597,7 +647,7 @@ const PACK_FLOOR = 5;
 /**
  * How hard the fill is weighted towards the end. Above 1 is slower early.
  */
-const PACK_CURVE = 1.25;
+const PACK_CURVE = 1.45;
 
 /**
  * How many puppies are loose in the yard once the build-out reaches `stage`.
@@ -1401,7 +1451,17 @@ export class MillScene {
   private shown = -1;
   private shownLayout = yardLayout(0);
   private pack: PackPup[] = [];
-  private ball: Ball = { x: 80, y: 0, tx: 80, ty: 0, from: 0, to: 0, chaser: null };
+  private fetch: Fetch = {
+    phase: "wait",
+    x: HAND_X + 8,
+    y: 0,
+    tx: 0,
+    ty: 0,
+    from: 0,
+    to: 0,
+    dog: null,
+    until: 0,
+  };
   private bundles: Bundle[] = [];
   /** The yard crew, moving the pile into and out of what it paid for. */
   private porters: Porter[] = [];
@@ -1462,7 +1522,8 @@ export class MillScene {
     this.bundles = [];
     this.porters = [];
     this.pack = [];
-    this.ball.chaser = null;
+    this.fetch.dog = null;
+    this.fetch.phase = "wait";
     this.hauls = [];
     this.lumps = [];
     this.baskets = [];
@@ -2059,8 +2120,9 @@ export class MillScene {
     // so it's drawn after the yard rather than with the trough it comes off:
     // behind the crate stacks it was pouring the pup out somewhere you couldn't see.
     if (this.troughBox) this.drawSpout(this.troughBox);
+    this.stepFetch(this.clock);
     this.stepPack(this.dt, this.clock);
-    this.stepBall(this.clock);
+
     this.drawPorters(now);
     // After the hoard: the pipeline runs down the near side of the yard, so it
     // passes in front of the crate stacks rather than being swallowed by them.
@@ -3973,7 +4035,18 @@ export class MillScene {
       });
     }
     for (const dog of this.pack) queue.push({ y: dog.y, go: () => this.drawPup(dog) });
-    queue.push({ y: this.ball.y, go: () => this.drawBall() });
+    // The ball's depth is whatever it's currently attached to, plus a hair, so
+    // it draws just in front of it. In the air it's on its own and sorts on
+    // where it's going to land.
+    const hand = this.handAt();
+    queue.push({ y: hand.y, go: () => this.drawHandler() });
+    const ballY =
+      this.fetch.phase === "carry" && this.fetch.dog
+        ? this.fetch.dog.y + 1
+        : this.fetch.phase === "wait"
+          ? hand.y + 1
+          : this.fetch.y;
+    queue.push({ y: ballY, go: () => this.drawFetch() });
     queue.sort((a, b) => a.y - b.y);
     for (const item of queue) item.go();
   }
@@ -4018,7 +4091,7 @@ export class MillScene {
         // worth the second and a half it takes to watch.
         dog.leaving = true;
         dog.doing = "trot";
-        dog.vx = 26 + Math.random() * 10;
+        dog.vx = 20 + Math.random() * 8;
         dog.vy = 0;
         dog.until = t + 60;
         over--;
@@ -4029,7 +4102,7 @@ export class MillScene {
     const front = this.packFront();
     const kept: PackPup[] = [];
     for (const dog of this.pack) {
-      if (t >= dog.until) pickAction(dog, t);
+      if (t >= dog.until && !dog.fetching) pickAction(dog, t);
       if (dog.doing === "trot" || dog.doing === "zoom") {
         dog.x += dog.vx * dt;
         dog.y += dog.vy * dt;
@@ -4081,6 +4154,7 @@ export class MillScene {
       walked: Math.random() * 40,
       coat: Math.floor(Math.random() * PACK_COATS),
       leaving: false,
+      fetching: false,
     };
     if (scatter) {
       pickAction(dog, t);
@@ -4089,88 +4163,188 @@ export class MillScene {
       // first action. The drop is one corner of a wide yard and the walk out of
       // it is the whole dispersal.
       dog.doing = "trot";
-      dog.vx = 1.6 * (PACK_WALK[0] + Math.random() * (PACK_WALK[1] - PACK_WALK[0]));
+      dog.vx = 1.45 * (PACK_WALK[0] + Math.random() * (PACK_WALK[1] - PACK_WALK[0]));
       dog.vy = (Math.random() - 0.5) * 4;
-      dog.until = t + 1.2 + Math.random() * 2;
+      dog.until = t + 1.6 + Math.random() * 2.5;
     }
     return dog;
   }
 
   /**
-   * The ball, and whoever is currently interested in it.
+   * Where the handler stands, in full.
    *
-   * The chase is the whole feature and it's three rules: if nobody's on it,
-   * the nearest dog within reach takes it on; a dog that has it trots at it
-   * regardless of where home is; and when it gets there it knocks it somewhere
-   * else and loses interest. That produces a ball that crosses the yard all
-   * day with a different dog behind it each time, off about fifteen lines.
+   * Level with the very front of the pack's band, which is the deepest anything
+   * in the yard gets — and pushed onto the depth queue after the dogs, so on a
+   * tie they draw behind. Anywhere shallower and the four pixels of apron in
+   * front of them fill up with puppies and the one figure the fetch loop needs
+   * you to see spends half its time behind a sleeping dog.
    */
-  private stepBall(t: number): void {
+  private handAt(): { x: number; y: number } {
+    return { x: HAND_X, y: this.packFront() };
+  }
+
+  /**
+   * One turn of the fetch loop.
+   *
+   * Runs before `stepPack`, which matters: it sets the fetching dog's velocity
+   * and `stepPack` is what integrates it, so doing this after would leave the
+   * chase a frame behind and — worse — let `pickAction` retask the dog on the
+   * frame its timer happened to run out.
+   *
+   * Every phase can fail safely back to `wait`, because the dog it's holding
+   * can be spent at any moment: you buy a tier, the yard empties, and whoever
+   * was mid-chase walks out of the gate with the ball still on the floor. That
+   * has to end with the handler picking it up again rather than with a null.
+   */
+  private stepFetch(t: number): void {
+    const hand = this.handAt();
     const back = this.packBack();
     const front = this.packFront();
-    if (this.ball.to === 0) {
-      this.ball.y = this.ball.ty = Math.round((back + front) / 2);
-      this.ball.to = t;
+    const f = this.fetch;
+
+    // The dog is only ever borrowed. If it's gone or on its way out, drop it.
+    if (f.dog && (!this.pack.includes(f.dog) || f.dog.leaving)) {
+      f.dog.fetching = false;
+      f.dog = null;
+      if (f.phase === "carry") f.phase = "chase";
     }
 
-    // In flight: a straight line with a hop in it, because a ball that slides
-    // along the ground reads as being dragged.
-    if (t < this.ball.to) return;
-    this.ball.x = this.ball.tx;
-    this.ball.y = this.ball.ty;
-
-    const chaser = this.ball.chaser;
-    if (chaser && this.pack.includes(chaser) && !chaser.leaving) {
-      chaser.doing = "trot";
-      chaser.until = t + 0.4;
-      const dx = this.ball.x - chaser.x;
-      chaser.vx = Math.sign(dx || 1) * 26;
-      chaser.vy = Math.sign(this.ball.y - chaser.y) * 6;
-      if (Math.abs(dx) < 6 && Math.abs(this.ball.y - chaser.y) < 4) {
-        // Got it. Knock it somewhere else and go back to being a dog.
-        this.ball.tx = PACK_LEFT + 6 + Math.random() * (PACK_RIGHT - PACK_LEFT - 12);
-        this.ball.ty = back + Math.random() * Math.max(1, front - back);
-        this.ball.from = t;
-        this.ball.to = t + 0.5 + Math.random() * 0.3;
-        this.ball.chaser = null;
-        chaser.until = t;
-      }
+    if (f.phase === "wait") {
+      f.x = hand.x + 8;
+      f.y = hand.y - 2;
+      if (t < f.until) return;
+      // Wind up and let go. The target is anywhere in the yard bar the strip
+      // right in front of the handler, or the throw is a drop.
+      f.from = t;
+      f.to = t + 0.7;
+      f.tx = PACK_LEFT + 8 + Math.random() * (PACK_RIGHT - PACK_LEFT - 16);
+      if (Math.abs(f.tx - hand.x) < 28) f.tx += f.tx < hand.x ? -34 : 34;
+      f.ty = back + Math.random() * Math.max(1, front - back);
+      f.phase = "fly";
       return;
     }
 
-    this.ball.chaser = null;
-    // Nobody on it. Whoever's nearest and not already busy leaving takes it on.
-    let best: PackPup | null = null;
-    let near = 46;
-    for (const dog of this.pack) {
-      if (dog.leaving) continue;
-      const d = Math.abs(dog.x - this.ball.x) + Math.abs(dog.y - this.ball.y) * 2;
-      if (d < near) {
-        near = d;
-        best = dog;
-      }
+    if (f.phase === "fly") {
+      if (t < f.to) return;
+      f.x = f.tx;
+      f.y = f.ty;
+      f.phase = "chase";
+      return;
     }
-    this.ball.chaser = best;
+
+    if (f.phase === "chase") {
+      if (!f.dog) {
+        // Whoever's nearest and free. Depth counts double, because a dog four
+        // pixels upfield is much further away than one four pixels along it.
+        let best: PackPup | null = null;
+        let near = Infinity;
+        for (const dog of this.pack) {
+          if (dog.leaving || dog.fetching) continue;
+          const d = Math.abs(dog.x - f.x) + Math.abs(dog.y - f.y) * 2;
+          if (d < near) {
+            near = d;
+            best = dog;
+          }
+        }
+        if (!best) {
+          // An empty yard. The handler goes and gets it themselves, off screen,
+          // which is to say the ball is simply back in their hand next beat.
+          f.phase = "wait";
+          f.until = t + FETCH_REST[0];
+          return;
+        }
+        best.fetching = true;
+        f.dog = best;
+      }
+      const dog = f.dog!;
+      this.drive(dog, f.x, f.y, t);
+      if (Math.abs(dog.x - f.x) < 5 && Math.abs(dog.y - f.y) < 4) f.phase = "carry";
+      return;
+    }
+
+    // Carrying it home. The ball rides at the dog's head — see `drawFetch` —
+    // so all this has to do is walk the dog back.
+    const dog = f.dog;
+    if (!dog) {
+      f.phase = "wait";
+      f.until = t + FETCH_REST[0];
+      return;
+    }
+    this.drive(dog, hand.x + 4, hand.y, t);
+    if (Math.abs(dog.x - hand.x - 4) < 6 && Math.abs(dog.y - hand.y) < 5) {
+      dog.fetching = false;
+      // Released mid-stride, so it wanders off from wherever it delivered
+      // rather than standing to attention at the handler's feet.
+      dog.until = t;
+      f.dog = null;
+      f.phase = "wait";
+      f.until = t + FETCH_REST[0] + Math.random() * (FETCH_REST[1] - FETCH_REST[0]);
+    }
   }
 
-  private drawBall(): void {
+  /** Point a dog at somewhere and keep it pointed until it gets there. */
+  private drive(dog: PackPup, x: number, y: number, t: number): void {
+    const dx = x - dog.x;
+    const dy = y - dog.y;
+    dog.doing = "trot";
+    // Refreshed every frame, so `pickAction` can never get a look in even if
+    // the fetching flag were somehow missed.
+    dog.until = t + 1;
+    dog.vx = Math.abs(dx) < 2 ? 0 : Math.sign(dx) * FETCH_SPEED;
+    dog.vy = Math.abs(dy) < 2 ? 0 : Math.sign(dy) * FETCH_SPEED * 0.35;
+    // Facing comes off `vx`, and a dog walking straight up the yard has none.
+    if (dog.vx === 0) dog.vx = Math.sign(x - dog.x) * 0.001 || 1;
+  }
+
+  /**
+   * The handler, and the ball wherever it currently is.
+   *
+   * Drawn as one thing because they're one thing to look at: the whole loop
+   * only reads if you can see the ball leave a hand and come back to it.
+   */
+  private drawHandler(): void {
+    const ctx = this.ctx;
+    const hand = this.handAt();
+    const sprite = artCanvas(KENNEL_HAND);
+    this.propShadow(hand.x, hand.y, sprite.w);
+    ctx.drawImage(sprite.canvas, hand.x, hand.y - sprite.h);
+  }
+
+  private drawFetch(): void {
     const ctx = this.ctx;
     const sprite = artCanvas(BALL);
+    const f = this.fetch;
     const t = this.clock;
-    let x = this.ball.x;
-    let y = this.ball.y;
-    let hop = 0;
-    if (t < this.ball.to && this.ball.to > this.ball.from) {
-      const f = (t - this.ball.from) / (this.ball.to - this.ball.from);
-      x = this.ball.x + (this.ball.tx - this.ball.x) * f;
-      y = this.ball.y + (this.ball.ty - this.ball.y) * f;
-      hop = Math.round(Math.sin(f * Math.PI) * 7);
+    let x = f.x;
+    let y = f.y;
+    let lift = 0;
+
+    if (f.phase === "fly" && f.to > f.from) {
+      const p = (t - f.from) / (f.to - f.from);
+      x = f.x + (f.tx - f.x) * p;
+      y = f.y + (f.ty - f.y) * p;
+      // A real arc, not a hop. It's the only thing in the scene that leaves the
+      // ground properly and it's what makes the throw read as a throw.
+      lift = Math.round(Math.sin(p * Math.PI) * 16);
+    } else if (f.phase === "carry" && f.dog) {
+      // In its mouth: at head height, on the leading edge.
+      x = f.dog.x + (f.dog.vx < 0 ? -1 : 7);
+      y = f.dog.y - 8;
+    } else if (f.phase === "wait") {
+      const hand = this.handAt();
+      x = hand.x + 8;
+      y = hand.y - 2;
     }
-    ctx.globalAlpha = 0.16;
-    ctx.fillStyle = INK;
-    ctx.fillRect(Math.round(x), Math.round(y) - 1, sprite.w, 1);
-    ctx.globalAlpha = 1;
-    ctx.drawImage(sprite.canvas, Math.round(x), Math.round(y) - sprite.h - hop);
+
+    // A shadow on the ground it's over, which during the throw is the only cue
+    // for where it's going to come down.
+    if (f.phase !== "carry") {
+      ctx.globalAlpha = 0.16;
+      ctx.fillStyle = INK;
+      ctx.fillRect(Math.round(x), Math.round(y) - 1, sprite.w, 1);
+      ctx.globalAlpha = 1;
+    }
+    ctx.drawImage(sprite.canvas, Math.round(x), Math.round(y) - sprite.h - lift);
   }
 
   /**
@@ -4189,7 +4363,7 @@ export class MillScene {
     // per-dog phase — it's constant while sat, and free.
     const pose =
       dog.doing === "sit"
-        ? 2 + (Math.floor(this.clock * 2.6 + dog.x) % 2)
+        ? 2 + (Math.floor(this.clock * 1.5 + dog.x) % 2)
         : dog.doing === "flop"
           ? 4
           : step;

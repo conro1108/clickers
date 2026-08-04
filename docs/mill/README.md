@@ -54,9 +54,13 @@ npm test
   **The hoard is a crowd, not a pile.** It was a heap for one afternoon — sixty
   sprites stacked into a pyramid, which is the right shape for potatoes and a
   pile of bodies when it isn't. So every puppy you're holding is out on the
-  concrete instead: trotting, sitting with its tail going, flat out asleep,
-  chasing the one ball round the yard, and about one in thirty deciding for no
-  reason to sprint the length of the place. The yard builds out around them —
+  concrete instead: trotting, sitting with its tail going, flat out asleep, and
+  about one in fifty deciding for no reason to sprint the length of the place.
+  There's a handler down the front throwing a ball, and a proper fetch loop
+  behind it — throw, one dog breaks off and runs it down, same dog carries it
+  back. Three beats with one actor each, which is what makes it read as a
+  *thing happening* rather than as a ball being nosed about. The yard builds
+  out around them —
   a basket, then a crate, a wagon, a kennel, eventually a sorting tower over
   the fence line. You don't read the yard, you recognise it.
 

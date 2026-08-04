@@ -2052,6 +2052,7 @@ export class InsideScene {
           walked: Math.random() * 40,
           coat: Math.floor(Math.random() * PACK_COATS),
           leaving: false,
+          fetching: false,
         });
       }
     } else if (here > target) {
