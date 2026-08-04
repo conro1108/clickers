@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildHidden, PACK_CAP, SCENE_W, YARD, yardLayout } from "./millScene.js";
+import { buildHidden, packAt, PACK_CAP, SCENE_W, YARD, yardLayout } from "./millScene.js";
 
 /** Sprite width straight off the char grid, since there's no canvas out here. */
 function artWidth(rows: readonly string[]): number {
@@ -40,7 +40,7 @@ describe("the yard", () => {
     for (let l = 0; l <= 15; l += 0.01) {
       const { stage, pack } = yardLayout(10 ** l);
       expect(pack).toBeGreaterThanOrEqual(0);
-      expect(pack).toBeLessThanOrEqual(Math.min(PACK_CAP, YARD[stage]!.pack));
+      expect(pack).toBeLessThanOrEqual(Math.min(PACK_CAP, packAt(stage)));
     }
   });
 
@@ -59,10 +59,26 @@ describe("the yard", () => {
     }
   });
 
-  it("leaves a decent pile standing once the yard is building", () => {
+  it("never leaves the yard looking emptier than the stage it's on", () => {
+    // Against the stage's own figure, not against the cap. The pack spends the
+    // whole run climbing now, so "a decent crowd" means a decent crowd *for
+    // where you are* — five dogs is a full yard on day one and a bug on day
+    // five, and a flat threshold can't tell the two apart.
     for (let l = Math.log10(200); l <= 17.5; l += 0.005) {
-      expect(yardLayout(10 ** l).pack).toBeGreaterThanOrEqual(Math.round(PACK_CAP * 0.4));
+      const { stage, pack } = yardLayout(10 ** l);
+      expect(pack, `thin at 1e${l.toFixed(2)}`).toBeGreaterThanOrEqual(Math.round(packAt(stage) * 0.75));
     }
+  });
+
+  it("takes the whole run to fill the yard, not the first minute", () => {
+    // The pack used to hit its cap at a hundred and ten puppies and sit there
+    // for seventeen orders of magnitude. This is the guard on that: the crowd
+    // has to still be visibly growing well past the point where a player has
+    // stopped being impressed by the props.
+    expect(yardLayout(200).pack).toBeLessThan(PACK_CAP * 0.3);
+    expect(yardLayout(1e6).pack).toBeLessThan(PACK_CAP * 0.5);
+    expect(yardLayout(1e12).pack).toBeLessThan(PACK_CAP * 0.85);
+    expect(yardLayout(1e17).pack).toBeGreaterThan(PACK_CAP * 0.85);
   });
 
   it("has a build-out that climbs and fits on the canvas", () => {

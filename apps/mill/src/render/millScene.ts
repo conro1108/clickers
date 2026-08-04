@@ -520,8 +520,6 @@ interface Prop {
 interface Stage {
   /** Puppies on hand at which this stage arrives. */
   at: number;
-  /** How big the pack grows before the next stage gives it somewhere to be. */
-  pack: number;
   /** The one thing this stage puts in the yard. The early stages are heap only. */
   add?: Prop;
 }
@@ -543,36 +541,36 @@ const p = (art: Art, x: number, row: number): Prop => ({ art, x, row });
  * stop.
  */
 export const YARD: Stage[] = [
-  { at: 0, pack: 5 },
-  { at: 5, pack: 13 },
-  { at: 16, pack: 21 },
-  { at: 45, pack: 29 },
-  { at: 110, pack: PACK_CAP },
-  { at: 200, pack: PACK_CAP, add: p(BASKET, 159, 0) },
-  { at: 900, pack: PACK_CAP, add: p(BASKET, 145, 0) },
-  { at: 4e3, pack: PACK_CAP, add: p(CRATE, 159, 1) },
-  { at: 2e4, pack: PACK_CAP, add: p(WAGON, 127, 0) },
-  { at: 8e4, pack: PACK_CAP, add: p(BASKET, 113, 0) },
-  { at: 3e5, pack: PACK_CAP, add: p(CRATE, 141, 1) },
-  { at: 1.5e6, pack: PACK_CAP, add: p(KENNEL, 141, 2) },
-  { at: 6e6, pack: PACK_CAP, add: p(STACK, 73, 3) },
-  { at: 3e7, pack: PACK_CAP, add: p(CRATE, 123, 1) },
-  { at: 1.2e8, pack: PACK_CAP, add: p(BASKET, 97, 0) },
-  { at: 5e8, pack: PACK_CAP, add: p(STACK, 57, 3) },
-  { at: 2e9, pack: PACK_CAP, add: p(CRATE, 105, 1) },
-  { at: 1e10, pack: PACK_CAP, add: p(SORTER, 105, 3) },
-  { at: 4e10, pack: PACK_CAP, add: p(CRATE, 87, 1) },
-  { at: 2e11, pack: PACK_CAP, add: p(STACK, 41, 3) },
-  { at: 8e11, pack: PACK_CAP, add: p(CRATE, 69, 1) },
-  { at: 3e12, pack: PACK_CAP, add: p(KENNEL, 109, 2) },
-  { at: 1.5e13, pack: PACK_CAP, add: p(STACK, 25, 3) },
-  { at: 6e13, pack: PACK_CAP, add: p(SORTER, 129, 3) },
-  { at: 2.5e14, pack: PACK_CAP, add: p(CRATE, 51, 1) },
-  { at: 1e15, pack: PACK_CAP, add: p(KENNEL, 77, 2) },
-  { at: 4e15, pack: PACK_CAP, add: p(BASKET, 81, 0) },
-  { at: 1.5e16, pack: PACK_CAP, add: p(STACK, 10, 3) },
-  { at: 6e16, pack: PACK_CAP, add: p(SORTER, 153, 3) },
-  { at: 2.5e17, pack: PACK_CAP, add: p(WAGON, 63, 0) },
+  { at: 0 },
+  { at: 5 },
+  { at: 16 },
+  { at: 45 },
+  { at: 110 },
+  { at: 200, add: p(BASKET, 159, 0) },
+  { at: 900, add: p(BASKET, 145, 0) },
+  { at: 4e3, add: p(CRATE, 159, 1) },
+  { at: 2e4, add: p(WAGON, 127, 0) },
+  { at: 8e4, add: p(BASKET, 113, 0) },
+  { at: 3e5, add: p(CRATE, 141, 1) },
+  { at: 1.5e6, add: p(KENNEL, 141, 2) },
+  { at: 6e6, add: p(STACK, 73, 3) },
+  { at: 3e7, add: p(CRATE, 123, 1) },
+  { at: 1.2e8, add: p(BASKET, 97, 0) },
+  { at: 5e8, add: p(STACK, 57, 3) },
+  { at: 2e9, add: p(CRATE, 105, 1) },
+  { at: 1e10, add: p(SORTER, 105, 3) },
+  { at: 4e10, add: p(CRATE, 87, 1) },
+  { at: 2e11, add: p(STACK, 41, 3) },
+  { at: 8e11, add: p(CRATE, 69, 1) },
+  { at: 3e12, add: p(KENNEL, 109, 2) },
+  { at: 1.5e13, add: p(STACK, 25, 3) },
+  { at: 6e13, add: p(SORTER, 129, 3) },
+  { at: 2.5e14, add: p(CRATE, 51, 1) },
+  { at: 1e15, add: p(KENNEL, 77, 2) },
+  { at: 4e15, add: p(BASKET, 81, 0) },
+  { at: 1.5e16, add: p(STACK, 10, 3) },
+  { at: 6e16, add: p(SORTER, 153, 3) },
+  { at: 2.5e17, add: p(WAGON, 63, 0) },
 ];
 
 interface YardLayout {
@@ -583,12 +581,45 @@ interface YardLayout {
 }
 
 /**
- * How many stay out in the yard after a stage arrives and the rest go into it,
- * as a fraction of the cap. Not zero: a mill making thousands a second should
- * never have one puppy and a kennel in the yard, which is what emptying it at
- * every threshold used to look like.
+ * How many stay out in the yard after a stage arrives and the rest go into it.
+ *
+ * Nearly all of them. It was a lot harsher when the pack jumped to its cap in
+ * the first minute and the only thing left to play with was the dip — now that
+ * the count climbs across the whole run, a 60% cull at every threshold would
+ * wipe out several stages' worth of growth each time and the yard would spend
+ * the game going backwards.
  */
-const PACK_KEEP = 0.4;
+const PACK_KEEP = 0.82;
+
+/** Where the yard starts, before you own anything at all. */
+const PACK_FLOOR = 5;
+
+/**
+ * How hard the fill is weighted towards the end. Above 1 is slower early.
+ */
+const PACK_CURVE = 1.25;
+
+/**
+ * How many puppies are loose in the yard once the build-out reaches `stage`.
+ *
+ * This used to be a number on each stage and every stage past the fifth said
+ * "the cap" — so the yard was full at a hundred and ten puppies, about ninety
+ * seconds in, and stayed full for the remaining seventeen orders of magnitude.
+ * Everything after the first minute was the props arriving, and the crowd was
+ * a constant.
+ *
+ * It's a curve over the stage index instead, which spends the whole run: five
+ * dogs at the start, eight by the time the first basket lands, into the teens
+ * around a hundred thousand, and the yard only actually fills at the top of the
+ * build-out. That makes the pack a second progress bar running alongside the
+ * props at a completely different rate — the props are a series of discrete
+ * arrivals, this is a slow tide — and it means "the yard is getting busy" stays
+ * true as a thing to notice for days rather than for a minute and a half.
+ */
+export function packAt(stage: number): number {
+  const f = stage / (YARD.length - 1);
+  return Math.round(PACK_FLOOR + (PACK_CAP - PACK_FLOOR) * Math.pow(f, PACK_CURVE));
+}
 
 /**
  * How the yard refills between one stage and the next. Well under 1, so most of
@@ -620,10 +651,15 @@ export function yardLayout(amount: number): YardLayout {
   // was built out of the pile, so the pile starts low; a stage that only made
   // room for a bigger mound picks up exactly where the last one left off, so
   // the early game is one unbroken climb rather than four resets to nothing.
-  const from = stage === 0 ? 0 : here.add ? Math.round(here.pack * PACK_KEEP) : YARD[stage - 1]!.pack;
+  const want = packAt(stage);
+  const prev = stage === 0 ? 0 : packAt(stage - 1);
+  // `Math.min` rather than the dip outright: it keeps "the yard only ever
+  // shrinks because something carried them indoors" structural instead of a
+  // property of whatever the curve happens to be doing.
+  const from = stage === 0 ? 0 : here.add ? Math.min(prev, Math.round(want * PACK_KEEP)) : prev;
   const grow = stage === 0 ? frac : Math.pow(frac, PACK_EASE);
-  const pack = from + Math.floor((here.pack - from) * grow);
-  return { stage, pack: Math.max(0, Math.min(here.pack, pack)) };
+  const pack = from + Math.floor((want - from) * grow);
+  return { stage, pack: Math.max(0, Math.min(want, pack)) };
 }
 
 function sameLayout(a: YardLayout, b: YardLayout): boolean {

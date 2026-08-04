@@ -60,6 +60,15 @@ npm test
   a basket, then a crate, a wagon, a kennel, eventually a sorting tower over
   the fence line. You don't read the yard, you recognise it.
 
+  **How many of them is a second progress bar, and a much slower one.** The
+  props arrive as discrete events roughly every four-and-a-bit times richer;
+  the crowd is a curve over the whole build-out — five dogs at the start, into
+  the teens around a million, and the yard only actually fills at the top of
+  the ladder. It was tuned the obvious way first, filling to capacity at a
+  hundred and ten puppies, which meant the single most eye-catching thing on
+  the screen finished growing ninety seconds in and then held still for
+  seventeen orders of magnitude.
+
   The puppies are drawn head-on, and `art.ts` explains why at length because
   the side view failed twice. A side-on dog at eleven pixels has one ear on top
   of its head, a muzzle out the front and two visible legs — a comb, a beak and
