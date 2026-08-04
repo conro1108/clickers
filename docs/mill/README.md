@@ -73,6 +73,13 @@ npm test
   the screen finished growing ninety seconds in and then held still for
   seventeen orders of magnitude.
 
+  The chute that feeds the yard hands off to the pack properly: the yard runs a
+  tab, and the next puppy to reach the bottom of the slide settles it — lands,
+  and grows from the sprite it rode down on into a full-sized dog over about a
+  second. Two clocks that have nothing to do with each other (the hoard's, and
+  the trough draining) reconciled by one queue, so the puppy you watch land is
+  the puppy that joins the pack.
+
   The puppies are drawn head-on, and `art.ts` explains why at length because
   the side view failed twice. A side-on dog at eleven pixels has one ear on top
   of its head, a muzzle out the front and two visible legs — a comb, a beak and

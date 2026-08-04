@@ -12,12 +12,14 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const PALETTE = {
-  ".": "#43301a", // bedding background
-  o: "#2a1c0d", // outline
-  L: "#f5cd85", // fawn, lit
+  ".": "#7fc3e4", // sky, so the fawn has something cool to sit on
+  o: "#3a2a20", // outline
+  L: "#eecb93", // fawn, lit
   M: "#dda65a", // fawn, mid
-  D: "#bd8038", // fawn, shaded
-  d: "#fbeed0", // muzzle and chest
+  d: "#fdf2dc", // muzzle
+  i: "#eda9ac", // inner ear
+  b: "#f2909a", // blush
+  w: "#ffffff", // the glint, and the whole reason it looks alive
 };
 
 // 20x20, and it is a head rather than a whole dog: at 60px on a home screen a
@@ -26,26 +28,32 @@ const PALETTE = {
 //
 // Outer ring must stay background so the padding trick is invisible.
 const SPRITE = [
-  "....................",
-  "...oo.........oo....",
-  "..oLLo.......oMMo...",
-  "..oLLLo.....oMMMo...",
-  "..oLLLLoooooMMMMo...",
-  "...oLLLLLLLLMMMMo...",
-  "...oLLLLLLLLLMMMo...",
-  "..oLLoLLLLLLoMMMMo..",
-  "..oLLLLLLLLLLMMMMo..",
-  "..oLLLLLLLLLLMMMDo..",
-  "..oLLLLLLLLLLMMMDo..",
-  "..oLLLLdddddMMMMDo..",
-  "...oLLdddoodddMMDo..",
-  "...oLLdddddddMMDo...",
-  "....oLLdddddMMDo....",
-  ".....oLLMMMMDDo.....",
-  "......ooDDDDoo......",
-  "........oooo........",
-  "....................",
-  "....................",
+    "..........................",
+    "..o....................o..",
+    "..ooo................ooo..",
+    "..oLLoo............ooMMo..",
+    "...oLLLoo........ooMMMo...",
+    "...oiLLLLo......oMMMMio...",
+    "....oiiLLo......oMMiio....",
+    "....oiiiLLooooooMMiiio....",
+    "....oiiiLLLMMMMMMMiiio....",
+    ".....oiiLMMMMMMMMMiio.....",
+    ".....oiLMMMMMMMMMMMio.....",
+    "....oLMooMMMMMMMMooMMo....",
+    "....oMwwooMMMMMMwwooMo....",
+    "...oMMwwooMMMMMMwwooMMo...",
+    "...oMMooooMMMMMMooooMMo...",
+    "...oMMMooMMMMMMMMooMMMo...",
+    "...oMMMMMMMMMMMMMMMMMMo...",
+    "...oMbbMMMdoooodMMMbbMo...",
+    "....obbbdddoooodddbbbo....",
+    "....obbddddooooddddbbo....",
+    ".....oMdddddoodddddMo.....",
+    "......oddddoddoddddo......",
+    ".......oododdddodoo.......",
+    ".........oooooooo.........",
+    "..........................",
+    "..........................",
 ];
 
 const GRID = SPRITE.length;

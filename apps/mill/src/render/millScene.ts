@@ -426,6 +426,32 @@ const FETCH_REST = [2.5, 6] as const;
 export const PACK_STRIDE = 4;
 
 /**
+ * How long an arrival spends as the sprite it rode down on, and then as the
+ * small one, before it's just another dog in the yard.
+ *
+ * Short. It's a beat of continuity, not a life cycle — the job is to stop the
+ * chute and the pack looking like two unrelated systems that happen to share a
+ * corner, and a puppy that takes five seconds to inflate is its own distraction.
+ */
+const GROW_CARRIED = 0.3;
+const GROW_SMALL = 1.1;
+
+/**
+ * How many dogs the yard is owed but hasn't been handed yet.
+ *
+ * The pack's size comes off the hoard, and the chute's deliveries come off the
+ * trough draining — two completely unrelated clocks. Rather than pick one, the
+ * yard runs a tab: when the count says it should have another dog it goes on
+ * the tab, and the next thing to come off the slide settles it. So the puppy
+ * you watch land is the puppy that joins the pack.
+ *
+ * The cap and the timeout are both for the case where nothing is coming: a mill
+ * with no producers has a dry trough, and the yard still has to fill.
+ */
+const OWED_CAP = 8;
+const OWED_TIMEOUT = 2.5;
+
+/**
  * One puppy, doing one thing until it decides to do another.
  *
  * `walked` rather than a clock phase is what stops sixty dogs stepping in
@@ -467,6 +493,8 @@ export interface PackPup {
    * suddenly decides to sit down has broken the only story the yard tells.
    */
   fetching: boolean;
+  /** Scene clock when it landed, which is what the growth is drawn off. */
+  born: number;
 }
 
 /**
@@ -1451,6 +1479,8 @@ export class MillScene {
   private shown = -1;
   private shownLayout = yardLayout(0);
   private pack: PackPup[] = [];
+  private owed = 0;
+  private owedSince = 0;
   private fetch: Fetch = {
     phase: "wait",
     x: HAND_X + 8,
@@ -1522,6 +1552,7 @@ export class MillScene {
     this.bundles = [];
     this.porters = [];
     this.pack = [];
+    this.owed = 0;
     this.fetch.dog = null;
     this.fetch.phase = "wait";
     this.hauls = [];
@@ -4062,7 +4093,7 @@ export class MillScene {
    */
   private stepPack(dt: number, t: number): void {
     const want = Math.min(PACK_CAP, Math.max(0, Math.round(this.shownLayout.pack)));
-    let here = 0;
+    let here = this.owed;
     for (const dog of this.pack) if (!dog.leaving) here++;
 
     if (here < want) {
@@ -4078,11 +4109,21 @@ export class MillScene {
       // where the pack is empty is a frame that only wants one dog, and the
       // other sixty-four then queued through the corner one at a time.
       const missing = want - here;
-      const scatter = missing > 3;
-      const batch = scatter ? missing : Math.min(3, missing);
-      for (let i = 0; i < batch; i++) this.pack.push(this.newPup(t, scatter));
+      if (missing > 3) {
+        for (let i = 0; i < missing; i++) this.pack.push(this.newPup(t, true));
+      } else {
+        // On the tab. `drawHauls` settles it the next time something reaches
+        // the bottom of the slide.
+        if (this.owed === 0) this.owedSince = t;
+        this.owed = Math.min(OWED_CAP, this.owed + missing);
+      }
     } else if (here > want) {
       let over = here - want;
+      // Cancel the tab before turning anyone out: a dog that hasn't arrived is
+      // a cheaper thing to un-promise than one already standing in the yard.
+      const unpromise = Math.min(over, this.owed);
+      this.owed -= unpromise;
+      over -= unpromise;
       for (const dog of this.pack) {
         if (over <= 0) break;
         if (dog.leaving) continue;
@@ -4128,6 +4169,30 @@ export class MillScene {
       kept.push(dog);
     }
     this.pack = kept;
+
+    // Nothing is coming down the slide — a mill with no producers, or a trough
+    // that has run dry — so the yard stops waiting and lets them in at the gate.
+    if (this.owed > 0 && t - this.owedSince > OWED_TIMEOUT) {
+      this.owedSince = t;
+      this.owed--;
+      this.pack.push(this.newPup(t, false));
+    }
+  }
+
+  /**
+   * Settle one off the tab, at the point on the ground where it landed.
+   *
+   * Called from the slide, so the coordinates are wherever the chute happens to
+   * spit — clamped into the band, because the chute's mouth sits a little above
+   * the yard and a dog standing there would be behind the fence.
+   */
+  private deliver(x: number, y: number): void {
+    if (this.owed <= 0) return;
+    this.owed--;
+    const dog = this.newPup(this.clock, false);
+    dog.x = clamp(x - 5, PACK_LEFT, PACK_RIGHT);
+    dog.y = clamp(y, this.packBack(), this.packFront());
+    this.pack.push(dog);
   }
 
   /**
@@ -4155,6 +4220,7 @@ export class MillScene {
       coat: Math.floor(Math.random() * PACK_COATS),
       leaving: false,
       fetching: false,
+      born: t,
     };
     if (scatter) {
       pickAction(dog, t);
@@ -4358,16 +4424,23 @@ export class MillScene {
   private drawPup(dog: PackPup): void {
     const ctx = this.ctx;
     const step = Math.floor(dog.walked / PACK_STRIDE) % 2;
-    // Sitting alternates the tail on the clock rather than on distance, for the
-    // obvious reason that a sitting dog isn't covering any. `x` stands in for a
-    // per-dog phase — it's constant while sat, and free.
+    const age = this.clock - dog.born;
+    // Growing overrides whatever it thinks it's doing. It only lasts a second
+    // and a dog that sits down halfway through inflating looks like a glitch.
     const pose =
-      dog.doing === "sit"
-        ? 2 + (Math.floor(this.clock * 1.5 + dog.x) % 2)
-        : dog.doing === "flop"
-          ? 4
-          : step;
-    const sprite = artCanvas(PACK_POSES[dog.coat]![dog.vx < 0 ? 1 : 0]![pose]!);
+      age < GROW_SMALL
+        ? 5
+        : dog.doing === "sit"
+          ? // Sitting alternates the tail on the clock rather than on distance,
+            // for the obvious reason that a sitting dog isn't covering any. `x`
+            // stands in for a per-dog phase: constant while sat, and free.
+            2 + (Math.floor(this.clock * 1.5 + dog.x) % 2)
+          : dog.doing === "flop"
+            ? 4
+            : step;
+    const sprite = artCanvas(
+      age < GROW_CARRIED ? PUPPY_SPRITE : PACK_POSES[dog.coat]![dog.vx < 0 ? 1 : 0]![pose]!,
+    );
     const x = Math.round(dog.x);
     const y = Math.round(dog.y);
     ctx.globalAlpha = 0.16;
@@ -4675,7 +4748,12 @@ export class MillScene {
     this.hauls = this.hauls.filter((h) => {
       const p = (now - h.born) / h.dur;
       if (p > 1) {
-        if (h.slide) this.puff(h.x1 + 3, h.y1 + 4, "dust", (Math.random() - 0.5) * 20);
+        if (h.slide) {
+          this.puff(h.x1 + 3, h.y1 + 4, "dust", (Math.random() - 0.5) * 20);
+          // The one that just landed is the one that joins the pack, if the
+          // yard is short. Otherwise it's another puppy onto the pile you own.
+          this.deliver(h.x1 + 3, h.y1 + 4);
+        }
         return false;
       }
       if (p < 0) return true;

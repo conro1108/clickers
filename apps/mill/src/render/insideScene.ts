@@ -2053,6 +2053,7 @@ export class InsideScene {
           coat: Math.floor(Math.random() * PACK_COATS),
           leaving: false,
           fetching: false,
+          born: this.clock,
         });
       }
     } else if (here > target) {

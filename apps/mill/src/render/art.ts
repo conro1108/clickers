@@ -618,6 +618,34 @@ const PUP_FLOP_ROWS = [
 ];
 
 /**
+ * Just off the slide, and not full size yet.
+ *
+ * The yard is fed by a chute that visibly drops puppies into the corner, and
+ * for a long time what came down it simply puffed out of existence while a
+ * fully grown dog faded in somewhere nearby. Two things happening in the same
+ * corner that obviously weren't the same thing.
+ *
+ * So an arrival is now drawn small and grows: the transit sprite it rode down
+ * on, then this, then the full pose. Same head-on construction at nine pixels
+ * instead of eleven, and the body is barely there — which is the right way to
+ * shrink a puppy, because what makes a young one young is that the head hasn't
+ * changed size yet and everything else hasn't caught up.
+ */
+const PUP_NEW_ROWS = [
+  ".k.....k.",
+  "klk...klk",
+  "kllkkkllk",
+  ".kpppppk.",
+  "kpkpppkpk",
+  "kpppppppk",
+  "kpmmmmmpk",
+  ".kmmkmmk.",
+  ".kpppppk.",
+  ".kkkkkkk.",
+  "..d...d..",
+];
+
+/**
  * Three coats, so a yard full of dogs isn't full of copies of one dog.
  *
  * All three are warm and none is dark enough to become a hole in the picture at
@@ -658,7 +686,7 @@ function pup(rows: readonly string[], coat: number, left: boolean): Art {
  * of the scene put together.
  *
  * Indexed `[coat][facing][pose]`: facing 0 is right, poses 0-1 are the trot,
- * 2-3 the sit with its tail down and up, and 4 the flop.
+ * 2-3 the sit with its tail down and up, 4 the flop and 5 the new arrival.
  */
 export const PACK_POSES: readonly (readonly (readonly Art[])[])[] = COATS.map((_, coat) =>
   [false, true].map((left) => [
@@ -667,6 +695,7 @@ export const PACK_POSES: readonly (readonly (readonly Art[])[])[] = COATS.map((_
     pup(PUP_SIT_ROWS[0]!, coat, left),
     pup(PUP_SIT_ROWS[1]!, coat, left),
     pup(PUP_FLOP_ROWS, coat, left),
+    pup(PUP_NEW_ROWS, coat, left),
   ]),
 );
 
