@@ -24,7 +24,13 @@ import {
   CLOUD,
   CRATE,
   SORTER,
+  BALL,
+  BOWL,
+  BOWL_RED,
+  BUNTING,
   FENCE,
+  FLAG,
+  HEART,
   growthStages,
   FLOWERS,
   LAMP,
@@ -73,18 +79,21 @@ const FLESH_DEEP = "#7d5330";
  * runs are, because grass under sixty dogs lasts about a week, and a poured
  * concrete apron at the front where everything gets hosed down.
  *
- * The hills behind stay green on purpose. Grey all the way to the horizon
- * reads as an institution; a grey compound sitting in green country reads as
- * something somebody put there, which is the joke.
+ * Warm stone rather than the cold grey this started as, which lasted exactly
+ * one screenshot: a grey yard under a grey fence beside grey plant is a car
+ * park, and the dogs were the only thing in the picture with any warmth in it.
+ * Warming the ground and lightening the apron keeps the contrast that made the
+ * pack legible — they're still the darkest warm thing out here — and stops the
+ * yard being somewhere you'd rather not be.
  *
- * It also buys the pack its silhouette back. Fawn on brown dirt is two warm
- * mid-tones fighting, and every dog in the yard came out as a smudge with an
- * outline round it. Fawn on grey is the one pairing here that separates.
+ * The hills behind stay green on purpose. Neutral all the way to the horizon
+ * reads as an institution; a compound sitting in green country reads as
+ * something somebody put there, which is the joke.
  */
-const GRAVEL = "#a8a294";
-const GRAVEL_DARK = "#948d80";
-const CONCRETE = "#b2ada0";
-const CONCRETE_DARK = "#8e8a7e";
+const GRAVEL = "#c6bda6";
+const GRAVEL_DARK = "#b0a68f";
+const CONCRETE = "#d8cfb8";
+const CONCRETE_DARK = "#b4ab95";
 
 /** What the scene needs to know. Everything else stays in the sim. */
 export interface MillView {
@@ -154,10 +163,21 @@ function phaseNow(): Phase {
   return "day";
 }
 
+/**
+ * Softer than it was, and the daytime row is the one that matters — it's what
+ * the game looks like for seventeen hours out of twenty-four.
+ *
+ * The old blue and green were a shade under a proper saturated primary each,
+ * which is right for a picture that wants to look like farmland and wrong for
+ * one that wants to look like somewhere you'd keep a puppy. Lifting the value
+ * and dropping the saturation on both puts the country in the background where
+ * it belongs and leaves the strongest colour in the picture on the things that
+ * matter: the dogs, the bunting and the bowls.
+ */
 const SKY: Record<Phase, { top: string; bottom: string; hill: string; hillFar: string }> = {
-  day: { top: "#8fd3f4", bottom: "#c9ecf7", hill: "#5f9c46", hillFar: "#79ad5e" },
-  dusk: { top: "#4a4a86", bottom: "#f0a878", hill: "#3f6b39", hillFar: "#557c48" },
-  night: { top: "#1d1f42", bottom: "#3a3564", hill: "#25402c", hillFar: "#2f4a35" },
+  day: { top: "#a6ddf5", bottom: "#dcf1f7", hill: "#7cbc60", hillFar: "#9dd07e" },
+  dusk: { top: "#5a5694", bottom: "#f6bb8e", hill: "#4d7a45", hillFar: "#628a55" },
+  night: { top: "#232549", bottom: "#403a6c", hill: "#2b4632", hillFar: "#35503b" },
 };
 
 /** What the dark is made of, and what the lamp puts back. */
@@ -294,13 +314,17 @@ export function mulberry32(seed: number): () => number {
  * to fix that. The number the yard is about didn't change; what changed is that
  * it's now a count of things that are alive.
  *
- * The trade is real and worth naming. A heap is free — sixty-five blits into
- * cached slots, no state — and a pack is sixty-five agents that have to be
- * stepped, bounded and depth-sorted every frame. It buys the one thing the
- * scene most needed: the yard is no longer the only part of the picture that
- * doesn't move.
+ * The trade is real and worth naming. A heap is free — blits into cached slots,
+ * no state — and a pack is dozens of agents that have to be stepped, bounded
+ * and depth-sorted every frame. It buys the one thing the scene most needed:
+ * the yard is no longer the only part of the picture that doesn't move.
+ *
+ * The cap came down from sixty-five when the sprite got chunkier. That's not a
+ * performance number, it's a legibility one: a fixed band of yard holds a fixed
+ * number of *readable* dogs, and past it they stop being a crowd and become a
+ * texture. Sixty-five eleven-pixel puppies in a thirty-pixel band is a rug.
  */
-export const PACK_CAP = 65;
+export const PACK_CAP = 44;
 
 /** How far in from each edge a puppy will wander before turning round. */
 export const PACK_LEFT = 2;
@@ -319,7 +343,47 @@ const DROP_X = 16;
 const PACK_SPILL = 4;
 
 /** Trot speed, buffer pixels a second. Slow: they have nowhere to be. */
-const PACK_WALK = [7, 18] as const;
+export const PACK_WALK = [7, 18] as const;
+
+/** Bunting pitch along the fence. */
+const FLAG_STEP = 7;
+
+/**
+ * Where the water bowls stand, as x and a fraction of the yard's depth.
+ *
+ * Hand-placed and permanent, unlike everything else in the yard, which arrives
+ * on a threshold. A bowl isn't a thing you unlock — it's a thing that has
+ * always been there, and the yard needs at least one prop that was.
+ */
+const BOWLS: readonly { x: number; d: number }[] = [
+  { x: 44, d: 0.28 },
+  { x: 118, d: 0.62 },
+  { x: 86, d: 0.9 },
+];
+
+/**
+ * The ball.
+ *
+ * There is exactly one and it never leaves, which is the point: a yard with a
+ * ball rolling around it and a dog going after the ball is doing something,
+ * and a yard where sixty dogs each have a ball is a ball pit.
+ *
+ * It's thrown rather than simulated — an arc from wherever it is to somewhere
+ * else, and then it sits until somebody gets to it. Rolling it properly would
+ * need collision against the props and the pack, which is a lot of frame time
+ * to spend on a joke.
+ */
+interface Ball {
+  x: number;
+  y: number;
+  /** Where it's headed, and when it set off and lands. */
+  tx: number;
+  ty: number;
+  from: number;
+  to: number;
+  /** The dog that went after it, if one has. */
+  chaser: PackPup | null;
+}
 
 /** Pixels of ground per animation frame. Ties the step to the walk, not the clock. */
 export const PACK_STRIDE = 5;
@@ -353,7 +417,7 @@ export interface PackPup {
   home: number;
   vx: number;
   vy: number;
-  doing: "trot" | "stand" | "sit";
+  doing: "trot" | "stand" | "sit" | "zoom" | "flop";
   /** Scene clock, in seconds, at which it picks something else. */
   until: number;
   walked: number;
@@ -375,7 +439,19 @@ export function pickAction(dog: PackPup, t: number): void {
     return;
   }
   const roll = Math.random();
-  if (roll < 0.42) {
+  if (roll < 0.03) {
+    // Zoomies. One dog in thirty decides, for no reason, to go flat out in a
+    // straight line for two seconds.
+    //
+    // It's a third of a percent of the yard at any moment and it is the single
+    // most-noticed thing on the screen, because everything else out here moves
+    // at a walk. A picture where nothing is ever in a hurry reads as a diorama;
+    // one thing sprinting through it every few seconds reads as alive.
+    dog.doing = "zoom";
+    dog.vx = (Math.random() < 0.5 ? -1 : 1) * 64;
+    dog.vy = 0;
+    dog.until = t + 0.9 + Math.random() * 1.1;
+  } else if (roll < 0.44) {
     dog.doing = "trot";
     // Homeward, and how insistently depends on how far off it is. A long way
     // out it always heads back and at a fair clip, which is what disperses a
@@ -397,9 +473,15 @@ export function pickAction(dog: PackPup, t: number): void {
     // anything faster crosses it before you've registered which way it went.
     dog.vy = (Math.random() - 0.5) * 4;
     dog.until = t + 0.7 + Math.random() * 2.2;
-  } else if (roll < 0.78) {
+  } else if (roll < 0.70) {
     dog.doing = "sit";
     dog.until = t + 1.4 + Math.random() * 3.4;
+  } else if (roll < 0.86) {
+    // Flopped, and for a good while. A puppy that lies down for one second is
+    // a puppy that changed its mind; the pose only reads as *settled* if it
+    // outlasts a couple of the walks going on around it.
+    dog.doing = "flop";
+    dog.until = t + 4 + Math.random() * 7;
   } else {
     dog.doing = "stand";
     dog.until = t + 0.6 + Math.random() * 1.8;
@@ -1283,6 +1365,7 @@ export class MillScene {
   private shown = -1;
   private shownLayout = yardLayout(0);
   private pack: PackPup[] = [];
+  private ball: Ball = { x: 80, y: 0, tx: 80, ty: 0, from: 0, to: 0, chaser: null };
   private bundles: Bundle[] = [];
   /** The yard crew, moving the pile into and out of what it paid for. */
   private porters: Porter[] = [];
@@ -1343,6 +1426,7 @@ export class MillScene {
     this.bundles = [];
     this.porters = [];
     this.pack = [];
+    this.ball.chaser = null;
     this.hauls = [];
     this.lumps = [];
     this.baskets = [];
@@ -1940,6 +2024,7 @@ export class MillScene {
     // behind the crate stacks it was pouring the pup out somewhere you couldn't see.
     if (this.troughBox) this.drawSpout(this.troughBox);
     this.stepPack(this.dt, this.clock);
+    this.stepBall(this.clock);
     this.drawPorters(now);
     // After the hoard: the pipeline runs down the near side of the yard, so it
     // passes in front of the crate stacks rather than being swallowed by them.
@@ -2284,9 +2369,9 @@ export class MillScene {
     // that the pile walks about, the worn ground has to go where the traffic
     // does, which is the whole width of the yard.
     const back = this.packBack();
-    ctx.fillStyle = "#a6a195";
+    ctx.fillStyle = "#cdc4ad";
     ctx.fillRect(0, back - 2, SCENE_W, this.sh - back + 2);
-    ctx.fillStyle = "#bcb7a9";
+    ctx.fillStyle = "#ded5be";
     ctx.fillRect(0, back + 2, SCENE_W, this.sh - back - 2);
     // The drain, down the middle of the apron. One dark line with a pale one
     // under it is all a channel needs, and it's the only thing in the yard that
@@ -3541,9 +3626,38 @@ export class MillScene {
   private drawFence(yardY: number): void {
     const ctx = this.ctx;
     const fence = artCanvas(FENCE);
+    const top = yardY - fence.h + 1;
     for (let x = 0; x < SCENE_W; x += fence.w) {
-      ctx.drawImage(fence.canvas, x, yardY - fence.h + 1);
+      ctx.drawImage(fence.canvas, x, top);
     }
+
+    // Bunting. Somebody climbed up and tied this on, which is a fact about the
+    // people running the place and the cheapest one the scene can state.
+    //
+    // Drawn rather than blitted per flag: it's a string with a sag in it, and
+    // the sag is the whole difference between bunting and a row of triangles.
+    // Two cosines an octave apart keep the dip from repeating on the tile.
+    const flag = artCanvas(FLAG);
+    ctx.fillStyle = rgba(INK, 0.55);
+    for (let x = 0; x < SCENE_W; x++) {
+      ctx.fillRect(x, top - 5 + this.sag(x), 1, 1);
+    }
+    for (let i = 0; i * FLAG_STEP < SCENE_W; i++) {
+      const x = i * FLAG_STEP;
+      ctx.fillStyle = BUNTING[i % BUNTING.length]!;
+      const y = top - 4 + this.sag(x);
+      for (let r = 0; r < flag.h; r++) {
+        const row = FLAG.rows[r]!;
+        for (let c = 0; c < row.length; c++) {
+          if (row[c] === "f") ctx.fillRect(x + c, y + r, 1, 1);
+        }
+      }
+    }
+  }
+
+  /** How far the bunting dips at `x`. Small: it's a string, not a washing line. */
+  private sag(x: number): number {
+    return Math.round(1.5 + 1.5 * Math.cos((x / SCENE_W) * Math.PI * 5.6));
   }
 
   // --- The hoard -----------------------------------------------------------
@@ -3609,9 +3723,17 @@ export class MillScene {
     return this.station(prop.row);
   }
 
-  /** The back of the yard the pack roams: level with the deepest thing in it. */
+  /**
+   * The back of the yard the pack roams: right up under the fence.
+   *
+   * The props only use the back four stations, which left a clear band of
+   * apron between the fence and the deepest dog — the picture had a stripe of
+   * nothing across it at exactly the height the eye lands. Depth is the only
+   * room this yard has to spare, it can't get any wider, and every pixel of it
+   * is one more row of dogs that isn't standing on the row in front.
+   */
   private packBack(): number {
-    return this.station(3) - 1;
+    return this.yardTop() + 5;
   }
 
   /**
@@ -3798,7 +3920,24 @@ export class MillScene {
       if (stage > layout.stage && !run) continue;
       queue.push({ y: this.propFoot(prop), go: () => this.drawProp(prop, run, now) });
     }
+    // The bowls stand in the yard forever, so they go in the same depth sort as
+    // everything else and dogs walk in front of and behind them.
+    const back = this.packBack();
+    const front = this.packFront();
+    for (const [i, at] of BOWLS.entries()) {
+      const art = i % 2 === 0 ? BOWL : BOWL_RED;
+      const sprite = artCanvas(art);
+      const y = Math.round(back + (front - back) * at.d);
+      queue.push({
+        y,
+        go: () => {
+          this.propShadow(at.x, y, sprite.w);
+          this.ctx.drawImage(sprite.canvas, at.x, y - sprite.h);
+        },
+      });
+    }
     for (const dog of this.pack) queue.push({ y: dog.y, go: () => this.drawPup(dog) });
+    queue.push({ y: this.ball.y, go: () => this.drawBall() });
     queue.sort((a, b) => a.y - b.y);
     for (const item of queue) item.go();
   }
@@ -3855,7 +3994,7 @@ export class MillScene {
     const kept: PackPup[] = [];
     for (const dog of this.pack) {
       if (t >= dog.until) pickAction(dog, t);
-      if (dog.doing === "trot") {
+      if (dog.doing === "trot" || dog.doing === "zoom") {
         dog.x += dog.vx * dt;
         dog.y += dog.vy * dt;
         dog.walked += Math.abs(dog.vx) * dt;
@@ -3922,6 +4061,83 @@ export class MillScene {
   }
 
   /**
+   * The ball, and whoever is currently interested in it.
+   *
+   * The chase is the whole feature and it's three rules: if nobody's on it,
+   * the nearest dog within reach takes it on; a dog that has it trots at it
+   * regardless of where home is; and when it gets there it knocks it somewhere
+   * else and loses interest. That produces a ball that crosses the yard all
+   * day with a different dog behind it each time, off about fifteen lines.
+   */
+  private stepBall(t: number): void {
+    const back = this.packBack();
+    const front = this.packFront();
+    if (this.ball.to === 0) {
+      this.ball.y = this.ball.ty = Math.round((back + front) / 2);
+      this.ball.to = t;
+    }
+
+    // In flight: a straight line with a hop in it, because a ball that slides
+    // along the ground reads as being dragged.
+    if (t < this.ball.to) return;
+    this.ball.x = this.ball.tx;
+    this.ball.y = this.ball.ty;
+
+    const chaser = this.ball.chaser;
+    if (chaser && this.pack.includes(chaser) && !chaser.leaving) {
+      chaser.doing = "trot";
+      chaser.until = t + 0.4;
+      const dx = this.ball.x - chaser.x;
+      chaser.vx = Math.sign(dx || 1) * 26;
+      chaser.vy = Math.sign(this.ball.y - chaser.y) * 6;
+      if (Math.abs(dx) < 6 && Math.abs(this.ball.y - chaser.y) < 4) {
+        // Got it. Knock it somewhere else and go back to being a dog.
+        this.ball.tx = PACK_LEFT + 6 + Math.random() * (PACK_RIGHT - PACK_LEFT - 12);
+        this.ball.ty = back + Math.random() * Math.max(1, front - back);
+        this.ball.from = t;
+        this.ball.to = t + 0.5 + Math.random() * 0.3;
+        this.ball.chaser = null;
+        chaser.until = t;
+      }
+      return;
+    }
+
+    this.ball.chaser = null;
+    // Nobody on it. Whoever's nearest and not already busy leaving takes it on.
+    let best: PackPup | null = null;
+    let near = 46;
+    for (const dog of this.pack) {
+      if (dog.leaving) continue;
+      const d = Math.abs(dog.x - this.ball.x) + Math.abs(dog.y - this.ball.y) * 2;
+      if (d < near) {
+        near = d;
+        best = dog;
+      }
+    }
+    this.ball.chaser = best;
+  }
+
+  private drawBall(): void {
+    const ctx = this.ctx;
+    const sprite = artCanvas(BALL);
+    const t = this.clock;
+    let x = this.ball.x;
+    let y = this.ball.y;
+    let hop = 0;
+    if (t < this.ball.to && this.ball.to > this.ball.from) {
+      const f = (t - this.ball.from) / (this.ball.to - this.ball.from);
+      x = this.ball.x + (this.ball.tx - this.ball.x) * f;
+      y = this.ball.y + (this.ball.ty - this.ball.y) * f;
+      hop = Math.round(Math.sin(f * Math.PI) * 7);
+    }
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = INK;
+    ctx.fillRect(Math.round(x), Math.round(y) - 1, sprite.w, 1);
+    ctx.globalAlpha = 1;
+    ctx.drawImage(sprite.canvas, Math.round(x), Math.round(y) - sprite.h - hop);
+  }
+
+  /**
    * One puppy, and the shadow that stops it floating.
    *
    * The frame comes off `walked` rather than the clock, so a dog that's stopped
@@ -3932,7 +4148,15 @@ export class MillScene {
   private drawPup(dog: PackPup): void {
     const ctx = this.ctx;
     const step = Math.floor(dog.walked / PACK_STRIDE) % 2;
-    const pose = dog.doing === "sit" ? 2 : step;
+    // Sitting alternates the tail on the clock rather than on distance, for the
+    // obvious reason that a sitting dog isn't covering any. `x` stands in for a
+    // per-dog phase — it's constant while sat, and free.
+    const pose =
+      dog.doing === "sit"
+        ? 2 + (Math.floor(this.clock * 2.6 + dog.x) % 2)
+        : dog.doing === "flop"
+          ? 4
+          : step;
     const sprite = artCanvas(PACK_POSES[dog.coat]![dog.vx < 0 ? 1 : 0]![pose]!);
     const x = Math.round(dog.x);
     const y = Math.round(dog.y);
@@ -3940,7 +4164,14 @@ export class MillScene {
     ctx.fillStyle = INK;
     ctx.fillRect(x + 1, y - 1, sprite.w - 2, 1);
     ctx.globalAlpha = 1;
-    const bob = dog.doing === "trot" && step === 1 ? 1 : 0;
+    // A pixel of lift on the off step at a walk, and a proper bounce at a
+    // sprint — a zooming dog that stays pinned to the floor just looks fast.
+    const bob =
+      dog.doing === "zoom"
+        ? Math.round(Math.abs(Math.sin(dog.walked / 7)) * 3)
+        : dog.doing === "trot" && step === 1
+          ? 1
+          : 0;
     ctx.drawImage(sprite.canvas, x, y - sprite.h - bob);
   }
 
@@ -4250,10 +4481,18 @@ export class MillScene {
     });
   }
 
-  /** What your own whistling turns up: out of the bedding, held a beat, gone. */
+  /**
+   * What your own whistling turns up: a puppy, held a beat, and a heart.
+   *
+   * The heart is the only part of this scene that isn't a thing in the world —
+   * there is no heart-shaped object on a mill — and it earns the exception by
+   * being the only feedback the click has. Everything else you do here shows up
+   * as a number moving; whistling a dog over should feel like something.
+   */
   private drawWhistled(now: number): void {
     const ctx = this.ctx;
     const sprite = artCanvas(PUPPY_SPRITE);
+    const heart = artCanvas(HEART);
     this.whistled = this.whistled.filter((d) => {
       const age = now - d.born;
       if (age > WHISTLED_MS) return false;
@@ -4261,6 +4500,17 @@ export class MillScene {
       const lift = Math.round(5 * Math.min(1, p * 6));
       ctx.globalAlpha = p > 0.6 ? Math.max(0, 1 - (p - 0.6) / 0.4) : 1;
       ctx.drawImage(sprite.canvas, d.x, d.y - sprite.h - lift);
+      // Rises faster than the puppy and drifts, so the two don't read as one
+      // object. Held back a beat as well: the dog arrives, and *then* it's
+      // pleased about it.
+      if (p > 0.15) {
+        ctx.globalAlpha *= 0.9;
+        ctx.drawImage(
+          heart.canvas,
+          d.x + 4 + Math.round(Math.sin(p * 6) * 1.5),
+          d.y - sprite.h - 5 - Math.round(p * 12),
+        );
+      }
       ctx.globalAlpha = 1;
       return true;
     });

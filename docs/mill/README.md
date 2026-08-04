@@ -54,10 +54,18 @@ npm test
   **The hoard is a crowd, not a pile.** It was a heap for one afternoon — sixty
   sprites stacked into a pyramid, which is the right shape for potatoes and a
   pile of bodies when it isn't. So every puppy you're holding is out on the
-  concrete instead, trotting, sitting and getting under things, and the yard
-  builds out around them: a basket arrives, then a crate, a wagon, a kennel,
-  eventually a sorting tower over the fence line. You don't read the yard, you
-  recognise it. After the Convergence you're
+  concrete instead: trotting, sitting with its tail going, flat out asleep,
+  chasing the one ball round the yard, and about one in thirty deciding for no
+  reason to sprint the length of the place. The yard builds out around them —
+  a basket, then a crate, a wagon, a kennel, eventually a sorting tower over
+  the fence line. You don't read the yard, you recognise it.
+
+  The puppies are drawn head-on, and `art.ts` explains why at length because
+  the side view failed twice. A side-on dog at eleven pixels has one ear on top
+  of its head, a muzzle out the front and two visible legs — a comb, a beak and
+  a pair of scaly feet. Head-on puts both ears where you can see them, and two
+  triangles flaring off a round skull isn't any other animal. Only the sleeping
+  pose goes back to the side, where there's no upright leg left to misread. After the Convergence you're
   standing in a second scene (`insideScene.ts`), which is a **descent**: you're
   cutting down through the nest and the picture is the cutaway, the hem at the
   top and your pack loose in the sump at the bottom. The eight inside rungs sit in

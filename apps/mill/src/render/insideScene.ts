@@ -2099,7 +2099,7 @@ export class InsideScene {
 
     for (const dog of [...this.pack].sort((a, b) => a.y - b.y)) {
       const step = Math.floor(dog.walked / PACK_STRIDE) % 2;
-      const sprite = artCanvas(PACK_POSES[dog.coat]![dog.vx < 0 ? 1 : 0]![dog.doing === "sit" ? 2 : step]!);
+      const sprite = artCanvas(PACK_POSES[dog.coat]![dog.vx < 0 ? 1 : 0]![dog.doing === "sit" ? 2 + (Math.floor(this.clock * 2.6 + dog.x) % 2) : dog.doing === "flop" ? 4 : step]!);
       const x = Math.round(dog.x);
       const y = Math.round(dog.y);
       ctx.globalAlpha = 0.2;

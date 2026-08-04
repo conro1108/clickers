@@ -228,25 +228,34 @@ export const BARN: Art = {
   palette: { k: K, r: "#b5503c", w: "#f2e3c8" },
 };
 
+/**
+ * The one tree, and it is a lollipop on purpose.
+ *
+ * A realistic canopy at sixteen pixels is a green smudge with a stick under it.
+ * Three overlapping rounds with blossom on them is legible, cheerful and about
+ * as far from a windbreak as a tree gets — which is the point, because the last
+ * thing this side of the picture needs is another reminder that the place is a
+ * working yard.
+ */
 export const TREE: Art = {
   rows: [
-    ".....kkkkk......",
-    "...kkgggggkk....",
-    "..kggglgggggk...",
-    ".kgglllggggggk..",
-    ".kglllllgglggk..",
-    "kggllllggglllgk.",
-    "kglllllggggllgk.",
-    "kgglllgggggggk..",
-    ".kggggggglggk...",
-    "..kkgggggggk....",
-    "....kkgggkk.....",
-    "......ktbk......",
-    "......ktbk......",
+    "....kkkkkk......",
+    "..kkgglgggkk....",
+    ".kgglllggggk....",
+    "kglllfgglggggk..",
+    "kglllggglllgggk.",
+    "kgglgggfgglllgk.",
+    ".kggggggggglgk..",
+    "kkgglfggggggkk..",
+    "kglgggggglggk...",
+    "kgglggggfggk....",
+    ".kkggglggkk.....",
+    "...kkgggkk......",
+    "......ktb.......",
+    ".....kttb.......",
     ".....kttbk......",
-    ".....ktttbk.....",
   ],
-  palette: { k: K, g: "#4e8a3c", l: "#74b356", t: "#7a5230", b: "#5c3d22" },
+  palette: { k: K, g: "#5fa34a", l: "#8cc76a", t: "#8a6242", b: "#68472c", f: "#f7d3e2" },
 };
 
 export const CLOUD: Art = {
@@ -345,28 +354,33 @@ export const FLOWERS: Art = {
 /**
  * One chihuahua sitting in its straw. The pen tier is drawn as rows of these.
  *
- * Side on and sitting, which matters more than it sounds: the pens are drawn as
- * a *row*, forty of them along a rail, and forty copies of a front-facing blob
- * came out as a tray of pastries. Facing along the row gives every one of them
- * a nose and a tail, and a row of noses all pointing the same way reads as
- * animals in a line.
+ * Head-on and drawn to the same rules as the pack, for the same reason: at this
+ * size the ears are the animal. Seven pixels across is barely enough for two of
+ * them and a pair of eyes, and it is exactly enough — a row of forty faces
+ * looking out of their pens is unmistakable, where a row of forty profiles was
+ * a tray of pastries.
+ *
+ * It pays off twice, because `growthStages` slices these from the bottom up. So
+ * a pen you've just bought is a muzzle and two eyes in the straw, then a whole
+ * head, and the ears are the last thing to arrive — which is both a legible
+ * progression and roughly the order it happens in.
  *
  * Note what the letters mean, because `growthStages` and `scruffy` both key off
- * them: `g` is the fawn of the coat, `l` the pale chest and front, `s` the eye
- * and `d` the straw it's sitting on. Anything that recolours a pen recolours
- * those and nothing else, which is why an upgraded pen still grows through the
- * same cycle in its own silhouette.
+ * them: `g` is the fawn of the coat, `l` the muzzle, `s` the eyes and `d` the
+ * straw. Anything that recolours a pen recolours those and nothing else, which
+ * is why an upgraded pen still grows through the same cycle in its own
+ * silhouette.
  */
 export const PEN_PUP: Art = {
   rows: [
-    ".....gg",
-    "g...ggg",
-    ".ggggsg",
-    ".gglllg",
-    ".ggllg.",
+    "g.....g",
+    "ggg.ggg",
+    ".ggggg.",
+    "gsgggsg",
+    ".glllg.",
     "ddddddd",
   ],
-  palette: { g: "#c98b4b", l: "#e2b077", s: "#402e3a", d: "#c9a86a" },
+  palette: { g: "#c98b4b", l: "#f4e6cc", s: "#402e3a", d: "#c9a86a" },
 };
 
 const SCRUFFY = new Map<Art, Art>();
@@ -513,80 +527,103 @@ export const PUPPY_SPRITE: Art = {
 };
 
 /**
- * The pack — one puppy, three poses, side on and facing right.
+ * The pack — one puppy, four poses, seen head-on.
  *
- * This is the sprite the yard is made of, and it exists because the yard used
- * to be a *heap*: sixty-five copies of a curled lump stacked into a pyramid.
- * That reads as one thing when the thing is potatoes and as something else
- * entirely when it's dogs, and there is no amount of palette work that fixes
- * a pile of bodies. So the hoard stopped being a pile and became a crowd, and
- * a crowd needs a sprite that can stand up, walk and sit down.
+ * This is the sprite the yard is made of, and it went through a side view first
+ * because side views are what you draw when you want something to walk. It was
+ * a mistake, and the failure is worth writing down because it's specific: a
+ * side-on dog at this size has one ear on top of its head, a muzzle pointing
+ * out of the front, and two visible legs. Those are a comb, a beak and a pair
+ * of scaly feet. Sixty of them in a yard is a poultry farm.
  *
- * Ten by nine, which is twice the area of `PUPPY_SPRITE` and the reason both
- * still exist: the small one is for puppies *in transit* — down a chute, off a
- * machine, popped out of the ground by a whistle — where the shape only has to
- * read as cargo. This one has to read as an animal at rest.
+ * Head-on fixes it because it puts the one feature nothing else has where you
+ * can see it: **both ears, enormous, out to the sides.** A chihuahua is ears
+ * first and a dog second, and the silhouette of two triangles flaring off a
+ * round skull isn't any other animal. The muzzle stops being a profile and
+ * becomes a pale blunt patch with a nose in it, which is the other half of it —
+ * nothing with a beak has a muzzle you can see the front of.
  *
- * It grew twice on the first two looks at a full yard, and the reason is worth
- * keeping. A 1px outline is a fixed cost whatever the sprite does, so on a
- * short wide body it ends up being most of the pixels: at eight rows the ink
- * ran clean across the back, the head and the belly, and sixty of them
- * overlapping merged into one dark mass with pale streaks through it.
+ * The cost is that facing no longer reads from the body, so the tail carries
+ * it: out to one side, and `flip` swaps which. That's a weak cue and it's the
+ * right trade. Nobody watching a yard of puppies is tracking which way any one
+ * of them is pointing; they're looking at whether the place is full of dogs.
  *
- * The fix isn't a thinner line, it's a taller dog and a head that doesn't sit
- * flush with the shoulders. Stepping the skull up out of the back breaks the
- * one long horizontal that was doing the damage, and the extra body row means
- * the coat, not the ink, is what you see first.
- *
- * One ear, not two. Side on, the far ear is behind the head, and drawing it
- * anyway put a second spike on the skyline that made every dog look startled.
+ * Proportions are deliberately wrong throughout. The head is over half the
+ * animal, the ears are half the head, the eyes are two by two with a glint, and
+ * the legs are two pixels of stub. Every one of those is the same trick — take
+ * what a puppy has more of than an adult and push it past accuracy — and it's
+ * the whole reason the yard is worth looking at.
  */
-const PUP_BODY = [
-  ".......kk.",
-  "......kplk",
-  "k....kkppk",
-  "kk..kkpppk",
-  ".kkkkkppek",
-  ".kppppppmk",
-  ".kppppppmk",
-  ".kllllllkk",
-  ".kkkkkkkk.",
+const PUP_HEAD = [
+  ".k.......k.",
+  "klk.....klk",
+  "kllk...kllk",
+  "kllkkkkkllk",
+  ".kpppppppk.",
+  "kpkkpppkkpk",
+  "kpwkpppwkpk",
+  "kppmmmmmppk",
+  ".kpmmkmmpk.",
+  "..kkkkkkk..",
 ];
 
-/**
- * Four legs, because two made every dog in the yard a hamster.
- *
- * They're single pixels and they're the one place the outline is skipped: a leg
- * drawn as outline-plus-fill is three pixels wide, which at this scale is a
- * table leg. `d` is the coat's own shadow tone, so they read as legs in shade
- * rather than as a separate object underneath the dog.
- */
+/** Standing, and the same thing mid-stride. Two frames is a trot. */
 const PUP_TROT_ROWS = [
-  [...PUP_BODY, "..d.d.d.d."],
-  [...PUP_BODY, "..dd...dd."],
-];
-
-/** Sat down: the legs go, the haunches come out, the bottom goes flat. */
-const PUP_SIT_ROWS = [
-  ".......kk.",
-  "......kplk",
-  "k....kkppk",
-  "kk..kkpppk",
-  ".kkkkkppek",
-  ".kppppppmk",
-  ".kppppppkk",
-  ".kppllllk.",
-  ".kllllllk.",
-  "..kkkkkk..",
+  [...PUP_HEAD, "k.kpppppk..", "kkkpppppppk", ".klllllllk.", ".kkkkkkkkk.", "..dd...dd.."],
+  [...PUP_HEAD, "k.kpppppk..", "kkkpppppppk", ".klllllllk.", ".kkkkkkkkk.", ".dd.....dd."],
 ];
 
 /**
- * Three coats, so sixty dogs in a yard aren't sixty copies of one dog.
+ * Sat down, with the tail down and up.
  *
- * All three are warm and none of them is dark enough to become a hole in the
- * picture at ten pixels — the yard behind them is gravel, and a chocolate
- * chihuahua on grey shingle is a smudge unless its belly stays pale. Which is
- * why `l` barely moves between the three: the pale underside is what keeps the
+ * A slow alternation between the two is a wag, and a wag is most of what makes
+ * a yard of sitting dogs read as pleased to be there rather than as a yard of
+ * ornaments. It's also the only animation a stationary sprite can have that
+ * doesn't look like it's fidgeting.
+ */
+const PUP_SIT_ROWS = [
+  [...PUP_HEAD, "k.kpppppk..", "kkkpppppppk", ".kpllllllpk", "..kkkkkkk.."],
+  [...PUP_HEAD, "kk.kpppppk.", "k.kpppppppk", ".kpllllllpk", "..kkkkkkk.."],
+];
+
+/**
+ * Flat out on its side, which is what a puppy does most of the time.
+ *
+ * The one pose that goes back to a side view, and the reason is the same reason
+ * the others don't. Head-on is right for an upright dog because it puts both
+ * ears up where they identify the animal; it's useless for a lying one, because
+ * a front-facing sprite with a shorter body doesn't read as *down*, it reads as
+ * a dog that has sunk into the concrete.
+ *
+ * Side-on is safe here where it wasn't standing up, because the two things that
+ * made the standing side view a chicken are both gone: the ear is laid back
+ * along the skull instead of standing on top of it, and there are no upright
+ * legs, just a paw out front. What's left is a long low shape with a face on
+ * one end, which is a sleeping animal and nothing else.
+ *
+ * Eight rows against fifteen, so at a glance it's a different *shape* rather
+ * than a different picture. A yard where a third of them are lying down has a
+ * silhouette that varies; a yard of nothing but upright dogs reads as a display
+ * cabinet however good the sprite is.
+ */
+const PUP_FLOP_ROWS = [
+  "..........kkk.",
+  "...kk....kpppk",
+  "..kllkkkkppppk",
+  ".kpppppppkkppk",
+  "kppppppppwkmmk",
+  "kllllllllllmmk",
+  ".kkkkkkkkkkkk.",
+  "..d...d.......",
+];
+
+/**
+ * Three coats, so a yard full of dogs isn't full of copies of one dog.
+ *
+ * All three are warm and none is dark enough to become a hole in the picture at
+ * eleven pixels — the ground behind them is pale stone, and a chocolate
+ * chihuahua on it is a smudge unless its belly stays light. Which is why `l`
+ * barely moves between the three: the pale underside is what keeps the
  * silhouette legible, and the coat colour is allowed to do the varying.
  */
 const COATS: readonly Record<string, string>[] = [
@@ -605,27 +642,98 @@ function flip(rows: readonly string[]): string[] {
 function pup(rows: readonly string[], coat: number, left: boolean): Art {
   return {
     rows: left ? flip(rows) : [...rows],
-    palette: { k: K, e: K, ...COATS[coat] },
+    // `m` is the muzzle and `w` the glint in the eye: both stay put across the
+    // coats, because the pale of a face is what carries the expression and a
+    // dark dog with a dark muzzle has none.
+    palette: { k: K, w: "#fdf6ea", m: "#f4e6cc", ...COATS[coat] },
   };
 }
 
 /**
  * Every pose the yard can draw, built once at module load.
  *
- * Eighteen `Art` objects rather than eighteen calls to a factory, because
+ * Thirty `Art` objects rather than a factory call per frame, because
  * `artCanvas` caches on object identity — building them per frame would paint
  * a fresh canvas per dog per frame and the yard would cost more than the rest
  * of the scene put together.
  *
- * Indexed `[coat][facing][pose]`, where facing 0 is right and pose 2 is sat.
+ * Indexed `[coat][facing][pose]`: facing 0 is right, poses 0-1 are the trot,
+ * 2-3 the sit with its tail down and up, and 4 the flop.
  */
 export const PACK_POSES: readonly (readonly (readonly Art[])[])[] = COATS.map((_, coat) =>
   [false, true].map((left) => [
     pup(PUP_TROT_ROWS[0]!, coat, left),
     pup(PUP_TROT_ROWS[1]!, coat, left),
-    pup(PUP_SIT_ROWS, coat, left),
+    pup(PUP_SIT_ROWS[0]!, coat, left),
+    pup(PUP_SIT_ROWS[1]!, coat, left),
+    pup(PUP_FLOP_ROWS, coat, left),
   ]),
 );
+
+/**
+ * The yard's small mercies.
+ *
+ * Everything else out here is either an animal or a piece of plant, and a
+ * compound made only of those two things is a compound. These are the props
+ * that say somebody is *fond* of the dogs: bowls that get filled, a ball that
+ * gets thrown, bunting that somebody had to climb up and tie on.
+ *
+ * They're also where the colour lives. The ground went warm stone and the
+ * apron went cream so the fawn of the pack would separate from it, which left
+ * a picture with no saturated anything in it. Four small props in primary-ish
+ * colours fix that far better than tinting the ground would, because they're
+ * scattered — the eye reads them as accents rather than as a palette.
+ */
+export const BOWL: Art = {
+  rows: [
+    ".kkkkkk.",
+    "kbwwwwbk",
+    "kbbwwbbk",
+    ".kbbbbk.",
+    "..kkkk..",
+  ],
+  palette: { k: K, b: "#4f9ec9", w: "#bfe8f4" },
+};
+
+/** The same bowl in the other colour, so a pair of them isn't a mirror. */
+export const BOWL_RED: Art = {
+  rows: BOWL.rows,
+  palette: { k: K, b: "#d9614f", w: "#f6c9b0" },
+};
+
+/** A ball. It is chased. */
+export const BALL: Art = {
+  rows: [
+    ".kkk.",
+    "kbwbk",
+    "kbbbk",
+    ".kkk.",
+  ],
+  palette: { k: K, b: "#e0b23c", w: "#fff0b8" },
+};
+
+/**
+ * One bunting flag. The scene repeats it along the fence in rotating colours,
+ * which is why the palette key for the flag body is set by the caller.
+ */
+export const FLAG: Art = {
+  rows: ["ffff", ".fff", ".ff.", "..f."],
+  palette: { f: "#ffffff" },
+};
+
+/** Four flags' worth of colour, cycled along the run. */
+export const BUNTING = ["#e8697d", "#f2c14e", "#5fb0d8", "#7fc96a"] as const;
+
+/**
+ * A heart, for when you whistle one up.
+ *
+ * Five by four and no outline, because at this size an outlined heart is a
+ * dark blob with a pink rim. The shape only survives as solid colour.
+ */
+export const HEART: Art = {
+  rows: [".h.h.", "hhhhh", ".hhh.", "..h.."],
+  palette: { h: "#f2718c" },
+};
 
 export const BASKET: Art = {
   rows: [
@@ -1331,13 +1439,14 @@ function repaint(art: Art, palette: Record<string, string>): Art {
 }
 
 /** Straw Bedding: a bigger dog, and twice as much under it. */
+/** Straw Bedding: a bigger dog, and twice as much under it. */
 const PEN_PUP_2: Art = {
   rows: [
-    "......gg",
-    "g....ggg",
-    ".gggggsg",
-    ".gggllgg",
-    ".gglllg.",
+    "g......g",
+    "ggg..ggg",
+    ".gggggg.",
+    "gsggggsg",
+    ".gllllg.",
     "dddddddd",
     "dddddddd",
   ],
@@ -1345,13 +1454,14 @@ const PEN_PUP_2: Art = {
 };
 
 /** Underfloor Heating: the warm comes up through the straw. */
+/** Underfloor Heating: the warm comes up through the straw. */
 const PEN_PUP_3: Art = {
   rows: [
-    "......gg",
-    "g....ggg",
-    ".gggggsg",
-    ".gggllgg",
-    ".gglllg.",
+    "g......g",
+    "ggg..ggg",
+    ".gggggg.",
+    "gsggggsg",
+    ".gllllg.",
     "dhdhdhdh",
     "dddddddd",
     "dddddddd",
@@ -1572,14 +1682,18 @@ const ZEPPELIN_3: Art = {
  * Show Lineage: it is twice the dog, it is sitting on twice the straw, and it
  * is wearing the rosette. The only fourth mark in the game that is a brag.
  */
+/**
+ * Show Lineage: twice the dog, twice the straw, and it is wearing the rosette.
+ * The only fourth mark in the game that is a brag.
+ */
 const PEN_PUP_4: Art = {
   rows: [
-    "........gg",
-    "g......ggg",
-    "gg....gggg",
-    ".gggggglsg",
-    ".ggglllggg",
-    ".ggrllllg.",
+    "g........g",
+    "ggg....ggg",
+    ".gggggggg.",
+    ".gsggggsg.",
+    ".gllllllg.",
+    "..grrgggg.",
     "dddddddddd",
     "dddddddddd",
   ],
