@@ -124,7 +124,7 @@ paths.
   necessarily the skin.
   - **Answer: puppies.** Milling has a built-in physical world (bedding,
     weather, pests, storage) that production/sabotage/defense upgrades can
-    hang off naturally — fences, GMO seed, barns, storage on the
+    hang off naturally — fences, GMO seed, groomers, storage on the
     production side; blight, moles, ruined bedding on the sabotage side —
     instead of needing an invented justification the way an abstract
     "factory" would.

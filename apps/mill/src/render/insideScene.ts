@@ -1,82 +1,49 @@
 /**
- * The inside of the puppy, drawn as a descent.
+ * The inside of the nest, drawn as a descent.
  *
  * A second scene, not a variant of the first. `millScene.ts` is a homestead:
- * sky, hills, a field of pup, a fence, a yard. None of that survives the
- * Convergence except the yard, and reskinning a field of puppy plants in ochre
- * would have said "the same mill, at sunset" — which is the one thing the fold
- * must not read as.
+ * sky, hills, a yard of pens, a fence, a hoard. None of that survives the
+ * Convergence except the hoard, and reskinning a yard of pens in cream would
+ * have said "the same mill, at dusk" — which is the one thing the fold must not
+ * read as.
  *
  * The two scenes share the buffer conventions and nothing else. Same width,
  * same rule: every blit is integer-aligned and unscaled, animation is
  * translation only. At this size a fractional transform resamples the art off
  * the pixel grid and 1px outlines double or vanish.
  *
- * ---
- *
- * ## What went wrong the first time, because it will be tempting again
- *
- * The first inside was a room: a ceiling band being ploughed upside down, a far
- * wall with doors cut in it, a starch plain underfoot, the yard at the front.
- * Five horizontal bands with hard rules between them. It was wrong in five ways
- * and they were all the same way — **it had no depth model.**
- *
- *  1. **Five stripes is a cross-section diagram, not a place.** The outside mill
- *     is sky → hills → field → fence → yard, which is a perspective the eye
- *     already knows, so the bands read as *distance* without being told. Roof /
- *     hollow / wall / floor / yard is a list of surfaces, and the only thing
- *     separating them was a 1px line.
- *  2. **Every colour in the file was the same hue.** Ochre at 30-40° top to
- *     bottom. Outside, blue → green → brown separates the bands before any line
- *     has to; inside, nothing did, which is exactly why it read as strata. On an
- *     empty mill the floor and the yard were the same colour with a rule between
- *     them and you could not tell where the room stopped.
- *  3. **The vessel network was a wiring diagram.** Every tier got its own branch,
- *     routed with right-angle bends, in a pale pink with no shadow and no ground
- *     contact, crossing everything else in the picture. The outside keeps the
- *     same promise — you can watch a puppy reach the pile — with *one* machine
- *     on *one* edge.
- *  4. **Nothing was a familiar noun.** Starch Seam, Phloem Vein, Periderm Gate.
- *     When art has to draw an abstraction it draws an abstract shape, which is
- *     how five Periderm Gates ended up as five identical white rectangles in a
- *     row, like paintings hung in a gallery.
- *  5. **Progression was a taxonomy.** Each tier pinned to a band height, so
- *     buying more meant denser overlap at the same scale rather than the place
- *     growing.
- *
- * The founding instinct — "a second scene, not a variant" — was right about the
- * *nouns* and wrong about the *grammar*. This keeps every noun new and takes the
- * grammar back: a spatial model your eye already has, colour doing the depth
- * work, one transport spine, and progression that builds the place out.
- *
  * ## The shaft
  *
- * You are cutting down through a puppy, and the picture is the cutaway. Top of
- * the buffer is the lid you came in through; bottom is the sump you have to
- * stand in. Between them are the strata you've opened, in order, **shallow at
- * the top and deep at the bottom** — which is the one arrangement where "further
- * down the shop" and "further down the screen" are the same direction.
+ * The Ur-Chihuahua burrowed, and you were standing on what it burrowed into.
+ * So you are cutting down through a mound of blanket and the picture is the
+ * cutaway. Top of the buffer is the hem you came in under; bottom is the sump
+ * you have to stand in. Between them are the strata you've opened, in order,
+ * **shallow at the top and deep at the bottom** — which is the one arrangement
+ * where "further down the shop" and "further down the screen" are the same
+ * direction.
  *
- * Four zones of two rungs each (`ZONES`), and a zone only exists once you own
- * something that works it. So a mill one purchase into the inside is a lid, one
- * thin stratum, and a sump; a finished one is four strata deep, each with its own
- * material and its own light. Buying into a new zone breaks the floor open —
- * three more reveals across an endgame that previously had none after the fold.
+ * Four strata of two rungs each (`ZONES`), and a stratum only exists once you
+ * own something that works it. So a mill one purchase into the nest is a hem,
+ * one thin layer and a sump; a finished one is four strata deep, each with its
+ * own material and its own light. Buying into a new stratum breaks the floor
+ * open — three more reveals across an endgame that previously had none after
+ * the fold.
  *
- * **Colour is the depth model.** Pale gold at the lid, ochre through the cortex,
- * then the picture leaves the puppy palette entirely: the vascular seam is
- * magenta-shadowed and the core is nearly black-red. That vertical run is doing
- * the job aerial perspective does outside, and it's the single biggest reason
- * this reads as somewhere rather than as a stack of bands.
+ * **Colour is the depth model.** Pale fleece at the hem, cream knit under it,
+ * then the picture leaves the fawn palette entirely: the seams are rose-
+ * shadowed and the warm at the middle is nearly black. That vertical run is
+ * doing the job aerial perspective does outside, and it's the single biggest
+ * reason this reads as somewhere rather than as a stack of bands. Anything that
+ * keeps all four strata inside one hue family puts the bands straight back.
  *
  * **The bore is the spine.** One open channel down the left, where the outside
- * mill's sorter runs, widening as you own more. Everything you cut rolls along
- * its own ledge to the lip, tips in, falls the whole height of the picture, and
- * slides into the mound. That's the entire logistics layer: no vessels, no
- * porters, no branch per tier. Gravity is the conveyor, one continuous motion
- * carries the eye from the deepest thing you own to the pile you're spending, and
- * the pup is the only thing crossing the strata — which is what makes the strata
- * legible instead of crowded.
+ * mill's sorter runs, widening as you own more. Everything you gather rolls
+ * along its own ledge to the lip, tips in, falls the whole height of the
+ * picture, and slides into the mound. That's the entire logistics layer: no
+ * vessels, no porters, no branch per tier. Gravity is the conveyor, one
+ * continuous motion carries the eye from the deepest thing you own to the pile
+ * you're spending, and the puppies are the only thing crossing the strata —
+ * which is what makes the strata legible instead of crowded.
  *
  * The mound stays in the bottom-left corner it occupies outside, because it is
  * the same puppies and the fold doesn't take your money off you.
@@ -133,10 +100,10 @@ export interface Zone {
   /** Top of the band, catching light off the cut above it. */
   lit: string;
   /** The body of the material. */
-  flesh: string;
+  weave: string;
   /** The bottom of the band, in its own shadow. */
   deep: string;
-  /** The one colour in the stratum that isn't the material — sprouts, sap, embers. */
+  /** The one colour in the stratum that isn't the material — threads, lint, embers. */
   accent: string;
   /**
    * Share of the shaft's height, before normalising over however many zones are
@@ -150,51 +117,52 @@ export interface Zone {
 /**
  * Four strata, and the colour run that is the whole point.
  *
- * `hollow` and `cortex` are puppy colours. `seam` and `core` deliberately are
- * not: the moment the picture stops being ochre is the moment it stops reading
- * as a stack of bands, and it should happen at the depth where the fiction says
- * you've reached something that is more organ than food. Anything that keeps all
- * four zones inside one hue family puts the original bug straight back.
+ * `hem` and `fleece` are the blanket's own colours, cream over tan. `seam` and
+ * `warm` deliberately are not: the moment the picture stops being cream is the
+ * moment it stops reading as a stack of bands, and it should happen at the
+ * depth where the fiction says you've got past bedding and into whatever the
+ * nest is built around.
  */
 export const ZONES: readonly Zone[] = [
   {
-    id: "hollow",
+    id: "hem",
     tiers: ["hem", "linthand"],
-    lit: "#e8cf9a",
-    flesh: "#d0b078",
-    deep: "#a8814a",
-    accent: "#a8f07a",
+    lit: "#f6efe4",
+    weave: "#e6dccb",
+    deep: "#c2b6a2",
+    accent: "#f0a8c0",
     weight: 1,
   },
   {
-    id: "cortex",
+    id: "fleece",
     tiers: ["fleece", "well"],
-    lit: "#cfa068",
-    flesh: "#b07f4a",
-    deep: "#7d5330",
-    accent: "#fff4e0",
+    lit: "#e4d3ae",
+    weave: "#cdb488",
+    deep: "#a48a5e",
+    accent: "#fffaf0",
     weight: 1.15,
   },
   {
     id: "seam",
     tiers: ["seam", "chorus"],
-    lit: "#a8636a",
-    flesh: "#84454f",
-    deep: "#4e2833",
-    accent: "#e0a8dc",
+    lit: "#a06a62",
+    weave: "#7a4a48",
+    deep: "#48282a",
+    accent: "#e8b0a0",
     weight: 1.3,
   },
   {
-    id: "core",
+    id: "warm",
     tiers: ["heart", "second"],
-    // Nearly black, and a long way below the seam's darkest value. Drawn any
-    // closer and the bottom two strata merge into one maroon mass — which is the
-    // same "everything is one hue" bug the old scene had, just relocated.
-    lit: "#4a1f31",
-    flesh: "#301324",
-    deep: "#180a14",
+    // Nearly black, and a long way below the seams' darkest value. Drawn any
+    // closer and the bottom two strata merge into one maroon mass — which is
+    // the "everything is one hue" failure this palette exists to avoid, just
+    // relocated.
+    lit: "#3a1c1c",
+    weave: "#241010",
+    deep: "#140808",
     accent: "#ffb454",
-    weight: 1.5,
+  weight: 1.5,
   },
 ];
 
@@ -211,8 +179,8 @@ export function zoneOf(id: InsideId): number {
 /**
  * How many strata are open, which is the deepest rung you own plus one.
  *
- * A prefix rather than a set: you cannot own a Hollow Heart without having cut
- * through the cortex to reach it, so a mill that skipped a rung still gets the
+ * A prefix rather than a set: you cannot own a Warm Heart without having cut
+ * through the fleece to reach it, so a mill that skipped a rung still gets the
  * band it must have passed through. Zero only for a mill that owns nothing
  * inside at all, which is what the first moment after the fold looks like.
  */
@@ -240,7 +208,7 @@ const PRIME_GLOW: Record<InsideId, string> = {
 // The place
 // ---------------------------------------------------------------------------
 
-/** The lid: the underside of what closed over you, still the brightest thing. */
+/** The hem: the underside of what closed over you, still the brightest thing. */
 const LID_LIT = "#f2e0b4";
 const LID_DEEP = "#c9a05c";
 
@@ -257,7 +225,7 @@ const INK = "#402e3a";
 /**
  * How dark it is down here before anything of yours is lit.
  *
- * There's no time of day inside a puppy — the wall clock has nothing to say
+ * There's no time of day inside a nest — the wall clock has nothing to say
  * about a place with no sky — so this is a constant rather than a phase table.
  * It sits where dusk sat outside: enough that a lit machine reads as the only
  * light source in the picture, not so much that an unlit mill is a black
@@ -265,7 +233,7 @@ const INK = "#402e3a";
  */
 const GLOOM = 0.26;
 
-/** The lid's share of the buffer, clamped so it's a lip and never a ceiling. */
+/** The hem's share of the buffer, clamped so it's a lip and never a ceiling. */
 const LID_MIN = 11;
 const LID_MAX = 20;
 const LID_SHARE = 0.08;
@@ -277,15 +245,15 @@ const SUMP_SHARE = 0.21;
 /** Nothing thinner than this is a stratum you can put a machine on. */
 const BAND_MIN = 15;
 
-/** The lid. */
-export const LID = -1;
+/** The hem. */
+export const HEM = -1;
 /** The sump, at the bottom, with the mound in it. */
 export const SUMP = -2;
 /** Puppy you haven't cut into yet, between the deepest workings and the sump. */
 export const UNWHISTLED = -3;
 
 export interface Band {
-  /** Index into `ZONES`, or one of `LID` / `SUMP` / `UNWHISTLED`. */
+  /** Index into `ZONES`, or one of `HEM` / `SUMP` / `UNWHISTLED`. */
   zone: number;
   top: number;
   bottom: number;
@@ -295,15 +263,15 @@ export interface Band {
  * Where the strata break, given a buffer height and how many are open.
  *
  * **Every zone gets the same share of the shaft whether or not the ones below
- * it are open**, and whatever's left over is solid unworked puppy. That's the
+ * it are open**, and whatever's left over is solid unworked blanket. That's the
  * single most important line in the file's layout and it was wrong first time
  * round: the first pass divided the shaft *among the open zones*, so a mill one
  * purchase into the inside got one stratum stretched over the entire screen —
- * two hundred pixels of flat ochre with a row of sprites along the bottom. The
+ * two hundred pixels of flat cream with a row of sprites along the bottom. The
  * same failure the old scene had with its empty hollow, in a different colour.
  *
- * Sized this way, a new mill is a lid, one thin working, and a great mass of
- * puppy it hasn't touched. Which is the correct read in both directions: there
+ * Sized this way, a new mill is a hem, one thin working, and a great mass of
+ * blanket it hasn't touched. Which is the correct read in both directions: there
  * is obviously a long way down, and every zone you open visibly eats into it
  * until the last one closes the gap and the shaft is worked out top to bottom.
  *
@@ -316,7 +284,7 @@ export function bandsFor(sh: number, openF: number): Band[] {
   const sumpH = Math.max(SUMP_MIN, Math.round(sh * SUMP_SHARE));
   const open = Math.max(0, Math.min(ZONES.length, openF));
   const whole = Math.ceil(open);
-  const bands: Band[] = [{ zone: LID, top: 0, bottom: lidH }];
+  const bands: Band[] = [{ zone: HEM, top: 0, bottom: lidH }];
 
   // Never less than one readable stratum per open zone, however short the buffer.
   const body = Math.max(BAND_MIN * whole, sh - lidH - sumpH);
@@ -379,8 +347,8 @@ export function shownCount(owned: number, cap: number, spread = 2.4): number {
  * times — the descent came out as eight shelves of merchandise, and the fact
  * that the sprites differed didn't matter, because what you read first is the
  * rhythm and the rhythm was identical all the way down. It's the same failure
- * the header blames for five Periderm Gates in a gallery row, wearing better
- * art.
+ * the old inside scene had when it hung five identical white rectangles across
+ * a wall like paintings, wearing better art.
  *
  * So the bench stops being where things *stand* and goes back to being what it
  * is — the walkway the crew use — and each rung does something else with the
@@ -399,7 +367,7 @@ export function shownCount(owned: number, cap: number, spread = 2.4): number {
  *
  * Assigned so that no two rungs you can see at once do the same thing, and so
  * that what each rung does is something its fiction would do: quarries cut into
- * a face, wells go down, a vascular seam hangs off the vessel above it.
+ * a face, wells go down, a stitched seam hangs off the vessel above it.
  */
 type Layout = "bench" | "knot" | "niche" | "sunk" | "hang";
 
@@ -507,7 +475,7 @@ export function flow(n: number): number {
 // Loose things
 // ---------------------------------------------------------------------------
 
-/** Starch dust, drifting up the bore. The ambient motion in a room with no weather. */
+/** Lint dust, drifting up the bore. The ambient motion in a room with no weather. */
 interface Mote {
   x: number;
   y: number;
@@ -528,7 +496,7 @@ interface Whistled {
 
 const WHISTLED_MS = 850;
 
-/** A breath of starch off something that just moved. */
+/** A breath of lint off something that just moved. */
 interface Puff {
   x: number;
   y: number;
@@ -695,7 +663,7 @@ const SLIDE_SPEED = 34;
  * one thing that should carry between the two pictures unchanged is the number
  * you're spending. The build-out around it doesn't carry: kennels and crate stacks are
  * things you put up on a mill, and there's nothing to build them out of down
- * here. What the sump gets instead is the flesh growing storage for you.
+ * here. What the sump gets instead is the blanket growing storage for you.
  */
 const HEAP_BASE = 11;
 const HEAP_COURSES = 10;
@@ -737,13 +705,13 @@ function heapSlots(): { x: number; y: number }[] {
 const HEAP_CROWN_X = HEAP_X + Math.round((HEAP_COURSES - 1) * (HEAP_STEP / 2)) + 3;
 
 /**
- * A cyst: a pale swelling in the flesh that the tuber grows around what you're
- * holding, and the inside's answer to the outside yard's kennels and crate stacks.
+ * A pocket: a fold of blanket that has closed around what you're holding, and
+ * the inside's answer to the outside yard's kennels and crate stacks.
  *
  * One arrives per stage of the same build-out curve the outside yard is read
  * with — so the two yards fill at the same pace and mean the same thing —
- * except that here they're all the same organ getting bigger, which is what a
- * puppy would do about storage.
+ * except that here they're all the same fold getting deeper, which is the only
+ * thing a blanket knows how to do about storage.
  */
 const CYST_SLOTS: { x: number; row: number; w: number }[] = [
   { x: 158, row: 0, w: 9 },
@@ -758,7 +726,7 @@ const CYST_SLOTS: { x: number; row: number; w: number }[] = [
   { x: 62, row: 3, w: 15 },
 ];
 
-/** How many stages of the yard curve go by before another cyst swells up. */
+/** How many stages of the yard curve go by before another pocket swells up. */
 const CYST_EVERY = 3;
 
 /** How long the floor takes to give way when a new stratum opens. */
@@ -846,7 +814,7 @@ export class InsideScene {
     this.sawView = true;
   }
 
-  /** A different tuber entirely: handed down, or ploughed under. */
+  /** A different nest entirely: handed down, or ploughed under. */
   private clearOut(): void {
     this.motes = [];
     this.whistled = [];
@@ -875,7 +843,7 @@ export class InsideScene {
   }
 
   /**
-   * A whistle: a puppy comes up out of the flesh where you put your finger.
+   * A whistle: a puppy comes up out of the blanket where you put your finger.
    *
    * The same verb as outside and deliberately the same feedback — whistling is the
    * one thing you do with your hands in either world, and it would be a strange
@@ -1114,36 +1082,36 @@ export class InsideScene {
   }
 
   /**
-   * The lid: the underside of what closed over you.
+   * The hem: the underside of what closed over you.
    *
    * The one warm, bright thing in the picture, and it's above everything — so
    * the eye enters at the top, where you came in, and travels down the shaft
-   * with the pup. Two wavy vascular lines and nothing else: it's a lip, not a
+   * with the pup. Two wavy stitched lines and nothing else: it's a lip, not a
    * ceiling, and the first draft of this scene proved that giving the roof real
    * estate just costs the half of the screen that has things in it.
    */
-  private drawLid(lid: Band): void {
+  private drawLid(hem: Band): void {
     const ctx = this.ctx;
-    const grad = ctx.createLinearGradient(0, 0, 0, lid.bottom);
+    const grad = ctx.createLinearGradient(0, 0, 0, hem.bottom);
     grad.addColorStop(0, LID_LIT);
     grad.addColorStop(1, LID_DEEP);
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, SCENE_W, lid.bottom);
+    ctx.fillRect(0, 0, SCENE_W, hem.bottom);
 
     const rng = mulberry32(0x11d);
     for (let i = 0; i < 22; i++) {
-      const y = Math.round(rng() * (lid.bottom - 2)) + 1;
+      const y = Math.round(rng() * (hem.bottom - 2)) + 1;
       const x = Math.round(rng() * SCENE_W);
       const w = 3 + Math.round(rng() * 11);
       ctx.fillStyle = rgba(rng() > 0.6 ? "#f7ecd0" : "#b0854a", 0.22);
       ctx.fillRect(x, y, w, 1);
     }
-    // Two vascular seams running the width of it, and eyes sprouting downward
+    // Two stitched seams running the width of it, and eyes hanging downward
     // out of the underside. Carried over from the ceiling the fold used to leave
     // you under: it's the only thing in this scene the player has seen before,
-    // and it's what stops the lid being a blank bar at the top of the screen.
+    // and it's what stops the hem being a blank bar at the top of the screen.
     for (let i = 0; i < 2; i++) {
-      const base = Math.round(lid.bottom * (0.42 + i * 0.3));
+      const base = Math.round(hem.bottom * (0.42 + i * 0.3));
       ctx.fillStyle = rgba("#a8703c", 0.35);
       for (let x = 0; x < SCENE_W; x++) {
         ctx.fillRect(x, base + Math.round(Math.sin(x * 0.09 + i * 2) * 1.6), 1, 1);
@@ -1151,19 +1119,19 @@ export class InsideScene {
     }
     for (let i = 0; i < 4; i++) {
       const x = 14 + Math.round(rng() * (SCENE_W - 28));
-      const y = lid.bottom - 4;
+      const y = hem.bottom - 4;
       ctx.fillStyle = rgba("#8a5a2c", 0.6);
       ctx.fillRect(x, y, 3, 2);
       ctx.fillStyle = rgba("#f2e0b4", 0.5);
       ctx.fillRect(x, y - 1, 3, 1);
-      // Pale stems, not green: a puppy sprouting in the dark etiolates, and the
-      // pale also keeps the one growing thing up there from reading as pup.
+      // Loose threads, hanging. Pale rather than coloured, which keeps the one
+      // moving thing up there from reading as a puppy.
       ctx.fillStyle = rgba("#e6dcc0", 0.55);
       ctx.fillRect(x + 1, y + 2, 1, 2 + Math.round(rng() * 2));
     }
-    // The cut where the lid stops and the puppy starts.
+    // The cut where the hem stops and the blanket starts.
     ctx.fillStyle = INK;
-    ctx.fillRect(0, lid.bottom - 1, SCENE_W, 1);
+    ctx.fillRect(0, hem.bottom - 1, SCENE_W, 1);
   }
 
   /**
@@ -1182,7 +1150,7 @@ export class InsideScene {
 
     const grad = ctx.createLinearGradient(0, band.top, 0, band.bottom);
     grad.addColorStop(0, zone.lit);
-    grad.addColorStop(0.45, zone.flesh);
+    grad.addColorStop(0.45, zone.weave);
     grad.addColorStop(1, zone.deep);
     ctx.fillStyle = grad;
     ctx.fillRect(0, band.top, SCENE_W, h);
@@ -1227,8 +1195,8 @@ export class InsideScene {
       }
     }
 
-    // Whatever this stratum is made of that isn't flesh: sprouts in the hollow,
-    // sap beading in the seam, embers in the core. One accent per zone, moving.
+    // Whatever this stratum is made of that isn't blanket: threads in the hollow,
+    // lint beading in the seam, embers in the core. One accent per zone, moving.
     this.drawAccent(band, t);
 
     // The floor. The one hard line in the band, and it's a cut, so it's earned.
@@ -1247,7 +1215,7 @@ export class InsideScene {
   }
 
   /**
-   * The puppy you haven't cut into yet.
+   * The blanket you haven't cut into yet.
    *
    * Denser and darker than anything you've opened, and deliberately featureless
    * next to the strata: what makes a worked band look worked is having unworked
@@ -1284,7 +1252,7 @@ export class InsideScene {
       ctx.fillStyle = rgba(rng() > 0.55 ? near : "#0e0710", 0.22 + rng() * 0.3);
       ctx.fillRect(x, y, 1 + Math.round(rng() * 3), 1);
     }
-    // Starch nodules: lumps of the pale stuff still locked in the flesh, which
+    // Lint nodules: lumps of the pale stuff still locked in the blanket, which
     // is the one thing down here that says the mass is worth cutting into.
     for (let i = 0; i < Math.round(h / 7); i++) {
       const x = 3 + Math.round(rng() * (SCENE_W - 8));
@@ -1295,7 +1263,7 @@ export class InsideScene {
       ctx.fillStyle = rgba("#e6dcc0", 0.16);
       ctx.fillRect(x + 1, y - 1, Math.max(1, w - 2), 1);
     }
-    // And a few fissures, running off the shaft — the flesh is under its own
+    // And a few fissures, running off the shaft — the blanket is under its own
     // weight down here, which the stulls in the bore are the answer to.
     for (let i = 0; i < Math.round(h / 22) + 1; i++) {
       let x = Math.round(rng() * SCENE_W);
@@ -1337,7 +1305,7 @@ export class InsideScene {
       const y = band.top + 2 + Math.round(rng() * Math.max(1, h - 6));
       const pulse = 0.35 + 0.3 * Math.sin(t * 0.9 + i * 1.9);
       if (band.zone === 0) {
-        // Pale stems: a puppy sprouting in the dark etiolates, and keeping them
+        // Loose threads, pale rather than coloured, and keeping them
         // off green is also what stops the one growing thing down here reading
         // as pup.
         ctx.fillStyle = rgba(mix(zone.accent, "#f7f1dc", 0.55), 0.5);
@@ -1347,7 +1315,7 @@ export class InsideScene {
         ctx.fillStyle = rgba(zone.accent, 0.3);
         ctx.fillRect(x, y, 2, 1);
       } else if (band.zone === 2) {
-        // Sap, beading and running. The colour that says this is an organ.
+        // Lint, catching and drifting. The colour that says this was worn.
         const run = Math.round((t * 6 + i * 13) % Math.max(4, h - 4));
         ctx.fillStyle = rgba(zone.accent, 0.55 * pulse + 0.2);
         ctx.fillRect(x, band.top + 2 + run, 1, 2);
@@ -1507,7 +1475,7 @@ export class InsideScene {
    * through all of them — the same hole, continuous top to bottom, which is the
    * thing that makes four separate bands add up to one place. Its edges catch
    * the light of whatever band they're passing through, so the shaft reads as
-   * going *through* the puppy instead of being painted on it.
+   * going *through* the blanket instead of being painted on it.
    */
   private drawBore(bands: Band[], t: number): void {
     const ctx = this.ctx;
@@ -1528,7 +1496,7 @@ export class InsideScene {
     // the sump at all; the strata are worked sideways off it one at a time.
     for (const band of bands) {
       const h = band.bottom - band.top;
-      if (h <= 0 || band.zone === LID || band.zone === SUMP) continue;
+      if (h <= 0 || band.zone === HEM || band.zone === SUMP) continue;
       const zone = band.zone >= 0 ? ZONES[band.zone]! : null;
       ctx.fillStyle = rgba(zone ? mix(zone.lit, "#ffffff", 0.3) : "#8a6a58", 0.6);
       ctx.fillRect(BORE_X, band.top, 1, h);
@@ -1562,7 +1530,7 @@ export class InsideScene {
    *
    * Dark, and that's a decision rather than an accident of being deepest — the
    * mound is the one thing on the canvas the player is actually spending, and a
-   * pile of warm ochre puppies needs something dark under it to read against.
+   * pile of warm cream puppies needs something dark under it to read against.
    * Outside, the yard gets that from being dirt in shadow.
    */
   private drawSump(sump: Band): void {
@@ -1589,7 +1557,7 @@ export class InsideScene {
     ctx.fillRect(0, sump.top + 1, SCENE_W, 1);
   }
 
-  /** Starch dust, rising up the shaft. It falls up in here. */
+  /** Lint dust, rising up the shaft. It falls up in here. */
   private drawMotes(top: number, floor: number, t: number): void {
     const ctx = this.ctx;
     if (this.motes.length === 0) {
@@ -2054,7 +2022,7 @@ export class InsideScene {
   // --- The sump --------------------------------------------------------------
 
   /**
-   * The hoard: a mound of puppies at the front, with the flesh swelling up
+   * The hoard: a mound of puppies at the front, with the blanket folding up
    * around it into cysts as you get richer.
    *
    * The mound chases the real number rather than snapping to it, which is what
@@ -2087,10 +2055,10 @@ export class InsideScene {
   }
 
   /**
-   * One swelling in the flesh, drawn rather than blitted.
+   * One fold of the blanket, drawn rather than blitted.
    *
-   * A cyst is the one thing in either scene whose size is a *variable* — it's how
-   * much of your hoard the tuber has grown around — so it's built from courses
+   * A pocket is the one thing in either scene whose size is a *variable* — it's how
+   * much of your hoard the nest has grown around — so it's built from courses
    * rather than being ten sprites.
    *
    * It was a plain dome for a long time and it was the least legible object on
@@ -2100,13 +2068,13 @@ export class InsideScene {
    * has to earn it. Three things do that here, and they're the parts to keep:
    *
    *  - **You can see the pup through it.** Puppies packed inside, showing as
-   *    dark rounds under a translucent skin. A container you can see into is a
+   *    dark rounds under a translucent ticking. A container you can see into is a
    *    container. This is the whole fix; the rest is polish.
    *  - **It breathes.** A slow swell on a phase taken from its own slot, so a
    *    bank of them isn't pulsing in lockstep. Nothing else in the sump moves,
    *    and something that never moves reads as scenery.
    *  - **It's lit from the shaft**, like everything else down here, with a wet
-   *    highlight — flesh rather than a UI shape sitting on top of the picture.
+   *    highlight — blanket rather than a UI shape sitting on top of the picture.
    */
   private drawCyst(slot: { x: number; row: number; w: number }, sumpTop: number, i: number): void {
     const ctx = this.ctx;
@@ -2114,12 +2082,12 @@ export class InsideScene {
     const base = sumpTop + 6 + slot.row * 6;
     const w = slot.w + (breathe > 0.6 ? 1 : 0);
     const courses = Math.max(2, Math.round(w / 2.4));
-    const skin = mix(SUMP_SPOIL, "#e6dcc0", 0.4);
+    const ticking = mix(SUMP_SPOIL, "#e6dcc0", 0.4);
 
-    // The skin, opaque. Drawing it translucent over the pup was the obvious way
+    // The ticking, opaque. Drawing it translucent over the pup was the obvious way
     // round and it was wrong: a pale film at 60% over a dark sump comes out grey,
     // and a bank of grey blobs is less legible than the plain domes were. Opaque
-    // skin first keeps the silhouette warm, and the pup goes *on* it — dimmed,
+    // ticking first keeps the silhouette warm, and the pup goes *on* it — dimmed,
     // which reads as "under the surface" without spending the colour.
     for (let c = 0; c < courses; c++) {
       // Narrows faster near the crown, which is what makes it a dome and not a
@@ -2130,7 +2098,7 @@ export class InsideScene {
       const y = base - c;
       ctx.fillStyle = INK;
       ctx.fillRect(slot.x + inset - 1, y, span + 2, 1);
-      ctx.fillStyle = c === courses - 1 ? mix(skin, "#f7f1dc", 0.55) : skin;
+      ctx.fillStyle = c === courses - 1 ? mix(ticking, "#f7f1dc", 0.55) : ticking;
       ctx.fillRect(slot.x + inset, y, span, 1);
     }
 
@@ -2157,7 +2125,7 @@ export class InsideScene {
   }
 
   /**
-   * What the tuber closed around, left where it stands in a strip along the
+   * What the nest closed around, left where it stands in a strip along the
    * front. One strip of dead kit is a thing you notice from across the room;
    * the same units scattered among the working ones is not.
    *
@@ -2186,7 +2154,7 @@ export class InsideScene {
    * Three of these across the endgame, which previously had no beats in it at
    * all after the fold — you bought eight rungs and the picture got denser. The
    * whole effect is a crack down the floor that was the bottom of the workings,
-   * plus a lot of starch coming off it, over the same window `bandsFor` is easing
+   * plus a lot of lint coming off it, over the same window `bandsFor` is easing
    * the new band in through. Cheap on purpose: the fold is the set piece, and
    * this must not try to compete with it.
    */
@@ -2221,7 +2189,7 @@ export class InsideScene {
     this.whistled = this.whistled.filter((d) => now - d.born < WHISTLED_MS);
     for (const d of this.whistled) {
       const age = (now - d.born) / WHISTLED_MS;
-      // Up out of the flesh, hang, and gone.
+      // Up out of the blanket, hang, and gone.
       const lift = Math.round(Math.sin(Math.min(1, age * 1.6) * Math.PI * 0.5) * 5);
       ctx.globalAlpha = age > 0.7 ? 1 - (age - 0.7) / 0.3 : 1;
       ctx.drawImage(puppy.canvas, d.x, d.y - lift);
@@ -2251,7 +2219,7 @@ export class InsideScene {
     const ctx = this.ctx;
     ctx.fillStyle = rgba("#140a10", GLOOM);
     ctx.fillRect(0, top, SCENE_W, this.sh - top);
-    // The lid takes less: it's the closest thing to a source in the picture.
+    // The hem takes less: it's the closest thing to a source in the picture.
     ctx.fillStyle = rgba("#140a10", GLOOM * 0.35);
     ctx.fillRect(0, 0, SCENE_W, top);
     // And the sump is warmed rather than dimmed, because the hoard is the thing

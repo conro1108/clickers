@@ -7,8 +7,12 @@
  * of, and the scenery around both.
  *
  * The one hard rule is the shared outline ink (`K`) — it's what makes a barn, a
- * combine barn and a UI button icon look like they came out of the same
- * box of crayons.
+ * grooming rig and a UI button icon look like they came out of the same box of
+ * crayons.
+ *
+ * Every chihuahua in here is fawn, because fawn survives being four pixels
+ * across. A black-and-tan reads as a hole in the picture at this size, and a
+ * merle reads as noise.
  */
 
 import type { Art } from "./pixel.js";
@@ -16,6 +20,8 @@ import type { Art } from "./pixel.js";
 const K = "#402e3a"; // shared outline ink
 
 // Palettes are per-art and deliberately tiny; these are the recurring members.
+// Fawn: the body, the pale of the chest and muzzle, and the shadow under the
+// ears.
 const PUPPY = { p: "#c98b4b", l: "#e2b077", d: "#95602c" };
 const METAL = { m: "#a8b0b8", s: "#7f8891", g: "#bfe3ef" };
 const WOOD = { w: "#7a5237", v: "#5e3e29" };
@@ -25,42 +31,44 @@ const WOOD = { w: "#7a5237", v: "#5e3e29" };
 // ---------------------------------------------------------------------------
 
 export const ICONS = {
-  // Oblong and tilted, not a disc. The old one was a circle with shading on
-  // it, and a circle of that colour on a button is a biscuit.
+  // Head-on, and it is all ears. A chihuahua in silhouette is two triangles and
+  // an apple, in that order of importance — draw the body instead and at twelve
+  // pixels you have a generic small mammal.
   puppy: {
     rows: [
-      "............",
-      ".....kkkkk..",
-      "...kkllppdk.",
-      "..kllpppppdk",
-      ".kllpdppppdk",
-      ".klppppppddk",
-      "kllppppppdk.",
-      "kppppdpppdk.",
-      "kpppppppdk..",
-      ".kkppppddk..",
-      "...kkkkkk...",
-      "............",
+      ".k........k.",
+      "klk......klk",
+      "kllk....kllk",
+      "kllkkkkkkllk",
+      ".kppppppppk.",
+      "kppkppppkppk",
+      "kpppppppppdk",
+      "kppplwwlpddk",
+      ".kpplwkwlpdk",
+      ".kkpplwwlpk.",
+      "...kkppppk..",
+      ".....kkkk...",
     ],
-    palette: { k: K, ...PUPPY },
+    palette: { k: K, ...PUPPY, w: "#f2e3c8" },
   },
 
-  sprout: {
+  // The Grow tab. A paw, because the thing you are growing has feet.
+  paw: {
     rows: [
-      "......k.....",
-      ".kkk..k..kk.",
-      "kgggk.k.kgk.",
-      "kgggkkkkggk.",
-      ".kggggkggkk.",
-      "...kkgkkk...",
-      ".....g......",
-      ".....g......",
-      ".....g......",
-      "..kkkkkkk...",
-      "..kdddddk...",
-      "...kkkkk....",
+      "............",
+      "..kk....kk..",
+      ".kppk..kppk.",
+      ".kppk..kppk.",
+      "..kk....kk..",
+      "kk........kk",
+      "kppk....kppk",
+      ".kk..kk..kk.",
+      "...kppppk...",
+      "..kpppppppk.",
+      "..kpppppppk.",
+      "...kkkkkk...",
     ],
-    palette: { k: K, g: "#6aa348", d: "#8a5f3f" },
+    palette: { k: K, p: "#c98b4b" },
   },
 
   basket: {
@@ -319,35 +327,48 @@ export const FLOWERS: Art = {
   palette: { g: "#548f3e", r: "#e06a7c", w: "#f6f1dc", p: "#c98add" },
 };
 
-/** A single puppy plant. The pen tier is drawn as rows of these. */
-export const PLANT: Art = {
+/**
+ * One chihuahua sitting in its straw. The pen tier is drawn as rows of these.
+ *
+ * Note what the letters mean, because `growthStages` and `scruffy` both key off
+ * them: `g` is the fawn of the coat, `l` the pale chest, `s` the legs and `d`
+ * the straw it's sitting in. Anything that recolours a pen recolours those four
+ * and nothing else, which is why an upgraded pen still grows through the same
+ * cycle in its own silhouette.
+ */
+export const PEN_PUP: Art = {
   rows: [
     "..g.g..",
     ".ggggg.",
     "gglllgg",
     ".ggggg.",
-    "..gsg..",
+    "..s.s..",
     ".ddddd.",
   ],
-  palette: { g: "#4e8a3c", l: "#74b356", s: "#3e6b2e", d: "#8a5f3f" },
+  palette: { g: "#c98b4b", l: "#e2b077", s: "#95602c", d: "#c9a86a" },
 };
 
-const WITHERED = new Map<Art, Art>();
+const SCRUFFY = new Map<Art, Art>();
 
 /**
- * The same pup, gone dry. Keyed off whichever mark of the pen is planted, so
- * a tired upgraded bed still reads as an upgraded bed — it's the colour that
- * goes, not the plant.
+ * The same pen, gone to seed. Keyed off whichever mark of the pen is stocked,
+ * so a neglected upgraded pen still reads as an upgraded pen — it's the colour
+ * that goes, not the silhouette.
+ *
+ * Grey and dusty rather than a different animal. A chihuahua on a mill whose
+ * bedding has been let go doesn't change breed, it stops looking looked-after,
+ * and the cheapest way to draw "nobody has been down here in a while" is to
+ * take the warmth out of the fur and the straw both.
  */
-export function withered(art: Art): Art {
-  const hit = WITHERED.get(art);
+export function scruffy(art: Art): Art {
+  const hit = SCRUFFY.get(art);
   if (hit) return hit;
-  const dried: Art = {
+  const dusty: Art = {
     rows: art.rows,
-    palette: { ...art.palette, g: "#8d8a3a", l: "#a89b46", s: "#6b6428", w: "#d6cdb0" },
+    palette: { ...art.palette, g: "#8f7f68", l: "#a89a83", s: "#6b5f4e", d: "#8a8168", w: "#cdc7b6" },
   };
-  WITHERED.set(art, dried);
-  return dried;
+  SCRUFFY.set(art, dusty);
+  return dusty;
 }
 
 const SHRUNK = new Map<Art, Art>();
@@ -410,9 +431,11 @@ const GROWTH_STAGES = new Map<Art, Art[]>();
  * so an upgraded bed still grows through the same cycle in its own silhouette
  * and adding a fourth pen mark doesn't mean drawing three more pictures.
  *
- * The early stages are the *bottom* slice of the full plant, which only reads
- * as growth if the caller bottom-aligns them — a pup that grows downward out
- * of the air is worse than no pup cycle at all.
+ * The early stages are the *bottom* slice of the full sprite, which only reads
+ * as growth if the caller bottom-aligns them — a puppy that grows downward out
+ * of the air is worse than none at all. It works because a chihuahua is drawn
+ * feet-up: the straw comes first, then the legs, then the body, and the ears
+ * are the last thing to arrive, which is roughly the order it happens in.
  */
 export function growthStages(art: Art): readonly Art[] {
   const hit = GROWTH_STAGES.get(art);
@@ -422,13 +445,14 @@ export function growthStages(art: Art): readonly Art[] {
   const n = rows.length;
   const slice = (from: number): Art => ({ rows: rows.slice(from), palette: art.palette });
 
-  // Ripe: puppies showing through the bedding at the base. Every other filled
-  // pixel of the bottom row, so it reads as lumps rather than a stripe.
+  // Ready: more of them, showing pale through the straw at the base. Every
+  // other filled pixel of the bottom row, so it reads as a litter rather than
+  // as a stripe.
   const base = rows[n - 1] ?? "";
   const lifted = [...base].map((c, i) => (c !== "." && i % 2 === 1 ? "o" : c)).join("");
   const ripe: Art = {
     rows: [...rows.slice(0, n - 1), lifted],
-    palette: { ...art.palette, o: "#c98b4b" },
+    palette: { ...art.palette, o: "#e2b077" },
   };
 
   const stages = [slice(n - 3), slice(Math.max(1, Math.floor(n * 0.4))), art, ripe];
@@ -447,16 +471,24 @@ export function growthStages(art: Art): readonly Art[] {
  * Outlined, which is the whole point. Without one it was a soft blob, and a
  * queue of soft blobs in a pipe is a tan line with lumps in it — you can't see
  * how many are going past, which is the one thing the pipeline is for.
+ *
+ * Seven by five, and it has to stay seven by five: the heap steps five pixels a
+ * slot, so the two-pixel overlap is what makes a mound of these touch itself
+ * instead of reading as a row of items on a shelf.
+ *
+ * Two spikes and an eye is the entire budget. The spikes are the ears, and they
+ * are the only reason this isn't a bread roll — a curled chihuahua is round,
+ * and round is what everything else in a pile already is.
  */
 export const PUPPY_SPRITE: Art = {
   rows: [
-    ".kkkk..",
-    "klllpk.",
-    "kllppdk",
-    ".kppddk",
-    "..kkkk.",
+    "k.k....",
+    "klkl...",
+    "kkeppdk",
+    "kpppddk",
+    ".kkkkk.",
   ],
-  palette: { k: K, ...PUPPY },
+  palette: { k: K, ...PUPPY, e: K },
 };
 
 export const BASKET: Art = {
@@ -511,7 +543,7 @@ function stack(cap: string[], body: string[], reps: number, base: string[]): str
 
 /**
  * The yard's crate stack is deliberately squat: it has to stand in a band about twenty
- * pixels deep next to crates and baskets, and a true-height grain crate stack would eat
+ * pixels deep next to crates and baskets, and a true-height feed silo would eat
  * the field above it.
  */
 export const STACK: Art = {
@@ -574,7 +606,7 @@ export const KENNEL: Art = {
 };
 
 /**
- * A grain sorter, and the tallest thing you will ever own. Deliberately
+ * The sorting tower, and the tallest thing you will ever own. Deliberately
  * taller than the yard is deep — the last few rungs of the build-out have to
  * clear the fence line or there's nothing left to be impressed by.
  */
@@ -619,20 +651,28 @@ export const KENNEL_HAND: Art = {
   palette: { k: K, t: "#c9a24a", f: "#e8bb8e", e: K, b: "#4a7fa5", v: "#5e3e29" },
 };
 
-export const SPRINKLER: Art = {
+/**
+ * A lamp on a post, throwing down rather than a sprinkler throwing up.
+ *
+ * The shade is the top two rows and the heat is the four under it, and that
+ * order is the whole sprite: light falls. Drawn the other way round — glow
+ * above the fitting — it read as a bonfire, which is the one thing a kennel
+ * yard must not appear to contain.
+ */
+export const HEAT_LAMP: Art = {
   rows: [
-    "....a..a.....",
-    "..a...a...a..",
-    ".a..mmmmm..a.",
-    "....mmmmm....",
-    "......m......",
+    "..kkmmmkk....",
+    "...kmmmk.....",
+    "....aaa......",
+    "...a.a.a.....",
+    "..a..a..a....",
     "......m......",
     "......m......",
     "......m......",
     "....kkkkk....",
     "...kkkkkkk...",
   ],
-  palette: { k: K, m: "#a8b0b8", a: "#8ec9e6" },
+  palette: { k: K, m: "#a8b0b8", a: "#ffb347" },
 };
 
 export const VAN: Art = {
@@ -653,7 +693,7 @@ export const VAN: Art = {
   palette: { k: K, b: "#4f8f3a", g: "#bfe3ef", w: "#4d4148" },
 };
 
-export const COMBINE: Art = {
+export const GROOMER: Art = {
   rows: [
     "........kkkkkkk.........",
     ".......kbbbbbbbk........",
@@ -768,18 +808,15 @@ export const REACTOR: Art = {
 };
 
 /**
- * The Orbital Greenhouse: a pressurised growing module, not a satellite.
+ * The Orbital Kennel: a pressurised habitat module, not a satellite.
  *
- * The old one was a green square between two blue squares, and next to the
- * Cloud Zeppelin — a proper lens-shaped airship trailing weather — it read as
- * placeholder art on the rung *above* it. The tier is a greenhouse, so it's
- * drawn as one: glazing bars over a lit canopy up top, the pup showing through
- * it, a hull with lit ports under that, and solar wings out to either side. The
- * one thing it must not look like is a machine — everything else in the sky at
- * this point in the ladder is hardware, and this is a garden that happens to be
- * in orbit.
+ * Glazing bars over a lit canopy up top with the fawn of the dogs showing
+ * through it, a hull with lit ports under that, and solar wings out to either
+ * side. The one thing it must not look like is a machine — everything else in
+ * the sky at this point in the ladder is hardware, and this is somewhere they
+ * live that happens to be in orbit.
  */
-export const GREENHOUSE: Art = {
+export const ORBITAL_KENNEL: Art = {
   rows: [
     ".........kk.........",
     "......kkkkkkkk......",
@@ -793,7 +830,7 @@ export const GREENHOUSE: Art = {
     ".....kkkkkkkkkk.....",
     "........kmmk........",
   ],
-  palette: { k: K, b: "#4a7fa5", c: "#bfe3ef", g: "#6dc45a", m: "#a8b0b8", y: "#ffe08a" },
+  palette: { k: K, b: "#4a7fa5", c: "#bfe3ef", g: "#c98b4b", m: "#a8b0b8", y: "#ffe08a" },
 };
 
 export const SINGULARITY: Art = {
@@ -817,28 +854,26 @@ export const SINGULARITY: Art = {
 };
 
 // ---------------------------------------------------------------------------
-// Above the fold — the four tiers that mill the puppy you're inside
+// Above the fold — the tiers that work the nest you're inside
 // ---------------------------------------------------------------------------
 //
-// These are drawn against the ceiling's warm ochre rather than against sky and
-// grass, so they're cool and hard-edged where everything else on the mill is
-// warm: the flesh is the quiet half of the screen and a machine on it should be
-// the one thing up there that isn't soft.
+// These are drawn against the nest's creams and tans rather than against sky
+// and grass, so they're cool and hard-edged where everything else in here is
+// soft: blanket is the quiet half of the screen, and a machine standing on it
+// should be the one thing down there with a straight line in it.
 
 /**
- * A press standing over a pad of flesh it has bruised.
+ * A press standing over the fold of hem it has worked open.
  *
  * The shallowest rung, and the one that has to teach the whole inside mill's
- * verb in one sprite: you damage it on purpose, it swells to seal the damage,
- * you pup the swelling. So the machine is the plainest thing on the ladder — a
- * ram and a plate, no more — and the interesting half of the sprite is the two
- * rows under it, where the dark of the hem is fringed by the pale of what
- * grew back. Read those two rows and you've read the tier.
- *
- * It used to be a plough hung upside down off the ceiling, which was the right
- * sprite for a scene that no longer exists.
+ * verb in one sprite: you push into it, it packs down around the push, and the
+ * loose down comes out ahead of you. So the machine is the plainest thing on
+ * the ladder — a ram and a plate, no more — and the interesting half of the
+ * sprite is the two rows under it, where the dark of the packed hem is fringed
+ * by the pale of what it pushed out. Read those two rows and you've read the
+ * tier.
  */
-export const BRUISE_BED: Art = {
+export const HEM_HOLLOW: Art = {
   rows: [
     "..kkkkkkk..",
     "..kmmmmmk..",
@@ -851,11 +886,11 @@ export const BRUISE_BED: Art = {
     "kdswwwwwsdk",
     ".kkkkkkkkk.",
   ],
-  palette: { k: K, m: "#8d959d", d: "#5e3040", s: "#a8657a", w: "#e6dcc0" },
+  palette: { k: K, m: "#8d959d", d: "#4a3a44", s: "#8a7a86", w: "#f4ecd8" },
 };
 
 /** A wellhead with the shaft running off the bottom of the world. */
-export const TAPROOT_WELL: Art = {
+export const DOWN_WELL: Art = {
   rows: [
     "...kkkk...",
     "..kmmmmk..",
@@ -908,9 +943,9 @@ export const CHORUS_FIGURE: Art = {
 };
 
 /**
- * An eye, opened. The one thing on the inside mill that is unambiguously alive
- * and unambiguously the puppy's rather than yours — every other rung down here
- * is kit you brought with you.
+ * An eye, opened. The one thing down here that is unambiguously alive and
+ * unambiguously the sleeper's rather than yours — every other rung in the nest
+ * is kit you carried in.
  */
 export const EYE: Art = {
   rows: [
@@ -931,19 +966,16 @@ export const EYE: Art = {
 };
 
 /**
- * Two benches cut into a face of starch, with the undercut under them.
+ * Two benches cut into a face of packed fleece, with the undercut under them.
  *
- * It was a dome for a while and at eleven pixels a pale dome is a bread roll —
- * six of them along a ledge looked like a bakery counter, which is the "what is
- * that and what does it do" failure the whole inside ladder was rewritten to
- * fix. The fix is the *flat top and the step*: nothing in nature is terraced, so
- * a terrace is read as something somebody cut, and the dark undercut along the
- * bottom is what stops it floating.
+ * The whole sprite is the *flat top and the step*: nothing settles into a
+ * terrace on its own, so a terrace reads as something somebody cut, and the
+ * dark undercut along the bottom is what stops it floating.
  *
  * Wide and low, so it's the one thing down here that reads as ground rather
  * than as a structure standing on it.
  */
-export const STARCH_FACE: Art = {
+export const FLEECE_FACE: Art = {
   rows: [
     "...kkkkkkkkk.",
     "...kwwwwwwwk.",
@@ -959,11 +991,11 @@ export const STARCH_FACE: Art = {
 };
 
 /**
- * A tapped vein. The clamp is the machine; everything else in the sprite is the
- * puppy's own plumbing, which is why it's the only rung drawn in a colour that
+ * A tapped seam. The clamp is the machine; everything else in the sprite is the
+ * nest's own stitching, which is why it's the only rung drawn in a colour that
  * isn't in any other sprite on the mill.
  */
-export const RING_MAIN: Art = {
+export const SEAM_MAIN: Art = {
   rows: [
     "..kvvk....",
     "..kvvk....",
@@ -983,16 +1015,15 @@ export const RING_MAIN: Art = {
 };
 
 /**
- * A cavity opened at the core, propped so it can't close again.
+ * The warm spot, opened at the core and propped so it can't close again.
  *
- * The previous rung in this slot was a door — a neat outlined rectangle, and
- * five of them stood in a row across the wall like paintings hung in a gallery.
- * Nothing rectangular survives down here for that reason: the opening is ragged
- * on every edge, the only straight lines in the sprite are the two stull legs
- * holding it, and what's inside it is drawn as darkness rather than as more
- * ochre. A hollow heart is a hole. It should look like one.
+ * Nothing rectangular survives down here: the opening is ragged on every edge,
+ * the only straight lines in the sprite are the two props holding it, and
+ * what's inside it is drawn as darkness rather than as more blanket. A hollow
+ * at the middle of a nest is a hole. It should look like one, right up until
+ * the last upgrade lights it.
  */
-export const HOLLOW_HEART: Art = {
+export const WARM_HEART: Art = {
   rows: [
     "...kkkkkk...",
     ".kkfllllfkk.",
@@ -1009,24 +1040,31 @@ export const HOLLOW_HEART: Art = {
   palette: { k: K, f: "#8a4a52", l: "#c98b6a", n: "#2a1520", s: "#e8c39c" },
 };
 
-/** The last rung, hanging where the sun was. It has eyes. */
-export const SECOND_PUPPY: Art = {
+/**
+ * The last rung, curled where the sun used to be.
+ *
+ * Asleep, and drawn asleep: the eyes are two dark pixels rather than anything
+ * that looks back at you. Whatever is at the middle of the nest is the only
+ * thing down here bigger than the mill, and the whole effect depends on it not
+ * having noticed the mill yet.
+ */
+export const SECOND_CHIHUAHUA: Art = {
   rows: [
-    "....kkkkkkk.....",
-    "..kkpppppppkk...",
-    ".kpplppppppppk..",
-    "kplllppppppdppk.",
-    "kpllppppppdddppk",
-    "kppppppppppddppk",
-    "kpppppdppppppppk",
-    "kppppdddpppppppk",
-    "kpppppdpppplpppk",
-    "kppppppppplllppk",
-    ".kpppdppppplppk.",
-    "..kkppdppppkkk..",
-    "....kkkkkkk.....",
+    "...k.....k......",
+    "..klk...klk.....",
+    "..kllkkkkllk....",
+    ".kkppppppppkk...",
+    "kppkppppkpppppk.",
+    "kppppppppppppppk",
+    "kplwwlpppppppppk",
+    ".kkwkwppppppppdk",
+    "..kkppppppppppdk",
+    "...kppppppppppdk",
+    "...kppppppdddppk",
+    "....kkppdddppkk.",
+    "......kkkkkkk...",
   ],
-  palette: { k: K, p: "#c98b4b", l: "#e2b077", d: "#7a4a24" },
+  palette: { k: K, ...PUPPY, w: "#f2e3c8" },
 };
 
 /**
@@ -1108,7 +1146,7 @@ export const HOIST_CAGE: Art = {
 // in a panel.
 //
 // Where the silhouette can carry the change it does — an exhaust stack, an
-// unloading auger, a second sprinkler boom, a taller tower — because that reads
+// unloading chute, a second lamp shade, a taller tower — because that reads
 // at a glance across the whole field. For the first two upgrades on the small or
 // distant tiers (the sky, the buildings on the back edge) the mark is a repaint,
 // which is all that survives at that size anyway.
@@ -1124,64 +1162,66 @@ function repaint(art: Art, palette: Record<string, string>): Art {
   return { rows: art.rows, palette: { ...art.palette, ...palette } };
 }
 
-const PLANT_2: Art = {
+const PEN_PUP_2: Art = {
   rows: [
-    "..g.g.g..",
-    ".gglglgg.",
-    "gglllllgg",
-    "gglllllgg",
-    ".ggglggg.",
-    "..gsssg..",
-    ".ddddddd.",
+    "...g.g...",
+    "..ggggg..",
+    ".gglllgg.",
+    ".gglllgg.",
+    "..ggggg..",
+    "..s...s..",
+    "ddddddddd",
   ],
-  palette: PLANT.palette,
+  palette: PEN_PUP.palette,
 };
 
-/** Puppies really do flower, and it's the clearest "this bed is doing well". */
-const PLANT_3: Art = {
+/** Underfloor Heating: the warm comes up through the straw. */
+const PEN_PUP_3: Art = {
   rows: [
-    "..w.w.w..",
-    "..gwgwg..",
-    ".gglglgg.",
-    "gglllllgg",
-    "gglllllgg",
-    ".ggglggg.",
-    "..gsssg..",
-    ".ddddddd.",
+    "...g.g...",
+    "..ggggg..",
+    ".gglllgg.",
+    ".ggllllg.",
+    "..ggggg..",
+    "..s...s..",
+    "dhdhdhdhd",
+    "ddddddddd",
   ],
-  palette: { ...PLANT.palette, w: "#efe4f6" },
+  palette: { ...PEN_PUP.palette, h: "#ffb347" },
 };
 
-const SPRINKLER_2: Art = {
+/** Ceramic Bulbs: a second shade on the same post, and it runs hotter. */
+const HEAT_LAMP_2: Art = {
   rows: [
-    "...a.a.a.a.a...",
-    ".a...a...a...a.",
-    "a..mmmmmmmmm..a",
-    "...mmmmmmmmm...",
-    ".......m.......",
+    ".kkmmmkkkmmmkk.",
+    "..kmmmkkkmmmk..",
+    "...aaa...aaa...",
+    "..a.a.a.a.a.a..",
+    ".a..a....a..a..",
     ".......m.......",
     ".......m.......",
     ".......m.......",
     ".....kkkkk.....",
     "....kkkkkkk....",
   ],
-  palette: SPRINKLER.palette,
+  palette: HEAT_LAMP.palette,
 };
 
-const SPRINKLER_3: Art = {
+/** Thermostats: three shades, a crossbar to hang them off, and a sensor. */
+const HEAT_LAMP_3: Art = {
   rows: [
-    "...a.a.a.a.a...",
-    ".a...a...a...a.",
-    "a..mmmmmmmmm..a",
-    "...mmmmmmmmm...",
-    "..mm...m...mm..",
-    "...m...m...m...",
-    "...m...m...m...",
+    "kkmmmkkmmmkkmmm",
+    ".kmmmk.kmmmk.km",
+    "..aaa...aaa...a",
+    ".a.a.a.a.a.a.a.",
+    "a..a..a.a..a..a",
+    "..mmmmmmmmmmm..",
+    ".......m.......",
     ".......m.......",
     ".....kkkkk.....",
     "....kkkkkkk....",
   ],
-  palette: SPRINKLER.palette,
+  palette: HEAT_LAMP.palette,
 };
 
 /** Turbo Diesel: the stack is the whole joke, so it goes on the roof. */
@@ -1226,8 +1266,8 @@ const VAN_3: Art = {
   palette: { ...VAN.palette, b: "#c99a34", y: "#e05a3c" },
 };
 
-/** Wider Header: the unloading auger swung out over the field. */
-const COMBINE_2: Art = {
+/** Wider Head: the delivery chute swung out over the yard. */
+const GROOMER_2: Art = {
   rows: [
     "..................kkkk..",
     "................kkkkk...",
@@ -1246,11 +1286,11 @@ const COMBINE_2: Art = {
     ".....kwwwwwwwwk.kwwk....",
     "......kwwwwwwk...kk.....",
   ],
-  palette: COMBINE.palette,
+  palette: GROOMER.palette,
 };
 
 /** Night Shift Cab: work lights, on at any hour. */
-const COMBINE_3: Art = {
+const GROOMER_3: Art = {
   rows: [
     "..................kkkk..",
     "................kkkkk...",
@@ -1269,11 +1309,11 @@ const COMBINE_3: Art = {
     ".....kwwwwwwwwk.kwwk....",
     "......kwwwwwwk...kk.....",
   ],
-  palette: { ...COMBINE.palette, l: "#ffe08a" },
+  palette: { ...GROOMER.palette, l: "#ffe08a" },
 };
 
-/** Catalytic Cracking, then Continuous Flow: the flare stack gets serious. */
-const REFINERY_2: Art = {
+/** Twin Extruders, then Continuous Flow: the flare stack gets serious. */
+const KIBBLE_2: Art = {
   rows: [
     "...........f........",
     "..........fff.......",
@@ -1291,7 +1331,7 @@ const REFINERY_2: Art = {
   palette: { ...KIBBLE.palette, f: "#f0913c" },
 };
 
-const REFINERY_3: Art = {
+const KIBBLE_3: Art = {
   rows: [
     "..........fff.......",
     ".........fbbbf......",
@@ -1310,7 +1350,7 @@ const REFINERY_3: Art = {
   palette: { ...KIBBLE.palette, f: "#f0913c", b: "#ffe08a" },
 };
 
-/** Full Spectrum LEDs, then Nutrient Telemetry: more lit floors, then more floors. */
+/** Express Lifts, then Kennel Telemetry: more lit floors, then more floors. */
 function tower(reps: number, palette: Record<string, string>): Art {
   return {
     rows: stack(
@@ -1325,8 +1365,8 @@ function tower(reps: number, palette: Record<string, string>): Art {
 const TOWER_2 = tower(8, { g: "#8ce06a" });
 const TOWER_3 = tower(11, { g: "#a8f07a", m: "#e2e8ee" });
 
-/** Silver Iodide, then a Jet Stream Permit: drizzle, then an actual storm. */
-const SEEDER_2: Art = {
+/** Helium Refit, then a Jet Stream Permit: it gets up, then it gets up there. */
+const ZEPPELIN_2: Art = {
   rows: [
     "....kkkkkk....",
     "..kkcccccckk..",
@@ -1341,7 +1381,7 @@ const SEEDER_2: Art = {
   palette: { ...ZEPPELIN.palette, c: "#b9c3cc" },
 };
 
-const SEEDER_3: Art = {
+const ZEPPELIN_3: Art = {
   rows: [
     "....kkkkkk....",
     "..kkcccccckk..",
@@ -1361,20 +1401,23 @@ const SEEDER_3: Art = {
 // The fourth marks — what a hundred of something turns into
 // ---------------------------------------------------------------------------
 
-/** Heirloom Strain: it flowers, it sprawls, and the pup breaks the surface. */
-const PLANT_4: Art = {
+/**
+ * Show Lineage: it is twice the dog, it is sitting on twice the straw, and it
+ * is wearing the rosette. The only fourth mark in the game that is a brag.
+ */
+const PEN_PUP_4: Art = {
   rows: [
-    "..w.w.w.w..",
-    ".wgwgwgwgw.",
-    ".gglglglgg.",
+    "...g...g...",
+    "..gg...gg..",
+    ".ggggggggg.",
+    ".gglllllgg.",
     "gglllllllgg",
-    "gglllllllgg",
-    ".gggglgggg.",
-    "..ggsssgg..",
-    ".ddddddddd.",
-    "..dpddpdd..",
+    ".ggglllggg.",
+    "..gggrgggg.",
+    "..s.....s..",
+    "ddddddddddd",
   ],
-  palette: { ...PLANT.palette, w: "#efe4f6", p: "#c98b4b" },
+  palette: { ...PEN_PUP.palette, r: "#c93f34" },
 };
 
 /** Equity Stake: a hat, a good coat, and gold on the lapels. Part owner. */
@@ -1397,25 +1440,25 @@ const KENNEL_HAND_4: Art = {
 };
 
 /**
- * Centre Pivot: the thing that actually waters a field this size. A boom on a
- * tower with drop tubes down its whole length, which is the one heatlamp
- * silhouette that reads as *industrial* rather than as a garden sprinkler.
+ * Whole-Yard Radiant: the thing that actually heats a yard this size. A gantry
+ * with emitters hung down its whole length, which is the one heat-lamp
+ * silhouette that reads as *plant* rather than as something over a hutch.
  */
-const SPRINKLER_4: Art = {
+const HEAT_LAMP_4: Art = {
   rows: [
     ".........m.........",
     "kmmmmmmmmmmmmmmmmmk",
     ".m..m..m.m.m..m..m.",
-    ".a..a..a.m.a..a..a.",
-    "a.a.a.a.ama.a.a.a.a",
-    ".a.a.a.a.m.a.a.a.a.",
+    "kmk.kmk.kmk.kmk.kmk",
+    ".a...a...a...a...a.",
+    "a.a.a.a.a.a.a.a.a.a",
     ".........m.........",
     ".........m.........",
     ".........m.........",
     ".......kkkkk.......",
     "......kkkkkkk......",
   ],
-  palette: SPRINKLER.palette,
+  palette: HEAT_LAMP.palette,
 };
 
 /** Tracked Chassis: twin stacks, a beacon, and it runs on tracks now. */
@@ -1443,8 +1486,8 @@ const VAN_4: Art = {
   palette: { ...VAN.palette, b: "#2f6b46", g: "#bfe3ef", y: "#e05a3c", w: "#3a3038" },
 };
 
-/** Twin Rotor: a second unloading auger, so it never has to stop to empty. */
-const COMBINE_4: Art = {
+/** Twin Drums: a second delivery chute, so it never has to stop to empty. */
+const GROOMER_4: Art = {
   rows: [
     "..................kkkk..",
     "................kkkkk...",
@@ -1463,7 +1506,7 @@ const COMBINE_4: Art = {
     ".....kwwwwwwwwk.kwwk....",
     "......kwwwwwwk...kk.....",
   ],
-  palette: { ...COMBINE.palette, b: "#8f2a22", y: "#e0c04a", l: "#ffe08a" },
+  palette: { ...GROOMER.palette, b: "#8f2a22", y: "#e0c04a", l: "#ffe08a" },
 };
 
 /** The Prize: the dome got bigger and there's a plaque over the door. */
@@ -1489,7 +1532,7 @@ const LAB_4: Art = {
 };
 
 /** Cogeneration: a second stack, alight, because nothing is vented any more. */
-const REFINERY_4: Art = {
+const KIBBLE_4: Art = {
   rows: [
     "...f......fff.......",
     "..fff....fbbbf......",
@@ -1509,7 +1552,7 @@ const REFINERY_4: Art = {
 };
 
 /**
- * Cloud Deck: taller than anything else on the property, with an observation
+ * Sky Lobby: taller than anything else on the property, with an observation
  * seam halfway up that overhangs the shaft — the one silhouette on the back edge
  * that isn't a box, and the reason you can pick a hundred-tower lot out of a
  * skyline at a glance.
@@ -1544,7 +1587,7 @@ const TOWER_4: Art = {
 };
 
 /** Eye of the Storm: the hull went the colour of the weather it makes. */
-const SEEDER_4: Art = {
+const ZEPPELIN_4: Art = {
   rows: [
     "....kkkkkk....",
     "..kkcccccckk..",
@@ -1585,11 +1628,11 @@ const REACTOR_4: Art = {
 };
 
 /**
- * Lagrange Station: it stopped being one greenhouse and became the place the
- * greenhouses dock at — a second canopy, a spine between them, and wings big
- * enough to run both.
+ * Lagrange Station: it stopped being one kennel and became the place the
+ * kennels dock at — a second canopy, a spine between them, and wings big enough
+ * to run both.
  */
-const GREENHOUSE_4: Art = {
+const ORBITAL_KENNEL_4: Art = {
   rows: [
     ".........kk.........",
     "......kkkkkkkk......",
@@ -1607,7 +1650,7 @@ const GREENHOUSE_4: Art = {
     ".....kkkkkkkkkk.....",
     "........kmmk........",
   ],
-  palette: { k: K, b: "#e0c04a", c: "#d8f0f8", g: "#a4e884", m: "#cfd6dc", y: "#fff0b8" },
+  palette: { k: K, b: "#e0c04a", c: "#d8f0f8", g: "#f0c68c", m: "#cfd6dc", y: "#fff0b8" },
 };
 
 /** Event Horizon Lease: it has a jet now, and the jet points at your mill. */
@@ -1633,8 +1676,8 @@ const SINGULARITY_4: Art = {
   palette: { p: "#e0c04a", v: "#a8792c", n: "#120c1c", y: "#fff0b8" },
 };
 
-/** It Stops Minding: the bed has stopped darkening and just swells, twice over. */
-const BRUISE_BED_4: Art = {
+/** It Stops Minding: the hem has stopped closing back up. It just gives. */
+const HEM_HOLLOW_4: Art = {
   rows: [
     "..kkkkkkk..",
     "..kmmmmmk..",
@@ -1647,11 +1690,11 @@ const BRUISE_BED_4: Art = {
     "kdwwwwwwwdk",
     ".kkkkkkkkk.",
   ],
-  palette: { k: K, m: "#e2e8ee", d: "#a8657a", w: "#fff4c0" },
+  palette: { k: K, m: "#e2e8ee", d: "#8a7a86", w: "#fffaf0" },
 };
 
 /** Core Breach: a derrick over the wellhead, and it's venting flame. */
-const TAPROOT_WELL_4: Art = {
+const DOWN_WELL_4: Art = {
   rows: [
     "....gg....",
     "...gkkg...",
@@ -1703,7 +1746,7 @@ const CHORUS_FIGURE_4: Art = {
 };
 
 /** They Live Down Here Now: two lamps, a full kit, and they've stopped looking up. */
-const PIT_HAND_4: Art = {
+const LINT_HAND_4: Art = {
   rows: [
     "..ttt..",
     ".tlttl.",
@@ -1721,7 +1764,7 @@ const PIT_HAND_4: Art = {
 };
 
 /** The Seam Goes Down: the cut face has become a shaft with a headframe. */
-const STARCH_FACE_4: Art = {
+const FLEECE_FACE_4: Art = {
   rows: [
     "....kmmmmk...",
     "....kmssmk...",
@@ -1737,8 +1780,8 @@ const STARCH_FACE_4: Art = {
   palette: { k: K, w: "#f4ecd0", s: "#ffffff", d: "#2c1d14", m: "#e2e8ee" },
 };
 
-/** The Whole Circulation: three clamps on a vein that has split to feed them. */
-const RING_MAIN_4: Art = {
+/** The Whole Seam: three clamps on a seam that has split to feed them. */
+const SEAM_MAIN_4: Art = {
   rows: [
     "..kvvk....",
     ".kkvvkk...",
@@ -1758,8 +1801,8 @@ const RING_MAIN_4: Art = {
   palette: { k: K, v: "#c48ac0", m: "#e2e8ee", s: "#8d959d", g: "#ffd166" },
 };
 
-/** It Was Always Hollow: the cavity has stopped being dark. Something in it is lit. */
-const HOLLOW_HEART_4: Art = {
+/** It Was Always Warm: the hollow has stopped being dark. Something in it is lit. */
+const WARM_HEART_4: Art = {
   rows: [
     "...kkkkkk...",
     ".kkflllofkk.",
@@ -1776,8 +1819,8 @@ const HOLLOW_HEART_4: Art = {
   palette: { k: K, f: "#a8657a", l: "#e8c39c", n: "#2a1520", o: "#ffd166" },
 };
 
-/** It's Awake: the eyes opened, and it has started to sprout. */
-const SECOND_PUPPY_4: Art = {
+/** It's Awake: the eyes opened. Nothing else about the sprite had to change. */
+const SECOND_CHIHUAHUA_4: Art = {
   rows: [
     "....s..s..s.....",
     "....kkkkkkk.....",
@@ -1813,25 +1856,25 @@ const SECOND_PUPPY_4: Art = {
  * The fourth is always a redraw — see the note above.
  */
 export const PRODUCER_MARKS = {
-  pen: [PLANT, PLANT_2, PLANT_3, PLANT_4],
+  pen: [PEN_PUP, PEN_PUP_2, PEN_PUP_3, PEN_PUP_4],
   hand: [
     KENNEL_HAND,
     repaint(KENNEL_HAND, { b: "#e08a3c", t: "#f2e3c8" }),
     repaint(KENNEL_HAND, { b: "#3f8f86", t: "#e0c04a" }),
     KENNEL_HAND_4,
   ],
-  heatlamp: [SPRINKLER, SPRINKLER_2, SPRINKLER_3, SPRINKLER_4],
+  heatlamp: [HEAT_LAMP, HEAT_LAMP_2, HEAT_LAMP_3, HEAT_LAMP_4],
   van: [VAN, VAN_2, VAN_3, VAN_4],
-  barn: [COMBINE, COMBINE_2, COMBINE_3, COMBINE_4],
+  groomer: [GROOMER, GROOMER_2, GROOMER_3, GROOMER_4],
   lab: [
     LAB,
     repaint(LAB, { g: "#7fe0a0" }),
     repaint(LAB, { g: "#c88fe6", w: "#eee8f4" }),
     LAB_4,
   ],
-  kibble: [KIBBLE, REFINERY_2, REFINERY_3, REFINERY_4],
+  kibble: [KIBBLE, KIBBLE_2, KIBBLE_3, KIBBLE_4],
   tower: [TOWER, TOWER_2, TOWER_3, TOWER_4],
-  zeppelin: [ZEPPELIN, SEEDER_2, SEEDER_3, SEEDER_4],
+  zeppelin: [ZEPPELIN, ZEPPELIN_2, ZEPPELIN_3, ZEPPELIN_4],
   reactor: [
     REACTOR,
     repaint(REACTOR, { g: "#6fd8e6" }),
@@ -1839,10 +1882,10 @@ export const PRODUCER_MARKS = {
     REACTOR_4,
   ],
   orbital: [
-    GREENHOUSE,
-    repaint(GREENHOUSE, { b: "#6fa8dc", g: "#a4e884" }),
-    repaint(GREENHOUSE, { b: "#e0c04a", g: "#c6f5a0", c: "#d8f0f8" }),
-    GREENHOUSE_4,
+    ORBITAL_KENNEL,
+    repaint(ORBITAL_KENNEL, { b: "#6fa8dc", g: "#e2b077" }),
+    repaint(ORBITAL_KENNEL, { b: "#e0c04a", g: "#f0c68c", c: "#d8f0f8" }),
+    ORBITAL_KENNEL_4,
   ],
   singularity: [
     SINGULARITY,
@@ -1851,16 +1894,16 @@ export const PRODUCER_MARKS = {
     SINGULARITY_4,
   ],
   hem: [
-    BRUISE_BED,
-    repaint(BRUISE_BED, { b: "#4f8f7a", g: "#b6f2fb" }),
-    repaint(BRUISE_BED, { b: "#7a5ac0", g: "#ffd166", m: "#e2e8ee" }),
-    BRUISE_BED_4,
+    HEM_HOLLOW,
+    repaint(HEM_HOLLOW, { b: "#4f8f7a", g: "#b6f2fb" }),
+    repaint(HEM_HOLLOW, { b: "#7a5ac0", g: "#ffd166", m: "#e2e8ee" }),
+    HEM_HOLLOW_4,
   ],
   well: [
-    TAPROOT_WELL,
-    repaint(TAPROOT_WELL, { g: "#ff7a4a", h: "#7a4a24" }),
-    repaint(TAPROOT_WELL, { g: "#ffe08a", m: "#cfd6dc", h: "#8a5a2c" }),
-    TAPROOT_WELL_4,
+    DOWN_WELL,
+    repaint(DOWN_WELL, { g: "#ff7a4a", h: "#7a4a24" }),
+    repaint(DOWN_WELL, { g: "#ffe08a", m: "#cfd6dc", h: "#8a5a2c" }),
+    DOWN_WELL_4,
   ],
   chorus: [
     CHORUS_FIGURE,
@@ -1876,31 +1919,31 @@ export const PRODUCER_MARKS = {
     SHAFT_CREW,
     repaint(SHAFT_CREW, { t: "#4f8f7a", b: "#4a5c7a", l: "#b6f2fb" }),
     repaint(SHAFT_CREW, { t: "#c9a24a", b: "#7a5ac0", l: "#fff0b8", v: "#5b4f58" }),
-    PIT_HAND_4,
+    LINT_HAND_4,
   ],
   fleece: [
-    STARCH_FACE,
-    repaint(STARCH_FACE, { s: "#ffffff", w: "#efe6cc" }),
-    repaint(STARCH_FACE, { s: "#d8f0f8", w: "#f4ecd0", m: "#cfd6dc" }),
-    STARCH_FACE_4,
+    FLEECE_FACE,
+    repaint(FLEECE_FACE, { s: "#ffffff", w: "#efe6cc" }),
+    repaint(FLEECE_FACE, { s: "#d8f0f8", w: "#f4ecd0", m: "#cfd6dc" }),
+    FLEECE_FACE_4,
   ],
   seam: [
-    RING_MAIN,
-    repaint(RING_MAIN, { v: "#a86ea2", g: "#f0c6ec" }),
-    repaint(RING_MAIN, { v: "#c48ac0", g: "#ffd166", m: "#cfd6dc" }),
-    RING_MAIN_4,
+    SEAM_MAIN,
+    repaint(SEAM_MAIN, { v: "#a86ea2", g: "#f0c6ec" }),
+    repaint(SEAM_MAIN, { v: "#c48ac0", g: "#ffd166", m: "#cfd6dc" }),
+    SEAM_MAIN_4,
   ],
   heart: [
-    HOLLOW_HEART,
-    repaint(HOLLOW_HEART, { f: "#d8b070", l: "#f7e8c0" }),
-    repaint(HOLLOW_HEART, { d: "#8d959d", f: "#e2b077", l: "#fff4c0" }),
-    HOLLOW_HEART_4,
+    WARM_HEART,
+    repaint(WARM_HEART, { f: "#d8b070", l: "#f7e8c0" }),
+    repaint(WARM_HEART, { d: "#8d959d", f: "#e2b077", l: "#fff4c0" }),
+    WARM_HEART_4,
   ],
   second: [
-    SECOND_PUPPY,
-    repaint(SECOND_PUPPY, { p: "#d69a58", l: "#f0c68c" }),
-    repaint(SECOND_PUPPY, { p: "#e0c04a", l: "#f7e08a", d: "#8a6a1c" }),
-    SECOND_PUPPY_4,
+    SECOND_CHIHUAHUA,
+    repaint(SECOND_CHIHUAHUA, { p: "#d69a58", l: "#f0c68c" }),
+    repaint(SECOND_CHIHUAHUA, { p: "#e0c04a", l: "#f7e08a", d: "#8a6a1c" }),
+    SECOND_CHIHUAHUA_4,
   ],
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 

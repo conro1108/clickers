@@ -260,7 +260,7 @@ export function Shop({
       )}
 
       <footer className="shop-foot">
-        <span className="muted">In the barn</span>
+        <span className="muted">In the groomer</span>
         <strong>{format(budget)}</strong>
       </footer>
     </section>

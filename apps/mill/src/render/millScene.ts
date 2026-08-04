@@ -37,7 +37,7 @@ import {
   STACK,
   TREE,
   TUFT,
-  withered,
+  scruffy,
 } from "./art.js";
 import { artCanvas, artTinted, type Art } from "./pixel.js";
 
@@ -341,7 +341,7 @@ const HEAP_CROWN_UP = 3 * (HEAP_COURSES - 1);
  * So: a build-out. The yard passes through a fixed sequence of stages, each
  * arriving at a threshold and each *adding one thing* to a spot that is its
  * spot forever — a basket, then another, then a crate, a wagon, a kennel, a crate stack,
- * eventually a grain sorter standing over the fence line. You don't read the
+ * eventually a sorting tower standing over the fence line. You don't read the
  * yard, you recognise it. Between stages the working heap grows, so there's
  * always something moving, and it's the heap that gets hauled into whatever
  * arrives next.
@@ -533,7 +533,7 @@ type OutsideId = Extract<
   | "hand"
   | "heatlamp"
   | "van"
-  | "barn"
+  | "groomer"
   | "lab"
   | "kibble"
   | "tower"
@@ -570,7 +570,7 @@ const PLACEMENT: Record<OutsideId, Placement> = {
   // Slow. A van that crosses the screen in fifteen seconds is a van
   // working a field; one that does it in five is a toy being pushed along.
   van: { band: "field", cap: 6, spread: 1.4, speed: 6 },
-  barn: { band: "field", cap: 5, spread: 1.2, speed: 4.5 },
+  groomer: { band: "field", cap: 5, spread: 1.2, speed: 4.5 },
   lab: { band: "back", cap: 5 },
   kibble: { band: "back", cap: 5 },
   tower: { band: "back", cap: 5 },
@@ -599,7 +599,7 @@ const PRIME_GLOW: Record<OutsideId, string> = {
   hand: "#ffd782",
   heatlamp: "#8ec9e6",
   van: "#ff8a4a",
-  barn: "#ffe08a",
+  groomer: "#ffe08a",
   lab: "#c88fe6",
   kibble: "#f0913c",
   tower: "#a8f07a",
@@ -614,7 +614,7 @@ const ORDER: OutsideId[] = [
   "hand",
   "heatlamp",
   "van",
-  "barn",
+  "groomer",
   "lab",
   "kibble",
   "tower",
@@ -897,7 +897,7 @@ export function buildHidden(age: number, up: boolean, height: number): number {
 /** How long a bed takes to come up. Long, on purpose — this is a place, not a slot machine. */
 const GROW_SECONDS = 46;
 
-/** How long a ripe bed stands before the mill gets to it without you watching. */
+/** How long a ready bed stands before the mill gets to it without you watching. */
 const RIPE_SECONDS = 14;
 
 /** Buffer pixels a second. A kennel hand crosses the field in about five. */
@@ -946,13 +946,13 @@ interface Basket {
   born: number;
 }
 
-/** One plant in a row, as drawn this frame. Ground point, not top-left. */
+/** One pup in a row, as drawn this frame. Ground point, not top-left. */
 interface Bed {
   x: number;
   y: number;
   /** Which pup row it stands in. */
   row: number;
-  /** Wilted plants are skipped: nothing there is worth walking out for. */
+  /** Wilted pups are skipped: nothing there is worth walking out for. */
   dry: boolean;
 }
 
@@ -963,14 +963,14 @@ interface Row {
   right: number;
 }
 
-/** How deep the field can get planted before it stops adding rows. */
+/** How deep the field can get stocked before it stops adding rows. */
 const FIELD_ROWS = 6;
 
-/** How long a van's furrow stays fresh behind it. */
-const TILL_MS = 4500;
+/** How long a van's wheel track stays fresh behind it. */
+const TRACK_MS = 4500;
 
-/** Seed dropped from a cloud zeppelin, on its way down to a specific plant. */
-interface Seed {
+/** A pup air-dropped from a zeppelin, on its way down to a specific pen. */
+interface Drop {
   x: number;
   y: number;
   vy: number;
@@ -981,8 +981,8 @@ interface Seed {
 /**
  * A cloud zeppelin, working the sky the way the hands work the ground.
  *
- * These used to drift left to right at a fixed pace on a fixed lane, seeding
- * whatever happened to be under them, and a rank of them was a screensaver.
+ * These used to drift left to right at a fixed pace on a fixed lane, dropping
+ * on whatever happened to be under them, and a rank of them was a screensaver.
  * A zeppelin has a *job*: pick a patch that needs bringing on, dart over it from
  * wherever it is, stop dead, and dump on it. So it holds a position and a
  * destination and moves between them, and it goes up and left as readily as
@@ -1023,7 +1023,7 @@ const FLY_HOLD = 3.6;
  * It hangs in its column most of the time, and every half a minute or so it
  * comes down over the mill and goes back up — which is the only way a thing that
  * doesn't travel gets to be watched. On the way it drags: clouds, greenhouses,
- * zeppelins and the seeds they're dropping all bend toward it as it passes and
+ * zeppelins and the pups they're dropping all bend toward it as it passes and
  * spring back once it's gone, because a hole in the sky that nothing reacts to
  * is a sticker of a hole in the sky.
  *
@@ -1150,8 +1150,8 @@ export class MillScene {
    * How deep each lot was last frame, and which of its slots are mid-build.
    *
    * Same argument the fold makes about `sawView`: the first frame a scene draws
-   * is a *restore*, so it seeds the depths and raises nothing. Otherwise every
-   * reload would put eleven kibble plants up in front of you at once.
+   * is a *restore*, so it fills the depths and raises nothing. Otherwise every
+   * reload would put eleven kibble pups up in front of you at once.
    */
   private lotSeen = new Map<string, number>();
   private raising = new Map<string, number>();
@@ -1173,13 +1173,13 @@ export class MillScene {
   private puffs: Puff[] = [];
   /** Cooling-tower steam, on its own budget so it can't starve the dust. */
   private plumes: Plume[] = [];
-  /** The plants as laid out this frame. Deterministic, so an index is a place. */
+  /** The pups as laid out this frame. Deterministic, so an index is a place. */
   private beds: Bed[] = [];
   /** This frame's pup rows. Rigs stand beside these; machines drive along them. */
   private rows: Row[] = [];
-  /** Fresh furrow behind a van, fading. */
-  private tills: { x: number; y: number; born: number }[] = [];
-  private seeds: Seed[] = [];
+  /** Fresh wheel track behind a van, fading. */
+  private tracks: { x: number; y: number; born: number }[] = [];
+  private drops: Drop[] = [];
   /** The zeppelins aloft, one entry each, kept between frames. */
   private flyers: Flyer[] = [];
   /** This frame's singularities. Placed before the sky, so the sky can feel them. */
@@ -1187,7 +1187,7 @@ export class MillScene {
   /** What they've taken off the mill, still going round. */
   private caught: Caught[] = [];
   /** When each bed was last cleared. Indexed the same as `beds`. */
-  private planted: number[] = [];
+  private stocked: number[] = [];
   private hands: Hand[] = [];
   /** What's sitting in the trough, 0..TROUGH_CAP, and the spout's metronome. */
   private troughFill = 0;
@@ -1270,7 +1270,7 @@ export class MillScene {
     this.machineLoad.clear();
     this.puffs = [];
     this.plumes = [];
-    this.tills = [];
+    this.tracks = [];
     this.whistled = [];
     this.caught = [];
     this.troughFill = 0;
@@ -1281,7 +1281,7 @@ export class MillScene {
     // Lot depths are seeded rather than raised on a restore, and a wipe is a
     // restore: the next mill shouldn't put its first pen up in a cloud of
     // dust it didn't earn, and it definitely shouldn't demolish eleven
-    // kibble plants on the way out.
+    // kibble pups on the way out.
     this.lotSeen.clear();
     this.raising.clear();
     this.sawLots = false;
@@ -1313,11 +1313,11 @@ export class MillScene {
     this.puff(x + 3, y, "dust", 10);
   }
 
-  /** How ripe a bed is, 0..1, where 1 is ready to lift. */
-  private ripeness(i: number, t: number): number {
-    const planted = this.planted[i];
-    if (planted === undefined) return 0;
-    return Math.min(1, (t - planted) / GROW_SECONDS);
+  /** How ready a bed is, 0..1, where 1 is ready to lift. */
+  private readiness(i: number, t: number): number {
+    const stocked = this.stocked[i];
+    if (stocked === undefined) return 0;
+    return Math.min(1, (t - stocked) / GROW_SECONDS);
   }
 
   /**
@@ -1330,7 +1330,7 @@ export class MillScene {
     // sweeps every row every few seconds, and a bed that goes back to a two
     // pixel sprout each time means the field you spent the whole game buying
     // is permanently brown.
-    this.planted[i] = t - GROW_SECONDS * 0.35;
+    this.stocked[i] = t - GROW_SECONDS * 0.35;
   }
 
   /**
@@ -1495,15 +1495,15 @@ export class MillScene {
       const bed = this.beds[i]!;
       if (bed.dry) continue;
       if (this.hands.some((h) => h.target === i)) continue;
-      const ripe = this.ripeness(i, t);
-      if (ripe <= 0.55) continue;
+      const ready = this.readiness(i, t);
+      if (ready <= 0.55) continue;
       // Ripest first, then weighted against the walk, then against the row
-      // this one tends to work. Purely by ripeness they all set off for the
-      // same corner, because beds ripen in patches; purely by distance they
+      // this one tends to work. Purely by readiness they all set off for the
+      // same corner, because beds come on in patches; purely by distance they
       // all crowd the near row. Each hand leaning towards a row of its own is
       // what spreads the crew over the whole field.
       const score =
-        ripe * 40 -
+        ready * 40 -
         Math.hypot(bed.x - hand.x, bed.y - hand.y) * 0.35 -
         Math.abs(bed.row - hand.rowPref) * 9;
       if (best < 0 || score > bestScore) {
@@ -1533,7 +1533,7 @@ export class MillScene {
   private drawHands(t: number): void {
     const ctx = this.ctx;
     const sprite = artCanvas(this.mark("hand"));
-    const spud = artCanvas(PUPPY_SPRITE);
+    const pup = artCanvas(PUPPY_SPRITE);
     const basket = artCanvas(BASKET);
     for (const [i, hand] of this.hands.entries()) {
       const moving = hand.state !== "resting" && hand.state !== "picking";
@@ -1550,7 +1550,7 @@ export class MillScene {
       // walking a dark field is the single best thing the fourth marks do.
       this.primeGlow("hand", x, y, sprite.w, sprite.h, t, i, 0.8);
       ctx.drawImage(sprite.canvas, x, y);
-      if (hand.carrying === "puppy") ctx.drawImage(spud.canvas, x + 1, y - 4);
+      if (hand.carrying === "puppy") ctx.drawImage(pup.canvas, x + 1, y - 4);
       // Baskets ride on the shoulder, which is also why a hand carrying one
       // walks at eighty-five per cent pace.
       if (hand.carrying === "basket") ctx.drawImage(basket.canvas, x - 2, y - basket.h + 3);
@@ -1623,7 +1623,7 @@ export class MillScene {
    * overlap would last instead: the singularities hang and never travel, so they
    * get the top and everything passes underneath them; the greenhouses cross, so
    * they get the middle; the zeppelins dash, hold and drip, so they get the
-   * bottom, nearest the rows they're seeding.
+   * bottom, nearest the rows they're stocking.
    */
   private decks(horizon: number): { deck: number; hang: number } {
     const ridge = RIDGES[0]!;
@@ -1761,7 +1761,7 @@ export class MillScene {
         this.whistled = this.whistled.filter((d) => d !== whistled);
       });
     }
-    // The ripe pup out of the beds under it. The plant stays in the ground —
+    // The ready pup out of the beds under it. The pup stays in the ground —
     // it's the puppy that goes, the same one a hand would have walked out for,
     // and the bed goes back to part-grown exactly as if one had. This is what
     // makes a dive over open field worth watching on a mill that hasn't got a
@@ -1769,7 +1769,7 @@ export class MillScene {
     // never more than one of those in reach.
     for (let b = 0; b < this.beds.length; b++) {
       const bed = this.beds[b]!;
-      if (bed.dry || this.ripeness(b, t) < 0.8) continue;
+      if (bed.dry || this.readiness(b, t) < 0.8) continue;
       offer(bed.x + 3, bed.y - 5, PUPPY_SPRITE, () => this.lift(b, t));
     }
     // And off the top of the trough, at the point on it nearest the hole.
@@ -1804,7 +1804,7 @@ export class MillScene {
    * the field is a lean and the middle of it is a swallow.
    *
    * One rule about what gets to move: anything loose does — clouds, machines,
-   * the crew, dust, seeds in the air. Anything rooted doesn't. The pup stays in
+   * the crew, dust, drops in the air. Anything rooted doesn't. The pup stays in
    * the ground, the rigs stay on their stands and the kennels stay on the hill,
    * because a mill that comes apart every thirty seconds isn't a mill, and the
    * point of the thing coming down is what it does to the work going on around
@@ -2281,7 +2281,7 @@ export class MillScene {
     this.drawLotLayer(lots, 3, phase, t);
     this.drawLotLayer(lots, 4, phase, t);
 
-    // No barn. It stood here for a long time as a bookend and it never meant
+    // No groomer. It stood here for a long time as a bookend and it never meant
     // anything — nothing you buy touched it, and it was taking a third of the
     // back edge away from the tiers that do.
     const tree = artCanvas(TREE);
@@ -2812,7 +2812,7 @@ export class MillScene {
 
     // Whole puppies in the pipe, not tan squares: outlined, so a hundred of
     // them nose to tail still reads as a hundred puppies rather than a stripe.
-    const spud = artCanvas(PUPPY_SPRITE);
+    const pup = artCanvas(PUPPY_SPRITE);
     this.lumps = this.lumps.filter((lump) => {
       lump.d += PIPE_SPEED * dt;
       const across = lump.from - runTo;
@@ -2820,12 +2820,12 @@ export class MillScene {
         // Along the run, riding with a one pixel jog so the contents rattle
         // rather than slide.
         const px = Math.round(lump.from - lump.d);
-        ctx.drawImage(spud.canvas, px, midY - 2 + (px % 5 === 0 ? 0 : 1));
+        ctx.drawImage(pup.canvas, px, midY - 2 + (px % 5 === 0 ? 0 : 1));
         return true;
       }
       const down = y + 2 + (lump.d - across);
       if (down < foot - 3) {
-        ctx.drawImage(spud.canvas, runTo, Math.round(down));
+        ctx.drawImage(pup.canvas, runTo, Math.round(down));
         return true;
       }
       // Down the chute and off the end onto the pile. It's already in the
@@ -2836,7 +2836,7 @@ export class MillScene {
         return false;
       }
       ctx.drawImage(
-        spud.canvas,
+        pup.canvas,
         runTo + Math.round(out),
         Math.round(foot - 3 + out * CHUTE_SLOPE),
       );
@@ -2856,17 +2856,17 @@ export class MillScene {
     // The field.
     //
     // The land is all there from the first frame: five worked rows, full width,
-    // waiting. Buying a Puppy Pen plants one bed in it. Before, the rows were
+    // waiting. Buying a Puppy Pen pups one bed in it. Before, the rows were
     // sized to the pup and the pup was a log curve on the owned count, which
     // meant the field's shape was a readout — and a readout that spent most of
-    // the game with the front half of the ground left as lawn. Empty furrows
+    // the game with the front half of the ground left as lawn. Empty runs
     // are not dead space, they're the thing you're filling in, and one pen
-    // buying one visible plant is a straighter line between the button and the
+    // buying one visible pup is a straighter line between the button and the
     // mill than any curve was.
     const stages = growthStages(this.mark("pen"));
-    const plant = artCanvas(this.mark("pen"));
+    const pup = artCanvas(this.mark("pen"));
     const wiltShare = 1 - this.view.bedding;
-    const step = plant.w + 1;
+    const step = pup.w + 1;
     // Wide, but leaving a rig's width of headland at each end: the heatlamp
     // stands off the ends of the rows it waters, and a row that runs to the
     // screen edge has nowhere to put it.
@@ -2877,7 +2877,7 @@ export class MillScene {
     // One pen, one bed, until the land runs out — which it does at ninety
     // pens, deep into a run and well past the point where the field stopped
     // being the thing you're watching.
-    const plants = Math.min(slots, this.view.working.pen ?? 0);
+    const pups = Math.min(slots, this.view.working.pen ?? 0);
     const rowWidth = perRow * step - 1;
     const rowLeft = marginX + Math.round((usable - rowWidth) / 2);
 
@@ -2908,19 +2908,19 @@ export class MillScene {
     // there's a machine.
     const works =
       (this.view.working.van ?? 0) +
-        (this.view.working.barn ?? 0) +
+        (this.view.working.groomer ?? 0) +
         (this.view.working.hand ?? 0) >
         0 || this.troughFill > 0;
     this.troughBox = works ? { x: 26, w: 112, y: lane(0.99) } : null;
 
     for (let r = 0; r < FIELD_ROWS; r++) {
-      const count = Math.max(0, Math.min(perRow, plants - r * perRow));
+      const count = Math.max(0, Math.min(perRow, pups - r * perRow));
       const left = rowLeft;
       const ground = rowGround(r);
       this.rows.push({ y: ground, left, right: left + rowWidth });
 
       // Worked bedding under the beds you own, and the rest of the row left as
-      // grass with the furrow line still marked out across it. Ploughing the
+      // grass with the run line still marked out across it. Working the
       // whole row regardless made a new mill look like six enormous empty
       // planters; a marked-out line reads as the land being there and waiting,
       // which is what it is.
@@ -2935,39 +2935,39 @@ export class MillScene {
       for (let c = count; c < perRow; c++) ctx.fillRect(left + c * step, ground, step - 2, 1);
 
       // A hundred pens is a pup that glows in the dark. One band the length
-      // of the row rather than a halo per plant: at ninety beds the haloes
+      // of the row rather than a halo per pup: at ninety beds the haloes
       // would merge into a single wash anyway, and cost ninety gradients a
       // frame to arrive at it.
       if (count > 0 && this.primed("pen")) {
         const lit = (0.7 + 0.3 * Math.sin(t * 1.2 + r)) * this.lightGain();
-        const band = ctx.createLinearGradient(0, ground - plant.h - 3, 0, ground + 2);
+        const band = ctx.createLinearGradient(0, ground - pup.h - 3, 0, ground + 2);
         band.addColorStop(0, rgba(PRIME_GLOW.pen, 0));
         band.addColorStop(0.65, rgba(PRIME_GLOW.pen, 0.26 * lit));
         band.addColorStop(1, rgba(PRIME_GLOW.pen, 0));
         ctx.fillStyle = band;
-        ctx.fillRect(left - 3, ground - plant.h - 3, worked + 2, plant.h + 5);
+        ctx.fillRect(left - 3, ground - pup.h - 3, worked + 2, pup.h + 5);
       }
 
       for (let c = 0; c < count; c++) {
         const i = r * perRow + c;
         const x = left + c * step;
-        // Deterministic per plant rather than drawn from the layout's rng
+        // Deterministic per pup rather than drawn from the layout's rng
         // stream, so wilt doesn't reshuffle when the field changes size.
         const dry = fract(Math.sin(i * 12.9898) * 43758.5453) < wiltShare;
         this.beds.push({ x, y: ground, row: r, dry });
 
-        // Neighbours ripen together: the stagger is a smooth function of where
-        // the plant stands, so the field comes on in patches like a real one
+        // Neighbours come on together: the stagger is a smooth function of where
+        // the pup stands, so the field comes on in patches like a real one
         // instead of flickering at random.
-        this.planted[i] ??= t - GROW_SECONDS * (0.5 + 0.5 * Math.sin(c * 0.7 + r * 2.1));
+        this.stocked[i] ??= t - GROW_SECONDS * (0.5 + 0.5 * Math.sin(c * 0.7 + r * 2.1));
 
-        const age = t - this.planted[i]!;
+        const age = t - this.stocked[i]!;
         const stage =
           age >= GROW_SECONDS ? 3 : age >= GROW_SECONDS * 0.6 ? 2 : age >= GROW_SECONDS * 0.25 ? 1 : 0;
         // Wilt keeps the mark's silhouette and loses its colour, so an upgraded
         // bed still reads as an upgraded bed while it's struggling.
         const art = stages[stage]!;
-        const sprite = artCanvas(dry ? withered(art) : art);
+        const sprite = artCanvas(dry ? scruffy(art) : art);
         // A 1px sway on a slow sine, offset along the row — the whole field
         // leans together in a wave, which is cheap and reads as wind.
         const sway = Math.sin(t * 1.1 + c * 0.4 + r) > 0.6 ? 1 : 0;
@@ -3004,7 +3004,7 @@ export class MillScene {
     // reach back over it, and something happens to the pup as they pass.
     for (const [id, fallback] of [
       ["van", 0.5],
-      ["barn", 0.78],
+      ["groomer", 0.78],
     ] as const) {
       const place = PLACEMENT[id];
       const n = shownCount(this.view.working[id] ?? 0, place.cap, place.spread);
@@ -3013,17 +3013,17 @@ export class MillScene {
       for (let i = 0; i < n; i++) {
         // The combine takes the rows from the front, the van from the back,
         // so on a mill with two rows they aren't nose to tail on the same one.
-        // With nothing planted they fall back to their own lanes on open grass.
+        // With nothing stocked they fall back to their own lanes on open grass.
         const pick =
-          id === "barn" ? this.rows.length - 1 - (i % Math.max(1, this.rows.length)) : i % Math.max(1, this.rows.length);
-        const row = this.rows.length > (id === "barn" && this.rows.length < 2 ? 1 : 0) ? this.rows[pick] : undefined;
+          id === "groomer" ? this.rows.length - 1 - (i % Math.max(1, this.rows.length)) : i % Math.max(1, this.rows.length);
+        const row = this.rows.length > (id === "groomer" && this.rows.length < 2 ? 1 : 0) ? this.rows[pick] : undefined;
         const ground = row ? row.y + 5 : lane(fallback);
         // Phase and pace are hashed per machine rather than dealt out evenly.
         // Evenly spaced starts at one shared speed drew two perfect diagonals
         // — the vans going one way down the rows and the combines the
         // other — and a mill that renders a clean X across itself all day is
         // clearly a formula and not a place where work is happening.
-        const h = fract(Math.sin((i + 1) * (id === "barn" ? 63.7 : 21.3)) * 4375.85);
+        const h = fract(Math.sin((i + 1) * (id === "groomer" ? 63.7 : 21.3)) * 4375.85);
         const pace = place.speed! * (0.78 + 0.44 * fract(h * 7.13));
         const x = Math.floor((((t * pace + h * span) % span) + span) % span) - sprite.w;
         // Where it's drawn, once anything hanging over the field has had its
@@ -3037,23 +3037,23 @@ export class MillScene {
         if (this.chance(2.5)) this.puff(x + 1, ground - 2, "dust");
 
         if (id === "van") {
-          // A van ploughs. The furrow it leaves is the whole reason to
+          // A van does a round. The track it leaves is the whole reason to
           // watch one cross a field.
-          if (this.tills.length < 90 && this.chance(14)) {
-            this.tills.push({ x: x + 1, y: ground - 1, born: now });
+          if (this.tracks.length < 90 && this.chance(14)) {
+            this.tracks.push({ x: x + 1, y: ground - 1, born: now });
           }
         }
 
         // Both of them lift what's ready under the header as they pass, and
         // both of them unload the same way a real one does: an auger swung out
         // over the trough, with the pup visibly going down it.
-        const reach = id === "barn" ? 6 : 2;
+        const reach = id === "groomer" ? 6 : 2;
         const key = `${id}${i}`;
         for (let b = 0; b < this.beds.length; b++) {
           const bed = this.beds[b]!;
           if (bed.dry || Math.abs(bed.y - (ground - 5)) > 3) continue;
           if (bed.x < x - reach || bed.x > x + sprite.w + reach) continue;
-          if (this.ripeness(b, t) < 1) continue;
+          if (this.readiness(b, t) < 1) continue;
           this.lift(b, t);
           this.machineLoad.set(key, (this.machineLoad.get(key) ?? 0) + 1);
         }
@@ -3155,7 +3155,7 @@ export class MillScene {
       if (cycle < 0.22) this.drawBeam(x + sprite.w / 2, y + sprite.h, t, cycle / 0.22);
     }
 
-    this.stepSeeds(t);
+    this.stepDrops(t);
     this.stepTrough(now);
   }
 
@@ -3221,12 +3221,12 @@ export class MillScene {
   /** Furrow behind a van: fresh dark bedding that grasses back over. */
   private drawTills(now: number): void {
     const ctx = this.ctx;
-    this.tills = this.tills.filter((till) => {
-      const age = now - till.born;
-      if (age > TILL_MS) return false;
-      ctx.globalAlpha = 0.55 * (1 - age / TILL_MS);
+    this.tracks = this.tracks.filter((track) => {
+      const age = now - track.born;
+      if (age > TRACK_MS) return false;
+      ctx.globalAlpha = 0.55 * (1 - age / TRACK_MS);
       ctx.fillStyle = DIRT_DARK;
-      ctx.fillRect(Math.round(till.x), Math.round(till.y), 3, 2);
+      ctx.fillRect(Math.round(track.x), Math.round(track.y), 3, 2);
       ctx.globalAlpha = 1;
       return true;
     });
@@ -3261,7 +3261,7 @@ export class MillScene {
         f.drip -= this.dt;
         if (f.drip <= 0) {
           f.drip = 0.22 + Math.random() * 0.16;
-          if (this.seeds.length < 24) this.dropSeedNear(f.x + sprite.w / 2, f.y + sprite.h);
+          if (this.drops.length < 24) this.dropPupNear(f.x + sprite.w / 2, f.y + sprite.h);
         }
         if (f.hold <= 0) this.aimFlyer(f, sprite.w, band);
       } else {
@@ -3314,7 +3314,7 @@ export class MillScene {
       const worth = (i: number) => {
         const x = clamp((this.beds[i]?.x ?? 0) - w / 2, 0, SCENE_W - w);
         const crowded = taken.some((o) => Math.abs(o - x) < w + 6);
-        return (this.planted[i] ?? 0) - (crowded ? 1e6 : 0);
+        return (this.stocked[i] ?? 0) - (crowded ? 1e6 : 0);
       };
       let pick = Math.floor(Math.random() * this.beds.length);
       for (let i = 0; i < 7; i++) {
@@ -3337,12 +3337,12 @@ export class MillScene {
   }
 
   /**
-   * Aim a seed at a plant that could use one, near where it was dropped: a
+   * Aim a drop at a pen that could use one, near where it was let go: a
    * zeppelin that stopped somewhere on purpose drops on what it's standing over.
-   * A hovering machine whose seeds all sail off to the far side of the field is
+   * A hovering machine whose drops all sail off to the far side of the yard is
    * a machine that didn't need to stop.
    */
-  private dropSeedNear(x: number, y: number): void {
+  private dropPupNear(x: number, y: number): void {
     if (this.beds.length === 0) return;
     let pick = -1;
     let best = Infinity;
@@ -3351,43 +3351,43 @@ export class MillScene {
       const bed = this.beds[other];
       if (!bed) continue;
       // Nearest to the nozzle, with a nudge towards the ones furthest behind.
-      const score = Math.abs(bed.x + 3 - x) - (this.clock - (this.planted[other] ?? 0)) * 0.4;
+      const score = Math.abs(bed.x + 3 - x) - (this.clock - (this.stocked[other] ?? 0)) * 0.4;
       if (score < best) {
         best = score;
         pick = other;
       }
     }
     if (pick < 0) return;
-    this.seeds.push({ x, y, vy: 30 + Math.random() * 12, pup: pick });
+    this.drops.push({ x, y, vy: 30 + Math.random() * 12, pup: pick });
   }
 
-  /** Seeds falling, and what they do when they land. */
-  private stepSeeds(t: number): void {
+  /** Drops falling, and what they do when they land. */
+  private stepDrops(t: number): void {
     const ctx = this.ctx;
     ctx.fillStyle = "#e6d78a";
-    this.seeds = this.seeds.filter((seed) => {
-      seed.y += seed.vy * this.dt;
-      const bed = this.beds[seed.pup];
-      if (!bed || seed.y >= bed.y) {
+    this.drops = this.drops.filter((drop) => {
+      drop.y += drop.vy * this.dt;
+      const bed = this.beds[drop.pup];
+      if (!bed || drop.y >= bed.y) {
         if (bed) {
           // Brought on by a quarter of its cycle, and a puff where it landed.
-          this.planted[seed.pup] = Math.min(t, (this.planted[seed.pup] ?? t) - GROW_SECONDS * 0.25);
+          this.stocked[drop.pup] = Math.min(t, (this.stocked[drop.pup] ?? t) - GROW_SECONDS * 0.25);
           this.puff(bed.x + 3, bed.y - 2, "water");
         }
         return false;
       }
-      // Drift toward the plant it's aimed at, so the drop reads as deliberate.
-      seed.x += (bed.x + 3 - seed.x) * Math.min(1, this.dt * 1.6);
+      // Drift toward the pen it's aimed at, so the drop reads as deliberate.
+      drop.x += (bed.x + 3 - drop.x) * Math.min(1, this.dt * 1.6);
       // Unless something with more of an opinion is in the way. It still lands
-      // where it was aimed — the seed falls the whole time, it just takes a
-      // detour around whatever came down over the field.
-      const at = this.warp(seed.x, seed.y);
+      // where it was aimed — the drop falls the whole time, it just takes a
+      // detour around whatever came down over the yard.
+      const at = this.warp(drop.x, drop.y);
       ctx.fillRect(Math.round(at.x), Math.round(at.y), 1, 2);
       return true;
     });
   }
 
-  /** A grow-light sweeping down from an orbital greenhouse onto the rows. */
+  /** A floodlight sweeping down from an orbital kennel onto the rows. */
   private drawBeam(x: number, y: number, t: number, progress: number): void {
     const ctx = this.ctx;
     const row = this.rows[this.rows.length - 1];
@@ -3404,7 +3404,7 @@ export class MillScene {
       for (let b = 0; b < this.beds.length; b++) {
         const bed = this.beds[b]!;
         if (Math.abs(bed.x + 3 - x) > half + 2) continue;
-        this.planted[b] = Math.min(t, (this.planted[b] ?? t) - GROW_SECONDS * 0.06);
+        this.stocked[b] = Math.min(t, (this.stocked[b] ?? t) - GROW_SECONDS * 0.06);
       }
     }
   }
@@ -3676,10 +3676,10 @@ export class MillScene {
       // Empty yard, but not an empty frame — a couple of strays in the dirt.
       // Placed off the crown rather than off the base, which now starts well
       // off the left edge and would have put both of them out of shot.
-      const spud = artCanvas(PUPPY_SPRITE);
+      const pup = artCanvas(PUPPY_SPRITE);
       const baseline = this.heapFoot();
-      ctx.drawImage(spud.canvas, HEAP_CROWN_X, baseline - spud.h);
-      ctx.drawImage(spud.canvas, HEAP_CROWN_X + 8, baseline - spud.h + 1);
+      ctx.drawImage(pup.canvas, HEAP_CROWN_X, baseline - pup.h);
+      ctx.drawImage(pup.canvas, HEAP_CROWN_X + 8, baseline - pup.h + 1);
       return;
     }
 
@@ -3695,11 +3695,11 @@ export class MillScene {
       }
     }
 
-    const spud = artCanvas(PUPPY_SPRITE);
+    const pup = artCanvas(PUPPY_SPRITE);
     const baseline = this.heapFoot();
     const heap = heapSlots();
     for (let j = 0; j < layout.heap; j++) {
-      ctx.drawImage(spud.canvas, heap[j]!.x, baseline + heap[j]!.y);
+      ctx.drawImage(pup.canvas, heap[j]!.x, baseline + heap[j]!.y);
     }
   }
 

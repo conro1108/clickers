@@ -67,7 +67,7 @@ export function Mill({
       <div className="tally">
         <div className="bank">
           <div className="bank-value">{format(onHand)}</div>
-          <div className="bank-label">in the barn{bankIsScore && " — and that's your score"}</div>
+          <div className="bank-label">in the groomer{bankIsScore && " — and that's your score"}</div>
         </div>
         {!bankIsScore && (
           <div className="tally-score">

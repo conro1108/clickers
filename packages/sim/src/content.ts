@@ -5,7 +5,7 @@ export type ProducerId =
   | "hand"
   | "heatlamp"
   | "van"
-  | "barn"
+  | "groomer"
   | "lab";
 
 export interface Producer {
@@ -75,11 +75,11 @@ export const PRODUCERS: readonly Producer[] = [
     growth: 1.12,
   },
   {
-    id: "barn",
-    name: "Whelping Barn",
-    blurb: "A litter before breakfast. Several after.",
-    hurt: "flooded",
-    mend: "Pump out",
+    id: "groomer",
+    name: "Grooming Rig",
+    blurb: "Fluffs a hundred an hour. Do not stand in front of it.",
+    hurt: "jammed",
+    mend: "Unjam",
     baseRate: 3_500,
     baseCost: P.of(45_000),
     growth: 1.12,
@@ -209,7 +209,7 @@ export const UPGRADES: readonly Upgrade[] = [
     blurb: "All producers x2. Don't read the label.",
     cost: P.of(900_000),
     effect: { kind: "global_mult", factor: 2 },
-    requires: { producer: "barn", count: 10 },
+    requires: { producer: "groomer", count: 10 },
   },
 ];
 

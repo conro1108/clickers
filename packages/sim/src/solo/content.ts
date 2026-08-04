@@ -28,7 +28,7 @@ export type SoloProducerId =
   | "hand"
   | "heatlamp"
   | "van"
-  | "barn"
+  | "groomer"
   | "lab"
   | "kibble"
   | "tower"
@@ -143,11 +143,11 @@ export const SOLO_PRODUCERS: readonly SoloProducer[] = [
     world: "outside",
   },
   {
-    id: "barn",
-    name: "Whelping Barn",
-    blurb: "A litter before breakfast. Several after.",
-    hurt: "flooded",
-    mend: "Pump out",
+    id: "groomer",
+    name: "Grooming Rig",
+    blurb: "Fluffs a hundred an hour. Do not stand in front of it.",
+    hurt: "jammed",
+    mend: "Unjam",
     baseRate: 3_400,
     baseCost: P.of(800_000),
     growth: 1.19,
@@ -444,7 +444,7 @@ function tierUpgrades(): SoloUpgrade[] {
     hand: ["Overtime Pay", "Profit Sharing", "Equity Stake"],
     heatlamp: ["Ceramic Bulbs", "Thermostats", "Whole-Yard Radiant"],
     van: ["Turbo Diesel", "Air Suspension", "Six Wheels"],
-    barn: ["Wider Stalls", "Night Shift", "Second Storey"],
+    groomer: ["Wider Head", "Night Shift", "Twin Drums"],
     lab: ["Peer Review", "Tenure", "The Prize"],
     kibble: ["Twin Extruders", "Continuous Flow", "Own Rendering Line"],
     tower: ["Express Lifts", "Kennel Telemetry", "Sky Lobby"],
@@ -581,9 +581,9 @@ const GLOBAL_UPGRADES: SoloUpgrade[] = [
     id: "designer_genes",
     name: "Designer Genes",
     blurb: "Everything produces +50%. Don't read the label.",
-    cost: fleetCost("barn", 20, 42),
+    cost: fleetCost("groomer", 20, 42),
     effect: { kind: "global_mult", factor: 1.5 },
-    requires: { producer: "barn", count: 20 },
+    requires: { producer: "groomer", count: 20 },
   },
   {
     id: "co_op",

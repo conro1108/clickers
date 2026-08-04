@@ -17,7 +17,7 @@ import {
 
 /**
  * The inside mill as a descent, which is the shape the whole scene rests on: a
- * lid, however many strata you've cut through, and a sump with your pile in it.
+ * hem, however many strata you've cut through, and a sump with your pile in it.
  *
  * Nothing here touches a canvas. What's worth pinning is the arithmetic that
  * decides how the buffer gets carved up and how much of the place a count is
@@ -41,7 +41,7 @@ describe("the ladder's depth", () => {
     expect(openZones({ second: 1 })).toBe(ZONES.length);
   });
 
-  it("cuts through the cortex on the way to the core, even on a skipped rung", () => {
+  it("cuts through the fleece on the way to the core, even on a skipped rung", () => {
     // You can't own a Hollow Heart without having got past everything above it,
     // so a save that somehow holds only the deepest rung still gets the strata
     // it must have come through rather than one band floating over the sump.
@@ -65,7 +65,7 @@ describe("carving up the buffer", () => {
     }
   });
 
-  it("always has a lid and a sump, and a stratum for each open zone", () => {
+  it("always has a hem and a sump, and a stratum for each open zone", () => {
     for (let open = 0; open <= ZONES.length; open++) {
       const bands = bandsFor(200, open);
       expect(bands[0]!.zone).toBe(-1);

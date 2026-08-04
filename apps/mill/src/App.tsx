@@ -614,7 +614,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   // go every time you can afford anything — so it gets the near end, and Pedigree
   // slots in at the far end where appearing later doesn't shuffle the rest.
   const nav: { id: MillSheet; label: string; icon: Parameters<typeof PxIcon>[0]["name"] }[] = [
-    ...(showPapers ? ([{ id: "papers", label: "Pedigree", icon: "sprout" }] as const) : []),
+    ...(showPapers ? ([{ id: "papers", label: "Pedigree", icon: "paw" }] as const) : []),
     // Named for what you do in it rather than for what put you there. "Weather"
     // was the cause, and it stopped being true the moment the horizon closed —
     // nothing sends weather at a folded mill, and the tab still said so. Repairs,
