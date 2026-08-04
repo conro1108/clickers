@@ -1,8 +1,9 @@
 /**
  * Every piece of pixel art in the game, as char grids.
  *
- * Two families live here. `ICONS` are 12x12 UI glyphs that replace what used to
- * be plain text and emoji in the chrome. `PROPS` are the scene's furniture:
+ * Two families live here. `ICONS` are 12x12 UI glyphs (bar the puppy, which is
+ * 14) that replace what used to be plain text and emoji in the chrome. `PROPS`
+ * are the scene's furniture:
  * one silhouette per producer tier, the pieces the puppy hoard is built out
  * of, and the scenery around both.
  *
@@ -34,22 +35,30 @@ export const ICONS = {
   // Head-on, and it is all ears. A chihuahua in silhouette is two triangles and
   // an apple, in that order of importance — draw the body instead and at twelve
   // pixels you have a generic small mammal.
+  //
+  // The odd one out at 14x14, because it's also the app icon and that had to be
+  // legible at 60px on a home screen, which the old squarer head wasn't. The
+  // same head is drawn again in `tools/make-icons.mjs` — that one is build-time
+  // node with a background and a drop shadow behind it, so it can't share this
+  // grid, and the two are meant to be kept in step by eye.
   puppy: {
     rows: [
-      ".k........k.",
-      "klk......klk",
-      "kllk....kllk",
-      "kllkkkkkkllk",
-      ".kppppppppk.",
-      "kppkppppkppk",
-      "kpppppppppdk",
-      "kppplwwlpddk",
-      ".kpplwkwlpdk",
-      ".kkpplwwlpk.",
-      "...kkppppk..",
-      ".....kkkk...",
+      "..kk......kk..",
+      ".kppk....kppk.",
+      ".kpipk..kpipk.",
+      ".kpiipkkpiipk.",
+      ".kpiippppiipk.",
+      "kkppppppppppkk",
+      "kppppppppppppk",
+      "kppkkppppkkppk",
+      "kppkkppppkkppk",
+      "kppppwwwwppppk",
+      "kpppwwkkwwpppk",
+      ".kppwwwwwwppk.",
+      ".kkppwwwwppkk.",
+      "...kkkkkkkk...",
     ],
-    palette: { k: K, ...PUPPY, w: "#f2e3c8" },
+    palette: { k: K, ...PUPPY, w: "#f2e3c8", i: "#e8929c" },
   },
 
   // The Grow tab. A paw, because the thing you are growing has feet.

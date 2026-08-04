@@ -655,7 +655,10 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
             is the point — everything back there is either parked or a cheat,
             and neither is worth a pixel of a bar you look at all game. */}
         <div className="hud-bank" {...hold}>
-          <PxIcon name="puppy" size={22} />
+          {/* 28 and 14, not 22 and 16: the head is a 14px grid, so anything but
+              a whole multiple of it lands some pixels a screen pixel wider than
+              their neighbours and the eyes come out lopsided. */}
+          <PxIcon name="puppy" size={28} />
           <div>
             <div className="hud-value">{format(budget)}</div>
             <div className="hud-label">in the yard</div>
@@ -694,7 +697,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           part worth keeping around. */}
       <div className="whistlebar">
         <button className="whistle" onClick={() => onWhistle()}>
-          <PxIcon name="puppy" size={16} />
+          <PxIcon name="puppy" size={14} />
           <span className="whistle-label">Whistle</span>
           <span className="whistle-yield">+{format(perWhistle)}</span>
         </button>

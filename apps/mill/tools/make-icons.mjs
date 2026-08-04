@@ -12,48 +12,45 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const PALETTE = {
-  ".": "#7fc3e4", // sky, so the fawn has something cool to sit on
-  o: "#3a2a20", // outline
-  L: "#eecb93", // fawn, lit
-  M: "#dda65a", // fawn, mid
-  d: "#fdf2dc", // muzzle
-  i: "#eda9ac", // inner ear
-  b: "#f2909a", // blush
-  w: "#ffffff", // the glint, and the whole reason it looks alive
+  ".": "#4b3328", // deep warm brown, so the fawn is the only bright thing
+  ",": "#3a271f", // the drop shadow, a step darker than the background
+  o: "#2b1c17", // outline
+  L: "#f2c88c", // fawn, lit
+  M: "#d99b53", // fawn, mid
+  w: "#fdf3e0", // muzzle
+  i: "#e8929c", // inner ear
+  n: "#ffffff", // the glint, and the whole reason it looks alive
 };
 
-// 20x20, and it is a head rather than a whole dog: at 60px on a home screen a
-// full body is a smudge, and the ears are the only part of a chihuahua that
-// survives being twelve pixels tall.
+// 18x18, which is coarse on purpose: a home-screen icon is read at a glance and
+// at thumbnail size, so the win is a big silhouette in four colours, not detail
+// that turns to mush. The head is drawn inside the grid rather than out to its
+// edges, because the margin is most of what makes those chunky icons look
+// composed instead of cropped.
+//
+// Still a head rather than a whole dog — the ears are the only part of a
+// chihuahua that survives being twelve pixels tall.
 //
 // Outer ring must stay background so the padding trick is invisible.
 const SPRITE = [
-    "..........................",
-    "..o....................o..",
-    "..ooo................ooo..",
-    "..oLLoo............ooMMo..",
-    "...oLLLoo........ooMMMo...",
-    "...oiLLLLo......oMMMMio...",
-    "....oiiLLo......oMMiio....",
-    "....oiiiLLooooooMMiiio....",
-    "....oiiiLLLMMMMMMMiiio....",
-    ".....oiiLMMMMMMMMMiio.....",
-    ".....oiLMMMMMMMMMMMio.....",
-    "....oLMooMMMMMMMMooMMo....",
-    "....oMwwooMMMMMMwwooMo....",
-    "...oMMwwooMMMMMMwwooMMo...",
-    "...oMMooooMMMMMMooooMMo...",
-    "...oMMMooMMMMMMMMooMMMo...",
-    "...oMMMMMMMMMMMMMMMMMMo...",
-    "...oMbbMMMdoooodMMMbbMo...",
-    "....obbbdddoooodddbbbo....",
-    "....obbddddooooddddbbo....",
-    ".....oMdddddoodddddMo.....",
-    "......oddddoddoddddo......",
-    ".......oododdddodoo.......",
-    ".........oooooooo.........",
-    "..........................",
-    "..........................",
+    "..................",
+    "..................",
+    "....oo......oo....",
+    "...oLLo....oLLo...",
+    "...oLiLo..oLiLo...",
+    "...oLiiLooLiiLo...",
+    "...oLiiLLLLiiLo...",
+    "..ooLLLLLLLLLLoo..",
+    "..oLLLLLLLLLLLLo..",
+    "..oLLooLLLLooLLo..",
+    "..oLLooLLLLooLLo..",
+    "..oLLLLwwwwLLLLo..",
+    "..oLLLwwoowwLLLo..",
+    "...oLLwwwwwwLLo...",
+    "...ooLLwwwwLLoo...",
+    ".....oooooooo.....",
+    "..................",
+    "..................",
 ];
 
 const GRID = SPRITE.length;
@@ -117,22 +114,37 @@ function render(size, coverage = 1) {
   const pixels = Buffer.alloc(size * size * 3);
   for (let i = 0; i < size * size; i++) pixels.set(bg, i * 3);
 
+  const cell = (gx, gy, key) => {
+    const c = rgb(PALETTE[key]);
+    for (let y = 0; y < scale; y++) {
+      const py = offset + gy * scale + y;
+      if (py < 0 || py >= size) continue;
+      for (let x = 0; x < scale; x++) {
+        const px = offset + gx * scale + x;
+        if (px < 0 || px >= size) continue;
+        pixels.set(c, (py * size + px) * 3);
+      }
+    }
+  };
+
+  const solid = (gx, gy) =>
+    gy >= 0 && gy < GRID && gx >= 0 && gx < GRID && SPRITE[gy][gx] !== ".";
+
+  // One cell of drop shadow, down and to the right, derived from the silhouette
+  // rather than drawn by hand — it's the thing that lifts the head off the
+  // background instead of leaving it pasted flat on it.
+  for (let gy = 0; gy < GRID; gy++) {
+    for (let gx = 0; gx < GRID; gx++) {
+      if (!solid(gx, gy) && solid(gx - 1, gy - 1)) cell(gx, gy, ",");
+    }
+  }
+
   for (let gy = 0; gy < GRID; gy++) {
     for (let gx = 0; gx < GRID; gx++) {
       const key = SPRITE[gy][gx];
-      const color = PALETTE[key];
-      if (!color) throw new Error(`no palette entry for "${key}"`);
+      if (!PALETTE[key]) throw new Error(`no palette entry for "${key}"`);
       if (key === ".") continue;
-      const c = rgb(color);
-      for (let y = 0; y < scale; y++) {
-        const py = offset + gy * scale + y;
-        if (py < 0 || py >= size) continue;
-        for (let x = 0; x < scale; x++) {
-          const px = offset + gx * scale + x;
-          if (px < 0 || px >= size) continue;
-          pixels.set(c, (py * size + px) * 3);
-        }
-      }
+      cell(gx, gy, key);
     }
   }
   return encodePng(size, pixels);
