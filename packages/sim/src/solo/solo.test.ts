@@ -596,7 +596,7 @@ describe("the Convergence", () => {
 
   /**
    * What the shop hangs its one piece of tunnel vision on. The window opens on
-   * the tenth Tuber Singularity and shuts on the purchase, and nowhere else —
+   * the tenth Chihuahua Singularity and shuts on the purchase, and nowhere else —
    * a mill that's already folded must not get an empty shop for the rest of
    * the run.
    */
@@ -673,7 +673,7 @@ describe("the Convergence", () => {
   });
 
   /**
-   * The Hem Bed is the only thing at the top of the ladder that feeds
+   * The Hem Hollow is the only thing at the top of the ladder that feeds
    * back into the land half, and the reason that half currently stops mattering
    * at four buildings. It has to stack the way a building does — diminishing,
    * under the clamp — or two hundred of them turn the weather off.
@@ -930,7 +930,7 @@ describe("the back room", () => {
     expect(opened.upgrades).not.toContain(CONVERGENCE_UPGRADE);
     expect(opened.upgrades).not.toContain("hem_x2a");
     expect(opened.land.padded_seams).toBeUndefined();
-    // `ceiling_rights` is gated on the Hem Bed, so it goes with it —
+    // `ceiling_rights` is gated on the Hem Hollow, so it goes with it —
     // whereas an upgrade gated on an outside rung is untouched.
     expect(opened.upgrades).not.toContain("ceiling_rights");
     // The yard and the run's output are somebody's afternoon. Left alone.

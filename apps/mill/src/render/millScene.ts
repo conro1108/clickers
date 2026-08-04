@@ -88,7 +88,7 @@ export interface MillView {
   seed: string;
   /**
    * How close the horizon is to closing, 0..1. The flesh starts bleeding
-   * through the sky from the first Tuber Singularity, so the fold arrives
+   * through the sky from the first Chihuahua Singularity, so the fold arrives
    * rather than happening to you.
    *
    * Back to zero once it *has* closed. The Convergence used to replace this
@@ -1018,7 +1018,7 @@ const FLY_SPEED = 27;
 const FLY_HOLD = 3.6;
 
 /**
- * A Tuber Singularity, as the rest of the sky experiences it.
+ * A Chihuahua Singularity, as the rest of the sky experiences it.
  *
  * It hangs in its column most of the time, and every half a minute or so it
  * comes down over the mill and goes back up — which is the only way a thing that
@@ -2083,7 +2083,7 @@ export class MillScene {
   /**
    * The flesh, showing through early.
    *
-   * From the first Tuber Singularity the top of the sky starts taking on the
+   * From the first Chihuahua Singularity the top of the sky starts taking on the
    * colour of the thing on the other side of it, deepening with every one you
    * buy until the Ur-Chihuahua is affordable and it's unmistakable. It's over the
    * clouds and the sun rather than under them, because it isn't weather — it's
@@ -2103,7 +2103,7 @@ export class MillScene {
     // other side rather than as a filter someone left on.
     const pulse = 0.88 + 0.12 * Math.sin(t * 0.42);
     // Front-loaded rather than linear, let alone squared. The whole point is
-    // that the *first* Tuber Singularity changes something you can see — on a
+    // that the *first* Chihuahua Singularity changes something you can see — on a
     // curve that only gets going in the back half, one of them is a tenth of
     // the way to a wash nobody would notice, which is the same as nothing.
     const strength = Math.pow(looming, 0.55) * pulse;

@@ -114,10 +114,10 @@ function Home({ onGo }: { onGo: (screen: Screen) => void }) {
   return (
     <div className="lobby">
       <h1>
-        Puppies, <span>Inc.</span>
+        Puppy <span>Mill</span>
       </h1>
       <p className="tagline">
-        Grow puppies. The weather will have opinions about that.
+        Breed chihuahuas. The weather will have opinions about that.
       </p>
 
       {/* Somebody's mill, running. A title screen for a game about a place
@@ -128,7 +128,7 @@ function Home({ onGo }: { onGo: (screen: Screen) => void }) {
         {returning ? "Back to your mill" : "Start your mill"}
       </button>
       <p className="muted small home-note">
-        A mill you keep. It grows while you're gone — and so does everything that's wrong with it.
+        A mill you keep. It runs while you're gone — and so does everything that's wrong with it.
       </p>
     </div>
   );
@@ -156,7 +156,7 @@ function Home({ onGo }: { onGo: (screen: Screen) => void }) {
 type MillSheet = "shop" | "upkeep" | "papers" | "back";
 
 /** The one-sentence hint, which is worth showing once, ever. */
-const TAUGHT_KEY = "puppies-inc:taught-tap";
+const TAUGHT_KEY = "puppy-mill:taught-tap";
 
 /** A blocked localStorage reports everything as already seen. Harmless. */
 function wasSeen(key: string): boolean {
@@ -204,21 +204,21 @@ const OMEN_FLASH_MS = 1900;
 
 /**
  * And the Convergence, which is the one the other two were only ever warning
- * about: the whole screen, from outside the puppy to inside it.
+ * about: the whole screen, from out under the sky to under the blanket.
  *
  * Ten seconds is longer than anything else in the game by a factor of three, and
  * it's the right length for exactly one thing. Everything else here is a run
  * that lasts days, and this fires once in it — the single moment the game has
- * been building toward since the first Tuber Singularity stained the sky. The
+ * been building toward since the first Chihuahua Singularity stained the sky. The
  * Singularity omen is seven seconds of the lights going out to say *something is
  * coming*; if the thing that arrives is the same blackout with different words,
  * the promise wasn't kept.
  *
  * So this one isn't a veil over the mill. It's the trip: the dark, then the
- * tuber itself out there in it, then the fall into it and through the skin, and
- * then the flesh — and the mill handed back underneath a ceiling that is only
- * just starting to come down. `FOLD_SWAP_MS` is what keeps the canvas from
- * spending that arrival while this is over the top of it.
+ * Ur-Chihuahua itself out there in it, then the thing turning over and settling
+ * — and the whole world going with it, down under the hem and into the warm.
+ * `FOLD_SWAP_MS` is what keeps the canvas from spending that arrival while this
+ * is over the top of it.
  *
  * Timings live in the `converge-*` keyframes, all of them on this duration with
  * percentage offsets, so the beats can't drift out of step with each other.
@@ -235,7 +235,7 @@ const CONVERGE_MS = 9600;
  *
  * So the canvas holds the mill you're standing on, and swaps here. `converge-veil`
  * is fully opaque from 8% of the duration to 92%, and this sits comfortably
- * inside that: the sky is the last thing you see going into the dark, the flesh
+ * inside that: the sky is the last thing you see going into the dark, the hem
  * is the first thing you see coming out of it, and the cut in between is the
  * only account of how you got from one to the other.
  */
@@ -438,12 +438,12 @@ function BackRoom({
           <button
             className="ghost danger"
             onClick={() => {
-              if (window.confirm("Plough it all under? This keeps nothing — not even papers.")) {
+              if (window.confirm("Shut the whole line down? This keeps nothing — not even papers.")) {
                 onAbandon();
               }
             }}
           >
-            Plough it all under
+            Shut the whole line down
           </button>
         </div>
       </section>
@@ -468,7 +468,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const [pops, setPops] = useState<{ id: number; text: string }[]>([]);
   const popId = useRef(0);
   const [taught, setTaught] = useState(() => wasSeen(TAUGHT_KEY));
-  // The only nudge in the game. The first Tuber Singularity is where the run
+  // The only nudge in the game. The first Chihuahua Singularity is where the run
   // stops being "buy the next rung" and starts being a climb toward something,
   // and nothing on the screen said so — the ceiling has begun bleeding through
   // the sky by now, but a player who hasn't seen the fold before has no reason
@@ -772,7 +772,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
       {sheet === "upkeep" && (
         <Sheet
           title="Upkeep"
-          sub={`What ${mill.converged ? "the tuber" : "the weather"} broke, what it costs, and what stops it next time.`}
+          sub={`What ${mill.converged ? "the nest" : "the weather"} broke, what it costs, and what stops it next time.`}
           onClose={() => setSheet(null)}
           foot={
             <>
@@ -812,7 +812,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           )}
           <Damage mill={mill} />
           <LandPanel mill={mill} budget={budget} dispatch={dispatch} />
-          <h3 className="sheet-section">Field report</h3>
+          <h3 className="sheet-section">Yard report</h3>
           <MillFeed mill={mill} now={now} />
         </Sheet>
       )}
@@ -845,7 +845,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
 
       {report && <AwayReport report={report} onDismiss={dismissReport} />}
 
-      {/* The first Tuber Singularity of a run: everything goes out, one sentence
+      {/* The first Chihuahua Singularity of a run: everything goes out, one sentence
           and one instruction arrive in the dark, and the mill fades back up
           underneath them. Deliberately says nothing about what's coming — the
           punchline has to land on a button the player chose to press, not on a
@@ -872,29 +872,30 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         </div>
       )}
 
-      {/* And the thing they were warning about. The lights go out, the tuber is
-          out there in the dark, and then the camera goes at it and through the
-          skin — the only cut in the game that moves rather than fades, because
-          the reveal is a place and you have to be taken to it.
+      {/* And the thing they were warning about. The lights go out, the
+          Ur-Chihuahua is out there in the dark, and then it turns around three
+          times and lies down — and the camera goes under with it, through the
+          hem and into the warm. The only cut in the game that moves rather than
+          fades, because the reveal is a place and you have to be taken to it.
 
           It's over everything, including the shop it was bought from, and it
           eats every input for its ten seconds. What it lifts on is the inside
-          of the puppy: the purchase moves the mill there, so the canvas
+          of the nest: the purchase moves the mill there, so the canvas
           underneath has already swapped to the other scene by the time the
           words clear. The cut is the whole journey now — there's no second act
           waiting on the canvas for it to get out of the way of. */}
       {converging && (
         <div className="converge" role="presentation">
-          <div className="converge-skin" />
-          <div className="converge-flesh" />
+          <div className="converge-dog" />
+          <div className="converge-warm" />
           {/* In the order they arrive. The sentence lands first, on the frame
-              you come through the skin and can see where you are — the card is
+              you come under the hem and can see where you are — the card is
               the name for what just happened to you, and naming it before it
               happens is a chapter heading on a thing you haven't read. It's
               also what's still up as the mill comes back underneath it. */}
           <div className="converge-words">
-            <p className="converge-line">The first puppy was never in the ground</p>
-            <p className="converge-call">You have always been inside it</p>
+            <p className="converge-line">The ground was never ground</p>
+            <p className="converge-call">You have always been under the blanket</p>
             <p className="converge-title">The Convergence</p>
           </div>
         </div>

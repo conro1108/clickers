@@ -23,7 +23,7 @@ export function Damage({ mill }: { mill: solo.MillState }) {
   return (
     <div className="damage">
       <div className="damage-head">
-        What {mill.converged ? "the tuber's" : "the weather's"} costing you
+        What {mill.converged ? "the nest's" : "the weather's"} costing you
       </div>
       <div className="damage-body">
         {lostToBreak > 0 && (

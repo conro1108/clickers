@@ -285,7 +285,7 @@ export function applyMillCommand(f0: MillState, cmd: MillCommand, now: Millis): 
       // Everything that only exists under a ceiling goes with the ceiling. An
       // upgrade belongs to the world of the producer that gates it, which is
       // also why `ur_puppy` has to be named here rather than derived: it's
-      // gated on the Tuber Singularity, out under the sky.
+      // gated on the Chihuahua Singularity, out under the sky.
       const inside = new Set(producersIn("inside").map((p) => p.id));
       const keep = <T extends Partial<Record<SoloProducerId, number>>>(rec: T) =>
         Object.fromEntries(Object.entries(rec).filter(([id]) => !inside.has(id as SoloProducerId)));
@@ -324,7 +324,7 @@ export function applyMillCommand(f0: MillState, cmd: MillCommand, now: Millis): 
       // more of the same. Buying a rung is otherwise silent, and it should stay
       // that way — this is the exception because nothing else told you.
       if (had === 0 && producer.id === CONVERGENCE_GATE_PRODUCER) {
-        note("the first Tuber Singularity is running. the horizon looks wrong.", "neutral");
+        note("the first Chihuahua Singularity is running. the horizon looks wrong.", "neutral");
       }
       break;
     }
@@ -537,7 +537,7 @@ export function mustApplyMill(f: MillState, cmd: MillCommand, now: Millis): Mill
  *
  * The Convergence is the only thing in the game you can't be told about in
  * advance without spoiling it, and it was also the only thing with no build-up
- * at all: you bought a Tuber Singularity, nothing acknowledged it, and nine
+ * at all: you bought a Chihuahua Singularity, nothing acknowledged it, and nine
  * purchases later the world folded. This is what the scene leans on to start
  * showing its hand — the ceiling bleeding through the sky well before it lands —
  * so the fold reads as arriving rather than as happening to you.
@@ -558,7 +558,7 @@ export function convergenceProgress(f: MillState): number {
  *
  * The shop empties itself down to this one row while it's true, which is the
  * only place in the game a purchase is made the only thing you can do. It's the
- * point: the tenth Tuber Singularity is a threshold nothing in the shop marked,
+ * point: the tenth Chihuahua Singularity is a threshold nothing in the shop marked,
  * and a player who reaches it with a screen full of rungs will keep buying rungs
  * and never notice what the tier was counting down to. There is roughly a
  * thousand seconds of production between the gate opening and the price being

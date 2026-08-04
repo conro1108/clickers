@@ -14,32 +14,36 @@ import { fileURLToPath } from "node:url";
 const PALETTE = {
   ".": "#43301a", // bedding background
   o: "#2a1c0d", // outline
-  L: "#f5cd85", // puppy, lit
-  M: "#dda65a", // puppy, mid
-  D: "#bd8038", // puppy, shaded
-  d: "#ad7330", // sprout-bud dimple
+  L: "#f5cd85", // fawn, lit
+  M: "#dda65a", // fawn, mid
+  D: "#bd8038", // fawn, shaded
+  d: "#fbeed0", // muzzle and chest
 };
 
-// 20x20. Outer ring must stay background so the padding trick is invisible.
+// 20x20, and it is a head rather than a whole dog: at 60px on a home screen a
+// full body is a smudge, and the ears are the only part of a chihuahua that
+// survives being twelve pixels tall.
+//
+// Outer ring must stay background so the padding trick is invisible.
 const SPRITE = [
   "....................",
-  ".......ooooo........",
-  "......oLLLLLo.......",
-  ".....oLLLLLLLo......",
-  "....oLLLLLLLMo......",
-  "....oLLdLLLLMMo.....",
-  "....oLLLLLLLMMo.....",
-  "....oLLLLLLLMMo.....",
-  "....oLLLLLLLMMMo....",
-  "....oLLLLLdMMMMo....",
-  "....oLLLLLLMMMMo....",
-  "....oLLLLLLMMMMo....",
-  "....oLLLLLMMMMo.....",
-  ".....oLdLMMMMMo.....",
-  ".....oLLMMDDDo......",
-  "......oMMDDDDo......",
-  "......oDDDDDo.......",
-  ".......ooooo........",
+  "...oo.........oo....",
+  "..oLLo.......oMMo...",
+  "..oLLLo.....oMMMo...",
+  "..oLLLLoooooMMMMo...",
+  "...oLLLLLLLLMMMMo...",
+  "...oLLLLLLLLLMMMo...",
+  "..oLLoLLLLLLoMMMMo..",
+  "..oLLLLLLLLLLMMMMo..",
+  "..oLLLLLLLLLLMMMDo..",
+  "..oLLLLLLLLLLMMMDo..",
+  "..oLLLLdddddMMMMDo..",
+  "...oLLdddoodddMMDo..",
+  "...oLLdddddddMMDo...",
+  "....oLLdddddMMDo....",
+  ".....oLLMMMMDDo.....",
+  "......ooDDDDoo......",
+  "........oooo........",
   "....................",
   "....................",
 ];

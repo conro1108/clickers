@@ -24,7 +24,7 @@ export function setServerOffset(deltaMs: number): void {
  * so this is a convenience rather than the only thing standing between a dev
  * button and a dead save.
  */
-const SKEW_KEY = "puppies-inc:dev-skew";
+const SKEW_KEY = "puppy-mill:dev-skew";
 
 let skew = readSkew();
 

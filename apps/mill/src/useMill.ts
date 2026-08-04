@@ -3,7 +3,7 @@ import { P, solo, type Millis, type Puppies } from "@mill/sim";
 
 import { nowMs } from "./clock.js";
 
-const SAVE_KEY = "puppies-inc:mill";
+const SAVE_KEY = "puppy-mill:mill";
 /** How often batched whistles are folded into the sim. */
 const WHISTLE_FLUSH_MS = 500;
 /**

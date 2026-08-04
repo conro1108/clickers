@@ -14,7 +14,7 @@ type BuyQty = 1 | 10 | "max";
  * ten. It's a preference, not a state of the mill — so it lives beside the save
  * rather than in it, and a mill handed down or abandoned keeps it.
  */
-const QTY_KEY = "puppies-inc:buy-qty";
+const QTY_KEY = "puppy-mill:buy-qty";
 
 function loadQty(): BuyQty {
   try {
@@ -131,7 +131,7 @@ function Convergence({
       <div className="grave-mark" aria-hidden />
       <h3 className="grave-name">{ur.name}</h3>
       <p className="grave-blurb">{ur.blurb}</p>
-      <p className="grave-line">You have spent this whole run on its skin.</p>
+      <p className="grave-line">You have spent this whole run on the outside of it.</p>
 
       <div className="grave-price">
         <div className="grave-track">
@@ -170,7 +170,7 @@ export function GrowPanel({
     setQtyRaw(next);
   };
 
-  // The last stretch. Once the tenth Tuber Singularity is standing, the shop
+  // The last stretch. Once the tenth Chihuahua Singularity is standing, the shop
   // stops being a shop: every other rung and every other upgrade comes off the
   // board and the only thing left is the one that ends the climb.
   //
@@ -185,8 +185,8 @@ export function GrowPanel({
   }
 
   // One shop per world. The outside mill keeps its ladder and keeps earning
-  // while you're inside, but you can't buy a Taproot Well for a wheat field or a
-  // Combine Barn for a room made of flesh — so the shop is the shop of the
+  // while you're inside, but you can't buy a Down Well for a bare yard or a
+  // Grooming Rig for a room made of blanket — so the shop is the shop of the
   // place you're standing in, and warping is how you change it.
   const ladder = solo.producersIn(mill.world);
   const upgrades = solo.SOLO_UPGRADES.filter((u) => {
@@ -215,7 +215,7 @@ export function GrowPanel({
           const n = qty === "max" ? Math.max(1, solo.affordableCount(mill, prod.id, budget)) : qty;
           const cost = solo.producerCost(mill, prod.id, n);
           // What it would actually add to the mill as it stands, tired bedding and
-          // all — the Taproot Well's rate moves with the dirt, so a clean-rate
+          // all — the Down Well's rate moves with the bedding, so a clean-rate
           // quote would be advertising a machine you can't currently buy.
           const each = solo.producerRateEach(mill, prod.id);
           const broken = solo.brokenCount(mill, prod.id);
@@ -310,7 +310,7 @@ export function LandPanel({
         <>
           <p className="hint">
             Nothing here mends on its own. What the weather hurt stays hurt and tired bedding
-            stays tired until you spend on it — that's what {mill.converged ? "the tuber" : "the weather"}{" "}
+            stays tired until you spend on it — that's what {mill.converged ? "the nest" : "the weather"}{" "}
             actually costs.
           </p>
           {jobs > 1 && (
@@ -474,7 +474,7 @@ export function LegacyPanel({
           <p className="hint">
             You can hand down the sky as well. Stay inside and the next generation starts under the
             ceiling, with the tiers that mill it already in the shop. Go back out and the horizon
-            opens — no Hem Bed, no Taproot Well, weather instead of the tuber, and the
+            opens — no Hem Hollow, no Warm Heart, weather instead of the nest, and the
             Convergence to reach all over again.
           </p>
           <div className="choices halves">

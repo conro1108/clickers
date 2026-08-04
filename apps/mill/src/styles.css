@@ -614,7 +614,7 @@ input {
   animation: converge-veil 9600ms linear both;
 }
 /* The light of the thing you're falling toward, before it's big enough to be
-   anything. Kept on the backdrop rather than on the tuber itself: a blurred
+   anything. Kept on the backdrop rather than on the dog itself: a blurred
    shadow scaled thirty times is a lot of pixels to ask a phone for. */
 .converge::before {
   content: "";
@@ -624,63 +624,70 @@ input {
   animation: converge-halo 9600ms ease-in both;
 }
 
-/* The puppy, from outside, getting closer. It's a lopsided blob with two eyes
-   on it, which is all it needs to be — for the four seconds it's small enough
-   to read as an object it's barely more than a lit speck, and by the time it's
-   big enough to inspect you're already through it. */
-.converge-skin {
+/* The Ur-Chihuahua, out there in the dark and getting closer. An apple head
+   with two eyes on it, which is all it needs to be — for the four seconds it's
+   small enough to read as an object it's barely more than a lit speck, and by
+   the time it's big enough to inspect it has already turned over and taken you
+   under with it.
+
+   Square-ish in vmin rather than the old lopsided oval: a chihuahua head is
+   round, and the one silhouette cue that survives being a blurred shape at 5%
+   scale is *not being oblong*. */
+.converge-dog {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 44vmin;
-  height: 33vmin;
-  margin: -16.5vmin 0 0 -22vmin;
-  border-radius: 54% 46% 48% 52% / 60% 58% 42% 40%;
-  background: radial-gradient(72% 78% at 36% 30%, #b07c4c 0%, #8a5a35 42%, #5d3a22 74%, #341f13 100%);
+  width: 38vmin;
+  height: 36vmin;
+  margin: -18vmin 0 0 -19vmin;
+  border-radius: 50% 50% 46% 46% / 54% 54% 46% 46%;
+  background: radial-gradient(70% 74% at 40% 30%, #e2b077 0%, #c98b4b 40%, #95602c 74%, #3d2415 100%);
   will-change: transform;
-  animation: converge-skin 9600ms cubic-bezier(0.62, 0, 0.9, 0.4) both;
+  animation: converge-dog 9600ms cubic-bezier(0.62, 0, 0.9, 0.4) both;
 }
-/* Two eyes, so the last thing that passes the camera on the way in is a sprout
-   pit the size of the screen. */
-.converge-skin::before,
-.converge-skin::after {
+/* Two eyes, level and facing you, so the last thing that passes the camera on
+   the way in is an eye the size of the screen. Level is the whole difference:
+   the pair used to be staggered, and a staggered pair on a brown oval is a
+   potato. */
+.converge-dog::before,
+.converge-dog::after {
   content: "";
   position: absolute;
   border-radius: 50%;
   background: radial-gradient(circle at 50% 40%, #2a1a10 0%, #46291a 62%, rgba(70, 41, 26, 0) 100%);
   box-shadow: 0 -0.35vmin 0 rgba(214, 160, 106, 0.45);
 }
-.converge-skin::before {
-  left: 25%;
-  top: 41%;
-  width: 7%;
+.converge-dog::before {
+  left: 27%;
+  top: 40%;
+  width: 8%;
   height: 9%;
 }
-.converge-skin::after {
+.converge-dog::after {
   left: 58%;
-  top: 25%;
-  width: 5%;
-  height: 6.5%;
+  top: 40%;
+  width: 8%;
+  height: 9%;
 }
 
-/* Inside. Cut flesh lit from where you came in, going to shadow at the edges,
-   with the same vascular seams the ceiling has — this is the same place the
-   canvas is about to draw over the sky, seen from much closer. */
-.converge-flesh {
+/* Inside. Pale fleece lit from where you came under, going to the warm dark at
+   the edges, with the same rings of weave the hem has — this is the same place
+   the canvas is about to draw over the sky, seen from much closer. */
+.converge-warm {
   position: absolute;
   inset: 0;
   background:
     repeating-radial-gradient(
       circle at 50% 44%,
-      rgba(93, 58, 34, 0.17) 0 2px,
-      rgba(93, 58, 34, 0) 2px 30px
+      rgba(120, 96, 72, 0.15) 0 2px,
+      rgba(120, 96, 72, 0) 2px 26px
     ),
-    radial-gradient(circle at 50% 44%, #f2e2b4 0%, #ecd9a6 18%, #c9a473 45%, #7d5330 74%, #3d2415 100%);
-  animation: converge-flesh 9600ms cubic-bezier(0.16, 0.6, 0.24, 1) both;
+    radial-gradient(circle at 50% 44%, #f8f2e8 0%, #e6dccb 18%, #cdb488 45%, #7a4a48 76%, #241010 100%);
+  animation: converge-warm 9600ms cubic-bezier(0.16, 0.6, 0.24, 1) both;
 }
-/* The skin going past the lens. One frame's worth of white, which is what
+/* The hem going past the lens. One frame's worth of white, which is what
    turns a crossfade into a passage through something. */
-.converge-flesh::before {
+.converge-warm::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -707,7 +714,7 @@ input {
   text-transform: uppercase;
 }
 /* Said in the dark, on the way in. Held up out of the middle, because the
-   middle is where the tuber is and a sentence across it makes the one object
+   middle is where the dog is and a sentence across it makes the one object
    on the screen look like a background. */
 .converge-line {
   align-self: start;
@@ -768,7 +775,7 @@ input {
     opacity: 0;
   }
 }
-@keyframes converge-skin {
+@keyframes converge-dog {
   0% {
     opacity: 0;
     transform: scale(0.05) rotate(-8deg);
@@ -789,7 +796,7 @@ input {
     transform: scale(34) rotate(6deg);
   }
 }
-@keyframes converge-flesh {
+@keyframes converge-warm {
   0%,
   42% {
     opacity: 0;
@@ -834,7 +841,7 @@ input {
     opacity: 0;
   }
 }
-/* Through the skin at 43%, and this is the first thing you read in there. */
+/* Under the hem at 43%, and this is the first thing you read in there. */
 @keyframes converge-call {
   0%,
   44% {
@@ -1168,12 +1175,12 @@ input {
   flex-shrink: 0;
   width: 104px;
   height: 78px;
-  border-radius: 54% 46% 48% 52% / 60% 58% 42% 40%;
-  background: radial-gradient(72% 78% at 36% 30%, #7d5433 0%, #5c3b23 42%, #3a2415 74%, #1c110a 100%);
+  border-radius: 50% 50% 46% 46% / 54% 54% 46% 46%;
+  background: radial-gradient(70% 74% at 40% 30%, #7d5433 0%, #5c3b23 42%, #3a2415 74%, #1c110a 100%);
   box-shadow: 0 0 54px 14px rgba(255, 176, 84, 0.16), inset -10px -12px 22px rgba(0, 0, 0, 0.55);
   animation: grave-breathe 6.5s ease-in-out infinite;
 }
-/* One sprout pit, low and off to the side. The fold's tuber has the pair, and
+/* One eye, low and off to the side. The fold's dog has the pair, and
    the pair is what makes this one a face: two dark dots at eye height on a blob
    is a cartoon no matter how the rest of it is lit. */
 .grave-mark::before {
@@ -1334,7 +1341,7 @@ input {
   font-weight: 400;
 }
 /* A fixed-width slot rather than an intrinsic one, so the names down the
-   column line up whether the row's thing is a 7px puppy plant or a 24px
+   column line up whether the row's thing is a 7px pen pup or a 24px
    combine barn. */
 .row-art {
   flex-shrink: 0;
@@ -1819,18 +1826,18 @@ input {
 
   /* The Convergence still takes the screen and still ends up inside the puppy,
      because that's the run's one payoff and cutting it would be cutting the
-     ending. What goes is the flight: no rush toward the tuber and no scaling on
-     the flesh, so it's a lit place you arrive in rather than one you're thrown
+     ending. What goes is the flight: no rush toward the dog and no scaling on
+     the hem, so it's a lit place you arrive in rather than one you're thrown
      at. Everything else is opacity, which is already safe. */
-  .converge-skin {
+  .converge-dog {
     display: none;
   }
-  .converge-flesh {
-    animation-name: converge-flesh-still;
+  .converge-warm {
+    animation-name: converge-warm-still;
   }
 }
 
-@keyframes converge-flesh-still {
+@keyframes converge-warm-still {
   0%,
   42% {
     opacity: 0;

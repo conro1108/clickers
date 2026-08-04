@@ -14,7 +14,7 @@ import { EMPTY_VIEW, MillScene as Scene, type MillView } from "../render/millSce
 import { InsideScene } from "../render/insideScene.js";
 
 export interface MillSceneHandle {
-  /** Turn a puppy up out of the ground. Somewhere in the field if unplaced. */
+  /** Whistle a puppy up. Somewhere in the yard if unplaced. */
   whistle(at?: { x: number; y: number }): void;
 }
 
@@ -105,8 +105,8 @@ export const MillScene = forwardRef<MillSceneHandle, {
     const marks: MillView["marks"] = {};
     // Only the world you're standing in. The other mill is still producing —
     // that's the whole arrangement after the fold — but it's producing somewhere
-    // you can't see from here, and drawing an Hem Bed over a wheat
-    // field would say the opposite.
+    // you can't see from here, and drawing a Hem Hollow over an open
+    // yard would say the opposite.
     for (const prod of solo.producersIn(world)) {
       const owned = mill.producers[prod.id] ?? 0;
       const dead = solo.brokenCount(mill, prod.id);

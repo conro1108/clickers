@@ -5,7 +5,7 @@ export function Feed({ state }: { state: MatchState }) {
   return (
     <section className="panel feed">
       <header className="panel-head">
-        <h2>Field report</h2>
+        <h2>Yard report</h2>
       </header>
       {entries.length === 0 ? (
         <p className="muted">Quiet so far.</p>
