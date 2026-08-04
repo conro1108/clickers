@@ -16,6 +16,7 @@
 import { P, format, ms, seconds, type Millis, type Puppies } from "../numbers.js";
 import { rngFor, type Rng } from "../rng.js";
 import {
+  MAX_BEDDING,
   MIN_BEDDING,
   SOLO_MAX_BROKEN_SHARE,
   SOLO_PRODUCERS,
@@ -248,8 +249,30 @@ export function fireWeather(f: MillState, at: Millis): { mill: MillState; event:
         // Jitter so identical storms aren't identical, and so the seeded PRNG
         // stays the only randomness anywhere in the sim.
         const rolled = kind.effect.share * breakPotency * rng.range(0.8, 1.2);
-        const want = Math.max(1, Math.round(working * rolled));
-        const cap = Math.max(0, Math.floor(owned * SOLO_MAX_BROKEN_SHARE) - already);
+        // "A storm always takes at least one unit — unless you built something
+        // that stops it."
+        //
+        // The floor here used to be a flat `Math.max(1, …)`, which is the first
+        // half of that sentence without the second. Every storm took a unit of
+        // everything it looked at no matter what stood in the way, so mitigation
+        // could thin the hits and stretch the gaps but never prevent one, and a
+        // mill left alone walked to the broken cap regardless of what the run had
+        // been spent on.
+        //
+        // Dropping the floor outright fixes that and overshoots: it hands the
+        // same relief to mills with no land at all, because a storm rounding 0.4
+        // units down to nothing is a storm that missed. So the floor is kept and
+        // *mitigated* — at bare land it's the old guaranteed unit, and what you
+        // build erodes it. That leaves the relief aimed at the players who paid
+        // for it, which is the whole point.
+        //
+        // Below one unit the remainder is odds rather than a rounding, so a small
+        // mill still occasionally loses its only van instead of being immune to
+        // arithmetic.
+        const exact = Math.max(breakPotency, working * rolled);
+        const want = Math.floor(exact) + (rng.next() < exact % 1 ? 1 : 0);
+        if (want <= 0) continue;
+        const cap = Math.max(0, Math.round(owned * brokenCeiling(mill)) - already);
         const hit = Math.min(want, working, cap);
         if (hit <= 0) continue;
         brokenNow[id] = already + hit;
@@ -324,5 +347,31 @@ function totalRepairs(f: MillState): number {
 
 /** Bedding actually taken, clamped so the land can never be run into the ground. */
 function takeBedding(f: MillState, want: number): number {
-  return Math.max(0, Math.min(want, f.bedding - MIN_BEDDING));
+  return Math.max(0, Math.min(want, f.bedding - beddingFloor(f)));
+}
+
+/**
+ * How far down the land can be pushed, and how much of the kit can be taken
+ * apart, given what you've built against it.
+ *
+ * Slowing the damage was never enough on its own. Every hit here is permanent
+ * and the events never stop, so *any* positive rate of loss walks a mill to its
+ * clamp over a long enough absence — mitigation bought hours and changed
+ * nothing about where the mill ended up. Both worst cases were constants, so
+ * every unattended mill arrived at the identical wreck: every producer at half
+ * broken, bedding on the floor, production down about 87%. Come back after
+ * eight hours or a week and the mill was in the same state, which is what made
+ * the weather read as one catastrophe that had already happened rather than a
+ * running cost you manage.
+ *
+ * So the land sets the floor as well as the slope. A mill behind a full row of
+ * poplars still gets knocked about by a storm, and still needs someone to come
+ * and put it right — it just can't be dismantled while you're not looking.
+ */
+function brokenCeiling(f: MillState): number {
+  return SOLO_MAX_BROKEN_SHARE * (1 - mitigation(f, "breakage"));
+}
+
+function beddingFloor(f: MillState): number {
+  return MAX_BEDDING - (MAX_BEDDING - MIN_BEDDING) * (1 - mitigation(f, "bedding"));
 }

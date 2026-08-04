@@ -223,7 +223,14 @@ describe("the ladder", () => {
     expect(paid.length).toBeGreaterThanOrEqual(globals.length - 1);
 
     const sorted = paid.map((u) => u.seconds).sort((a, b) => a - b);
-    expect(sorted[Math.floor(sorted.length / 2)]).toBeGreaterThan(2_000);
+    // Was 2,000s, and came down when the weather stopped being able to wipe an
+    // unlucky run. This median is taken across cadences, so it used to be held
+    // up by the runs that spent the session pinned at the broken cap earning
+    // almost nothing — an upgrade looks expensive in seconds-of-production when
+    // your production is 13% of what you built. Measured on runs that *weren't*
+    // wrecked, pacing barely moved (within about 4% over a fixed 8h run), which
+    // is why the per-upgrade floor below is unchanged and is the real guard.
+    expect(sorted[Math.floor(sorted.length / 2)]).toBeGreaterThan(1_500);
     for (const { id, seconds: s } of paid) expect(s, id).toBeGreaterThan(700);
   });
 });
@@ -438,6 +445,49 @@ describe("weather", () => {
     });
     const median = [...ratios].sort((a, b) => a - b)[1]!;
     expect(median).toBeGreaterThan(1.5);
+  });
+
+  /**
+   * The bug this pins is the one a player actually reports, and they report it
+   * as "everything breaks at once".
+   *
+   * Damage here is permanent and the events never stop, so when the worst case
+   * was a constant — half of every producer broken, bedding on the floor — every
+   * unattended mill walked to that same constant and sat there. Eight hours away
+   * and a week away returned the *identical* wreck at about 87% down, no matter
+   * what the run had been spent on. That isn't a running cost, it's a cutscene
+   * with a repair bill attached.
+   *
+   * So what's asserted is that the absence's damage saturates somewhere the
+   * player chose, rather than somewhere the constants did.
+   */
+  it("lets a mill you built up survive being left alone", () => {
+    for (const seed of ["k1", "k2", "k3"]) {
+      const base = developedMill(seed, HOUR);
+      const bare: MillState = { ...base, land: {} };
+      const built: MillState = {
+        ...base,
+        land: { windbreak: 12, drainage: 12, pest_control: 10 },
+      };
+      // Measured against the mill you walked away from, since both start with
+      // whatever the active hour already did to them.
+      const kept = (f: MillState, hours: number) =>
+        currentRate(advance(f, ms(base.checkpointAt + hours * HOUR), true).mill) / currentRate(f);
+
+      for (const hours of [8, 24 * 7]) {
+        console.log(
+          `${seed} ${hours}h: bare kept ${(kept(bare, hours) * 100).toFixed(0)}%, ` +
+            `built kept ${(kept(built, hours) * 100).toFixed(0)}%`,
+        );
+        // A mill with the land behind it comes back needing a tidy, not a rebuild.
+        expect(kept(built, hours)).toBeGreaterThan(0.8);
+        // One without still gets taken apart — that's what the land is for.
+        expect(kept(bare, hours)).toBeLessThan(0.35);
+      }
+      // And the wreck has to stop being a fixed destination: a week away can't
+      // cost a built mill materially more than a night away.
+      expect(kept(built, 24 * 7)).toBeGreaterThan(kept(built, 8) - 0.05);
+    }
   });
 
   /**
