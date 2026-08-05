@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 
+import { PACK_POSES, POSE } from "./art.js";
 import {
   buildHidden,
   DROP_CLEAR_X,
   fetchTarget,
   HAND_X,
   onLanding,
+  onPitch,
   packAt,
+  pickAction,
+  type PackPup,
   PACK_CAP,
   PACK_LEFT,
   PACK_OPEN_AT,
@@ -134,6 +138,55 @@ describe("the yard", () => {
     // Nothing permanent stands in it, or the clearing is just a smaller yard
     // with a water bowl in the middle of it.
     expect(at(HAND_X, front)).toBe(false);
+  });
+
+  it("keeps the handler's feet clear too, and only their feet", () => {
+    const front = 344;
+    // Where they stand, and where the ball sits in their hand.
+    expect(onPitch(HAND_X, front, front)).toBe(true);
+    expect(onPitch(HAND_X + 8, front - 2, front)).toBe(true);
+    // A few pixels upfield of them is still yard: this is a place to swing an
+    // arm, not a second clearing.
+    expect(onPitch(HAND_X, front - 20, front)).toBe(false);
+    expect(onPitch(HAND_X + 40, front, front)).toBe(false);
+    expect(onPitch(HAND_X - 20, front, front)).toBe(false);
+  });
+
+  it("spends about half the day lying down, and a slice of that asleep", () => {
+    // Weights and durations pull in opposite directions here, which is the trap:
+    // sleep is the rarest roll in the rotation bar the zoomies and the longest
+    // by a mile, so the only number worth asserting on is how much of the yard
+    // is in each pose at a glance. Half of them down reads as a warm afternoon;
+    // all of them down reads as a yard nobody has fed.
+    const time: Record<string, number> = {};
+    const dog = { x: 80, home: 80, leaving: false } as PackPup;
+    let t = 0;
+    for (let i = 0; i < 40_000; i++) {
+      pickAction(dog, t);
+      time[dog.doing] = (time[dog.doing] ?? 0) + (dog.until - t);
+      t = dog.until;
+    }
+    const share = (doing: string) => (time[doing] ?? 0) / t;
+    expect(share("rest") + share("sleep")).toBeGreaterThan(0.35);
+    expect(share("rest") + share("sleep")).toBeLessThan(0.65);
+    // Asleep has to be a minority of the lying down, or the yard stops moving.
+    expect(share("sleep")).toBeGreaterThan(0.1);
+    expect(share("sleep")).toBeLessThan(share("rest"));
+    // And something is always up and about.
+    expect(share("trot")).toBeGreaterThan(0.1);
+  });
+
+  it("draws a different picture for every pose it can be in", () => {
+    // Two poses that come out as the same grid is a state the yard can be in
+    // that you can't see it in — which is how the sleeping dogs shipped as
+    // sitting ones the first time.
+    const poses = PACK_POSES[0]![0]!;
+    const seen = new Map<string, string>();
+    for (const [name, i] of Object.entries(POSE)) {
+      const key = poses[i]!.rows.join("|");
+      expect(seen.get(key), `${name} is drawn the same as ${seen.get(key)}`).toBeUndefined();
+      seen.set(key, name);
+    }
   });
 
   it("never throws the ball somewhere no dog can reach", () => {

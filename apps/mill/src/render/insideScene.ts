@@ -55,6 +55,7 @@ import {
   HOIST_CAGE,
   PACK_COATS,
   PACK_POSES,
+  POSE,
   PUPPY_SPRITE,
   PRODUCER_MARKS,
   SHAFT_CREW_UP,
@@ -2101,7 +2102,17 @@ export class InsideScene {
 
     for (const dog of [...this.pack].sort((a, b) => a.y - b.y)) {
       const step = Math.floor(dog.walked / PACK_STRIDE) % 2;
-      const sprite = artCanvas(PACK_POSES[dog.coat]![dog.vx < 0 ? 1 : 0]![dog.doing === "sit" ? 2 + (Math.floor(this.clock * 2.6 + dog.x) % 2) : dog.doing === "flop" ? 4 : step]!);
+      const pose =
+        dog.doing === "sit"
+          ? POSE.sit + (Math.floor(this.clock * 2.6 + dog.x) % 2)
+          : dog.doing === "rest"
+            ? POSE.loaf
+            : dog.doing === "sleep"
+              ? POSE.sleep
+              : dog.doing === "zoom"
+                ? POSE.run + step
+                : POSE.trot + step;
+      const sprite = artCanvas(PACK_POSES[dog.coat]![dog.vx < 0 ? 1 : 0]![pose]!);
       const x = Math.round(dog.x);
       const y = Math.round(dog.y);
       ctx.globalAlpha = 0.2;

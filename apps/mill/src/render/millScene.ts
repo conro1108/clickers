@@ -35,12 +35,14 @@ import {
   LAMP_ON,
   PACK_COATS,
   PACK_POSES,
+  POSE,
   PUPPY_SPRITE,
   PRODUCER_MARKS,
   BASKET,
   shrunk,
   TREE,
   TUFT,
+  ZZZ,
   scruffy,
 } from "./art.js";
 import { artCanvas, artTinted, type Art } from "./pixel.js";
@@ -372,6 +374,26 @@ export function onLanding(x: number, y: number, back: number, front: number): bo
   return x < DROP_CLEAR_X && y < back + (front - back) * DROP_CLEAR_D;
 }
 
+/**
+ * The other patch nobody settles on: where the handler stands to throw.
+ *
+ * The handler is at the very front of the yard and sorts *behind* the pack on a
+ * tie, which was fine when the front row was a couple of dogs deep and stopped
+ * being fine the moment they were all lying down: a dog at rest is the widest
+ * sprite out here, and two of them parked on the spot hid the handler, the ball
+ * in their hand, and the whole of the wind-up. The throw was still happening —
+ * it just happened behind a puppy.
+ *
+ * Small, and only at the front: it's a place to stand and swing an arm, not a
+ * second clearing. The dogs go *round* rather than away.
+ */
+const PITCH_W = 14;
+const PITCH_D = 9;
+
+export function onPitch(x: number, y: number, front: number): boolean {
+  return x > HAND_X - 6 && x < HAND_X + PITCH_W && y > front - PITCH_D;
+}
+
 /** How much of the yard's depth the pack spreads over, back to front. */
 const PACK_SPILL = 4;
 
@@ -450,8 +472,17 @@ export const HAND_X = 40;
 /** How fast a dog moves when it has a job. Faster than an amble, short of a sprint. */
 const FETCH_SPEED = 30;
 
-/** How long the handler stands there between throws. */
-const FETCH_REST = [2.5, 6] as const;
+/**
+ * How long the handler stands there between throws.
+ *
+ * Shorter than it was by half. The loop reads perfectly and almost nobody ever
+ * saw it: a throw is up for less than a second, the fetch itself is over in
+ * three or four, and then the ball sat in a hand for the best part of ten. What
+ * that adds up to is a yard where, most of the time you glance at it, the one
+ * thing anybody in the picture is *doing* isn't happening. A pause long enough
+ * to feel like a rest is two or three seconds, not ten.
+ */
+const FETCH_REST = [1.2, 3.5] as const;
 
 /** How much room the throw leaves around the handler, or it's a drop, not a throw. */
 const FETCH_CLEAR = 28;
@@ -542,7 +573,7 @@ export interface PackPup {
   home: number;
   vx: number;
   vy: number;
-  doing: "trot" | "stand" | "sit" | "zoom" | "flop";
+  doing: "trot" | "stand" | "sit" | "zoom" | "rest" | "sleep";
   /** Scene clock, in seconds, at which it picks something else. */
   until: number;
   walked: number;
@@ -616,12 +647,25 @@ export function pickAction(dog: PackPup, t: number): void {
   } else if (roll < 0.68) {
     dog.doing = "sit";
     dog.until = t + 4 + Math.random() * 9;
-  } else if (roll < 0.88) {
-    // Flopped, and for a good while. A puppy that lies down for one second is
-    // a puppy that changed its mind; the pose only reads as *settled* if it
-    // outlasts a couple of the walks going on around it.
-    dog.doing = "flop";
+  } else if (roll < 0.815) {
+    // Down but awake, and for a good while. A puppy that lies down for one
+    // second is a puppy that changed its mind; the pose only reads as *settled*
+    // if it outlasts a couple of the walks going on around it.
+    dog.doing = "rest";
     dog.until = t + 12 + Math.random() * 22;
+  } else if (roll < 0.845) {
+    // Properly asleep, and for long enough that it's a fixture of the yard
+    // rather than a pose in the rotation: come back to the tab in a minute and
+    // the same dog is still asleep in the same place, which is what makes the
+    // yard somewhere that carries on without you rather than a loop.
+    //
+    // Rare *as a roll* and common *on the ground*, which is the thing to hold
+    // in mind here: at one in thirty and a minute a go it still ends up being
+    // a fifth of the yard at any moment, and every second of that is a second
+    // some dog isn't doing anything else. It's the longest pose in the rotation
+    // and the weight has to be read against that, not against the other rolls.
+    dog.doing = "sleep";
+    dog.until = t + 30 + Math.random() * 50;
   } else {
     dog.doing = "stand";
     dog.until = t + 2 + Math.random() * 4;
@@ -3913,7 +3957,7 @@ export class MillScene {
       const y = Math.round(back + (front - back) * rng());
       // The landing stays bare, weeds included — a tuft of grass in front of a
       // half-grown puppy hides as much of it as a dog would.
-      if (this.onTheLanding(x + sprite.w, y)) continue;
+      if (this.onTheLanding(x + sprite.w, y) || onPitch(x + sprite.w, y, front)) continue;
       queue.push({ y, go: () => this.ctx.drawImage(sprite.canvas, x, y - sprite.h) });
     }
     for (const dog of this.pack) queue.push({ y: dog.y, go: () => this.drawPup(dog) });
@@ -4036,23 +4080,30 @@ export class MillScene {
   }
 
   /**
-   * Move a dog off the landing, so there's always clear grass under the chute
-   * for the next one to grow up on.
+   * Move a dog off the two patches of grass the yard keeps clear: the landing
+   * under the chute, so there's always somewhere for the next one to grow up,
+   * and the handler's few feet at the front, so the throw is something you can
+   * see happen.
    *
    * It's a shove rather than a fence: whoever's standing there is sent trotting
-   * out at a downward angle, which reads as a dog wandering off rather than as
-   * a dog that can't go somewhere. The ones exempt are the ones the clearing is
-   * *for* — anything still growing — plus a dog on its way out of the gate and
-   * a dog chasing the ball, neither of which is going to linger anyway.
+   * out — down the field off the landing, back up it off the handler's spot,
+   * both of which head into open yard from where they start. That reads as a
+   * dog wandering off rather than as a dog that can't go somewhere.
+   *
+   * The ones exempt are the ones the clearing is *for* — anything still growing
+   * — plus a dog on its way out of the gate and a dog chasing the ball, neither
+   * of which is going to linger anyway.
    */
   private clearTheLanding(dog: PackPup, t: number): void {
     if (dog.leaving || dog.fetching) return;
     if (this.clock - dog.born < GROW_SMALL) return;
-    if (!this.onTheLanding(dog.x, dog.y)) return;
-    if (dog.doing === "trot" && dog.vx > 0 && dog.vy > 0) return;
+    const landing = this.onTheLanding(dog.x, dog.y);
+    if (!landing && !onPitch(dog.x, dog.y, this.packFront())) return;
+    const away = landing ? 1 : -1;
+    if (dog.doing === "trot" && dog.vx > 0 && dog.vy * away > 0) return;
     dog.doing = "trot";
     dog.vx = PACK_WALK[0] + Math.random() * (PACK_WALK[1] - PACK_WALK[0]);
-    dog.vy = 3 + Math.random() * 5;
+    dog.vy = away * (3 + Math.random() * 5);
     dog.until = t + 1.5 + Math.random() * 1.5;
     // Somewhere out on the open field, so it doesn't turn round and come
     // straight back the moment it stops.
@@ -4162,7 +4213,7 @@ export class MillScene {
       // Wind up and let go. The target is anywhere in the yard bar the strip
       // right in front of the handler, or the throw is a drop.
       f.from = t;
-      f.to = t + 0.7;
+      f.to = t + 0.85;
       f.tx = fetchTarget(hand.x);
       f.ty = back + Math.random() * Math.max(1, front - back);
       f.phase = "fly";
@@ -4174,6 +4225,12 @@ export class MillScene {
       f.x = f.tx;
       f.y = f.ty;
       f.phase = "chase";
+      // A scuff of grass where it comes down. The ball is four pixels and the
+      // arc puts it well away from the handler, so without something at the
+      // landing the eye loses it in the air and picks it up again in a dog's
+      // mouth — which is the wrong half of the throw to be able to see.
+      this.puff(f.tx, f.ty, "dust", -10);
+      this.puff(f.tx + 2, f.ty, "dust", 10);
       return;
     }
 
@@ -4308,15 +4365,19 @@ export class MillScene {
     // and a dog that sits down halfway through inflating looks like a glitch.
     const pose =
       age < GROW_SMALL
-        ? 5
+        ? POSE.newborn
         : dog.doing === "sit"
           ? // Sitting alternates the tail on the clock rather than on distance,
             // for the obvious reason that a sitting dog isn't covering any. `x`
             // stands in for a per-dog phase: constant while sat, and free.
-            2 + (Math.floor(this.clock * 1.5 + dog.x) % 2)
-          : dog.doing === "flop"
-            ? 4
-            : step;
+            POSE.sit + (Math.floor(this.clock * 1.5 + dog.x) % 2)
+          : dog.doing === "rest"
+            ? POSE.loaf
+            : dog.doing === "sleep"
+              ? POSE.sleep
+              : dog.doing === "zoom"
+                ? POSE.run + step
+                : POSE.trot + step;
     const sprite = artCanvas(
       age < GROW_CARRIED ? PUPPY_SPRITE : PACK_POSES[dog.coat]![dog.vx < 0 ? 1 : 0]![pose]!,
     );
@@ -4328,13 +4389,40 @@ export class MillScene {
     ctx.globalAlpha = 1;
     // A pixel of lift on the off step at a walk, and a proper bounce at a
     // sprint — a zooming dog that stays pinned to the floor just looks fast.
+    // A sleeping one breathes instead: a pixel, once every few seconds, which
+    // is the slowest animation in the scene and the only one that's meant to be
+    // noticed after you've stopped looking for it.
     const bob =
       dog.doing === "zoom"
         ? Math.round(Math.abs(Math.sin(dog.walked / 7)) * 3)
-        : dog.doing === "trot" && step === 1
-          ? 1
-          : 0;
+        : dog.doing === "sleep"
+          ? (Math.sin(this.clock * 0.9 + dog.x) > 0.6 ? 1 : 0)
+          : dog.doing === "trot" && step === 1
+            ? 1
+            : 0;
     ctx.drawImage(sprite.canvas, x, y - sprite.h - bob);
+    if (dog.doing === "sleep") this.drawSleep(dog, x, y - sprite.h);
+  }
+
+  /**
+   * The `Z` coming off a sleeping one: up and away over about three seconds,
+   * fading as it goes, and only one at a time.
+   *
+   * Phased on the dog's own x, so a row of sleepers isn't a row of Zs rising in
+   * lockstep — the yard has no other sprite that would give that away as
+   * quickly as this one would.
+   */
+  private drawSleep(dog: PackPup, x: number, top: number): void {
+    const ctx = this.ctx;
+    const sprite = artCanvas(ZZZ);
+    const p = fract(this.clock / 3.2 + dog.x * 0.11);
+    // Nothing for the first stretch of the cycle, so they come one at a time
+    // rather than as a stream.
+    if (p > 0.75) return;
+    const rise = p / 0.75;
+    ctx.globalAlpha = 0.85 * (1 - rise * rise);
+    ctx.drawImage(sprite.canvas, x + (dog.vx < 0 ? -3 : 11), Math.round(top - 2 - rise * 7));
+    ctx.globalAlpha = 1;
   }
 
   /**

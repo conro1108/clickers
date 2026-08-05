@@ -582,6 +582,41 @@ const PUP_TROT_ROWS = [
 ];
 
 /**
+ * The same head with the ears pinned back, for the one thing out here that ever
+ * hurries.
+ *
+ * The ears are the whole sprite — see above — so a running dog can't just move
+ * its legs faster: what says *flat out* on an animal whose silhouette is two
+ * triangles is that the two triangles have gone. They lie down into the skull
+ * line here, which takes three pixels off the top of the shape and is easily
+ * the loudest thing about the pose at a glance.
+ */
+const PUP_RUN_HEAD = [
+  "...........",
+  ".k.......k.",
+  "klkkkkkkklk",
+  "kllkkkkkllk",
+  ...PUP_HEAD.slice(4),
+];
+
+/**
+ * Flat out: paws thrown wide, then gathered under it, with the tongue out.
+ *
+ * Two frames and a hard alternation rather than anything smoother, because it's
+ * only ever on screen for two seconds at fifty pixels a second — a subtle run
+ * cycle at that speed is a blur of subtlety. Wide-then-under is the shape of a
+ * bound, which is what a small dog going flat out actually does, and it reads
+ * even when you only catch a couple of frames of it.
+ *
+ * The tongue is one pink pixel under the chin. It does more for the pose than
+ * the legs do.
+ */
+const PUP_RUN_ROWS = [
+  [...PUP_RUN_HEAD, "k.kptpppk..", "kkkpppppppk", ".klllllllk.", ".kkkkkkkkk.", "d.........d"],
+  [...PUP_RUN_HEAD, "k.kptpppk..", "kkkpppppppk", ".klllllllk.", ".kkkkkkkkk.", "...dd.dd..."],
+];
+
+/**
  * Sat down, with the tail down and up.
  *
  * A slow alternation between the two is a wag, and a wag is most of what makes
@@ -595,35 +630,71 @@ const PUP_SIT_ROWS = [
 ];
 
 /**
- * Flat out on its side, which is what a puppy does most of the time.
+ * Down but awake: the loaf.
+ *
+ * A puppy lying with its head still up and its paws out front, which is the
+ * pose it spends most of a warm afternoon in and by some distance the cutest
+ * thing it does. Head-on, so it keeps the ears and the face — the whole point
+ * of this one is that it's *looking at you* while lying down.
+ *
+ * Wider than the standing sprite and shorter than the sat one: the body spills
+ * a pixel past the head on each side, which is the entire trick. A dog that has
+ * gone slightly wider than it should be reads as settled and heavy in a way
+ * nothing about its outline can, and it's the difference between a lying dog
+ * and a standing dog drawn short.
+ */
+const PUP_LOAF_ROWS = [
+  ...PUP_HEAD,
+  ".kppppppppk",
+  "kplllllllpk",
+  ".kkddkddkk.",
+];
+
+/**
+ * Asleep: on its side, curled, eyes shut.
  *
  * The one pose that goes back to a side view, and the reason is the same reason
  * the others don't. Head-on is right for an upright dog because it puts both
- * ears up where they identify the animal; it's useless for a lying one, because
- * a front-facing sprite with a shorter body doesn't read as *down*, it reads as
- * a dog that has sunk into the concrete.
+ * ears up where they identify the animal; it's useless for a sleeping one,
+ * because a front-facing sprite with a shorter body doesn't read as *down*, it
+ * reads as a dog that has sunk into the ground.
  *
  * Side-on is safe here where it wasn't standing up, because the two things that
  * made the standing side view a chicken are both gone: the ear is laid back
  * along the skull instead of standing on top of it, and there are no upright
- * legs, just a paw out front. What's left is a long low shape with a face on
- * one end, which is a sleeping animal and nothing else.
+ * legs, just paws tucked in. What's left is a long low shape with a face on one
+ * end, which is a sleeping animal and nothing else.
+ *
+ * Two pixels of shut eye do the rest. The loaf has an open face and this one
+ * doesn't, and that's the whole distinction between resting and asleep — a
+ * sprite this size can't afford a subtler one. The tail curls up over the back
+ * so the low end still has something to look at, and the scene floats a `Z` off
+ * the head, which is the only thing on the canvas that spells anything.
  *
  * Eight rows against fifteen, so at a glance it's a different *shape* rather
- * than a different picture. A yard where a third of them are lying down has a
+ * than a different picture. A yard where a third of them are down has a
  * silhouette that varies; a yard of nothing but upright dogs reads as a display
  * cabinet however good the sprite is.
  */
-const PUP_FLOP_ROWS = [
-  "..........kkk.",
-  "...kk....kpppk",
-  "..kllkkkkppppk",
-  ".kpppppppkkppk",
-  "kppppppppwkmmk",
-  "kllllllllllmmk",
-  ".kkkkkkkkkkkk.",
-  "..d...d.......",
+const PUP_SLEEP_ROWS = [
+  "....kkkkkkk..",
+  "..kkpppkllkk.",
+  ".kllppppppppk",
+  "kpppppppkkppk",
+  "kpppppppppmmk",
+  "kllllllllmmmk",
+  ".kkkkkkkkkkk.",
+  "..dd..dd.....",
 ];
+
+/**
+ * The `Z` over a sleeping one. Four by four, which is the smallest a `Z` can be
+ * drawn and still have the diagonal that stops it being an `I`.
+ */
+export const ZZZ: Art = {
+  rows: ["zzzz", "..z.", ".z..", "zzzz"],
+  palette: { z: "#f6f2e6" },
+};
 
 /**
  * Just off the slide, and not full size yet.
@@ -678,23 +749,38 @@ function flip(rows: readonly string[]): string[] {
 function pup(rows: readonly string[], coat: number, left: boolean): Art {
   return {
     rows: left ? flip(rows) : [...rows],
-    // `m` is the muzzle and `w` the glint in the eye: both stay put across the
-    // coats, because the pale of a face is what carries the expression and a
-    // dark dog with a dark muzzle has none.
-    palette: { k: K, w: "#fdf6ea", m: "#f4e6cc", ...COATS[coat] },
+    // `m` is the muzzle, `w` the glint in the eye and `t` the tongue: all three
+    // stay put across the coats, because the pale of a face is what carries the
+    // expression and a dark dog with a dark muzzle has none.
+    palette: { k: K, w: "#fdf6ea", m: "#f4e6cc", t: "#f2718c", ...COATS[coat] },
   };
 }
 
 /**
+ * Which picture goes with what a dog is doing. Named, because the yard reaches
+ * for these by hand and `poses[4]` is how a sleeping dog ends up sitting.
+ */
+export const POSE = {
+  trot: 0,
+  trotB: 1,
+  sit: 2,
+  sitB: 3,
+  loaf: 4,
+  newborn: 5,
+  sleep: 6,
+  run: 7,
+  runB: 8,
+} as const;
+
+/**
  * Every pose the yard can draw, built once at module load.
  *
- * Thirty `Art` objects rather than a factory call per frame, because
+ * Fifty-odd `Art` objects rather than a factory call per frame, because
  * `artCanvas` caches on object identity — building them per frame would paint
  * a fresh canvas per dog per frame and the yard would cost more than the rest
  * of the scene put together.
  *
- * Indexed `[coat][facing][pose]`: facing 0 is right, poses 0-1 are the trot,
- * 2-3 the sit with its tail down and up, 4 the flop and 5 the new arrival.
+ * Indexed `[coat][facing][pose]`, facing 0 being right. See `POSE`.
  */
 export const PACK_POSES: readonly (readonly (readonly Art[])[])[] = COATS.map((_, coat) =>
   [false, true].map((left) => [
@@ -702,8 +788,11 @@ export const PACK_POSES: readonly (readonly (readonly Art[])[])[] = COATS.map((_
     pup(PUP_TROT_ROWS[1]!, coat, left),
     pup(PUP_SIT_ROWS[0]!, coat, left),
     pup(PUP_SIT_ROWS[1]!, coat, left),
-    pup(PUP_FLOP_ROWS, coat, left),
+    pup(PUP_LOAF_ROWS, coat, left),
     pup(PUP_NEW_ROWS, coat, left),
+    pup(PUP_SLEEP_ROWS, coat, left),
+    pup(PUP_RUN_ROWS[0]!, coat, left),
+    pup(PUP_RUN_ROWS[1]!, coat, left),
   ]),
 );
 
