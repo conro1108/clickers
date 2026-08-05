@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { buildHidden, packAt, PACK_CAP, SCENE_W, YARD, yardLayout } from "./millScene.js";
+import {
+  buildHidden,
+  fetchTarget,
+  packAt,
+  PACK_CAP,
+  PACK_LEFT,
+  PACK_OPEN_AT,
+  PACK_RIGHT,
+  SCENE_W,
+  YARD,
+  yardLayout,
+} from "./millScene.js";
 
 /** Sprite width straight off the char grid, since there's no canvas out here. */
 function artWidth(rows: readonly string[]): number {
@@ -33,10 +44,12 @@ describe("the yard", () => {
     }
   });
 
-  it("counts the first few puppies one for one, then keeps the pack in bounds", () => {
+  it("puts a dog on the ground for the very first puppy, then keeps the pack in bounds", () => {
+    // It counted the first few one for one until the opening was stretched out;
+    // the first one still has to land immediately, because an empty yard on the
+    // first whistle reads as the whistle not having worked.
     expect(yardLayout(0).pack).toBe(0);
     expect(yardLayout(1).pack).toBe(1);
-    expect(yardLayout(2).pack).toBe(2);
     for (let l = 0; l <= 15; l += 0.01) {
       const { stage, pack } = yardLayout(10 ** l);
       expect(pack).toBeGreaterThanOrEqual(0);
@@ -64,7 +77,11 @@ describe("the yard", () => {
     // whole run climbing now, so "a decent crowd" means a decent crowd *for
     // where you are* — five dogs is a full yard on day one and a bug on day
     // five, and a flat threshold can't tell the two apart.
-    for (let l = Math.log10(200); l <= 17.5; l += 0.005) {
+    //
+    // From the end of the opening rather than from the first prop: below that
+    // the yard is *meant* to look thin for its stage, because the pack is still
+    // arriving. That's the opening's whole job.
+    for (let l = Math.log10(PACK_OPEN_AT); l <= 17.5; l += 0.005) {
       const { stage, pack } = yardLayout(10 ** l);
       expect(pack, `thin at 1e${l.toFixed(2)}`).toBeGreaterThanOrEqual(Math.round(packAt(stage) * 0.75));
     }
@@ -79,6 +96,48 @@ describe("the yard", () => {
     expect(yardLayout(1e6).pack).toBeLessThan(PACK_CAP * 0.5);
     expect(yardLayout(1e12).pack).toBeLessThan(PACK_CAP * 0.85);
     expect(yardLayout(1e17).pack).toBeGreaterThan(PACK_CAP * 0.85);
+  });
+
+  it("spends the whole opening filling the yard, not the first few whistles", () => {
+    // The pack used to be one dog per puppy up to a floor of five, so ten
+    // seconds in the yard was as full as it would be for the next hour and the
+    // only thing left to watch arrive was props.
+    expect(yardLayout(5).pack).toBeLessThanOrEqual(2);
+    expect(yardLayout(200).pack).toBeLessThanOrEqual(4);
+    expect(yardLayout(PACK_OPEN_AT).pack).toBeGreaterThanOrEqual(7);
+  });
+
+  it("arrives one dog at a time, including where the opening hands over", () => {
+    // Aim the opening ramp at the wrong top and it lets go one short, so the
+    // pack pops two at the boundary — which reads as a bug, because a dog that
+    // was never on the ground has nowhere to have come from.
+    let last = 0;
+    for (let a = 0; a <= PACK_OPEN_AT * 1.2; a = a < 50 ? a + 1 : Math.ceil(a * 1.001)) {
+      const { pack } = yardLayout(a);
+      expect(pack - last, `jumped ${last} to ${pack} at ${a}`).toBeLessThanOrEqual(1);
+      last = pack;
+    }
+  });
+
+  it("never throws the ball somewhere no dog can reach", () => {
+    // A target outside the pack's bounds pinned the chasing dog against the
+    // fence, and since nothing times a chase out, the fetch loop stayed wedged
+    // there for the rest of the session.
+    for (const handX of [0, 12, 40, 88, 150, SCENE_W]) {
+      for (let roll = 0; roll <= 1; roll += 0.001) {
+        const tx = fetchTarget(handX, roll);
+        expect(tx, `hand ${handX} roll ${roll.toFixed(3)}`).toBeGreaterThanOrEqual(PACK_LEFT);
+        expect(tx, `hand ${handX} roll ${roll.toFixed(3)}`).toBeLessThanOrEqual(PACK_RIGHT);
+      }
+    }
+  });
+
+  it("throws clear of the handler, so the throw reads as a throw", () => {
+    // Where the handler actually stands there's plenty of yard to the right,
+    // so every throw should be well off their feet.
+    for (let roll = 0; roll <= 1; roll += 0.001) {
+      expect(Math.abs(fetchTarget(40, roll) - 40)).toBeGreaterThanOrEqual(20);
+    }
   });
 
   it("has a build-out that climbs and fits on the canvas", () => {

@@ -422,6 +422,37 @@ const FETCH_SPEED = 30;
 /** How long the handler stands there between throws. */
 const FETCH_REST = [2.5, 6] as const;
 
+/** How much room the throw leaves around the handler, or it's a drop, not a throw. */
+const FETCH_CLEAR = 28;
+
+/**
+ * Where the next throw lands.
+ *
+ * This used to pick anywhere in the yard and then shove the target clear of the
+ * handler if it came out too close — and the shove had nothing bounding it, so
+ * a throw aimed just left of the handler came out at a negative x. A ball
+ * outside the pack's bounds is one no dog can ever reach: the chaser pins
+ * against the fence, `drive` re-points it at the fence every frame, the chase
+ * never closes and the fetch loop stops for the rest of the session. With the
+ * handler at 40 that was about one throw in six.
+ *
+ * So it samples the two clear spans either side of the handler instead,
+ * weighted by how much room each has, and never leaves the reachable band. The
+ * roll is a parameter so this is testable across the whole range rather than
+ * one throw at a time.
+ */
+export function fetchTarget(handX: number, roll: number = Math.random()): number {
+  const lo = PACK_LEFT + 8;
+  const hi = PACK_RIGHT - 8;
+  const left = Math.max(0, handX - FETCH_CLEAR - lo);
+  const right = Math.max(0, hi - (handX + FETCH_CLEAR));
+  // A handler standing somewhere that leaves no clear span at all. Can't happen
+  // where this one stands, but the fallback has to be reachable, not tidy.
+  if (left + right === 0) return clamp(handX + FETCH_CLEAR, lo, hi);
+  const pick = roll * (left + right);
+  return clamp(pick < left ? lo + pick : handX + FETCH_CLEAR + (pick - left), lo, hi);
+}
+
 /** Pixels of ground per animation frame. Ties the step to the walk, not the clock. */
 export const PACK_STRIDE = 4;
 
@@ -669,13 +700,39 @@ interface YardLayout {
  */
 const PACK_KEEP = 0.82;
 
-/** Where the yard starts, before you own anything at all. */
+/** Where the yard settles once the opening is over. */
 const PACK_FLOOR = 5;
+
+/** One dog for the first puppy, so the first whistle puts something on the ground. */
+const PACK_START = 1;
+
+/**
+ * The hoard at which the opening ends and the stage curve takes over.
+ *
+ * A million, which on a keen run is about an hour in. That sounds absurd for
+ * something called the opening, and it's the point: at two hundred — where this
+ * first landed — the yard was done growing ninety seconds after the first
+ * whistle, and everything after that was props. An hour of a pack that is still
+ * visibly arriving is an hour where the thing you look at keeps changing.
+ */
+export const PACK_OPEN_AT = 1e6;
 
 /**
  * How hard the fill is weighted towards the end. Above 1 is slower early.
  */
 const PACK_CURVE = 1.45;
+
+/**
+ * How the yard refills between one stage and the next. Well under 1, so most of
+ * the pack is back within the first slice of the stage and the long tail is
+ * spent topping it up — the yard should read as busy most of the time and only
+ * be conspicuously thin right after something took half of them indoors.
+ *
+ * Up here with the rest of the pack's knobs rather than next to the layout that
+ * reads it, because `PACK_OPEN_TOP` asks the stage curve a question at module
+ * load and everything that answer depends on has to exist by then.
+ */
+const PACK_EASE = 0.5;
 
 /**
  * How many puppies are loose in the yard once the build-out reaches `stage`.
@@ -700,14 +757,44 @@ export function packAt(stage: number): number {
 }
 
 /**
- * How the yard refills between one stage and the next. Well under 1, so most of
- * the pack is back within the first slice of the stage and the long tail is
- * spent topping it up — the yard should read as busy most of the time and only
- * be conspicuously thin right after something took half of them indoors.
+ * A ceiling on the pack for the opening, and no ceiling at all after it.
+ *
+ * The stage curve's floor is five and stage zero ends at five puppies, so the
+ * yard used to fill to that floor one dog per whistle and then sit at five for
+ * the rest of the opening — the first thing a new player watches was over in
+ * about ten seconds, and then nothing on the ground changed for an hour.
+ *
+ * This stretches those first few dogs across the whole opening instead: one on
+ * the first puppy, and the rest spread out behind it. Logarithmic, because the
+ * hoard is — on a linear ramp the last dog would take longer to arrive than all
+ * the others put together.
+ *
+ * Past `PACK_OPEN_AT` it returns the cap, which makes it a no-op rather than a
+ * clamp the rest of the run has to fight. The ramp's top comes off the stage
+ * curve at that same point rather than being a number of its own, so the
+ * handover can't skip a dog however either side is retuned — aim the ramp one
+ * short and the pack pops two at the boundary.
  */
-const PACK_EASE = 0.5;
+const PACK_OPEN_TOP = stageLayout(PACK_OPEN_AT).pack;
+
+export function packOpening(amount: number): number {
+  const a = Math.max(0, amount);
+  if (a >= PACK_OPEN_AT) return PACK_CAP;
+  const f = Math.log10(1 + a) / Math.log10(1 + PACK_OPEN_AT);
+  return Math.floor(PACK_START + (PACK_OPEN_TOP + 1 - PACK_START) * f);
+}
 
 export function yardLayout(amount: number): YardLayout {
+  const a = Math.max(0, amount);
+  const base = stageLayout(a);
+  // The opening only ever binds downwards and only for the first stretch of the
+  // run, so it can't turn a stage that took dogs indoors into one that didn't —
+  // the pack still falls only where `add` says it should.
+  return { stage: base.stage, pack: Math.min(base.pack, packOpening(a)) };
+}
+
+/** The pack the build-out alone asks for, before the opening gets a say. */
+function stageLayout(amount: number): YardLayout {
   const a = Math.max(0, amount);
   let stage = 0;
   while (stage + 1 < YARD.length && a >= YARD[stage + 1]!.at) stage++;
@@ -4283,8 +4370,7 @@ export class MillScene {
       // right in front of the handler, or the throw is a drop.
       f.from = t;
       f.to = t + 0.7;
-      f.tx = PACK_LEFT + 8 + Math.random() * (PACK_RIGHT - PACK_LEFT - 16);
-      if (Math.abs(f.tx - hand.x) < 28) f.tx += f.tx < hand.x ? -34 : 34;
+      f.tx = fetchTarget(hand.x);
       f.ty = back + Math.random() * Math.max(1, front - back);
       f.phase = "fly";
       return;
