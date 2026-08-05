@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildHidden,
+  DROP_CLEAR_X,
   fetchTarget,
+  HAND_X,
+  onLanding,
   packAt,
   PACK_CAP,
   PACK_LEFT,
@@ -111,6 +114,26 @@ describe("the yard", () => {
       expect(pack - last, `jumped ${last} to ${pack} at ${a}`).toBeLessThanOrEqual(1);
       last = pack;
     }
+  });
+
+  it("keeps the grass under the slide clear, and only that", () => {
+    // The band as the scene lays it out on a tall phone: a yard about eighty
+    // pixels deep, its back edge just under the fence.
+    const back = 262;
+    const front = 344;
+    const at = (x: number, y: number) => onLanding(x, y, back, front);
+    // Where the chute puts one down, and the first stretch of the walk out of
+    // it — the whole of a puppy's growing up has to happen on clear ground.
+    expect(at(16, back)).toBe(true);
+    expect(at(DROP_CLEAR_X - 2, back + 4)).toBe(true);
+    // And it's a corner, not a stripe: the rest of the back fence and the deep
+    // front of the field are still somewhere a dog can settle.
+    expect(at(60, back)).toBe(false);
+    expect(at(16, front)).toBe(false);
+    expect(at(16, back + (front - back) * 0.5)).toBe(false);
+    // Nothing permanent stands in it, or the clearing is just a smaller yard
+    // with a water bowl in the middle of it.
+    expect(at(HAND_X, front)).toBe(false);
   });
 
   it("never throws the ball somewhere no dog can reach", () => {

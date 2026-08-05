@@ -348,6 +348,30 @@ export const PACK_RIGHT = SCENE_W - 12;
  */
 const DROP_X = 16;
 
+/**
+ * The landing: the patch of grass under the slide's mouth that the pack keeps
+ * off, as a right-hand edge and a share of the yard's depth from the back.
+ *
+ * A puppy comes off the chute the size of a bread roll and takes a second or so
+ * to stand up into itself, and that second is the best thing in the picture. It
+ * was also invisible: the drop is the busiest corner of the yard, so what you
+ * actually watched was a full-grown dog's back with something small happening
+ * behind it. Nothing settles here now — new arrivals grow up in it and walk
+ * out, and anything that wanders in gets moved along.
+ *
+ * Sized off the walk rather than picked by eye: a new one trots at about twelve
+ * pixels a second and grows for a bit over a second, so thirty-odd pixels of
+ * clear ground is exactly the room it needs to finish growing before it's back
+ * among everyone else.
+ */
+export const DROP_CLEAR_X = DROP_X + 18;
+export const DROP_CLEAR_D = 0.34;
+
+/** Is this spot on the grass under the slide's mouth, given the pack's band? */
+export function onLanding(x: number, y: number, back: number, front: number): boolean {
+  return x < DROP_CLEAR_X && y < back + (front - back) * DROP_CLEAR_D;
+}
+
 /** How much of the yard's depth the pack spreads over, back to front. */
 const PACK_SPILL = 4;
 
@@ -421,7 +445,7 @@ interface Fetch {
  * Front left, out of the corner the slide and the pipeline both drop into, so
  * a throw always has the open middle of the field to land in.
  */
-const HAND_X = 40;
+export const HAND_X = 40;
 
 /** How fast a dog moves when it has a job. Faster than an amble, short of a sprint. */
 const FETCH_SPEED = 30;
@@ -3887,6 +3911,9 @@ export class MillScene {
       const sprite = rng() < 0.35 ? flowers : tuft;
       const x = Math.floor(rng() * (SCENE_W - sprite.w));
       const y = Math.round(back + (front - back) * rng());
+      // The landing stays bare, weeds included — a tuft of grass in front of a
+      // half-grown puppy hides as much of it as a dog would.
+      if (this.onTheLanding(x + sprite.w, y)) continue;
       queue.push({ y, go: () => this.ctx.drawImage(sprite.canvas, x, y - sprite.h) });
     }
     for (const dog of this.pack) queue.push({ y: dog.y, go: () => this.drawPup(dog) });
@@ -3989,6 +4016,7 @@ export class MillScene {
           }
         }
       }
+      this.clearTheLanding(dog, t);
       if (dog.leaving && dog.x > SCENE_W + 2) continue;
       kept.push(dog);
     }
@@ -4001,6 +4029,34 @@ export class MillScene {
       this.owed--;
       this.pack.push(this.newPup(t, false));
     }
+  }
+
+  private onTheLanding(x: number, y: number): boolean {
+    return onLanding(x, y, this.packBack(), this.packFront());
+  }
+
+  /**
+   * Move a dog off the landing, so there's always clear grass under the chute
+   * for the next one to grow up on.
+   *
+   * It's a shove rather than a fence: whoever's standing there is sent trotting
+   * out at a downward angle, which reads as a dog wandering off rather than as
+   * a dog that can't go somewhere. The ones exempt are the ones the clearing is
+   * *for* — anything still growing — plus a dog on its way out of the gate and
+   * a dog chasing the ball, neither of which is going to linger anyway.
+   */
+  private clearTheLanding(dog: PackPup, t: number): void {
+    if (dog.leaving || dog.fetching) return;
+    if (this.clock - dog.born < GROW_SMALL) return;
+    if (!this.onTheLanding(dog.x, dog.y)) return;
+    if (dog.doing === "trot" && dog.vx > 0 && dog.vy > 0) return;
+    dog.doing = "trot";
+    dog.vx = PACK_WALK[0] + Math.random() * (PACK_WALK[1] - PACK_WALK[0]);
+    dog.vy = 3 + Math.random() * 5;
+    dog.until = t + 1.5 + Math.random() * 1.5;
+    // Somewhere out on the open field, so it doesn't turn round and come
+    // straight back the moment it stops.
+    dog.home = DROP_CLEAR_X + 8 + Math.random() * (PACK_RIGHT - DROP_CLEAR_X - 8);
   }
 
   /**
