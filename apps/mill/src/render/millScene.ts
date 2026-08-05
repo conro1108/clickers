@@ -20,10 +20,7 @@
 import type { solo } from "@mill/sim";
 
 import {
-  WAGON,
   CLOUD,
-  CRATE,
-  SORTER,
   BALL,
   BOWL,
   BOWL_RED,
@@ -41,9 +38,7 @@ import {
   PUPPY_SPRITE,
   PRODUCER_MARKS,
   BASKET,
-  KENNEL,
   shrunk,
-  STACK,
   TREE,
   TUFT,
   scruffy,
@@ -52,7 +47,7 @@ import { artCanvas, artTinted, type Art } from "./pixel.js";
 
 export const SCENE_W = 176;
 
-const YARD_SHARE = 0.23; // the hoard yard, front band — deep enough to stand a crate stack in
+const YARD_SHARE = 0.23; // the puppy field, front band — deep enough for a few rows of dogs
 const FIELD_SHARE = 0.46; // the working field
 const MIN_SKY = 20;
 
@@ -90,11 +85,20 @@ const FLESH_DEEP = "#7d5330";
  * The hills behind stay green on purpose. Neutral all the way to the horizon
  * reads as an institution; a compound sitting in green country reads as
  * something somebody put there, which is the joke.
+ *
+ * The front yard is the exception, and it goes the other way: it's grass, a
+ * shade brighter and warmer than the hills so it sits in front of them, because
+ * that band is nothing but puppies now and puppies belong on a field.
  */
 const GRAVEL = "#c6bda6";
 const GRAVEL_DARK = "#b0a68f";
 const CONCRETE = "#d8cfb8";
 const CONCRETE_DARK = "#b4ab95";
+const GRASS = "#8fcf6c";
+const GRASS_DARK = "#74b455";
+/** The same field with the bedding run down: parched rather than muddy. */
+const GRASS_DRY = "#c0bd6a";
+const GRASS_DRY_DARK = "#a1a055";
 
 /** What the scene needs to know. Everything else stays in the sim. */
 export interface MillView {
@@ -205,9 +209,9 @@ const DARKNESS: Record<Phase, { field: number; yard: number }> = {
  * Where the lamp post stands, how far its light carries, and how wide the cone
  * under it opens by the bottom of the screen.
  *
- * `LAMP_X` is picked to stand just clear of the mound, because the mound is the
+ * `LAMP_X` is picked to stand just clear of the drop, because the pack is the
  * thing the light is for — the hoard is what you came back to look at, and a
- * lamp at the far end of the yard from it would be a lamp lighting the crates.
+ * lamp at the far end of the yard from it would be a lamp lighting the grass.
  */
 const LAMP_X = 46;
 const LAMP_REACH = 96;
@@ -324,8 +328,12 @@ export function mulberry32(seed: number): () => number {
  * performance number, it's a legibility one: a fixed band of yard holds a fixed
  * number of *readable* dogs, and past it they stop being a crowd and become a
  * texture. Sixty-five eleven-pixel puppies in a thirty-pixel band is a rug.
+ *
+ * It went back up a little when the storage came out of the yard: the floor the
+ * pack has to itself is most of the band now rather than the gaps between a
+ * dozen crates, so a few more of them still read as a few more dogs.
  */
-export const PACK_CAP = 26;
+export const PACK_CAP = 34;
 
 /** How far in from each edge a puppy will wander before turning round. */
 export const PACK_LEFT = 2;
@@ -360,9 +368,9 @@ const FLAG_STEP = 7;
 /**
  * Where the water bowls stand, as x and a fraction of the yard's depth.
  *
- * Hand-placed and permanent, unlike everything else in the yard, which arrives
- * on a threshold. A bowl isn't a thing you unlock — it's a thing that has
- * always been there, and the yard needs at least one prop that was.
+ * Hand-placed and permanent. A bowl isn't a thing you unlock — it's a thing
+ * that has always been there, and now that the build-out is gone it and the
+ * ball are the only things in the yard that aren't a dog.
  */
 const BOWLS: readonly { x: number; d: number }[] = [
   { x: 44, d: 0.28 },
@@ -410,9 +418,8 @@ interface Fetch {
 /**
  * Where the handler stands: front left, in the clear.
  *
- * The build-out fills the yard from the right, so the left stays open however
- * rich the mill gets — which is what the fetch loop needs, because a throw that
- * lands behind a crate stack is a throw nobody saw.
+ * Front left, out of the corner the slide and the pipeline both drop into, so
+ * a throw always has the open middle of the field to land in.
  */
 const HAND_X = 40;
 
@@ -598,7 +605,7 @@ export function pickAction(dog: PackPup, t: number): void {
 }
 
 /**
- * The yard doesn't count your puppies. It shows what you've built with them.
+ * The yard doesn't count your puppies. It shows them.
  *
  * Two earlier goes at this both counted, and counting is the problem. Place
  * value emptied the whole yard every time you crossed a power of ten. Rows of
@@ -606,48 +613,25 @@ export function pickAction(dog: PackPup, t: number): void {
  * where the only difference between a millionaire and a billionaire was three
  * more crates in the same strip.
  *
- * So: a build-out. The yard passes through a fixed sequence of stages, each
- * arriving at a threshold and each *adding one thing* to a spot that is its
- * spot forever — a basket, then another, then a crate, a wagon, a kennel, a crate stack,
- * eventually a sorting tower standing over the fence line. You don't read the
- * yard, you recognise it. Between stages the working heap grows, so there's
- * always something moving, and it's the heap that gets hauled into whatever
- * arrives next.
+ * The go after that was a build-out — a basket, then a crate, a kennel, a
+ * sorting tower — and it worked, in that you could read your wealth off the
+ * yard at a glance. It also filled the one part of the screen that was ever
+ * cute with storage. Twenty stages in, the bottom of the picture was a
+ * warehouse with dogs squeezed between the units.
  *
- * Thresholds are roughly one stage per four-and-a-bit times richer. That's
- * granular enough that clearing out your bank for an upgrade visibly costs you
- * a building or two, and you watch them come back.
+ * So the props are gone and the stages stay: a fixed ladder of thresholds,
+ * roughly one per four-and-a-bit times richer, and all a stage does now is put
+ * more dogs on the grass. What you built with your puppies is more puppies.
  */
-interface Prop {
-  art: Art;
-  /** Left edge, in buffer pixels. */
-  x: number;
-  /** Which depth station it stands on: 0 is the front edge of the yard. */
-  row: number;
-}
-
 interface Stage {
   /** Puppies on hand at which this stage arrives. */
   at: number;
-  /** The one thing this stage puts in the yard. The early stages are heap only. */
-  add?: Prop;
 }
 
-const p = (art: Art, x: number, row: number): Prop => ({ art, x, row });
-
 /**
- * The build-out, in order. Positions are hand-placed rather than generated:
- * the right of the yard is the working end (baskets, crates, kennels), the left is
- * the heap with the tall stuff standing behind it.
- *
- * That way round because the heap is where everything lands, and everything
- * lands on the left — the pipeline comes down the west side and the trough
- * empties towards it. A mound in the opposite corner from the two chutes
- * feeding it was the yard's oldest lie.
- *
- * It runs out at around a hundred trillion, which is past the last thing on the
- * price list. A yard with everything in it is a fine place for the ladder to
- * stop.
+ * The ladder, in order. It runs out at around a hundred quadrillion, which is
+ * past the last thing on the price list — a yard at its fullest is a fine place
+ * for it to stop.
  */
 export const YARD: Stage[] = [
   { at: 0 },
@@ -655,31 +639,31 @@ export const YARD: Stage[] = [
   { at: 16 },
   { at: 45 },
   { at: 110 },
-  { at: 200, add: p(BASKET, 159, 0) },
-  { at: 900, add: p(BASKET, 145, 0) },
-  { at: 4e3, add: p(CRATE, 159, 1) },
-  { at: 2e4, add: p(WAGON, 127, 0) },
-  { at: 8e4, add: p(BASKET, 113, 0) },
-  { at: 3e5, add: p(CRATE, 141, 1) },
-  { at: 1.5e6, add: p(KENNEL, 141, 2) },
-  { at: 6e6, add: p(STACK, 73, 3) },
-  { at: 3e7, add: p(CRATE, 123, 1) },
-  { at: 1.2e8, add: p(BASKET, 97, 0) },
-  { at: 5e8, add: p(STACK, 57, 3) },
-  { at: 2e9, add: p(CRATE, 105, 1) },
-  { at: 1e10, add: p(SORTER, 105, 3) },
-  { at: 4e10, add: p(CRATE, 87, 1) },
-  { at: 2e11, add: p(STACK, 41, 3) },
-  { at: 8e11, add: p(CRATE, 69, 1) },
-  { at: 3e12, add: p(KENNEL, 109, 2) },
-  { at: 1.5e13, add: p(STACK, 25, 3) },
-  { at: 6e13, add: p(SORTER, 129, 3) },
-  { at: 2.5e14, add: p(CRATE, 51, 1) },
-  { at: 1e15, add: p(KENNEL, 77, 2) },
-  { at: 4e15, add: p(BASKET, 81, 0) },
-  { at: 1.5e16, add: p(STACK, 10, 3) },
-  { at: 6e16, add: p(SORTER, 153, 3) },
-  { at: 2.5e17, add: p(WAGON, 63, 0) },
+  { at: 200 },
+  { at: 900 },
+  { at: 4e3 },
+  { at: 2e4 },
+  { at: 8e4 },
+  { at: 3e5 },
+  { at: 1.5e6 },
+  { at: 6e6 },
+  { at: 3e7 },
+  { at: 1.2e8 },
+  { at: 5e8 },
+  { at: 2e9 },
+  { at: 1e10 },
+  { at: 4e10 },
+  { at: 2e11 },
+  { at: 8e11 },
+  { at: 3e12 },
+  { at: 1.5e13 },
+  { at: 6e13 },
+  { at: 2.5e14 },
+  { at: 1e15 },
+  { at: 4e15 },
+  { at: 1.5e16 },
+  { at: 6e16 },
+  { at: 2.5e17 },
 ];
 
 interface YardLayout {
@@ -688,17 +672,6 @@ interface YardLayout {
   /** Puppies loose in the yard, 0..the stage's cap. */
   pack: number;
 }
-
-/**
- * How many stay out in the yard after a stage arrives and the rest go into it.
- *
- * Nearly all of them. It was a lot harsher when the pack jumped to its cap in
- * the first minute and the only thing left to play with was the dip — now that
- * the count climbs across the whole run, a 60% cull at every threshold would
- * wipe out several stages' worth of growth each time and the yard would spend
- * the game going backwards.
- */
-const PACK_KEEP = 0.82;
 
 /** Where the yard settles once the opening is over. */
 const PACK_FLOOR = 5;
@@ -744,12 +717,10 @@ const PACK_EASE = 0.5;
  * a constant.
  *
  * It's a curve over the stage index instead, which spends the whole run: five
- * dogs at the start, eight by the time the first basket lands, into the teens
- * around a hundred thousand, and the yard only actually fills at the top of the
- * build-out. That makes the pack a second progress bar running alongside the
- * props at a completely different rate — the props are a series of discrete
- * arrivals, this is a slow tide — and it means "the yard is getting busy" stays
- * true as a thing to notice for days rather than for a minute and a half.
+ * dogs at the start, eight or so by a thousand, into the teens around a hundred
+ * thousand, and the field only actually fills at the top of the ladder. A slow
+ * tide rather than a series of arrivals, which means "the yard is getting busy"
+ * stays true as a thing to notice for days rather than for a minute and a half.
  */
 export function packAt(stage: number): number {
   const f = stage / (YARD.length - 1);
@@ -812,16 +783,13 @@ function stageLayout(amount: number): YardLayout {
   }
   frac = Math.max(0, Math.min(1, frac));
 
-  // Where the mound starts this stage. A stage that put something in the yard
-  // was built out of the pile, so the pile starts low; a stage that only made
-  // room for a bigger mound picks up exactly where the last one left off, so
-  // the early game is one unbroken climb rather than four resets to nothing.
+  // Every stage picks up exactly where the last one left off, so the whole run
+  // is one unbroken climb. Stages used to take a cut of the pack indoors when
+  // they added a prop, which was the yard paying for what it built; with
+  // nothing left to build, a yard that got emptier as you got richer would just
+  // read as a bug.
   const want = packAt(stage);
-  const prev = stage === 0 ? 0 : packAt(stage - 1);
-  // `Math.min` rather than the dip outright: it keeps "the yard only ever
-  // shrinks because something carried them indoors" structural instead of a
-  // property of whatever the curve happens to be doing.
-  const from = stage === 0 ? 0 : here.add ? Math.min(prev, Math.round(want * PACK_KEEP)) : prev;
+  const from = stage === 0 ? 0 : packAt(stage - 1);
   const grow = stage === 0 ? frac : Math.pow(frac, PACK_EASE);
   const pack = from + Math.floor((want - from) * grow);
   return { stage, pack: Math.max(0, Math.min(want, pack)) };
@@ -830,50 +798,6 @@ function stageLayout(amount: number): YardLayout {
 function sameLayout(a: YardLayout, b: YardLayout): boolean {
   return a.stage === b.stage && a.pack === b.pack;
 }
-
-/**
- * A handful of puppies being carried into the unit they just added up to, or
- * a unit coming apart because you spent it. Short-lived, purely cosmetic, and
- * the only thing on this canvas that interpolates a position — it still lands
- * on whole pixels.
- */
-interface Bundle {
-  art: Art;
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
-  born: number;
-  dur: number;
-  /** Rises and fades instead of travelling. Used for puppies you spent. */
-  poof: boolean;
-}
-
-/**
- * Somebody moving the hoard about by hand.
- *
- * A crate doesn't appear in the yard because a number went up, it appears
- * because the pile got bagged and carried into it. So every stage change now
- * has a person in it: out from the mound with a basket on the shoulder, tip it
- * in, walk back for the next one — and when you spend the yard back down, the
- * same walk in reverse, off out of the gate with what you paid.
- */
-interface Porter {
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
-  born: number;
-  /** How long the loaded leg takes. The empty leg back takes the same. */
-  walk: number;
-  /** Comes home empty afterwards. False for a load that's leaving for good. */
-  home: boolean;
-}
-
-/** Yard pace, buffer pixels a second. Slower than the field: it's heavy. */
-const PORTER_SPEED = 24;
-/** How long they stand at the far end tipping the basket in. */
-const PORTER_TIP = 300;
 
 // ---------------------------------------------------------------------------
 // Producer placement
@@ -1561,7 +1485,7 @@ export class MillScene {
   /**
    * The hoard the yard is currently showing, which chases the real one rather
    * than snapping to it. This is what makes spending *look* like spending:
-   * buy a van and you watch the crates come back apart.
+   * buy a van and you watch the field empty out.
    */
   private shown = -1;
   private shownLayout = yardLayout(0);
@@ -1579,15 +1503,6 @@ export class MillScene {
     dog: null,
     until: 0,
   };
-  private bundles: Bundle[] = [];
-  /** The yard crew, moving the pile into and out of what it paid for. */
-  private porters: Porter[] = [];
-  /**
-   * Stages part-way through arriving or leaving, as stage index to the moment
-   * it started. A prop on this list is drawn sliding out of or down into the
-   * ground rather than just standing there.
-   */
-  private building = new Map<number, { born: number; up: boolean }>();
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -1625,9 +1540,9 @@ export class MillScene {
    * The yard chases the hoard rather than snapping to it, which is what makes
    * spending look like spending — but a chase is the wrong verb for a wipe.
    * Coming down from a late-run hoard it's an exponential decay through
-   * twenty-odd orders of magnitude, so a mill you no longer own kept its crate stacks,
-   * its crates, its pipeline and a heap up the side of the screen for twenty
-   * seconds after the generation that built them was cleared.
+   * twenty-odd orders of magnitude, so a mill you no longer own kept its pack,
+   * its pipeline and a heap up the side of the screen for twenty seconds after
+   * the generation that built them was cleared.
    *
    * A generation bump or a new seed is the whole tell: prestige does the first,
    * ploughing it all under does the second, and nothing else does either.
@@ -1635,9 +1550,6 @@ export class MillScene {
   private clearOut(): void {
     this.shown = Math.max(0, this.view.hoard);
     this.shownLayout = yardLayout(this.shown);
-    this.building.clear();
-    this.bundles = [];
-    this.porters = [];
     this.pack = [];
     this.owed = 0;
     this.fetch.dog = null;
@@ -1841,7 +1753,7 @@ export class MillScene {
         case "back": {
           // To the trough, same as the baskets. One deposit point for the whole
           // mill: what a hand pulls out of a bed goes where a grooming rig's load
-          // goes, and the trough empties towards the mound.
+          // goes, and the trough empties towards the drop.
           const bin = this.troughBox;
           const bx = bin ? clamp(hand.x, bin.x + 4, bin.x + bin.w - 6) : hand.home;
           const by = bin ? bin.y + 3 : hand.homeY;
@@ -2215,7 +2127,7 @@ export class MillScene {
     const horizon = this.fieldTop();
     const yardY = this.yardTop();
 
-    this.stepHoard(dt, now);
+    this.stepHoard(dt);
     this.pipeEnd = 0;
     // Before anything is drawn: the sky has to know where the holes in it are
     // before it draws the things that fall toward them.
@@ -2233,17 +2145,15 @@ export class MillScene {
     this.drawPuffs(now, dt);
     this.drawFence(yardY);
     this.drawLamp(yardY, phase);
-    this.drawHoard(now);
-    // The spout hangs over the yard on its way to the mound at the front of it,
-    // so it's drawn after the yard rather than with the trough it comes off:
-    // behind the crate stacks it was pouring the pup out somewhere you couldn't see.
+    this.drawHoard();
+    // The spout hangs over the yard on its way to the drop at the front of it,
+    // so it's drawn after the yard rather than with the trough it comes off.
     if (this.troughBox) this.drawSpout(this.troughBox);
     this.stepFetch(this.clock);
     this.stepPack(this.dt, this.clock);
 
-    this.drawPorters(now);
     // After the hoard: the pipeline runs down the near side of the yard, so it
-    // passes in front of the crate stacks rather than being swallowed by them.
+    // passes in front of the pack rather than being swallowed by it.
     this.drawPipeline(horizon, yardY, dt, t);
     // The hands walk between the two bands, so they're drawn after both — and
     // after the field has said where this frame's beds are.
@@ -2251,7 +2161,6 @@ export class MillScene {
     this.drawHands(t);
     this.drawHauls(now);
     this.drawWhistled(now);
-    this.drawBundles(now);
     // In front of the whole mill, because one of them may be hanging in the
     // middle of it.
     this.drawWells(t);
@@ -2557,20 +2466,27 @@ export class MillScene {
     ctx.fillStyle = mix(GRAVEL_DARK, "#776d57", dry);
     for (let y = horizon + 6; y < yardY; y += 9) ctx.fillRect(0, y, SCENE_W, 2);
 
-    // The front yard: poured concrete, because this is where everything gets
-    // set down, walked over and hosed off.
-    ctx.fillStyle = CONCRETE;
+    // The front yard: grass. It was poured concrete and compacted gravel for a
+    // long while, on the argument that a working kennel yard is hard standing
+    // and grass under sixty dogs lasts a week. True, and it made the one part
+    // of the screen that's meant to be lovely look like a car park. This is the
+    // puppy field: the dogs are on it, and it's the only ground out here that
+    // isn't being worked.
+    ctx.fillStyle = mix(GRASS, GRASS_DRY, dry);
     ctx.fillRect(0, yardY, SCENE_W, this.sh - yardY);
-    // Shade along the back of it, under the fence, where nothing stands. One
-    // flat brown from the fence to the bottom of the screen gave the yard no
-    // floor at all — everything in it looked stuck to a wall.
-    ctx.fillStyle = CONCRETE_DARK;
+    // Shade along the back of it, under the fence. One flat green from the
+    // fence to the bottom of the screen gave the yard no floor at all —
+    // everything in it looked stuck to a wall.
+    ctx.fillStyle = mix(GRASS_DARK, GRASS_DRY_DARK, dry);
     ctx.fillRect(0, yardY, SCENE_W, 3);
     ctx.globalAlpha = 0.5;
     ctx.fillRect(0, yardY + 3, SCENE_W, 3);
     ctx.globalAlpha = 1;
+    // Texture: a scatter of darker blades, so the field isn't a flat slab of
+    // colour under the pack.
+    ctx.globalAlpha = 0.5;
     const rng = mulberry32(this.rngSeed ^ 0x9e37);
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 40; i++) {
       ctx.fillRect(
         Math.floor(rng() * SCENE_W),
         yardY + 6 + Math.floor(rng() * Math.max(1, this.sh - yardY - 8)),
@@ -2578,25 +2494,20 @@ export class MillScene {
         1,
       );
     }
+    ctx.globalAlpha = 1;
 
-    // The apron: the strip by the gate where everything gets set down and then
-    // walked over all day, so it's bare and paler than the rest. It used to be
-    // a patch in the corner because the corner was where the pile stood; now
-    // that the pile walks about, the worn ground has to go where the traffic
-    // does, which is the whole width of the yard.
+    // The worn track along the gate end, where the dogs come off the slide and
+    // everybody walks all day. Grass doesn't survive the traffic there, and the
+    // bare strip is what stops the field reading as a lawn nobody uses.
     const back = this.packBack();
-    ctx.fillStyle = "#cdc4ad";
-    ctx.fillRect(0, back - 2, SCENE_W, this.sh - back + 2);
-    ctx.fillStyle = "#ded5be";
-    ctx.fillRect(0, back + 2, SCENE_W, this.sh - back - 2);
-    // The drain, down the middle of the apron. One dark line with a pale one
-    // under it is all a channel needs, and it's the only thing in the yard that
-    // says this floor gets washed rather than swept.
-    const drain = Math.round((this.sh + back) / 2);
-    ctx.fillStyle = "#7e7a6e";
-    ctx.fillRect(0, drain, SCENE_W, 1);
-    ctx.fillStyle = "#c8c3b5";
-    ctx.fillRect(0, drain + 1, SCENE_W, 1);
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = mix("#a89b72", "#8a7f66", dry);
+    for (let i = 0; i < 26; i++) {
+      const y = back + 2 + Math.floor(rng() * Math.max(1, this.sh - back - 4));
+      const w = 6 + Math.floor(rng() * 14);
+      ctx.fillRect(Math.floor(rng() * (DROP_X + 26)), y, w, 1);
+    }
+    ctx.globalAlpha = 1;
   }
 
   /**
@@ -3070,7 +2981,7 @@ export class MillScene {
     // The riser runs right down the west side of the yard to just above the
     // mound, because that's what it's filling. Stopping at the top of the yard
     // meant a chute pointed at forty pixels of empty dirt.
-    const foot = Math.max(yardY + 12, this.station(0) - 30);
+    const foot = Math.max(yardY + 12, this.yardFloor() - 30);
     const reach = this.lumps.reduce((m, l) => Math.max(m, l.from), this.pipeEnd);
     const build = this.pipeBuild(t, reach);
     if (reach <= 0) return;
@@ -3883,7 +3794,7 @@ export class MillScene {
    * transition should look like. Exponential chase, so a small whistle is a nudge
    * and a big purchase is a visible drain rather than a jump cut.
    */
-  private stepHoard(dt: number, now: number): void {
+  private stepHoard(dt: number): void {
     const target = Math.max(0, this.view.hoard);
     if (this.shown < 0) {
       // Adopt the hoard rather than animating up from zero, or every reload
@@ -3905,48 +3816,24 @@ export class MillScene {
     const k = 1 - Math.exp(-dt * 3.2);
     const gap = target - this.shown;
     this.shown += gap * k;
-    // Snap once it's close, so the heap settles instead of creeping forever.
+    // Snap once it's close, so the pack settles instead of creeping forever.
     if (Math.abs(gap) < Math.max(0.5, target * 1e-4)) this.shown = target;
 
     const next = yardLayout(this.shown);
-    if (!sameLayout(next, this.shownLayout)) {
-      if (next.stage !== this.shownLayout.stage) this.turnStage(this.shownLayout.stage, next.stage, now);
-      this.shownLayout = next;
-    }
-
-    this.ambleYard(now);
-
-    const cutoff = now - 900;
-    if (this.bundles.length > 0) this.bundles = this.bundles.filter((b) => b.born + b.dur > cutoff);
-    for (const [stage, run] of this.building) {
-      if (run.born + BUILD_MS < now) this.building.delete(stage);
-    }
+    if (!sameLayout(next, this.shownLayout)) this.shownLayout = next;
   }
 
-  /**
-   * How far back in the yard something stands. 0 is the heap at the front edge;
-   * each station back steps by the same amount, so the yard reads as depth
-   * rather than as a stack of shelves. On a short screen the steps tighten
-   * instead of the back row walking off the top.
-   */
-  private station(i: number): number {
-    const step = Math.max(5, Math.min(9, Math.floor((this.sh - this.yardTop() - 12) / 4)));
-    return this.sh - 4 - i * step;
-  }
-
-  /** Where a prop's feet are, once it's finished arriving. */
-  private propFoot(prop: Prop): number {
-    return this.station(prop.row);
+  /** The front edge of the yard: where a dog standing at the very front stands. */
+  private yardFloor(): number {
+    return this.sh - 4;
   }
 
   /**
    * The back of the yard the pack roams: right up under the fence.
    *
-   * The props only use the back four stations, which left a clear band of
-   * apron between the fence and the deepest dog — the picture had a stripe of
-   * nothing across it at exactly the height the eye lands. Depth is the only
-   * room this yard has to spare, it can't get any wider, and every pixel of it
-   * is one more row of dogs that isn't standing on the row in front.
+   * Depth is the only room this yard has to spare — it can't get any wider —
+   * and every pixel of it is one more row of dogs that isn't standing on the
+   * row in front.
    */
   private packBack(): number {
     return this.yardTop() + 5;
@@ -3961,181 +3848,18 @@ export class MillScene {
    * screen rather than as a shelf with dogs on it.
    */
   private packFront(): number {
-    return this.station(0) + PACK_SPILL;
+    return this.yardFloor() + PACK_SPILL;
   }
 
   /**
-   * Crossing a threshold. Going up, the heap gets carried into whatever just
-   * arrived and the new thing rises out of the ground behind a cloud of its own
-   * dust; going down, it sinks back into the ground it came out of. Either way
-   * the stage that moved is the loudest thing on the canvas for half a second,
-   * because it's the only part of the yard that ever changes shape.
+   * The yard: the pack, the few things that live out there with them, and
+   * everything sorted back to front.
    */
-  private turnStage(from: number, to: number, now: number): void {
-    const up = to > from;
-    // A purchase can drop several stages at once. Each one gets its own moment,
-    // stacked up in sequence, so a big spend reads as a demolition rather than
-    // as everything blinking out on the same frame.
-    const moved: number[] = [];
-    for (let s = Math.min(from, to) + 1; s <= Math.max(from, to); s++) moved.push(s);
-    if (!up) moved.reverse();
-
-    for (const [i, stage] of moved.entries()) {
-      const prop = YARD[stage]?.add;
-      if (!prop) continue;
-      const born = now + i * 120;
-      this.building.set(stage, { born, up });
-      const sprite = artCanvas(prop.art);
-      const foot = this.propFoot(prop);
-      // Dust at the feet, thrown outward — the same puffs the machines use.
-      for (let d = 0; d < 4; d++) {
-        this.puff(prop.x + 2 + (d * sprite.w) / 3, foot - 2, "dust", d < 2 ? -14 : 14);
-      }
-      const arrives = this.sendPorter(prop, sprite.w, foot, born, up);
-      if (!up || this.bundles.length > 24) continue;
-      // What the porter tips in when they get there. Three puppies over the
-      // lip is enough to read as "that pile went in there" without burying the
-      // thing that just arrived.
-      const drop = prop.x + Math.floor(sprite.w / 2);
-      for (let n = 0; n < 3; n++) {
-        this.bundles.push({
-          art: PUPPY_SPRITE,
-          x0: drop - 8,
-          y0: foot - 12,
-          x1: drop - 3 + n * 2,
-          y1: foot - sprite.h + 2,
-          born: arrives + n * 90,
-          dur: 380,
-          poof: false,
-        });
-      }
-    }
-  }
-
-  /**
-   * Send somebody out with a basket, and say when they'll get there.
-   *
-   * Going up they set off from the mound and come back for another; going down
-   * they come out of whatever's being taken apart and carry it off the right
-   * hand edge, which is where the yard's gate is as far as anyone watching is
-   * concerned. Either way the load is only ever on screen once.
-   */
-  private sendPorter(prop: Prop, w: number, foot: number, born: number, up: boolean): number {
-    const at = this.doorstep(prop, w, foot);
-    const yard = this.station(0);
-    const mound = { x: DROP_X + 10, y: yard };
-    const gate = { x: SCENE_W + 4, y: yard };
-    return up ? this.pushPorter(mound, at, born, true) : this.pushPorter(at, gate, born, false);
-  }
-
-  /** Where you'd stand to load something: at its feet, a little to the left. */
-  private doorstep(prop: Prop, w: number, foot: number): { x: number; y: number } {
-    return { x: prop.x + Math.floor(w / 2) - 10, y: foot };
-  }
-
-  private pushPorter(
-    start: { x: number; y: number },
-    end: { x: number; y: number },
-    born: number,
-    home: boolean,
-  ): number {
-    if (this.porters.length > 5) return born;
-    const dist = Math.hypot(end.x - start.x, end.y - start.y);
-    const walk = Math.max(500, Math.min(2400, (dist / PORTER_SPEED) * 1000));
-    this.porters.push({ x0: start.x, y0: start.y, x1: end.x, y1: end.y, born, walk, home });
-    return born + walk;
-  }
-
-  /**
-   * The yard, being kept. Every so often somebody shifts a basket from one store
-   * to another — nothing to do with the count, which doesn't move a puppy
-   * either way. It's just that a yard where the only thing that ever happens is
-   * a threshold being crossed is a yard nobody works in.
-   */
-  private ambleYard(now: number): void {
-    if (this.porters.length > 0 || !this.chance(0.06)) return;
-    const standing: Prop[] = [];
-    for (let s = 0; s <= this.shownLayout.stage && s < YARD.length; s++) {
-      const prop = YARD[s]?.add;
-      if (prop) standing.push(prop);
-    }
-    if (standing.length < 2) return;
-    const i = Math.floor(Math.random() * standing.length);
-    let j = Math.floor(Math.random() * (standing.length - 1));
-    if (j >= i) j++;
-    const from = standing[i]!;
-    const to = standing[j]!;
-    const a = this.doorstep(from, artCanvas(from.art).w, this.propFoot(from));
-    const b = this.doorstep(to, artCanvas(to.art).w, this.propFoot(to));
-    this.pushPorter(a, b, now, true);
-  }
-
-  /**
-   * The yard crew, walking. Drawn like the field hands — same sprite, same
-   * one-pixel bob — because they are the field hands: this is the same mill at
-   * the other end of the same day.
-   */
-  private drawPorters(now: number): void {
-    const ctx = this.ctx;
-    const sprite = artCanvas(this.mark("hand"));
-    const basket = artCanvas(BASKET);
-    this.porters = this.porters.filter((porter) => {
-      const age = now - porter.born;
-      if (age < 0) return true;
-      const total = porter.home ? porter.walk * 2 + PORTER_TIP : porter.walk;
-      if (age > total) return false;
-
-      // Out loaded, a beat to heave the basket in, then back empty. A load that's
-      // leaving skips both: it walks the one leg and goes out of shot with it.
-      let f: number;
-      let load = true;
-      if (age < porter.walk) {
-        f = age / porter.walk;
-      } else if (age < porter.walk + PORTER_TIP) {
-        f = 1;
-        load = age < porter.walk + PORTER_TIP / 2;
-      } else {
-        f = 1 - (age - porter.walk - PORTER_TIP) / porter.walk;
-        load = false;
-      }
-
-      const x = Math.round(porter.x0 + (porter.x1 - porter.x0) * f);
-      const y = Math.round(porter.y0 + (porter.y1 - porter.y0) * f);
-      const walking = age < porter.walk || age > porter.walk + PORTER_TIP;
-      // Stooped while they're heaving the basket off the shoulder.
-      const bob = walking ? Math.floor(now / 190) % 2 : 2;
-      const top = y - sprite.h + bob;
-      if (!porter.home) ctx.globalAlpha = Math.max(0, Math.min(1, (SCENE_W + 2 - x) / 12));
-      ctx.drawImage(sprite.canvas, x, top);
-      if (load) ctx.drawImage(basket.canvas, x - 2, top - basket.h + 3);
-      ctx.globalAlpha = 1;
-      return true;
-    });
-  }
-
-  /**
-   * The yard: everything built so far, back stations first, and the working
-   * heap in front of the lot.
-   */
-  private drawHoard(now: number): void {
-    const layout = this.shownLayout;
-
-    // Back to front, and the pack is in the sort rather than on top of it, so a
-    // puppy behind a crate is behind the crate. Nothing here is drawn scaled —
-    // depth is only ever draw order — and feet are the only depth cue there is,
-    // so `y` is the key for a dog and a kennel alike.
-    //
-    // The sort is stable, which is what keeps props in stage order inside a
-    // row: two crates on the same station have identical keys, and the one you
-    // bought first has to stay behind the one you bought second.
+  private drawHoard(): void {
+    // Feet are the only depth cue there is — nothing here is drawn scaled — so
+    // `y` is the key for a dog, a bowl and a tuft of grass alike, and a puppy
+    // behind the water bowl is behind the water bowl.
     const queue: { y: number; go: () => void }[] = [];
-    for (let stage = 0; stage < YARD.length; stage++) {
-      const prop = YARD[stage]?.add;
-      if (!prop) continue;
-      const run = this.building.get(stage);
-      if (stage > layout.stage && !run) continue;
-      queue.push({ y: this.propFoot(prop), go: () => this.drawProp(prop, run, now) });
-    }
     // The bowls stand in the yard forever, so they go in the same depth sort as
     // everything else and dogs walk in front of and behind them.
     const back = this.packBack();
@@ -4151,6 +3875,19 @@ export class MillScene {
           this.ctx.drawImage(sprite.canvas, at.x, y - sprite.h);
         },
       });
+    }
+    // Weeds and daisies through the grass, in the same sort, so a dog walks
+    // through them rather than over a decal. Seeded off the mill, so they're in
+    // the same places every time you open it — the field should be somewhere
+    // you recognise, not a fresh scatter each reload.
+    const rng = mulberry32(this.rngSeed ^ 0x51d2);
+    const tuft = artCanvas(TUFT);
+    const flowers = artCanvas(FLOWERS);
+    for (let i = 0; i < 12; i++) {
+      const sprite = rng() < 0.35 ? flowers : tuft;
+      const x = Math.floor(rng() * (SCENE_W - sprite.w));
+      const y = Math.round(back + (front - back) * rng());
+      queue.push({ y, go: () => this.ctx.drawImage(sprite.canvas, x, y - sprite.h) });
     }
     for (const dog of this.pack) queue.push({ y: dog.y, go: () => this.drawPup(dog) });
     // The ball's depth is whatever it's currently attached to, plus a hair, so
@@ -4545,64 +4282,6 @@ export class MillScene {
   }
 
   /**
-   * One thing in the yard, standing or in the middle of arriving. Arrivals rise
-   * out of the ground: the sprite is clipped to the footprint it will end up
-   * occupying and slid up into it, which costs a clip rect but keeps every
-   * pixel of the art on the grid.
-   */
-  private drawProp(prop: Prop, run: { born: number; up: boolean } | undefined, now: number): void {
-    const ctx = this.ctx;
-    const sprite = artCanvas(prop.art);
-    const foot = this.propFoot(prop);
-    const top = foot - sprite.h;
-    if (!run) {
-      this.propShadow(prop.x, foot, sprite.w);
-      ctx.drawImage(sprite.canvas, prop.x, top);
-      this.propLife(prop, top);
-      return;
-    }
-
-    const hidden = buildHidden(now - run.born, run.up, sprite.h);
-    if (hidden >= sprite.h) return;
-    this.propShadow(prop.x, foot, sprite.w);
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(prop.x, top, sprite.w, sprite.h);
-    ctx.clip();
-    ctx.drawImage(sprite.canvas, prop.x, top + hidden);
-    ctx.restore();
-  }
-
-  /**
-   * The lights on the things in the yard that are big enough to have them. The
-   * yard is where you look when nothing else is happening, and a kennel with a
-   * lamp over the door is a kennel somebody works in.
-   */
-  private propLife(prop: Prop, top: number): void {
-    const ctx = this.ctx;
-    const t = this.clock;
-    if (prop.art === KENNEL) {
-      // A lamp either side of the door, on a slow flicker.
-      const lit = 0.7 + 0.3 * Math.sin(t * 2.1 + prop.x);
-      for (const c of [2, 24]) {
-        ctx.globalAlpha = lit;
-        ctx.fillStyle = "#ffd782";
-        ctx.fillRect(prop.x + c, top + 6, 1, 1);
-        ctx.globalAlpha = 0.16 * lit;
-        ctx.fillRect(prop.x + c - 1, top + 5, 3, 3);
-      }
-      ctx.globalAlpha = 1;
-    } else if (prop.art === SORTER && (t * 0.5 + prop.x * 0.02) % 1 < 0.18) {
-      // A beacon on the head house: it's the tallest thing you own.
-      ctx.fillStyle = "#ff5b4a";
-      ctx.fillRect(prop.x + 9, top + 1, 1, 1);
-      ctx.globalAlpha = 0.28;
-      ctx.fillRect(prop.x + 8, top, 3, 3);
-      ctx.globalAlpha = 1;
-    }
-  }
-
-  /**
    * A pool of shade under something's feet. Two pixels of it, tucked in at the
    * ends — with a dozen things standing on the same flat brown, this is the
    * only thing telling you which of them are near and which are far.
@@ -4614,27 +4293,6 @@ export class MillScene {
     ctx.fillRect(x, foot - 1, w, 1);
     ctx.fillRect(x + 2, foot, w - 4, 1);
     ctx.globalAlpha = 1;
-  }
-
-  /** Puppies being carried between columns, drawn over the columns themselves. */
-  private drawBundles(now: number): void {
-    const ctx = this.ctx;
-    for (const b of this.bundles) {
-      const p = (now - b.born) / b.dur;
-      if (p < 0 || p > 1) continue;
-      const sprite = artCanvas(b.art);
-      if (b.poof) {
-        ctx.globalAlpha = 1 - p;
-        ctx.drawImage(sprite.canvas, b.x0, Math.round(b.y0 + (b.y1 - b.y0) * p));
-        ctx.globalAlpha = 1;
-        continue;
-      }
-      // Ease out, with a hop over the gap — a flat lerp reads as a slide.
-      const e = 1 - (1 - p) * (1 - p);
-      const x = Math.round(b.x0 + (b.x1 - b.x0) * e);
-      const y = Math.round(b.y0 + (b.y1 - b.y0) * e - Math.sin(p * Math.PI) * 11);
-      ctx.drawImage(sprite.canvas, x, y);
-    }
   }
 
   // --- The trough ----------------------------------------------------------

@@ -25,7 +25,6 @@ const K = "#402e3a"; // shared outline ink
 // ears.
 const PUPPY = { p: "#c98b4b", l: "#e2b077", d: "#95602c" };
 const METAL = { m: "#a8b0b8", s: "#7f8891", g: "#bfe3ef" };
-const WOOD = { w: "#7a5237", v: "#5e3e29" };
 
 // ---------------------------------------------------------------------------
 // UI icons — 12x12
@@ -792,29 +791,10 @@ export const BASKET: Art = {
   palette: { k: K, b: "#b98a52", l: "#d6ab73", p: "#c98b4b" },
 };
 
-export const CRATE: Art = {
-  rows: [
-    "..pp.pp.pp.pp..",
-    ".pp.pp.pp.pp.p.",
-    "kkkkkkkkkkkkkkk",
-    "kwwwwwwwwwwwwwk",
-    "kwvvwwwwwwvvwwk",
-    "kwwwwwwwwwwwwwk",
-    "kkkkkkkkkkkkkkk",
-    "kwwwwwwwwwwwwwk",
-    "kwwvvwwwwvvwwwk",
-    "kwwwwwwwwwwwwwk",
-    "kkkkkkkkkkkkkkk",
-    "kwwwwwwwwwwwwwk",
-    "kkkkkkkkkkkkkkk",
-  ],
-  palette: { k: K, w: "#a97a52", v: "#7a5237", p: "#c98b4b" },
-};
-
 /**
- * CrateStack and hydroponic tower are the only two props tall enough that writing
- * their body out row by row would be more typo than art, so their repeating
- * middles are generated. The caps and bases stay hand-authored.
+ * The hydroponic tower is tall enough that writing its body out row by row
+ * would be more typo than art, so its repeating middle is generated. The cap
+ * and base stay hand-authored.
  */
 function stack(cap: string[], body: string[], reps: number, base: string[]): string[] {
   const rows = [...cap];
@@ -822,100 +802,6 @@ function stack(cap: string[], body: string[], reps: number, base: string[]): str
   rows.push(...base);
   return rows;
 }
-
-/**
- * Crates, stacked. Deliberately squat: it has to stand in a band about twenty
- * pixels deep next to the loose crates and baskets, and anything taller would
- * eat the yard above it.
- *
- * It was a feed silo for about an hour, which was wrong for one reason and it's
- * the reason the whole yard exists: every prop out here is a *denomination*, so
- * it has to be something the hoard could plausibly be inside. A sealed metal
- * cylinder is the one shape on a mill that obviously isn't.
- */
-export const STACK: Art = {
-  rows: stack(
-    [
-      "..pp.pp.pp...",
-      ".pp.pp.pp.p..",
-      "kkkkkkkkkkkkk",
-      "kwwwwwwwwwwwk",
-      "kwvvwwwwwvvwk",
-    ],
-    ["kwwwwwwwwwwwk", "kkkkkkkkkkkkk", "kwwwwwwwwwwwk", "kwvvwwwwwvvwk"],
-    3,
-    ["kwwwwwwwwwwwk", "kkkkkkkkkkkkk", "kkkkkkkkkkkkk"],
-  ),
-  palette: { k: K, ...WOOD, ...PUPPY },
-};
-
-/**
- * A wagon of puppies: the first thing in the yard that isn't just puppies,
- * and the first hint that this is becoming an operation.
- */
-export const WAGON: Art = {
-  rows: [
-    "....pp.pp....",
-    "..ppplpppdp..",
-    ".kkkkkkkkkkk.",
-    ".kwwwwwwwwwk.",
-    ".kwvwwwwwvwk.",
-    ".kwwwwwwwwwk.",
-    ".kkkkkkkkkkk.",
-    "..k.......k..",
-    ".kkk.....kkk.",
-    "kkvkk...kkvkk",
-    ".kkk.....kkk.",
-  ],
-  palette: { k: K, ...PUPPY, ...WOOD },
-};
-
-/** A storage kennel. Wide and low, so it reads as a step up from a crate. */
-export const KENNEL: Art = {
-  rows: [
-    "....kkkkkkkkkkkkkkkkkkk....",
-    "..kkmmmmmmmmmmmmmmmmmmmkk..",
-    ".kmmmmmmmmmmmmmmmmmmmmmmmk.",
-    "kmmmmmmmmmmmmmmmmmmmmmmmmmk",
-    "kkkkkkkkkkkkkkkkkkkkkkkkkkk",
-    "kwwwwwwwwwwwwwwwwwwwwwwwwwk",
-    "kwvwwwwwwwwwwwwwwwwwwwwwvwk",
-    "kwwwwwwwwwwwwwwwwwwwwwwwwwk",
-    "kwwkkkkkkkkkkkkkkkkkkkkkwwk",
-    "kwwkvvvvvvvvvvvvvvvvvvvkwwk",
-    "kwwkvvvvvvvvvvvvvvvvvvvkwwk",
-    "kwwkvvvvvvvvvvvvvvvvvvvkwwk",
-    "kwwkvvvvvvvvvvvvvvvvvvvkwwk",
-    "kwwkvvvvvvvvvvvvvvvvvvvkwwk",
-    "kkkkkkkkkkkkkkkkkkkkkkkkkkk",
-  ],
-  palette: { k: K, ...METAL, ...WOOD },
-};
-
-/**
- * The sorting tower, and the tallest thing you will ever own. Deliberately
- * taller than the yard is deep — the last few rungs of the build-out have to
- * clear the fence line or there's nothing left to be impressed by.
- */
-export const SORTER: Art = {
-  rows: stack(
-    [
-      "......kkkkkkk......",
-      "....kkmmmmmmmkk....",
-      "...kmmmmmmmmmmmk...",
-      "...kmmsmmmmmmmmk...",
-      "...kkkkkkkkkkkkk...",
-      "..kmmmmmmmmmmmmmk..",
-      ".kmmmmmmmmmmmmmmmk.",
-      "kmmmmmmmmmmmmmmmmmk",
-      "kkkkkkkkkkkkkkkkkkk",
-    ],
-    ["kmmsmmmmmmmmmmmsmmk", "kmmsmmmmmmmmmmmsmmk", "kmmsmmmmmmmmmmmsmmk", "kkkkkkkkkkkkkkkkkkk"],
-    4,
-    ["kmmsmmmmmmmmmmmsmmk", "kmmsmmmmmmmmmmmsmmk", "kkkkkkkkkkkkkkkkkkk"],
-  ),
-  palette: { k: K, ...METAL },
-};
 
 // ---------------------------------------------------------------------------
 // Producers — one silhouette per rung of the ladder

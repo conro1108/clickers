@@ -13,16 +13,12 @@ import {
   yardLayout,
 } from "./millScene.js";
 
-/** Sprite width straight off the char grid, since there's no canvas out here. */
-function artWidth(rows: readonly string[]): number {
-  return rows.reduce((m, r) => Math.max(m, r.length), 0);
-}
-
 /**
- * The yard's promises: earning only ever builds, spending visibly unbuilds, and
- * the hand-placed props don't stand on each other. The first one is the whole
- * reason this stopped being a counter — place value emptied the yard at every
- * power of ten, and a row of units turned it into a bar chart.
+ * The yard's promises: the pack only ever grows while you earn, spending it
+ * visibly costs you dogs, and the crowd takes the whole run to arrive. The
+ * first one is the whole reason this stopped being a counter — place value
+ * emptied the yard at every power of ten, and a row of units turned it into a
+ * bar chart.
  */
 describe("the yard", () => {
   it("never takes anything down while the hoard grows", () => {
@@ -34,7 +30,7 @@ describe("the yard", () => {
     }
   });
 
-  it("costs you a building or two when you clear out your bank", () => {
+  it("costs you a stage or two when you clear out your bank", () => {
     // Anywhere past the early stages, spending nine tenths of what you have
     // should be something you can watch happen, not a rounding difference.
     for (let l = 3; l <= 13; l += 0.25) {
@@ -57,22 +53,20 @@ describe("the yard", () => {
     }
   });
 
-  it("only ever shrinks the pack because something carried it away", () => {
-    // The pack used to reset to nothing at every stage, including the four
-    // early ones that add nothing to the yard — so a mill pouring puppies in
-    // spent long stretches with one puppy on the ground.
+  it("never shrinks the pack while the hoard grows", () => {
+    // The pack used to reset to nothing at every stage, and later took a cut
+    // indoors whenever a stage added a prop. With the props gone there's
+    // nothing left for a dog to leave *for*, so earning is one unbroken climb
+    // and any dip is a bug.
     let last = yardLayout(1);
     for (let l = 0.05; l <= 17.5; l += 0.005) {
       const now = yardLayout(10 ** l);
-      if (now.pack < last.pack) {
-        expect(now.stage, `pack fell at 1e${l.toFixed(2)}`).toBeGreaterThan(last.stage);
-        expect(YARD[now.stage]!.add, `pack fell at 1e${l.toFixed(2)}`).toBeDefined();
-      }
+      expect(now.pack, `pack fell at 1e${l.toFixed(2)}`).toBeGreaterThanOrEqual(last.pack);
       last = now;
     }
   });
 
-  it("never leaves the yard looking emptier than the stage it's on", () => {
+  it("never leaves the field looking emptier than the stage it's on", () => {
     // Against the stage's own figure, not against the cap. The pack spends the
     // whole run climbing now, so "a decent crowd" means a decent crowd *for
     // where you are* — five dogs is a full yard on day one and a bug on day
@@ -140,14 +134,9 @@ describe("the yard", () => {
     }
   });
 
-  it("has a build-out that climbs and fits on the canvas", () => {
+  it("has a ladder that climbs", () => {
     for (let i = 1; i < YARD.length; i++) {
       expect(YARD[i]!.at).toBeGreaterThan(YARD[i - 1]!.at);
-    }
-    for (const { add } of YARD) {
-      if (!add) continue;
-      expect(add.x).toBeGreaterThanOrEqual(0);
-      expect(add.x + artWidth(add.art.rows)).toBeLessThanOrEqual(SCENE_W);
     }
   });
 
@@ -168,17 +157,6 @@ describe("the yard", () => {
         expect(hidden).toBeLessThanOrEqual(h);
         expect(up ? hidden <= last : hidden >= last).toBe(true);
         last = hidden;
-      }
-    }
-  });
-
-  it("stands nothing on top of anything else in the same row", () => {
-    const props = YARD.flatMap((s) => (s.add ? [s.add] : []));
-    for (const a of props) {
-      for (const b of props) {
-        if (a === b || a.row !== b.row) continue;
-        const clear = a.x + artWidth(a.art.rows) <= b.x || b.x + artWidth(b.art.rows) <= a.x;
-        expect(clear, `row ${a.row}: ${a.x} and ${b.x} overlap`).toBe(true);
       }
     }
   });
