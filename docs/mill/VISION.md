@@ -8,7 +8,10 @@ single-player mill**: one mill you keep, growing while you're away, with a
 prestige loop under it and a much longer upgrade ladder above it.
 
 The competitive version is parked behind a menu rather than deleted. Its sim,
-content and bots are intact and its tests still run.
+content and bots are intact and its tests still run — and as of the multiplayer
+work it is no longer only bots: you can race an actual person, by join code or
+by challenging their handle. It's still behind the back room, because the front
+door is still the mill.
 
 What carries over is the thesis, not the multiplayer. The claim in "Why this is
 interesting" was never really about opponents — it was that a clicker gets a
@@ -115,11 +118,17 @@ paths.
     afford to spam an action because spending it means not spending on
     something else), not from a timer gating the action itself.
 - Sit-down or slow-burn — or both, as genuinely different modes?
-  - **Answer: deferred on purpose.** Not deciding this yet, and not treating
-    it as blocking. Build out the core game feel and pacing first (the
-    click/produce/upgrade loop, sabotage/defense feel) with whatever match
-    shape is easiest to prototype against, then figure out which length (or
-    both) it wants to be once the fun part is proven out.
+  - **Answer: sit-down first, and the slow burn isn't ruled out.** Real
+    multiplayer is built on the sit-down shape, because it's the one the
+    existing match already is — swapping the bot for a person changed no game
+    rules at all. But nothing in the wire format assumes it: a match is an
+    append-only command log ordered by server timestamps, with no turn counter
+    and no assumption that anybody is watching. A slow burn is the same log with
+    periodic checkpoint rows compacting it, and `PlayerState` is already a
+    checkpoint. What's genuinely unbuilt is the *design*: what sabotage does to
+    somebody who's asleep, and what they see when they wake up. Solo already
+    answered a version of that — timed shields had to become permanent buildings
+    because most weather lands with the tab closed — and that lesson transfers.
 - What's the resource, thematically? Cookies is the reference point but not
   necessarily the skin.
   - **Answer: chihuahuas.** Specifically chunky ones. Running a kennel has a
