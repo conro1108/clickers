@@ -11,7 +11,9 @@
     "build": "npm run build -w @mill/web",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p packages/sim --noEmit && tsc -p apps/web --noEmit"
+    "typecheck": "tsc -p packages/sim --noEmit && tsc -p apps/web --noEmit",
+    "db:push": "node db/push.mjs db/schema.sql",
+    "db:verify": "node db/verify.mjs"
   },
   "devDependencies": {
     "playwright-core": "^1.62.1",
