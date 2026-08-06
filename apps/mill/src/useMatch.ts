@@ -67,8 +67,21 @@ function buildMatch(setup: MatchSetup, startedAt: Millis): MatchState {
   });
 }
 
+/**
+ * Who you're up against, in the words the lobby uses.
+ *
+ * The picker used to offer "chill", "scrappy" and "nasty" — the profile keys,
+ * straight out of `BOT_PROFILES`. Naming them here means the lobby and the
+ * match log call the same opponent the same thing.
+ */
+export const BOTS: Record<string, { name: string; blurb: string }> = {
+  chill: { name: "Sleepy Pete", blurb: "Grows slowly, rarely swings. A warm-up." },
+  scrappy: { name: "Marge", blurb: "Keeps pace, and will hit you back." },
+  nasty: { name: "Big Gordo", blurb: "Faster than you, and comes for your kit." },
+};
+
 function botName(profile: keyof typeof BOT_PROFILES): string {
-  return { chill: "Sleepy Pete", scrappy: "Marge", nasty: "Big Gordo" }[profile] ?? "Bot";
+  return BOTS[profile]?.name ?? "Bot";
 }
 
 /**

@@ -198,19 +198,15 @@ input {
   flex-direction: column;
   gap: 14px;
 }
-.lobby h1,
-.brand {
+.lobby h1 {
   font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--wood-dark);
-}
-.lobby h1 {
   font-size: 2.1rem;
   margin: 0;
   line-height: 1.1;
 }
-.lobby h1 span,
-.brand span {
+.lobby h1 span {
   color: var(--accent);
 }
 .tagline {
@@ -1416,6 +1412,12 @@ input {
   border-color: var(--leaf);
   background: #f0f7e6;
 }
+/* Versus only. The one shelf where what you're buying happens to somebody else,
+   so it gets the sky's colour rather than the yard's. */
+.row-attack {
+  border-color: #6d5a8f;
+  background: #f1ecf7;
+}
 
 /* One bill for the whole mill. It keeps the repair rows' colour, because it is
    those rows — but it's the answer to all of them rather than another item in
@@ -1501,31 +1503,6 @@ input {
    sheet is about. */
 .world-door {
   margin-bottom: 12px;
-}
-
-/* --- Status list --------------------------------------------------------- */
-
-.stats {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin: 0 0 14px;
-}
-.stats > div {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 7px 0;
-  border-bottom: 1px dashed rgba(138, 111, 87, 0.4);
-  font-size: 0.88rem;
-}
-.stats dt {
-  font-weight: 700;
-  color: var(--wood-dark);
-}
-.stats dd {
-  margin: 0;
-  font-variant-numeric: tabular-nums;
 }
 
 .damage {
@@ -1620,152 +1597,69 @@ input {
   gap: 8px;
 }
 
-/* --- Versus (the older prototype, same skin) ----------------------------- */
+/* --- Versus (the older prototype, on the same shell) --------------------- */
 
-.topbar {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  background: var(--cream);
-  border-bottom: 3px solid var(--wood);
-  font-size: 0.8rem;
-}
-.brand {
-  font-size: 0.9rem;
-}
-.clock {
+/* The clock, which is the one thing the head-to-head has that the homestead
+   doesn't. Centre of the HUD, between what you can spend and where you stand,
+   because it's the number that makes both of them urgent. */
+.hud-clock {
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.35rem;
   color: var(--wood-dark);
   font-variant-numeric: tabular-nums;
-}
-.clock.urgent {
-  color: var(--blood);
-}
-.topbar-bank {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-.topbar-bank-value {
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-.topbar-bank-label {
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-.topbar-right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-/* The scoring rule is a lobby decision you can't change mid-match, and on a
-   phone-width topbar it's the first thing that should give up its room. */
-.rule {
-  display: none;
-}
-
-.grid {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
-  background: var(--cream);
-}
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.panel {
-  background: var(--cream-3);
-  border: 2px solid var(--wood);
-  border-radius: 14px;
-  padding: 12px;
-  box-shadow: var(--panel-shadow);
-}
-.panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.panel-head h2 {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--wood-dark);
-}
-.tabs {
-  gap: 6px;
-}
-.tabs button {
-  flex: 1;
-  padding: 6px 4px;
-  font-size: 0.8rem;
-  position: relative;
-}
-.tab-alert {
-  position: absolute;
-  top: 3px;
-  right: 4px;
-  width: 6px;
-  height: 6px;
-  background: var(--blood);
-}
-.shop-foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 2px solid var(--cream-2);
-  padding-top: 9px;
-  font-size: 0.85rem;
-}
-
-.tally {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-.bank-value {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--wood-dark);
   line-height: 1;
-  font-variant-numeric: tabular-nums;
 }
-.bank-label,
-.tally-score-label {
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ink-soft);
+.hud-clock.urgent {
+  color: var(--blood);
+  animation: clock-tick 1s steps(2, end) infinite;
 }
-.tally-score {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+@keyframes clock-tick {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
 }
-.tally-score-value {
-  font-weight: 800;
+
+/* Where you stand, in the slot the bedding meter has out on the homestead —
+   same bar, same place, and full is still the good end of it. */
+.lead .bedding-track {
+  width: 54px;
+}
+.lead span {
   font-variant-numeric: tabular-nums;
 }
 
-.whistle-layout {
-  margin: 10px 0;
+/* What's currently being done to you, over the mill it's being done to. Top
+   right, clear of the pack and clear of the hoard, and gone entirely when
+   nothing is wrong. */
+.conditions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  left: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  justify-content: flex-end;
+  pointer-events: none;
 }
-.whistle-emoji {
-  font-size: 1.2rem;
+.chip {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 2px solid var(--wood);
+  border-radius: 999px;
+  background: var(--cream-3);
+  box-shadow: var(--panel-shadow);
+  font-size: 0.68rem;
+}
+.chip-slow {
+  border-color: var(--blood);
+  background: #fdeee9;
 }
 
 .opp-list {
@@ -1778,18 +1672,43 @@ input {
 }
 .opp {
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 8px;
+  grid-template-columns: 1fr auto;
+  gap: 2px 10px;
   align-items: baseline;
-  font-size: 0.82rem;
+  padding: 9px 11px;
+  border: 2px solid var(--wood);
+  border-radius: 12px;
+  background: var(--cream-3);
+  font-size: 0.85rem;
 }
 .opp-name {
+  font-weight: 800;
+  color: var(--wood-dark);
+}
+.opp-figures {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-variant-numeric: tabular-nums;
+}
+.opp-count {
   font-weight: 700;
 }
-.opp-count,
 .opp-rate {
-  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
   color: var(--ink-soft);
+}
+.opp-delta {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.opp-delta.ahead {
+  color: var(--leaf);
+}
+.opp-delta.behind {
+  color: var(--blood);
 }
 .fog {
   font-size: 0.7rem;
@@ -1807,11 +1726,6 @@ input {
 }
 .chip-detail,
 .chip-timer {
-  color: var(--ink-soft);
-  font-size: 0.72rem;
-}
-.stat-note {
-  font-size: 0.7rem;
   color: var(--ink-soft);
 }
 

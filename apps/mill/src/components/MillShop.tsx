@@ -2,7 +2,7 @@ import { useState } from "react";
 import { P, format, solo, type Millis, type Puppies } from "@mill/sim";
 
 import { producerArt, upgradePreview } from "../marks.js";
-import { artUrl, type Art } from "../render/pixel.js";
+import { Row } from "./Row.js";
 
 type BuyQty = 1 | 10 | "max";
 
@@ -33,56 +33,6 @@ function saveQty(qty: BuyQty): void {
   } catch {
     // See `loadQty`.
   }
-}
-
-function Row({
-  name,
-  blurb,
-  cost,
-  meta,
-  affordable,
-  onBuy,
-  accent,
-  art,
-  best,
-}: {
-  name: string;
-  blurb: string;
-  /** A paper price is rendered differently from a puppy price. */
-  cost: string;
-  meta?: string;
-  affordable: boolean;
-  onBuy: () => void;
-  accent?: string;
-  /** The thing itself, as it currently stands on your mill. */
-  art?: Art;
-  /** Most rate per puppy on the board. A dot, and nothing more. */
-  best?: boolean;
-}) {
-  return (
-    <button
-      className={`row ${accent ?? ""} ${affordable ? "" : "row-locked"}`}
-      onClick={onBuy}
-      disabled={!affordable}
-    >
-      {art && (
-        <span className="row-art">
-          <img className="pxicon" src={artUrl(art)} alt="" />
-        </span>
-      )}
-      <span className="row-body">
-        <span className="row-name">
-          {name}
-          {best && <span className="row-best" title="Best rate per puppy" aria-label="best value" />}
-        </span>
-        <span className="row-blurb">{blurb}</span>
-      </span>
-      <span className="row-right">
-        <span className="row-cost">{cost}</span>
-        {meta && <span className="row-meta">{meta}</span>}
-      </span>
-    </button>
-  );
 }
 
 /**

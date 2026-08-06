@@ -9,10 +9,13 @@ import {
 } from "react";
 import {
   P,
+  brokenRate,
   clickYield,
   format,
   formatDuration,
+  rateAt,
   seconds,
+  slowMultiplier,
   solo,
   standings,
   type ScoringRule,
@@ -20,18 +23,27 @@ import {
 
 import { clockSkew, setClockSkew } from "./clock.js";
 import { AwayReport } from "./components/AwayReport.js";
+import { Conditions } from "./components/Conditions.js";
 import { Damage } from "./components/Damage.js";
-import { Mill } from "./components/Mill.js";
 import { MillFeed } from "./components/MillFeed.js";
-import { MillScene, TitleScene, type MillSceneHandle } from "./components/MillScene.js";
-import { GrowPanel, LandPanel, LegacyPanel } from "./components/MillShop.js";
+import {
+  MatchScene,
+  MillScene,
+  TitleScene,
+  type MillSceneHandle,
+} from "./components/MillScene.js";
+import {
+  GrowPanel as MillGrowPanel,
+  LandPanel,
+  LegacyPanel,
+} from "./components/MillShop.js";
 import { Feed } from "./components/Feed.js";
 import { Opponents } from "./components/Opponents.js";
 import { PxIcon } from "./components/PxIcon.js";
 import { Sheet } from "./components/Sheet.js";
-import { Shop } from "./components/Shop.js";
+import { DefendPanel, GrowPanel, SabotagePanel } from "./components/Shop.js";
 import { hasSavedMill, useMill } from "./useMill.js";
-import { YOU, useMatch, type MatchSetup } from "./useMatch.js";
+import { BOTS, YOU, useMatch, type MatchSetup } from "./useMatch.js";
 
 /** `greedy` exists as a control group for the balance harness, not as an opponent. */
 const PLAYABLE_BOTS: MatchSetup["botProfile"][] = ["chill", "scrappy", "nasty"];
@@ -760,7 +772,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
             )
           }
         >
-          <GrowPanel mill={mill} budget={budget} dispatch={dispatch} />
+          <MillGrowPanel mill={mill} budget={budget} dispatch={dispatch} />
         </Sheet>
       )}
       {/* Damage, defence and the log of what caused it are one subject, and
@@ -926,6 +938,10 @@ function VersusLobby({ onStart, onBack }: { onStart: (setup: MatchSetup) => void
         Grow puppies. Ruin someone else's. You can't afford to do both.
       </p>
 
+      {/* The same mill the title screen runs, for the same reason: the front
+          door of a game about a place shouldn't be a page of form fields. */}
+      <TitleScene />
+
       <label className="field">
         <span>Your name</span>
         <input
@@ -956,10 +972,11 @@ function VersusLobby({ onStart, onBack }: { onStart: (setup: MatchSetup) => void
         <div className="choices">
           {PLAYABLE_BOTS.map((k) => (
             <button key={k} className={botProfile === k ? "on" : ""} onClick={() => setBotProfile(k)}>
-              {k}
+              {BOTS[k]?.name ?? k}
             </button>
           ))}
         </div>
+        <p className="muted small">{BOTS[botProfile]?.blurb}</p>
       </div>
 
       <div className="field">
@@ -996,9 +1013,24 @@ function VersusLobby({ onStart, onBack }: { onStart: (setup: MatchSetup) => void
   );
 }
 
+/** The sheets of a match, in the order they sit on the bar. */
+type MatchSheet = "match" | "defend" | "sabotage" | "shop";
+
+/**
+ * A match, on the homestead's shell.
+ *
+ * Three bordered panels of text used to share the screen — your mill as a
+ * column of numbers, the shop beside it, opponents and the log beside that —
+ * which read as a spreadsheet of the game rather than the game. It's the same
+ * sim; what changed is that the mill is the picture, the clock and the bank are
+ * the only things pinned over it, and everything else is a sheet you open.
+ */
 function Match({ setup, onExit }: { setup: MatchSetup; onExit: () => void }) {
   const { state, now, me, pendingClicks, over, error, click, dispatch, restart } = useMatch(setup);
-  useSpaceToWhistle(click);
+  const [sheet, setSheet] = useState<MatchSheet | null>(null);
+  const sceneRef = useRef<MillSceneHandle>(null);
+  const [pops, setPops] = useState<{ id: number; text: string }[]>([]);
+  const popId = useRef(0);
 
   const table = standings(state, now);
   const opponentIds = state.order.filter((id) => id !== YOU);
@@ -1010,51 +1042,170 @@ function Match({ setup, onExit }: { setup: MatchSetup; onExit: () => void }) {
     [me, pendingClicks],
   );
   const yourScore = table.find((s) => s.player.id === YOU)?.score ?? 0;
+  const bestRival = Math.max(0, ...table.filter((s) => s.player.id !== YOU).map((s) => s.score));
   const timeLeft = state.startedAt + state.config.durationMs - now;
+  const perClick = clickYield(me);
+  const rate = rateAt(me, now);
+  const slow = slowMultiplier(me, now);
+  const broken = brokenRate(me) > 0;
+
+  const onWhistle = useCallback(
+    (at?: { x: number; y: number }) => {
+      if (over) return;
+      click();
+      sceneRef.current?.whistle(at);
+      const id = popId.current++;
+      setPops((p) => [...p.slice(-6), { id, text: `+${format(clickYield(me))}` }]);
+      setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 700);
+    },
+    [click, me, over],
+  );
+  useSpaceToWhistle(onWhistle, !over && sheet === null);
+
+  // Where you stand, as a bar rather than a number: your share of the two
+  // scores, so a match you're losing is visibly a bar under half.
+  const share = yourScore + bestRival > 0 ? yourScore / (yourScore + bestRival) : 0.5;
 
   return (
-    <div className="app">
-      {/* Pinned, because the two numbers you actually play against — the clock
-          and what's in the bank — are otherwise scrolled off the moment you go
-          shopping, which is exactly when you need them. */}
-      <header className="topbar">
-        <div className="brand">
-          Puppies, <span>Inc.</span>
+    <div className="app mill-app">
+      <header className="hud">
+        <div className="hud-bank">
+          <PxIcon name="puppy" size={28} />
+          <div>
+            <div className="hud-value">{format(budget)}</div>
+            <div className="hud-label">to spend</div>
+          </div>
         </div>
-        <div className={`clock ${timeLeft < seconds(30) ? "urgent" : ""}`}>
+        {/* The one thing this game has that the homestead doesn't, and the
+            reason every decision in it is made under pressure. */}
+        <div className={`hud-clock ${timeLeft < seconds(30) ? "urgent" : ""}`}>
           {formatDuration(timeLeft)}
         </div>
-        <div className="topbar-bank">
-          <span className="topbar-bank-value">{format(budget)}</span>
-          <span className="topbar-bank-label">to spend</span>
-        </div>
-        <div className="topbar-right">
-          <span className="muted rule">
-            {state.config.scoring === "on_hand" ? "biggest pile wins" : "most raised wins"}
-          </span>
-          <button className="ghost" onClick={onExit}>
-            Leave
-          </button>
+        <div className="hud-side">
+          <div className={`hud-rate ${slow < 1 ? "hurt" : ""}`}>{format(rate)}/s</div>
+          {/* Sits exactly where the homestead's bedding meter does, and reads
+              the same way: a bar you want full, with the number beside it. */}
+          <div className="bedding lead" title="Your score against the best of them">
+            <div className="bedding-track">
+              <div
+                className={`bedding-fill ${share < 0.5 ? "low" : ""}`}
+                style={{ width: `${Math.round(share * 100)}%` }}
+              />
+            </div>
+            <span className={share < 0.5 ? "hurt" : "muted"}>
+              {yourScore >= bestRival ? "+" : "−"}
+              {format(Math.abs(yourScore - bestRival))}
+            </span>
+          </div>
         </div>
       </header>
 
       {error && <div className="error">{error}</div>}
 
-      <main className="grid">
-        <Mill
-          state={state}
-          me={me}
-          now={now}
-          pendingClicks={pendingClicks}
-          onClick={click}
-          disabled={over}
-        />
-        <Shop me={me} now={now} budget={budget} opponents={opponents} dispatch={dispatch} />
-        <div className="sidebar">
-          <Opponents state={state} now={now} ids={opponentIds} yourScore={yourScore} />
-          <Feed state={state} />
+      <MatchScene ref={sceneRef} me={me} hoard={budget} onWhistle={onWhistle}>
+        <Conditions me={me} now={now} />
+      </MatchScene>
+
+      <div className="whistlebar">
+        <button className="whistle" onClick={() => onWhistle()} disabled={over}>
+          <PxIcon name="puppy" size={14} />
+          <span className="whistle-label">Whistle</span>
+          <span className="whistle-yield">+{format(perClick)}</span>
+        </button>
+        <div className="pops" aria-hidden>
+          {pops.map((p) => (
+            <span key={p.id} className="pop">
+              {p.text}
+            </span>
+          ))}
         </div>
-      </main>
+      </div>
+
+      <nav className="nav">
+        {([
+          { id: "match", label: "Match", icon: "clipboard" },
+          { id: "sabotage", label: "Sabotage", icon: "cloud" },
+          { id: "defend", label: "Defend", icon: "shield" },
+          { id: "shop", label: "Shop", icon: "basket" },
+        ] as const).map((item) => (
+          <button
+            key={item.id}
+            className={item.id === "defend" && broken ? "alert" : undefined}
+            onClick={() => setSheet(item.id)}
+          >
+            <PxIcon name={item.icon} size={20} />
+            <span>{item.label}</span>
+            {item.id === "defend" && broken && <span className="nav-dot" />}
+          </button>
+        ))}
+      </nav>
+
+      {sheet === "shop" && (
+        <Sheet
+          title="Shop"
+          sub="More kit in the yard, and the upgrades that make it worth more."
+          onClose={() => setSheet(null)}
+          foot={
+            <>
+              <span className="muted">To spend</span>
+              <strong>{format(budget)}</strong>
+            </>
+          }
+        >
+          <GrowPanel me={me} budget={budget} dispatch={dispatch} />
+        </Sheet>
+      )}
+      {sheet === "sabotage" && (
+        <Sheet
+          title="Sabotage"
+          sub="Reach across the table. Everything here is a puppy you didn't grow with."
+          onClose={() => setSheet(null)}
+          foot={
+            <>
+              <span className="muted">To spend</span>
+              <strong>{format(budget)}</strong>
+            </>
+          }
+        >
+          <SabotagePanel me={me} budget={budget} opponents={opponents} dispatch={dispatch} />
+        </Sheet>
+      )}
+      {sheet === "defend" && (
+        <Sheet
+          title="Defend"
+          sub="What they broke, what it costs, and what stops it next time."
+          onClose={() => setSheet(null)}
+          foot={
+            <>
+              <span className="muted">To spend</span>
+              <strong>{format(budget)}</strong>
+            </>
+          }
+        >
+          <DefendPanel me={me} now={now} budget={budget} dispatch={dispatch} />
+        </Sheet>
+      )}
+      {/* The match itself: where everyone stands, what wins it, what's happened
+          — and the way out, which is the only place it needs to be. A Leave
+          button pinned to the bar all match is a button you press by accident. */}
+      {sheet === "match" && (
+        <Sheet
+          title="The match"
+          sub={`${formatDuration(Math.max(0, timeLeft))} left · ${
+            state.config.scoring === "on_hand" ? "biggest pile wins" : "most raised wins"
+          }`}
+          onClose={() => setSheet(null)}
+        >
+          <Opponents state={state} now={now} ids={opponentIds} yourScore={yourScore} />
+          <h3 className="sheet-section">Yard report</h3>
+          <Feed state={state} />
+          <div className="choices">
+            <button className="ghost" onClick={onExit}>
+              Leave the match
+            </button>
+          </div>
+        </Sheet>
+      )}
 
       {over && (
         <div className="overlay">

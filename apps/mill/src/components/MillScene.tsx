@@ -7,9 +7,9 @@ import {
   type PointerEventHandler,
   type ReactNode,
 } from "react";
-import { solo, type Puppies } from "@mill/sim";
+import { PRODUCERS, solo, type PlayerState, type Puppies } from "@mill/sim";
 
-import { producerMark } from "../marks.js";
+import { matchMark, producerMark } from "../marks.js";
 import { EMPTY_VIEW, MillScene as Scene, type MillView } from "../render/millScene.js";
 import { InsideScene } from "../render/insideScene.js";
 
@@ -72,6 +72,23 @@ const SceneCanvas = forwardRef<MillSceneHandle, {
 
   return <canvas ref={canvasRef} className="scene" onPointerDown={onPointerDown} />;
 });
+
+/**
+ * A tap on the canvas, in buffer pixels, so the puppy comes up under your
+ * finger rather than somewhere else on the mill.
+ */
+function whistleAt(
+  e: { currentTarget: HTMLCanvasElement; clientX: number; clientY: number; preventDefault(): void },
+  onWhistle: (at?: { x: number; y: number }) => void,
+): void {
+  e.preventDefault();
+  const rect = e.currentTarget.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return onWhistle();
+  onWhistle({
+    x: ((e.clientX - rect.left) / rect.width) * e.currentTarget.width,
+    y: ((e.clientY - rect.top) / rect.height) * e.currentTarget.height,
+  });
+}
 
 /**
  * The mill, on a canvas.
@@ -138,18 +155,50 @@ export const MillScene = forwardRef<MillSceneHandle, {
         ref={ref}
         view={view}
         world={world}
-        onPointerDown={(e) => {
-          e.preventDefault();
-          // Into buffer pixels, so the puppy comes up under your finger
-          // rather than somewhere else on the mill.
-          const rect = e.currentTarget.getBoundingClientRect();
-          if (rect.width <= 0 || rect.height <= 0) return onWhistle();
-          onWhistle({
-            x: ((e.clientX - rect.left) / rect.width) * e.currentTarget.width,
-            y: ((e.clientY - rect.top) / rect.height) * e.currentTarget.height,
-          });
-        }}
+        onPointerDown={(e) => whistleAt(e, onWhistle)}
       />
+      {children}
+    </div>
+  );
+});
+
+/**
+ * The same picture, for the head-to-head prototype.
+ *
+ * Versus used to be three panels of text sat where the mill should be, which is
+ * how the parked mode ended up looking like a different game to the one it's a
+ * mode of. Its six producers are the bottom six of the solo ladder under the
+ * same ids, so the yard, the pack and the broken kit all draw themselves — what
+ * it doesn't have is bedding (always clean), a horizon (nothing looming) or a
+ * lineage (one generation, always).
+ */
+export const MatchScene = forwardRef<MillSceneHandle, {
+  me: PlayerState;
+  /** Puppies on hand, including the clicks that haven't flushed yet. */
+  hoard: Puppies;
+  onWhistle: (at?: { x: number; y: number }) => void;
+  children?: ReactNode;
+}>(function MatchScene({ me, hoard, onWhistle, children }, ref) {
+  const view = useMemo<MillView>(() => {
+    const working: MillView["working"] = {};
+    const broken: MillView["broken"] = {};
+    const marks: MillView["marks"] = {};
+    for (const prod of PRODUCERS) {
+      const owned = me.producers[prod.id] ?? 0;
+      const dead = Math.min(me.broken[prod.id] ?? 0, owned);
+      if (owned - dead > 0) working[prod.id] = owned - dead;
+      if (dead > 0) broken[prod.id] = dead;
+      const level = matchMark(me.upgrades, prod.id);
+      if (level > 0) marks[prod.id] = level;
+    }
+    // Seeded off the player rather than the match, so a rematch is the same
+    // yard laid out the same way — it's your mill both times.
+    return { ...EMPTY_VIEW, working, broken, marks, hoard, seed: me.id };
+  }, [me, hoard]);
+
+  return (
+    <div className="stage">
+      <SceneCanvas ref={ref} view={view} onPointerDown={(e) => whistleAt(e, onWhistle)} />
       {children}
     </div>
   );
