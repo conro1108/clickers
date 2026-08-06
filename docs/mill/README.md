@@ -267,19 +267,39 @@ in a five-minute match, and a follow-up showed pure growth beating sabotage on
 every seed — the second axis the design rests on didn't exist.
 
 **Bots on every seat can't answer the question the lobby actually asks.** They
-tell you the economy isn't degenerate; they can't tell you whether `nasty` is
-beatable, and every rung of the ladder turned out to be crushable by an ordinary
-person. So one seat can now be a *reference human* (`reference.ts`), modelled on
-how the game gets played rather than optimally: whistle while whistling is the
-only income, then follow the shop's "best value" badge and keep adding capacity.
-`human.test.ts` grades the ladder against it —
+tell you the economy isn't degenerate; they can't tell you whether the top rung
+is beatable, and every rung of the ladder turned out to be crushable by an
+ordinary person. So one seat can now be a *reference human* (`reference.ts`),
+modelled on how the game gets played rather than optimally: whistle while
+whistling is the only income, then follow the shop's "best value" badge and keep
+adding capacity. `human.test.ts` grades the ladder against it.
+
+**The thing both the bot and the reference human got wrong was saving.** Both
+bought the best thing they could *afford right now*, which in a shelf priced at
+`growth^N` means shovelling the pile into Puppy Pens forever: the 60th pen is
+~13.5K puppies for 2.5/s, while a first Grooming Rig is 45K for 3500/s — four
+hundred times the rate per puppy. A player who waits two seconds for the better
+tier finishes in the hundreds of millions; one who doesn't finishes at 600K.
+That one difference was the entire difficulty ceiling, and it's now a knob
+(`thrift`) on both the bot and the reference human.
+
+It has an interior optimum, which is worth knowing: neither 0 (buy anything) nor
+1 (only ever buy the single best thing) is close to good. Buy a few of the tier
+you just unlocked, *then* save for the next one.
+
+The ladder is graded on margin, at every length people play:
 
 ```
-builder vs chill      1.76x   comfortable
-builder vs scrappy    1.12x   a real fight
-builder vs nasty      0.75x   loses, stays in sight
-scrapper vs nasty     0.85x   sabotage closes some of the gap
+                chill scrappy nasty  mean vicious ruthless merciless tyrant
+builder @180s     46x    26x    11x  7.4x   3.7x     1.5x     0.74x   0.12x
+builder @300s   2105x   231x    44x   11x   4.4x     1.9x     1.14x   0.83x
 ```
+
+Win rate is deliberately not the measure. The economy is exponential, so whoever
+has the better exponent finishes orders of magnitude ahead and every rung reads
+as either 15/15 or 0/15 — a step, not a ladder. What a player feels is the
+margin: against `chill` you finish a thousand times ahead and it was never a
+game; against `ruthless` you finish just ahead and it was close all match.
 
 `leaves neither pure growth nor sabotage dominant` is the guard rail on the
 second axis, run as `nasty` against `greedy` — the same bot with sabotage
@@ -305,6 +325,12 @@ action per decision tick: it sat on puppies that earned nothing. Now that a turn
 spends the pile down, cadence is a legitimate difficulty knob alongside `skill`
 and click rate.
 
+Its foil is a reference human rather than a `chill` bot, and that matters. Graded
+against a punching bag, the aggressive rungs measure as *weaker* than the passive
+ones — they keep spending on sabotage against someone who was never going to
+catch them. True, and irrelevant: nobody plays a rung of the ladder against
+another rung of the ladder.
+
 ## Open questions this raised
 
 - **What does the winner actually win on?** VISION.md says "has the most of the
@@ -322,9 +348,14 @@ and click rate.
   single click at 75% of rebuild cost. That makes damage a pure tax. If we want
   getting hit to feel worse, repair wanting *time* (or a queue) is the obvious
   next lever.
-- **Wrist speed is still worth more than it should be.** The reference human has
-  a `masher` variant that never looks away from the whistle button, and it beats
-  `builder` by 4-9x against the same bot. Nobody has hit this in practice — the
+- **Wrist speed is worth roughly a thousand times what it should be.** The
+  reference human has a `masher` variant that never looks away from the whistle
+  button, and it beats `builder` by 900-1700x against the same bot. This used to
+  read as 4-9x, and only because nobody in the sim was compounding properly;
+  once both sides save for the good tiers, early clicks feed the exponent and the
+  gap explodes. No bot ladder can span three orders of magnitude, so `masher`
+  beats every rung including `tyrant` — the fix belongs in the economy, not in
+  `bot.ts`. Nobody has hit this in practice — the
   ladder is graded against `builder`, which is how the game actually gets played
   — but it means an autoclicker beats strategy, and it quietly penalises playing
   on a phone, where you can't tap that fast. Capping the whistle rate or flattening

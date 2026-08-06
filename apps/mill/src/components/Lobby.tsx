@@ -230,6 +230,7 @@ export function VersusLobby({
 }: {
   lobby: LobbyState;
   bots: readonly { id: string; name: string; blurb: string }[];
+  /** Which rung is selected when the screen opens. */
   botProfile: string;
   onBot: (profile: string, terms: MatchTerms) => void;
   onEnter: (row: MatchRow) => void;
@@ -237,6 +238,11 @@ export function VersusLobby({
 }) {
   const { me, challenges, names, error, setMe, setError, refresh } = lobby;
   const [door, setDoor] = useState<Door>("bot");
+  // The roster used to start a match on the tap that picked the opponent, which
+  // meant the blurb under it described whoever was first in the list and nobody
+  // ever read one. With eight rungs the blurb is the only thing telling you what
+  // you're walking into, so picking and starting are two presses.
+  const [bot, setBot] = useState(botProfile);
   const [durationMs, setDurationMs] = useState(seconds(300));
   const [scoring, setScoring] = useState<ScoringRule>("total_raised");
   const [code, setCode] = useState("");
@@ -334,19 +340,17 @@ export function VersusLobby({
 
       {door === "bot" && (
         <>
-          <div className="choices">
-            {bots.map((b) => (
-              <button
-                key={b.id}
-                className={botProfile === b.id ? "on" : ""}
-                onClick={() => onBot(b.id, terms)}
-              >
+          {/* In ladder order, easiest first — the row you're on is the setting. */}
+          <div className="choices roster">
+            {bots.map((b, i) => (
+              <button key={b.id} className={bot === b.id ? "on" : ""} onClick={() => setBot(b.id)}>
+                <span className="roster-rung">{i + 1}</span>
                 {b.name}
               </button>
             ))}
           </div>
-          <p className="muted small">{bots.find((b) => b.id === botProfile)?.blurb}</p>
-          <button className="start" onClick={() => onBot(botProfile, terms)}>
+          <p className="muted small">{bots.find((b) => b.id === bot)?.blurb}</p>
+          <button className="start" onClick={() => onBot(bot, terms)}>
             Start match
           </button>
         </>

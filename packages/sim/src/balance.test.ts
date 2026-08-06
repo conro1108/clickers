@@ -5,6 +5,18 @@ import { format, seconds } from "./numbers.js";
 
 const SEEDS = ["s1", "s2", "s3", "s4", "s5"];
 
+/** The lobby's roster, in the order it offers them. `greedy` is not on it. */
+export const LADDER = [
+  "chill",
+  "scrappy",
+  "nasty",
+  "mean",
+  "vicious",
+  "ruthless",
+  "merciless",
+  "tyrant",
+] as const;
+
 function fiveMinuteMatch(seed: string) {
   return simulateMatch({
     seed,
@@ -102,10 +114,16 @@ describe("match pacing", () => {
    * *slower or lazier* bots stronger, because acting less often means a bigger
    * pile and a bigger pile buys better tiers. Scores are noisy enough that this
    * has to be a median over many seeds.
+   *
+   * The foil is a reference *human*, not a `chill` bot. Against a punching bag
+   * the aggressive rungs measure as weaker than the passive ones purely because
+   * they keep spending on sabotage against someone who was never going to catch
+   * them — true, but it says nothing about difficulty, since nobody plays a
+   * rung of the ladder against another rung of the ladder.
    */
   it("orders the difficulty ladder the way the lobby claims", () => {
     const seeds = Array.from({ length: 21 }, (_, i) => `ladder-${i}`);
-    const medianFor = (profile: "chill" | "scrappy" | "nasty") => {
+    const medianFor = (profile: string) => {
       const scores = seeds
         .map(
           (seed) =>
@@ -114,7 +132,7 @@ describe("match pacing", () => {
               durationMs: seconds(300),
               players: [
                 { id: "bot", name: "Bot", profile },
-                { id: "foil", name: "Foil", profile: "chill" },
+                { id: "foil", name: "Foil", human: "builder" },
               ],
             }).finalScores.bot!,
         )
@@ -122,14 +140,19 @@ describe("match pacing", () => {
       return scores[Math.floor(scores.length / 2)]!;
     };
 
-    const chill = medianFor("chill");
-    const scrappy = medianFor("scrappy");
-    const nasty = medianFor("nasty");
+    // Every rung, not just the ends: a ladder with one step backwards in the
+    // middle is a lobby that lies to you, and the knobs interact enough
+    // (thrift against buys-per-turn especially) that eyeballing won't catch it.
+    const scores = LADDER.map((profile) => ({ profile, score: medianFor(profile) }));
     console.log(
-      `difficulty ladder: chill=${format(chill)} scrappy=${format(scrappy)} nasty=${format(nasty)}`,
+      `difficulty ladder: ${scores.map((s) => `${s.profile}=${format(s.score)}`).join(" ")}`,
     );
-    expect(scrappy).toBeGreaterThan(chill);
-    expect(nasty).toBeGreaterThan(scrappy);
+    for (let i = 1; i < scores.length; i++) {
+      expect(
+        scores[i]!.score,
+        `${scores[i]!.profile} should out-earn ${scores[i - 1]!.profile}`,
+      ).toBeGreaterThan(scores[i - 1]!.score);
+    }
   });
 
   /**

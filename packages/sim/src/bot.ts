@@ -42,25 +42,86 @@ export interface BotProfile {
   skill: number;
   /** How often it acts. */
   decisionMs: number;
+  /**
+   * How far ahead of it you have to be before it reaches across the board, as a
+   * share of its own score. At 0.6 it only swings at someone who's within
+   * striking distance of overtaking it — which, once it's comfortably ahead,
+   * means it stops attacking altogether and just farms. That's the right
+   * instinct for the low rungs and the whole reason the old top rung played
+   * passively. At 0 it swings every turn it can afford to, winning or not.
+   */
+  patience: number;
+  /** Swings it will stack into a single turn, budget permitting. */
+  swings: number;
+  /**
+   * How many things it buys per turn.
+   *
+   * This is the real difficulty knob at the top of the ladder, and the reason
+   * the old top rung lost to moderately active farming: at 24 it physically
+   * could not spend a late-game pile as fast as it earned one, so it sat on
+   * puppies that weren't producing while a person who keeps clicking Buy does
+   * not. A number here that never binds (a few hundred) means the only thing
+   * limiting it is what it can afford.
+   */
+  buysPerTurn: number;
+  /**
+   * 0..1 — how much worse than the best buy on the board it will settle for
+   * rather than save up, as a share of that best buy's rate-per-puppy.
+   *
+   * This is the single biggest thing separating a good player from a bad one,
+   * and the old bot was at 0. Every tier costs `growth^N` more each time you
+   * buy one, so the 60th Puppy Pen is ~13.5K puppies for 2.5/s while a first
+   * Grooming Rig is 45K for 3500/s — four hundred times the rate per puppy.
+   * Buying the best thing you can *afford right now* means shovelling the pile
+   * into pens forever and never reaching the tier that wins the match, which is
+   * exactly why the old ladder got flattened by anyone who saved.
+   *
+   * At 0 it buys anything affordable. At 0.9 it sits on its hands unless the
+   * purchase is within 10% of the best rate-per-puppy in the shop — which
+   * usually means waiting for the next tier. Not 1: some idling is worse than a
+   * slightly-off buy, since puppies you're sitting on earn nothing either.
+   */
+  thrift: number;
 }
 
+/**
+ * Eight rungs, ordered. The ladder is checked by the difficulty test in
+ * balance.test.ts, and graded against a human-speed reference player in
+ * human.test.ts — "the top rung should actually be able to beat you" is a claim
+ * we test, not hope.
+ *
+ * `skill` tops out at 1 by the third rung, because it only describes *not
+ * making beginner mistakes* and there's nothing above playing correctly. So the
+ * five rungs above it climb on the four things a very good opponent actually
+ * has more of: hands (`clicksPerSecond`), attention (`decisionMs`), throughput
+ * (`buysPerTurn` — the one that decides who wins), and pressure (`patience`
+ * and `swings`).
+ *
+ * Note that `aggression` does *not* climb with the ladder past `vicious`, and
+ * falls at the top. It's a share of the pile spent per *turn*, so at a 250ms
+ * cadence the same number is nearly three times the spend per second it is at
+ * 700ms — and puppies thrown at a shielded opponent are puppies not compounding
+ * at home. The hard rungs pressure you by swinging more often, not by betting
+ * more of the farm on each swing.
+ */
 export const BOT_PROFILES: Record<string, BotProfile> = {
-  // The ladder is checked by the difficulty test in balance.test.ts, and the
-  // top rung is checked against a human-speed reference player in human.test.ts
-  // — "nasty should actually be able to beat you" is a claim we test, not hope.
-  chill: { aggression: 0.15, defensiveness: 0.2, clicksPerSecond: 1, skill: 0.3, decisionMs: 1400 },
-  scrappy: { aggression: 0.3, defensiveness: 0.4, clicksPerSecond: 2, skill: 0.6, decisionMs: 1000 },
-  nasty: { aggression: 0.4, defensiveness: 0.5, clicksPerSecond: 3, skill: 1, decisionMs: 700 },
+  // prettier-ignore-start
+  chill:     { aggression: 0.15, defensiveness: 0.2,  clicksPerSecond: 1,  skill: 0.5, decisionMs: 1400, patience: 0.8, swings: 1, buysPerTurn: 8,   thrift: 0.1 },
+  scrappy:   { aggression: 0.3,  defensiveness: 0.4,  clicksPerSecond: 2,  skill: 0.8, decisionMs: 1000, patience: 0.6, swings: 1, buysPerTurn: 16,  thrift: 0.13 },
+  nasty:     { aggression: 0.4,  defensiveness: 0.5,  clicksPerSecond: 3,  skill: 1,   decisionMs: 700,  patience: 0.6, swings: 1, buysPerTurn: 24,  thrift: 0.11 },
+  mean:      { aggression: 0.35, defensiveness: 0.5,  clicksPerSecond: 4,  skill: 1,   decisionMs: 600,  patience: 0.3, swings: 1, buysPerTurn: 40,  thrift: 0.13 },
+  vicious:   { aggression: 0.35, defensiveness: 0.5,  clicksPerSecond: 5,  skill: 1,   decisionMs: 500,  patience: 0,   swings: 1, buysPerTurn: 60,  thrift: 0.15 },
+  ruthless:  { aggression: 0.3,  defensiveness: 0.5,  clicksPerSecond: 7,  skill: 1,   decisionMs: 450,  patience: 0,   swings: 2, buysPerTurn: 100, thrift: 0.17 },
+  merciless: { aggression: 0.25, defensiveness: 0.55, clicksPerSecond: 9,  skill: 1,   decisionMs: 350,  patience: 0,   swings: 3, buysPerTurn: 200, thrift: 0.19 },
+  tyrant:    { aggression: 0.2,  defensiveness: 0.6,  clicksPerSecond: 12, skill: 1,   decisionMs: 250,  patience: 0,   swings: 4, buysPerTurn: 400, thrift: 0.2 },
   /**
    * `nasty` with the second axis switched off. The control group only means
    * anything if it's identical apart from the thing being measured, so this has
    * to be kept in step with `nasty` whenever that's retuned.
    */
-  greedy: { aggression: 0, defensiveness: 0, clicksPerSecond: 3, skill: 1, decisionMs: 700 },
+  greedy:    { aggression: 0,    defensiveness: 0,    clicksPerSecond: 3,  skill: 1,   decisionMs: 700,  patience: 0.6, swings: 1, buysPerTurn: 24,  thrift: 0.11 },
+  // prettier-ignore-end
 };
-
-/** Buys per turn at skill 1. A beginner (skill 0) manages one. */
-const MAX_BUYS_PER_TURN = 24;
 
 /** Priciest item it can afford within `budget`. */
 function affordable<T extends Attack | Defense>(
@@ -166,14 +227,21 @@ export function botTurn(
     .map((id) => ({ id, score: scoreOf(state.players[id]!, t, state.config.scoring) }))
     .sort((a, b) => b.score - a.score)[0];
 
-  if (profile.aggression > 0 && leader && leader.score > P.mul(scoreOf(me, t, state.config.scoring), 0.6)) {
+  if (
+    profile.aggression > 0 &&
+    leader &&
+    leader.score > P.mul(scoreOf(me, t, state.config.scoring), profile.patience)
+  ) {
     const targetRate = cleanRate(state.players[leader.id]!);
-    const pick = affordable(
-      ATTACKS,
-      (a) => attackCost(a, me.attacksUsed[a.id] ?? 0, targetRate),
-      P.mul(me.puppies, profile.aggression),
-    );
-    if (pick) {
+    // The budget is re-read from what's left after each swing, so stacking them
+    // costs geometrically less and a big `swings` can't empty the mill.
+    for (let i = 0; i < profile.swings; i++) {
+      const pick = affordable(
+        ATTACKS,
+        (a) => attackCost(a, me.attacksUsed[a.id] ?? 0, targetRate),
+        P.mul(me.puppies, profile.aggression),
+      );
+      if (!pick) break;
       out.push({ type: "attack", player: botId, target: leader.id, attack: pick.item.id });
       pay(pick.cost);
       me = { ...me, attacksUsed: { ...me.attacksUsed, [pick.item.id]: (me.attacksUsed[pick.item.id] ?? 0) + 1 } };
@@ -191,15 +259,15 @@ export function botTurn(
     me = { ...me, upgrades: [...me.upgrades, up.id] };
   }
 
-  const buys = Math.max(1, Math.round(MAX_BUYS_PER_TURN * profile.skill));
-  for (let i = 0; i < buys; i++) {
+  for (let i = 0; i < profile.buysPerTurn; i++) {
     const ranked = rankProducers(me);
     // Playing badly, on purpose: grab the cheapest thing on the shelf. It's what
     // a first-timer does, and it quietly wrecks your curve — you pay ever more
     // per pen while the good tiers stay one save away.
     const pick = plays()
-      ? ranked.find((r) => P.gte(me.puppies, r.cost))
+      ? ranked.find((r) => P.gte(me.puppies, r.cost) && r.value >= ranked[0]!.value * profile.thrift)
       : [...ranked].sort((a, b) => a.cost - b.cost).find((r) => P.gte(me.puppies, r.cost));
+    // Nothing worth buying — hold the pile and let it grow into the next tier.
     if (!pick) break;
     out.push({ type: "buy_producer", player: botId, producer: pick.id, qty: 1 });
     pay(pick.cost);

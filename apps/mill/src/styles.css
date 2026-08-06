@@ -248,6 +248,24 @@ input {
   margin-bottom: 14px;
 }
 
+/* Eight opponents don't fit a row. A grid keeps the ladder readable as a
+   ladder: two columns, easiest top-left, hardest bottom-right. */
+.choices.roster {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.choices.roster button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-start;
+}
+.roster-rung {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.5;
+  font-size: 0.72em;
+}
+
 /* A live diorama, not a hero image — same scene the game runs, sized down. */
 .title-scene {
   height: 220px;
@@ -1729,6 +1747,28 @@ input {
 }
 .lead span {
   font-variant-numeric: tabular-nums;
+}
+
+/* Who you're racing, in full, under the bar that says by how much. */
+.hud-rival {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.hud-rival-name {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  max-width: 8ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hud-rival span:nth-child(2) {
+  font-weight: 700;
+  color: var(--ink);
 }
 
 /* What's currently being done to you, over the mill it's being done to. Top

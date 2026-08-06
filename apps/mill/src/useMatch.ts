@@ -78,6 +78,11 @@ export const BOTS: Record<string, { name: string; blurb: string }> = {
   chill: { name: "Sleepy Pete", blurb: "Grows slowly, rarely swings. A warm-up." },
   scrappy: { name: "Marge", blurb: "Keeps pace, and will hit you back." },
   nasty: { name: "Big Gordo", blurb: "Faster than you, and comes for your kit." },
+  mean: { name: "Trish", blurb: "Doesn't wait to fall behind before she swings at you." },
+  vicious: { name: "The Vicar", blurb: "Swings every turn he can afford to, winning or not." },
+  ruthless: { name: "Ma Tullock", blurb: "Two swings a turn, and a yard that never stops compounding." },
+  merciless: { name: "Silas Crowe", blurb: "Out-earns you outright. You'll need the sabotage tab." },
+  tyrant: { name: "The Duchess", blurb: "Saves for the good tiers instead of the cheap ones. Beating her is the point." },
 };
 
 function botName(profile: keyof typeof BOT_PROFILES): string {

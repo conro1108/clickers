@@ -13,6 +13,7 @@ import {
   clickYield,
   format,
   formatDuration,
+  opponentView,
   rateAt,
   seconds,
   slowMultiplier,
@@ -52,7 +53,16 @@ import { BOTS, useMatch, type MatchRuntime, type MatchSetup } from "./useMatch.j
  * The opponents the lobby offers. `greedy` is missing on purpose — it exists as
  * a control group for the balance harness, not as somebody to play.
  */
-const BOT_ROSTER = (["chill", "scrappy", "nasty"] as const).map((id) => ({
+const BOT_ROSTER = ([
+  "chill",
+  "scrappy",
+  "nasty",
+  "mean",
+  "vicious",
+  "ruthless",
+  "merciless",
+  "tyrant",
+] as const).map((id) => ({
   id,
   name: BOTS[id]?.name ?? id,
   blurb: BOTS[id]?.blurb ?? "",
@@ -965,7 +975,16 @@ function Match({
     [me, pendingClicks],
   );
   const yourScore = table.find((s) => s.player.id === me.id)?.score ?? 0;
-  const bestRival = Math.max(0, ...table.filter((s) => s.player.id !== me.id).map((s) => s.score));
+  // The one you're actually racing. Their figures go on the HUD rather than
+  // only in the match sheet: a delta tells you you're behind but not whether
+  // they're pulling away, and "are they out-producing me" is the question every
+  // spending decision in the shop turns on. It's the same `opponentView` the
+  // sheet uses, so the fog rule still decides what's shown.
+  const rival = useMemo(() => {
+    const views = opponentIds.map((id) => opponentView(state, id, now));
+    return views.sort((a, b) => b.count - a.count)[0];
+  }, [state, now, opponentIds]);
+  const bestRival = rival?.count ?? 0;
   const timeLeft = state.startedAt + state.config.durationMs - now;
   const perClick = clickYield(me);
   const rate = rateAt(me, now);
@@ -1020,6 +1039,13 @@ function Match({
               {format(Math.abs(yourScore - bestRival))}
             </span>
           </div>
+          {rival && (
+            <div className="hud-rival" title={`${rival.name}'s count and rate`}>
+              <span className="hud-rival-name">{rival.name}</span>
+              <span>{format(rival.count)}</span>
+              <span className="hud-rival-rate">{format(rival.rate)}/s</span>
+            </div>
+          )}
         </div>
       </header>
 

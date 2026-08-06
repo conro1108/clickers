@@ -39,6 +39,17 @@ export interface HumanStyle {
   defends: boolean;
   /** How often they touch the shop. */
   decisionMs: number;
+  /**
+   * 0..1 — how much worse than the best rate-per-puppy in the shop they'll
+   * settle for rather than sit on the pile and wait for the good tier. Same
+   * knob as the bot's, and the same reason it exists: a shelf priced at
+   * `growth^N` makes the tenth Puppy Pen a worse buy than a first Grooming Rig
+   * by orders of magnitude, and a person reading prices next to rates works
+   * that out. Modelling them as spending every puppy the instant they have it
+   * understated a real player by two orders of magnitude, which made the whole
+   * difficulty ladder look harder than it was.
+   */
+  thrift: number;
 }
 
 export const HUMAN_STYLES: Record<string, HumanStyle> = {
@@ -50,6 +61,7 @@ export const HUMAN_STYLES: Record<string, HumanStyle> = {
     attacks: false,
     defends: true,
     decisionMs: 1000,
+    thrift: 0.5,
   },
   /** Same economy, but engages with the other two tabs. */
   scrapper: {
@@ -59,6 +71,7 @@ export const HUMAN_STYLES: Record<string, HumanStyle> = {
     attacks: true,
     defends: true,
     decisionMs: 1000,
+    thrift: 0.5,
   },
   /** Never looks away from the whistle button. The wrist-speed end of the range. */
   masher: {
@@ -68,6 +81,9 @@ export const HUMAN_STYLES: Record<string, HumanStyle> = {
     attacks: true,
     defends: true,
     decisionMs: 1000,
+    // Eyes on the whistle, not the price list — takes the decent buy in front
+    // of them rather than waiting for the great one.
+    thrift: 0.3,
   },
 };
 
@@ -175,7 +191,10 @@ export function humanTurn(
       const cost = producerCost(prod.id, me.producers[prod.id] ?? 0);
       return { id: prod.id, cost, value: (prod.baseRate * producerMultiplier(me, prod.id)) / cost };
     }).sort((a, b) => b.value - a.value);
-    const got = ranked.find((r) => P.gte(me.puppies, r.cost));
+    const got = ranked.find(
+      (r) => P.gte(me.puppies, r.cost) && r.value >= ranked[0]!.value * style.thrift,
+    );
+    // Nothing here is worth it yet — hold the pile for the next tier up.
     if (!got) break;
     out.push({ type: "buy_producer", player: id, producer: got.id, qty: 1 });
     pay(got.cost);
