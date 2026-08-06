@@ -251,6 +251,11 @@ input {
 /* A live diorama, not a hero image — same scene the game runs, sized down. */
 .title-scene {
   height: 220px;
+  /* The lobby is a flex column, and once it grew an identity strip and a list of
+     challenges this was the only child with no content of its own to hold it
+     open — so it got squeezed to a 3px line and the title screen became a rule.
+     A fixed height only means anything if it can't be shrunk past it. */
+  flex-shrink: 0;
   border: 3px solid var(--wood);
   border-radius: 14px;
   overflow: hidden;
@@ -1595,6 +1600,100 @@ input {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* --- Who you are, and who wants a race ----------------------------------- */
+
+.identity {
+  border: 2px solid var(--wood);
+  border-radius: 12px;
+  background: var(--cream-3);
+  padding: 9px 11px;
+}
+.identity-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.identity-handle {
+  font-weight: 800;
+  color: var(--wood-dark);
+}
+.identity-tag {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--leaf);
+  color: #fff8ec;
+}
+/* Not a warning. Playing as a guest is a perfectly good way to play — it's only
+   the one thing it can't do that's worth naming, and the panel says which. */
+.identity-tag.guest {
+  background: var(--cream-2);
+  color: var(--ink-soft);
+}
+.identity-row .small-btn {
+  margin-left: auto;
+}
+.small-btn {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border-radius: 8px;
+}
+.identity-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px solid var(--cream-2);
+}
+
+.challenge-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.challenge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  background: var(--cream-3);
+}
+.challenge-who {
+  font-weight: 700;
+  color: var(--wood-dark);
+  font-size: 0.88rem;
+}
+.challenge-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* The code, while you're holding it up. Big enough to read off a screen from
+   across a table, which is the entire user interface of this feature. */
+.waiting {
+  text-align: center;
+  border: 2px dashed var(--wood);
+  border-radius: 12px;
+  padding: 14px;
+  background: var(--cream-3);
+}
+.waiting-code {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: var(--wood-dark);
+  line-height: 1.1;
 }
 
 /* --- Versus (the older prototype, on the same shell) --------------------- */
