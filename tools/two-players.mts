@@ -93,11 +93,38 @@ async function setHandleDirectly(user: { id: string; session: { access_token: st
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 
+/**
+ * Somebody who has never opened this game, following a link they were sent.
+ *
+ * No mill in localStorage, no session, no idea the back room exists — which is
+ * the whole point of the test. Everything they need has to happen on load.
+ */
+async function openInvite(label: string, url: string): Promise<Page> {
+  const ctx = await browser.newContext({
+    viewport: { width: 400, height: 800 },
+    deviceScaleFactor: 2,
+    // The host copies the play link to the clipboard, and the test reads it back
+    // from there rather than rebuilding the URL itself — otherwise it would be
+    // checking a string it wrote, not the one the button produces.
+    permissions: ["clipboard-read", "clipboard-write"],
+  });
+  const page = await ctx.newPage();
+  page.on("console", (m) => {
+    if (m.type() === "error") console.log(`  [${label}] ${m.text().slice(0, 160)}`);
+  });
+  await page.goto(url);
+  return page;
+}
+
 /** A player, in their own context so the two have separate storage and sessions. */
 async function open(label: string, user: { session: unknown }): Promise<Page> {
   const ctx = await browser.newContext({
     viewport: { width: 400, height: 800 },
     deviceScaleFactor: 2,
+    // The host copies the play link to the clipboard, and the test reads it back
+    // from there rather than rebuilding the URL itself — otherwise it would be
+    // checking a string it wrote, not the one the button produces.
+    permissions: ["clipboard-read", "clipboard-write"],
   });
   const page = await ctx.newPage();
   page.on("console", (m) => {
@@ -255,6 +282,47 @@ if (failures === 0) {
     `you say ${sa.mine}/${sa.theirs}, brad says ${sb.mine}/${sb.theirs}`,
   );
   check("both players have actually produced something", sa.mine > 0 && sb.mine > 0);
+}
+
+// --- and the other door: a link, followed by a total stranger ---------------
+//
+// The link is the invite that works on someone who isn't in the room and has
+// never played. It has to carry them past the splash, past the mill and past
+// the back room, and sign them in on the way, without asking for anything.
+console.log("\nthe play link");
+{
+  const host = await account(`vs-link-${stamp}`);
+  const hostPage = await open("linkhost", host);
+  await hostPage.getByRole("button", { name: "a code" }).click();
+  await hostPage.getByRole("button", { name: "Open a match" }).click();
+  await hostPage.waitForSelector(".waiting-code", { timeout: 20000 });
+  const code = await hostPage.locator(".waiting-code").innerText();
+
+  // Straight off the button the host would actually press.
+  await hostPage.getByRole("button", { name: "Copy play link" }).click();
+  await hostPage.waitForTimeout(400);
+  const link = await hostPage.evaluate(() => navigator.clipboard.readText());
+  check("the copied link carries the code", link.includes(`?join=${code}`), link);
+
+  const guest = await openInvite("linkguest", link);
+  try {
+    await guest.waitForSelector(".hud-clock", { timeout: 30000 });
+    check("a stranger following the link lands straight in the race", true);
+  } catch {
+    check(
+      "a stranger following the link lands straight in the race",
+      false,
+      (await guest.locator("body").innerText()).slice(0, 160).replace(/\n+/g, " | "),
+    );
+    await guest.screenshot({ path: `${stem}-link-stuck.png` });
+  }
+  await guest.screenshot({ path: `${stem}-link-guest.png` });
+  check(
+    "the code is taken back out of the address bar",
+    !(await guest.evaluate(() => window.location.search)).includes("join"),
+  );
+  await hostPage.waitForSelector(".hud-clock", { timeout: 25000 }).catch(() => {});
+  check("and the host is pulled in with them", (await hostPage.locator(".hud-clock").count()) > 0);
 }
 
 for (const id of made) {

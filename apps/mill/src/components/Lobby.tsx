@@ -243,6 +243,7 @@ export function VersusLobby({
   const [hosted, setHosted] = useState<MatchRow | null>(null);
   const [friend, setFriend] = useState("");
   const [sent, setSent] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const terms: MatchTerms = { durationMs, scoring };
@@ -356,9 +357,29 @@ export function VersusLobby({
           {hosted?.join_code ? (
             <div className="waiting">
               <div className="waiting-code">{hosted.join_code}</div>
+              {/* Both, because they're for different rooms. The code is for
+                  someone sitting next to you; the link is for someone who
+                  isn't, and it's the one that works on a person who has never
+                  opened this game — it takes them past the splash, past the
+                  mill and past the back room straight into the race. */}
+              <div className="choices halves">
+                <button
+                  className="ghost"
+                  onClick={() => {
+                    void navigator.clipboard
+                      ?.writeText(`${location.origin}${location.pathname}?join=${hosted.join_code}`)
+                      .then(() => {
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 1600);
+                      });
+                  }}
+                >
+                  {copied ? "Copied" : "Copy play link"}
+                </button>
+              </div>
               <p className="muted small">
-                Read it out. The race starts the moment they're in — you don't have to press anything
-                else.
+                Send the link, or read the code out. The race starts the moment they're in — you
+                don't have to press anything else.
               </p>
             </div>
           ) : (

@@ -21,8 +21,8 @@ import {
 } from "@mill/sim";
 
 import { clockSkew, setClockSkew } from "./clock.js";
-import { abandon, type MatchRow } from "./online/matches.js";
-import { useLobby } from "./online/useLobby.js";
+import { abandon, joinByCode, type MatchRow } from "./online/matches.js";
+import { errorText, useLobby } from "./online/useLobby.js";
 import { useOnlineMatch } from "./online/useOnlineMatch.js";
 import { AwayReport } from "./components/AwayReport.js";
 import { Conditions } from "./components/Conditions.js";
@@ -1209,11 +1209,30 @@ function OnlineMatch({
  * silent, but it still creates a user, and somebody who only ever plays their
  * own mill should never have one made for them.
  */
-function Versus({ onLeave }: { onLeave: () => void }) {
+function Versus({ onLeave, invite }: { onLeave: () => void; invite?: string | null }) {
   const lobby = useLobby();
   const [inMatch, setInMatch] = useState<
     { kind: "bot"; setup: MatchSetup } | { kind: "online"; row: MatchRow } | null
   >(null);
+
+  // An invite link walks itself in. Whoever opened it may never have seen this
+  // game before, so nothing is asked of them: the anonymous sign-in has already
+  // happened by the time `me` exists, and the code is spent on arrival.
+  const walkedIn = useRef(false);
+  useEffect(() => {
+    if (walkedIn.current || !invite || !lobby.me) return;
+    walkedIn.current = true;
+    // Taken out of the address bar the moment it's used. A join code is good
+    // once, so a refresh would only ever produce "No open match with that code"
+    // over a race that's already running.
+    window.history.replaceState(null, "", window.location.pathname);
+    void joinByCode(invite).then(
+      (row) => setInMatch({ kind: "online", row }),
+      // A dead link lands in the lobby holding the reason, rather than on a
+      // blank screen — the code has usually just been used by somebody else.
+      (e) => lobby.setError(errorText(e)),
+    );
+  }, [invite, lobby.me, lobby.setError]);
 
   // A challenge accepted at the other end starts a match you never pressed a
   // button for — without this the challenger sits in the lobby watching a race
@@ -1272,18 +1291,34 @@ function Versus({ onLeave }: { onLeave: () => void }) {
   );
 }
 
+/**
+ * The invite link, read once at boot.
+ *
+ * A query parameter rather than a path, because the app has no router — every
+ * screen is a value in one `useState`, and `/play/ABCD` would need a rewrite
+ * rule on the host to avoid a 404 on a cold load. This needs nothing.
+ */
+function inviteCode(): string | null {
+  const code = new URLSearchParams(window.location.search).get("join");
+  return code ? code.trim().toUpperCase() : null;
+}
+
 export function App() {
-  // A mill you already own is the app. The splash is for the one session where
-  // you don't have one yet.
+  const [invite] = useState(inviteCode);
+  // A mill you already own is the app, and the splash is for the one session
+  // where you don't have one yet — but an invite outranks both. Somebody who
+  // followed a link came here to play a specific person, and showing them a
+  // title screen first is asking them to find their way to a race they were
+  // already sent to.
   const [screen, setScreen] = useState<Screen>(() =>
-    hasSavedMill() ? { kind: "mill" } : { kind: "home" },
+    invite ? { kind: "versus" } : hasSavedMill() ? { kind: "mill" } : { kind: "home" },
   );
 
   switch (screen.kind) {
     case "mill":
       return <Homefarm onGo={setScreen} />;
     case "versus":
-      return <Versus onLeave={() => setScreen({ kind: "mill" })} />;
+      return <Versus invite={invite} onLeave={() => setScreen({ kind: "mill" })} />;
     default:
       return <Home onGo={setScreen} />;
   }
