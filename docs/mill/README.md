@@ -291,8 +291,9 @@ The ladder is graded on margin, at every length people play:
 
 ```
                 chill scrappy nasty  mean vicious ruthless merciless tyrant
-builder @180s     46x    26x    11x  7.4x   3.7x     1.5x     0.74x   0.12x
-builder @300s   2105x   231x    44x   11x   4.4x     1.9x     1.14x   0.83x
+builder @120s      11x   5.1x   3.7x  2.7x   1.8x     1.3x     1.04x   0.86x
+builder @180s      42x    20x    12x  7.2x   3.9x     2.0x     1.53x   0.96x
+builder @300s   2105x   231x    44x  3.3x   1.9x     1.3x     1.15x   0.92x
 ```
 
 Win rate is deliberately not the measure. The economy is exponential, so whoever
@@ -348,14 +349,24 @@ another rung of the ladder.
   single click at 75% of rebuild cost. That makes damage a pure tax. If we want
   getting hit to feel worse, repair wanting *time* (or a queue) is the obvious
   next lever.
-- **Wrist speed is worth roughly a thousand times what it should be.** The
-  reference human has a `masher` variant that never looks away from the whistle
-  button, and it beats `builder` by 900-1700x against the same bot. This used to
-  read as 4-9x, and only because nobody in the sim was compounding properly;
-  once both sides save for the good tiers, early clicks feed the exponent and the
-  gap explodes. No bot ladder can span three orders of magnitude, so `masher`
-  beats every rung including `tyrant` — the fix belongs in the economy, not in
-  `bot.ts`. Nobody has hit this in practice — the
+- ~~**Wrist speed is worth more than it should be.**~~ Fixed, and it was much
+  worse than the 4-9x this used to say — that number was only small because
+  nobody in the sim was compounding properly. Once both sides save for the good
+  tiers, early taps feed the exponent: a player at 20 taps/second finished a
+  three-minute match **434x** ahead of one at 1/second, all else equal. That is
+  an autoclicker tax, and it penalises playing on a phone.
+
+  Whistles now come out of a token bucket (`WHISTLE_RATE`, `WHISTLE_BURST` in
+  `match.ts`), refilling at 5/s — just above what a thumb does flat out, so it
+  never binds on a person playing normally and hard-binds on a macro. Overflow
+  taps are worth 15% rather than nothing, so mashing degrades instead of
+  breaking, and the HUD says "Winded" rather than silently paying less. Mashing
+  is now worth ~2x at the lengths people play, down from ~1000x.
+
+  It applies to bots through the same `applyCommand`, which is why no rung of
+  the ladder taps faster than 5/s any more — the top rungs used to lean on 7-12,
+  and that was most of what made the hardest one feel like it beat you off the
+  line rather than out-played you. Nobody has hit this in practice — the
   ladder is graded against `builder`, which is how the game actually gets played
   — but it means an autoclicker beats strategy, and it quietly penalises playing
   on a phone, where you can't tap that fast. Capping the whistle rate or flattening

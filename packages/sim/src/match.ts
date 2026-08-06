@@ -34,6 +34,49 @@ import type {
 /** Server-side clamp on batched clicks (STACK.md: clicks batch, ~500ms flush). */
 export const MAX_CLICKS_PER_FLUSH = 25;
 
+/**
+ * What a wrist is allowed to be worth.
+ *
+ * Whistling is the opening move and the only income you have for the first few
+ * seconds, so how fast you tap shifts *when* you reach each tier — and in an
+ * exponential economy, arriving somewhere earlier multiplies everything after
+ * it. Measured, a player tapping 20/s finished a three-minute match 434 times
+ * ahead of one tapping 1/s, all else equal. That isn't a skill curve, it's an
+ * autoclicker tax, and it quietly penalises playing on a phone.
+ *
+ * So whistles come out of a bucket: `WHISTLE_RATE` a second, `WHISTLE_BURST` of
+ * headroom to spend at once. Past that the puppies simply aren't ready to come
+ * and a whistle is worth `WHISTLE_OVERFLOW` of the usual — reduced rather than
+ * refused, so mashing never feels broken and the "+N" over the button just gets
+ * smaller. The rate is set where a person can comfortably sit without trying;
+ * what it takes off the table is the difference between tapping fast and
+ * holding down a macro.
+ */
+export const WHISTLE_RATE = 5;
+export const WHISTLE_BURST = 15;
+export const WHISTLE_OVERFLOW = 0.15;
+
+/**
+ * Whistles available at `t`, given the bucket's last state. Pure, so the UI can
+ * ask the same question the sim answers without applying anything.
+ */
+export function whistlesReady(p: PlayerState, t: Millis): number {
+  const refilled = p.whistles + ((t - p.whistleAt) / 1000) * WHISTLE_RATE;
+  return Math.max(0, Math.min(WHISTLE_BURST, refilled));
+}
+
+/**
+ * What `count` whistles at `t` are actually worth. The HUD has to ask this
+ * rather than multiplying by `clickYield`, or the pile it shows you runs ahead
+ * of the pile you can spend and the shop starts refusing things you're looking
+ * at — the same bug batching clicks caused before `dispatch` learned to bank
+ * them first.
+ */
+export function whistleGain(p: PlayerState, t: Millis, count: number): Puppies {
+  const paid = Math.min(count, whistlesReady(p, t));
+  return P.mul(clickYield(p), paid + (count - paid) * WHISTLE_OVERFLOW);
+}
+
 export function createPlayer(id: PlayerId, name: string, startedAt: Millis, isBot = false): PlayerState {
   return {
     id,
@@ -48,6 +91,8 @@ export function createPlayer(id: PlayerId, name: string, startedAt: Millis, isBo
     attacksUsed: {},
     defensesUsed: {},
     effects: [],
+    whistles: WHISTLE_BURST,
+    whistleAt: startedAt,
   };
 }
 
@@ -179,11 +224,16 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
     case "click": {
       const count = Math.max(0, Math.min(MAX_CLICKS_PER_FLUSH, Math.floor(cmd.count)));
       if (count === 0) return fail("Nothing to flush.");
-      const gained = P.mul(clickYield(actor), count);
+      // Full price for what the bucket covers, `WHISTLE_OVERFLOW` for the rest.
+      const ready = whistlesReady(actor, t);
+      const paid = Math.min(count, ready);
+      const gained = whistleGain(actor, t, count);
       actor = {
         ...actor,
         puppies: P.add(actor.puppies, gained),
         raised: P.add(actor.raised, gained),
+        whistles: ready - paid,
+        whistleAt: t,
       };
       break;
     }

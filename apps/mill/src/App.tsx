@@ -10,11 +10,12 @@ import {
 import {
   P,
   brokenRate,
-  clickYield,
   format,
   formatDuration,
   opponentView,
   rateAt,
+  whistleGain,
+  whistlesReady,
   seconds,
   slowMultiplier,
   solo,
@@ -969,10 +970,13 @@ function Match({
   const opponentIds = state.order.filter((id) => id !== me.id);
   const opponents = opponentIds.map((id) => state.players[id]!);
   // Clicks you've made but that haven't been flushed into the sim yet still
-  // count — `dispatch` banks them before it spends, so this is honest.
+  // count — `dispatch` banks them before it spends, so this is honest. Priced
+  // through `whistleGain` rather than `clickYield` for the same reason: while
+  // the whistle bucket is drained a tap is worth less than a whole tap, and a
+  // budget that doesn't know that shows you a pile the shop then refuses.
   const budget = useMemo(
-    () => P.add(me.puppies, P.mul(clickYield(me), pendingClicks)),
-    [me, pendingClicks],
+    () => P.add(me.puppies, whistleGain(me, now, pendingClicks)),
+    [me, now, pendingClicks],
   );
   const yourScore = table.find((s) => s.player.id === me.id)?.score ?? 0;
   // The one you're actually racing. Their figures go on the HUD rather than
@@ -986,7 +990,12 @@ function Match({
   }, [state, now, opponentIds]);
   const bestRival = rival?.count ?? 0;
   const timeLeft = state.startedAt + state.config.durationMs - now;
-  const perClick = clickYield(me);
+  // What the *next* whistle is worth, which is not always a whole one.
+  const perClick = whistleGain(me, now, pendingClicks + 1) - whistleGain(me, now, pendingClicks);
+  // Whistling faster than the puppies can come. Worth saying out loud — the
+  // yield quietly dropping is the kind of thing a player reads as the game
+  // being broken rather than as a rule they've hit.
+  const winded = whistlesReady(me, now) - pendingClicks < 1;
   const rate = rateAt(me, now);
   const slow = slowMultiplier(me, now);
   const broken = brokenRate(me) > 0;
@@ -997,7 +1006,7 @@ function Match({
       click();
       sceneRef.current?.whistle(at);
       const id = popId.current++;
-      setPops((p) => [...p.slice(-6), { id, text: `+${format(clickYield(me))}` }]);
+      setPops((p) => [...p.slice(-6), { id, text: `+${format(perClick)}` }]);
       setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 700);
     },
     [click, me, over],
@@ -1056,9 +1065,13 @@ function Match({
       </MatchScene>
 
       <div className="whistlebar">
-        <button className="whistle" onClick={() => onWhistle()} disabled={over}>
+        <button
+          className={`whistle ${winded ? "winded" : ""}`}
+          onClick={() => onWhistle()}
+          disabled={over}
+        >
           <PxIcon name="puppy" size={14} />
-          <span className="whistle-label">Whistle</span>
+          <span className="whistle-label">{winded ? "Winded" : "Whistle"}</span>
           <span className="whistle-yield">+{format(perClick)}</span>
         </button>
         <div className="pops" aria-hidden>

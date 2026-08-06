@@ -109,11 +109,11 @@ export const BOT_PROFILES: Record<string, BotProfile> = {
   chill:     { aggression: 0.15, defensiveness: 0.2,  clicksPerSecond: 1,  skill: 0.5, decisionMs: 1400, patience: 0.8, swings: 1, buysPerTurn: 8,   thrift: 0.1 },
   scrappy:   { aggression: 0.3,  defensiveness: 0.4,  clicksPerSecond: 2,  skill: 0.8, decisionMs: 1000, patience: 0.6, swings: 1, buysPerTurn: 16,  thrift: 0.13 },
   nasty:     { aggression: 0.4,  defensiveness: 0.5,  clicksPerSecond: 3,  skill: 1,   decisionMs: 700,  patience: 0.6, swings: 1, buysPerTurn: 24,  thrift: 0.11 },
-  mean:      { aggression: 0.35, defensiveness: 0.5,  clicksPerSecond: 4,  skill: 1,   decisionMs: 600,  patience: 0.3, swings: 1, buysPerTurn: 40,  thrift: 0.13 },
-  vicious:   { aggression: 0.35, defensiveness: 0.5,  clicksPerSecond: 5,  skill: 1,   decisionMs: 500,  patience: 0,   swings: 1, buysPerTurn: 60,  thrift: 0.15 },
-  ruthless:  { aggression: 0.3,  defensiveness: 0.5,  clicksPerSecond: 7,  skill: 1,   decisionMs: 450,  patience: 0,   swings: 2, buysPerTurn: 100, thrift: 0.17 },
-  merciless: { aggression: 0.25, defensiveness: 0.55, clicksPerSecond: 9,  skill: 1,   decisionMs: 350,  patience: 0,   swings: 3, buysPerTurn: 200, thrift: 0.19 },
-  tyrant:    { aggression: 0.2,  defensiveness: 0.6,  clicksPerSecond: 12, skill: 1,   decisionMs: 250,  patience: 0,   swings: 4, buysPerTurn: 400, thrift: 0.2 },
+  mean:      { aggression: 0.35, defensiveness: 0.5,  clicksPerSecond: 3.5,  skill: 1,   decisionMs: 600,  patience: 0.3, swings: 1, buysPerTurn: 40,  thrift: 0.18 },
+  vicious:   { aggression: 0.35, defensiveness: 0.5,  clicksPerSecond: 4,  skill: 1,   decisionMs: 500,  patience: 0,   swings: 1, buysPerTurn: 60,  thrift: 0.21 },
+  ruthless:  { aggression: 0.3,  defensiveness: 0.5,  clicksPerSecond: 4.5,  skill: 1,   decisionMs: 450,  patience: 0,   swings: 2, buysPerTurn: 100, thrift: 0.24 },
+  merciless: { aggression: 0.25, defensiveness: 0.55, clicksPerSecond: 5,  skill: 1,   decisionMs: 350,  patience: 0,   swings: 3, buysPerTurn: 200, thrift: 0.26 },
+  tyrant:    { aggression: 0.2,  defensiveness: 0.6,  clicksPerSecond: 5, skill: 1,   decisionMs: 250,  patience: 0,   swings: 4, buysPerTurn: 400, thrift: 0.3 },
   /**
    * `nasty` with the second axis switched off. The control group only means
    * anything if it's identical apart from the thing being measured, so this has

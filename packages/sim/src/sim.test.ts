@@ -17,7 +17,15 @@ import {
   slowMultiplier,
 } from "./economy.js";
 import { P, ms, seconds, type Millis } from "./numbers.js";
-import { applyCommand, createMatch, mustApply, opponentView, standings } from "./match.js";
+import {
+  WHISTLE_OVERFLOW,
+  applyCommand,
+  createMatch,
+  mustApply,
+  opponentView,
+  standings,
+  whistlesReady,
+} from "./match.js";
 import type { ActiveEffect, Command, MatchState, PlayerState } from "./state.js";
 
 const T0 = ms(1_000_000);
@@ -300,7 +308,50 @@ describe("commands", () => {
     const res = applyCommand(newMatch(), { type: "click", player: "a", count: 10_000 }, T0);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
-    expect(res.state.players.a!.puppies).toBe(25);
+    // Clamped to MAX_CLICKS_PER_FLUSH (25), of which the bucket covers its
+    // WHISTLE_BURST (15) at full price and the rest at WHISTLE_OVERFLOW.
+    expect(res.state.players.a!.puppies).toBe(15 + 10 * WHISTLE_OVERFLOW);
+  });
+
+  /**
+   * The whistle bucket, which is the only thing standing between this game and
+   * an autoclicker. Measured before it existed: 20 taps a second finished a
+   * three-minute match 434x ahead of one tap a second.
+   */
+  it("pays full price for whistling at a rate a person can manage", () => {
+    // Five a second for twenty seconds, in the 500ms batches the client sends.
+    let state = newMatch();
+    for (let i = 1; i <= 40; i++) {
+      state = mustApply(state, { type: "click", player: "a", count: 2 }, at(i * 0.5));
+    }
+    // Nothing lost: a thumb does 3-4/s flat out and never touches the ceiling.
+    expect(state.players.a!.puppies).toBe(80);
+  });
+
+  it("stops paying full price for whistling faster than hands go", () => {
+    let state = newMatch();
+    // Twenty a second over the same twenty seconds — an autoclicker, or a very
+    // determined person. Four times the taps.
+    for (let i = 1; i <= 40; i++) {
+      state = mustApply(state, { type: "click", player: "a", count: 10 }, at(i * 0.5));
+    }
+    const macro = state.players.a!.puppies;
+    // Still worth something — a whistle is never refused, it just stops being
+    // worth a whole whistle, so mashing degrades instead of breaking.
+    expect(macro).toBeGreaterThan(80);
+    // But nowhere near the 4x it used to buy, and the gap keeps closing the
+    // longer the match runs: the bucket refills at a fixed rate and the
+    // overflow is all that scales.
+    expect(macro).toBeLessThan(80 * 2.5);
+  });
+
+  it("refills the bucket while you aren't whistling", () => {
+    let state = newMatch();
+    const drain = applyCommand(state, { type: "click", player: "a", count: 25 }, T0);
+    expect(drain.ok).toBe(true);
+    if (!drain.ok) return;
+    // Three seconds of not touching it puts WHISTLE_RATE x 3 back.
+    expect(whistlesReady(drain.state.players.a!, at(3))).toBe(15);
   });
 
   it("gates upgrades behind their producer requirement", () => {

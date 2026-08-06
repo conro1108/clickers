@@ -925,6 +925,11 @@ input {
   text-transform: uppercase;
   font-weight: 800;
 }
+/* Whistling faster than the puppies can come. Said out loud, because a yield
+   that quietly drops reads as the game being broken rather than as a rule. */
+.whistle.winded {
+  background: var(--wood);
+}
 .whistle-yield {
   font-weight: 700;
   opacity: 0.85;

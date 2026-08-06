@@ -56,6 +56,14 @@ export interface PlayerState {
   defensesUsed: Partial<Record<DefenseId, number>>;
 
   effects: ActiveEffect[];
+
+  /**
+   * Whistles left in the bucket, and when it was last drawn from. Refilled by
+   * elapsed time in `applyCommand`, so it's folded from the log like everything
+   * else — no wall clock, no state the database has to hold.
+   */
+  whistles: number;
+  whistleAt: Millis;
 }
 
 export type ScoringRule = "total_raised" | "on_hand";
