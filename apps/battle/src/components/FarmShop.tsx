@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { P, format, solo, type Millis, type Potatoes } from "@battle/sim";
+import { Y, format, solo, type Millis, type Yield } from "@clickers/sim";
 
 import { producerArt, upgradePreview } from "../marks.js";
 import { artUrl, type Art } from "../render/pixel.js";
@@ -124,12 +124,12 @@ function Convergence({
   budget,
   dispatch,
 }: {
-  farm: solo.FarmState;
-  budget: Potatoes;
-  dispatch: (cmd: solo.FarmCommand) => void;
+  farm: solo.SiteState;
+  budget: Yield;
+  dispatch: (cmd: solo.SiteCommand) => void;
 }) {
   const ur = solo.SOLO_UPGRADE_BY_ID[solo.CONVERGENCE_UPGRADE]!;
-  const affordable = P.gte(budget, ur.cost);
+  const affordable = Y.gte(budget, ur.cost);
   const held = Math.max(0, Math.min(1, budget / ur.cost));
   const rate = solo.currentRate(farm);
   const left = rate > 0 ? ((ur.cost - budget) / rate) * 1000 : Infinity;
@@ -168,9 +168,9 @@ export function GrowPanel({
   budget,
   dispatch,
 }: {
-  farm: solo.FarmState;
-  budget: Potatoes;
-  dispatch: (cmd: solo.FarmCommand) => void;
+  farm: solo.SiteState;
+  budget: Yield;
+  dispatch: (cmd: solo.SiteCommand) => void;
 }) {
   const [qty, setQtyRaw] = useState<BuyQty>(loadQty);
   const setQty = (next: BuyQty) => {
@@ -228,7 +228,7 @@ export function GrowPanel({
       (i === 0 ||
         owned > 0 ||
         (prev !== undefined && (farm.producers[prev.id] ?? 0) > 0) ||
-        P.gte(P.mul(budget, 3), prod.baseCost));
+        Y.gte(Y.mul(budget, 3), prod.baseCost));
     if (!visible) return [];
     return [{ prod, owned, n, cost, each, broken }];
   });
@@ -236,7 +236,7 @@ export function GrowPanel({
   // One dot, on whichever rung buys the most rate per potato right now. Only
   // among rows you can actually press — a badge on a price you can't meet is
   // trivia, not a nudge — and only when there's more than one to choose from.
-  const buyable = shelf.filter((r) => P.gte(budget, r.cost) && r.each > 0);
+  const buyable = shelf.filter((r) => Y.gte(budget, r.cost) && r.each > 0);
   const best =
     buyable.length > 1
       ? buyable.reduce((a, b) => (b.cost / (b.each * b.n) < a.cost / (a.each * a.n) ? b : a)).prod.id
@@ -261,7 +261,7 @@ export function GrowPanel({
             blurb={`${prod.blurb} +${format(each * n)}/s`}
             cost={format(cost)}
             meta={qty === "max" ? `buy ${n}` : undefined}
-            affordable={P.gte(budget, cost)}
+            affordable={Y.gte(budget, cost)}
             best={prod.id === best}
             art={producerArt(farm, prod.id)}
             onBuy={() => dispatch({ type: "buy_producer", producer: prod.id, qty: n })}
@@ -277,7 +277,7 @@ export function GrowPanel({
             name={u.name}
             blurb={u.blurb}
             cost={format(u.cost)}
-            affordable={P.gte(budget, u.cost)}
+            affordable={Y.gte(budget, u.cost)}
             art={upgradePreview(farm, u)}
             onBuy={() => dispatch({ type: "buy_upgrade", upgrade: u.id })}
           />
@@ -292,11 +292,11 @@ export function LandPanel({
   budget,
   dispatch,
 }: {
-  farm: solo.FarmState;
-  budget: Potatoes;
-  dispatch: (cmd: solo.FarmCommand) => void;
+  farm: solo.SiteState;
+  budget: Yield;
+  dispatch: (cmd: solo.SiteCommand) => void;
 }) {
-  const soilBill = solo.soilRestoreCost(farm);
+  const conditionBill = solo.conditionRestoreCost(farm);
   // Damage on the farm you're standing on. What broke on the other one is
   // waiting for you when you go back, which is the cost of keeping two places:
   // nothing down here can be fixed from up there.
@@ -311,7 +311,7 @@ export function LandPanel({
   // thing to pay for — a "fix all" over a single row is the same button twice,
   // and the row it duplicates is the one that says what it's actually mending.
   const bill = solo.upkeepBill(farm);
-  const jobs = damaged.length + (soilBill > 0 ? 1 : 0);
+  const jobs = damaged.length + (conditionBill > 0 ? 1 : 0);
   const brokenHere = damaged.reduce((n, p) => n + solo.brokenCount(farm, p.id), 0);
   // Only what this button actually buys back: the kit on this farm, quoted the
   // same way the individual repair rows quote it, plus the soil if it's tired.
@@ -321,11 +321,11 @@ export function LandPanel({
     damaged.reduce(
       (r, p) => r + solo.brokenCount(farm, p.id) * solo.producerRateEach(farm, p.id),
       0,
-    ) + (soilBill > 0 ? solo.soilLossRate(farm) : 0);
+    ) + (conditionBill > 0 ? solo.conditionLossRate(farm) : 0);
 
   return (
     <>
-      {(damaged.length > 0 || soilBill > 0) && (
+      {(damaged.length > 0 || conditionBill > 0) && (
         <>
           <p className="hint">
             Nothing here mends on its own. What the weather hurt stays hurt and tired soil
@@ -338,29 +338,29 @@ export function LandPanel({
                 accent="row-repair row-fixall"
                 name="Put everything right"
                 blurb={`${
-                  brokenHere > 0 && soilBill > 0
+                  brokenHere > 0 && conditionBill > 0
                     ? `${brokenHere} broken and the soil`
                     : brokenHere > 0
                       ? `${brokenHere} broken`
                       : "the soil"
                 } · restores +${format(backHere)}/s`}
                 cost={format(bill)}
-                affordable={P.gte(budget, bill)}
+                affordable={Y.gte(budget, bill)}
                 onBuy={() => dispatch({ type: "fix_all" })}
               />
             </div>
           )}
           <div className="rows">
-            {soilBill > 0 && (
+            {conditionBill > 0 && (
               <Row
                 accent="row-repair"
                 name="Restore the soil"
-                blurb={`Back to 100% from ${Math.round(farm.soil * 100)}% · restores +${format(
-                  solo.soilLossRate(farm),
+                blurb={`Back to 100% from ${Math.round(farm.condition * 100)}% · restores +${format(
+                  solo.conditionLossRate(farm),
                 )}/s`}
-                cost={format(soilBill)}
-                affordable={P.gte(budget, soilBill)}
-                onBuy={() => dispatch({ type: "restore_soil" })}
+                cost={format(conditionBill)}
+                affordable={Y.gte(budget, conditionBill)}
+                onBuy={() => dispatch({ type: "restore_condition" })}
               />
             )}
             {damaged.map((prod) => {
@@ -378,7 +378,7 @@ export function LandPanel({
                   name={`${prod.mend} ${prod.name}`}
                   blurb={`${broken} ${prod.hurt} · restores +${format(back)}/s`}
                   cost={format(cost)}
-                  affordable={P.gte(budget, cost)}
+                  affordable={Y.gte(budget, cost)}
                   onBuy={() => dispatch({ type: "repair", producer: prod.id })}
                 />
               );
@@ -413,7 +413,7 @@ export function LandPanel({
               blurb={land.blurb}
               cost={format(cost)}
               meta={`${Math.round(now * 100)}% now`}
-              affordable={P.gte(budget, cost)}
+              affordable={Y.gte(budget, cost)}
               onBuy={() => dispatch({ type: "buy_land", land: land.id })}
             />
           );
@@ -429,34 +429,34 @@ export function LegacyPanel({
   pendingDigs,
   dispatch,
 }: {
-  farm: solo.FarmState;
+  farm: solo.SiteState;
   now: Millis;
   pendingDigs: number;
-  dispatch: (cmd: solo.FarmCommand) => void;
+  dispatch: (cmd: solo.SiteCommand) => void;
 }) {
   // Which world the next generation gets. Defaults to the one you're standing
   // in: coming back out is a thing you go and ask for.
   const [outside, setOutside] = useState(false);
-  const pending = solo.pendingSeeds(farm);
-  const thisRun = solo.projectedHarvested(farm, now);
-  const multNow = 1 + solo.MULT_PER_UNSPENT_SEED * farm.seeds;
-  const multAfter = 1 + solo.MULT_PER_UNSPENT_SEED * (farm.seeds + pending);
+  const pending = solo.pendingHeirlooms(farm);
+  const thisRun = solo.projectedProduced(farm, now);
+  const multNow = 1 + solo.MULT_PER_UNSPENT_HEIRLOOM * farm.heirlooms;
+  const multAfter = 1 + solo.MULT_PER_UNSPENT_HEIRLOOM * (farm.heirlooms + pending);
 
   return (
     <>
       <div className="legacy-head">
         <div>
-          <div className="legacy-value">{farm.seeds}</div>
+          <div className="legacy-value">{farm.heirlooms}</div>
           <div className="muted small">Heirloom Seed · ×{multNow.toFixed(2)} output</div>
         </div>
-        {/* This run's harvest is what `pendingSeeds` is computed from, so it
+        {/* This run's harvest is what `pendingHeirlooms` is computed from, so it
             reads here rather than in a ledger somewhere else — the number and
             the thing it buys in the same glance. Lifetime is the only figure in
             the game that never goes backwards, and it's the one that makes a
             hand-down feel like it added up to something. */}
         <div className="muted small legacy-runs">
-          <div>This run {format(P.add(thisRun, P.mul(solo.clickYield(farm), pendingDigs)))}</div>
-          <div>Lifetime {format(farm.lifetimeHarvested)}</div>
+          <div>This run {format(Y.add(thisRun, Y.mul(solo.clickYield(farm), pendingDigs)))}</div>
+          <div>Lifetime {format(farm.lifetimeProduced)}</div>
         </div>
       </div>
 
@@ -550,7 +550,7 @@ export function LegacyPanel({
               name={`${perk.name}${level ? ` ×${level}` : ""}`}
               blurb={maxed ? "Fully grown." : perk.blurb}
               cost={maxed ? "—" : `${cost} seed`}
-              affordable={!maxed && farm.seeds >= cost}
+              affordable={!maxed && farm.heirlooms >= cost}
               onBuy={() => dispatch({ type: "buy_perk", perk: perk.id })}
             />
           );

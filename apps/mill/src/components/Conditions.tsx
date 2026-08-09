@@ -1,4 +1,4 @@
-import { format, type Millis, type PlayerState } from "@mill/sim";
+import { format, type Millis, type PlayerState } from "@clickers/sim";
 
 /**
  * What's currently happening to your mill, over the top of the mill.

@@ -1,5 +1,5 @@
 /**
- * A headless miller, for tuning.
+ * A headless rival, for tuning.
  *
  * Same job `balance.ts` does for versus: play a whole run with nobody watching
  * so a cost curve can be changed and the consequences read off, instead of
@@ -8,7 +8,7 @@
  * does without a spreadsheet.
  */
 
-import { P, ms, seconds, type Millis, type Puppies, type Rate } from "../numbers.js";
+import { Y, ms, seconds, type Millis, type Yield, type Rate } from "../numbers.js";
 import { LANDS, SOLO_PRODUCERS, SOLO_UPGRADES, type SoloProducerId } from "./content.js";
 import {
   brokenCount,
@@ -22,75 +22,75 @@ import {
   producerMultiplier,
   producerRateEach,
   repairCost,
-  beddingRestoreCost,
+  conditionRestoreCost,
 } from "./economy.js";
-import { advance, applyMillCommand, createMill } from "./mill.js";
-import type { MillCommand, MillState } from "./state.js";
+import { advance, applySiteCommand, createSite } from "./site.js";
+import type { SiteCommand, SiteState } from "./state.js";
 
-export interface MillerStyle {
-  /** Whistles per second while playing. */
-  whistlesPerSecond: number;
-  /** How often the miller looks at the shop. */
+export interface RivalStyle {
+  /** Clicks per second while playing. */
+  clicksPerSecond: number;
+  /** How often the rival looks at the shop. */
   decisionMs: number;
   /** Share of the pile it will put into repairs in one go. */
   repairBudget: number;
-  /** Share of the pile it will put into bedding restoration in one go. */
-  beddingBudget: number;
+  /** Share of the pile it will put into condition restoration in one go. */
+  conditionBudget: number;
   /** Share of the pile it will put into mitigation buildings in one go. */
   landBudget: number;
-  /** Below this bedding health, restoring becomes a priority. */
-  beddingFloor: number;
+  /** Below this condition health, restoring becomes a priority. */
+  conditionFloor: number;
 }
 
-export const MILLER_STYLES: Record<string, MillerStyle> = {
+export const RIVAL_STYLES: Record<string, RivalStyle> = {
   /** Buys growth, patches damage, ignores the land until it bites. */
   keen: {
-    whistlesPerSecond: 2,
+    clicksPerSecond: 2,
     decisionMs: 2_000,
     repairBudget: 0.35,
-    beddingBudget: 0.35,
+    conditionBudget: 0.35,
     landBudget: 0.15,
-    beddingFloor: 0.9,
+    conditionFloor: 0.9,
   },
   /** Never builds mitigation. A control group for anything land-related. */
   reckless: {
-    whistlesPerSecond: 2,
+    clicksPerSecond: 2,
     decisionMs: 2_000,
     repairBudget: 0.35,
-    beddingBudget: 0.35,
+    conditionBudget: 0.35,
     landBudget: 0,
-    beddingFloor: 0.9,
+    conditionFloor: 0.9,
   },
   /**
    * Barely clicks, checks in rarely. The idle-player shape, and the control
-   * group for "how much faster is clicking?". Not zero whistles: a mill with no
+   * group for "how much faster is clicking?". Not zero clicks: a site with no
    * producers and no clicks earns nothing forever, so a truly idle bot measures
    * nothing at all.
    */
   absent: {
-    whistlesPerSecond: 0.05,
+    clicksPerSecond: 0.05,
     decisionMs: 60_000,
     repairBudget: 0.4,
-    beddingBudget: 0.4,
+    conditionBudget: 0.4,
     landBudget: 0.2,
-    beddingFloor: 0.85,
+    conditionFloor: 0.85,
   },
 };
 
 /**
- * Production per puppy spent — the only ranking that matters when buying.
- * Measured as what the unit would actually add to the mill's rate as it stands,
- * not its clean rate, so the Down Well gets discounted for tired bedding the way
+ * Production per unit spent — the only ranking that matters when buying.
+ * Measured as what the unit would actually add to the site's rate as it stands,
+ * not its clean rate, so the Down Well gets discounted for tired condition the way
  * a buyer looking at the shop would discount it.
  */
-function valueOf(f: MillState, id: SoloProducerId): number {
+function valueOf(f: SiteState, id: SoloProducerId): number {
   return producerRateEach(f, id) / producerCost(f, id, 1);
 }
 
-/** What the miller would do right now, in priority order. */
-export function millerTurn(f: MillState, style: MillerStyle): MillCommand[] {
-  const cmds: MillCommand[] = [];
-  const pile = f.puppies;
+/** What the rival would do right now, in priority order. */
+export function rivalTurn(f: SiteState, style: RivalStyle): SiteCommand[] {
+  const cmds: SiteCommand[] = [];
+  const pile = f.stock;
 
   // Broken kit first: it's the only spend that pays back instantly and in full.
   let best: { id: SoloProducerId; value: number } | null = null;
@@ -105,16 +105,16 @@ export function millerTurn(f: MillState, style: MillerStyle): MillCommand[] {
   }
   if (best) return [{ type: "repair", producer: best.id }];
 
-  const beddingBill = beddingRestoreCost(f);
-  if (f.bedding < style.beddingFloor && beddingBill > 0 && beddingBill <= pile * style.beddingBudget) {
-    return [{ type: "restore_bedding" }];
+  const conditionBill = conditionRestoreCost(f);
+  if (f.condition < style.conditionFloor && conditionBill > 0 && conditionBill <= pile * style.conditionBudget) {
+    return [{ type: "restore_condition" }];
   }
 
   // Upgrades are flat-priced doublings — always the best buy on the board when
   // they're affordable at all.
   for (const u of SOLO_UPGRADES) {
     if (f.upgrades.includes(u.id) || !isUnlocked(f, u)) continue;
-    if (P.gte(pile, u.cost)) return [{ type: "buy_upgrade", upgrade: u.id }];
+    if (Y.gte(pile, u.cost)) return [{ type: "buy_upgrade", upgrade: u.id }];
   }
 
   if (style.landBudget > 0) {
@@ -131,7 +131,7 @@ export function millerTurn(f: MillState, style: MillerStyle): MillCommand[] {
   let pick: { id: SoloProducerId; value: number } | null = null;
   for (const prod of SOLO_PRODUCERS) {
     if (!isProducerAvailable(f, prod.id)) continue;
-    if (!P.gte(pile, producerCost(f, prod.id, 1))) continue;
+    if (!Y.gte(pile, producerCost(f, prod.id, 1))) continue;
     const value = valueOf(f, prod.id);
     if (!pick || value > pick.value) pick = { id: prod.id, value };
   }
@@ -140,97 +140,97 @@ export function millerTurn(f: MillState, style: MillerStyle): MillCommand[] {
   return cmds;
 }
 
-export interface MillSample {
+export interface SiteSample {
   atSeconds: number;
   rate: Rate;
-  raised: Puppies;
-  bedding: number;
+  produced: Yield;
+  condition: number;
   broken: number;
 }
 
-export interface MillRunResult {
-  mill: MillState;
-  samples: MillSample[];
+export interface SiteRunResult {
+  site: SiteState;
+  samples: SiteSample[];
   weatherEvents: number;
   brokeTotal: number;
-  beddingLost: number;
+  conditionLost: number;
 }
 
 /**
- * Play a mill for `durationMs`.
+ * Play a site for `durationMs`.
  *
  * `weather: false` suppresses the schedule entirely, which is how the tests get
  * a control group to measure the weather's cost against.
  */
-export function simulateMill(opts: {
+export function simulateSite(opts: {
   seed: string;
   durationMs: number;
-  style?: keyof typeof MILLER_STYLES | MillerStyle;
+  style?: keyof typeof RIVAL_STYLES | RivalStyle;
   stepMs?: number;
   sampleEverySeconds?: number;
   weather?: boolean;
-}): MillRunResult {
+}): SiteRunResult {
   const step = opts.stepMs ?? 1_000;
   const sampleEvery = opts.sampleEverySeconds ?? 600;
   const style =
     typeof opts.style === "string"
-      ? (MILLER_STYLES[opts.style] ?? MILLER_STYLES.keen!)
-      : (opts.style ?? MILLER_STYLES.keen!);
+      ? (RIVAL_STYLES[opts.style] ?? RIVAL_STYLES.keen!)
+      : (opts.style ?? RIVAL_STYLES.keen!);
 
   const startedAt = ms(0);
-  let mill = createMill({ seed: opts.seed, startedAt });
-  if (opts.weather === false) mill = { ...mill, nextWeatherAt: ms(Number.POSITIVE_INFINITY) };
+  let site = createSite({ seed: opts.seed, startedAt });
+  if (opts.weather === false) site = { ...site, nextWeatherAt: ms(Number.POSITIVE_INFINITY) };
 
-  const samples: MillSample[] = [];
+  const samples: SiteSample[] = [];
   let weatherEvents = 0;
   let brokeTotal = 0;
-  let beddingLost = 0;
-  let whistleCarry = 0;
+  let conditionLost = 0;
+  let clickCarry = 0;
   let nextDecision = 0;
 
-  const apply = (cmd: MillCommand, t: Millis) => {
-    const res = applyMillCommand(mill, cmd, t);
-    if (res.ok) mill = res.mill;
+  const apply = (cmd: SiteCommand, t: Millis) => {
+    const res = applySiteCommand(site, cmd, t);
+    if (res.ok) site = res.site;
   };
 
   for (let t = startedAt; t < startedAt + opts.durationMs; t = ms(t + step)) {
-    whistleCarry += (style.whistlesPerSecond * step) / 1000;
-    const whistles = Math.floor(whistleCarry);
-    if (whistles > 0) {
-      whistleCarry -= whistles;
-      apply({ type: "whistle", count: whistles }, t);
+    clickCarry += (style.clicksPerSecond * step) / 1000;
+    const clicks = Math.floor(clickCarry);
+    if (clicks > 0) {
+      clickCarry -= clicks;
+      apply({ type: "click", count: clicks }, t);
     }
 
     if (t >= nextDecision) {
       nextDecision = t + style.decisionMs;
-      for (const cmd of millerTurn(mill, style)) apply(cmd, t);
+      for (const cmd of rivalTurn(site, style)) apply(cmd, t);
     }
 
     // Nothing bought this step still has to move time forward, or the weather
-    // never lands on an idle mill.
-    const stepped = advance(mill, ms(t + step));
-    mill = stepped.mill;
+    // never lands on an idle site.
+    const stepped = advance(site, ms(t + step));
+    site = stepped.site;
     weatherEvents += stepped.events.length;
     for (const e of stepped.events) {
       brokeTotal += e.brokeTotal;
-      beddingLost += e.beddingLost;
+      conditionLost += e.conditionLost;
     }
 
     const elapsed = (t + step - startedAt) / 1000;
     if (elapsed % sampleEvery === 0) {
       let broken = 0;
-      for (const prod of SOLO_PRODUCERS) broken += brokenCount(mill, prod.id);
+      for (const prod of SOLO_PRODUCERS) broken += brokenCount(site, prod.id);
       samples.push({
         atSeconds: elapsed,
-        rate: currentRate(mill),
-        raised: mill.raised,
-        bedding: mill.bedding,
+        rate: currentRate(site),
+        produced: site.produced,
+        condition: site.condition,
         broken,
       });
     }
   }
 
-  return { mill, samples, weatherEvents, brokeTotal, beddingLost };
+  return { site, samples, weatherEvents, brokeTotal, conditionLost };
 }
 
 // ---------------------------------------------------------------------------
@@ -238,9 +238,9 @@ export function simulateMill(opts: {
 // ---------------------------------------------------------------------------
 
 /**
- * `simulateMill` never closes the tab. That's the right control group for the
+ * `simulateSite` never closes the tab. That's the right control group for the
  * economy but the wrong model of a person, and the difference matters here
- * specifically: nobody repairs anything in the gaps. A mill that gets checked on
+ * specifically: nobody repairs anything in the gaps. A site that gets checked on
  * three times a day spends most of the week accumulating damage nobody is there
  * to undo, which is the only thing separating a real playthrough from the
  * always-on bot.
@@ -265,12 +265,12 @@ export const CHECK_INS: Record<"heavy" | "normal" | "light", CheckInCadence> = {
 };
 
 export interface CadenceResult {
-  mill: MillState;
+  site: SiteState;
   /** Elapsed ms at which each producer was first owned. */
   firstOwned: Partial<Record<SoloProducerId, number>>;
   /** Elapsed ms at which the horizon closed, or null if it never did. */
   convergedAt: number | null;
-  /** What the mill was making the moment it folded. Prices the Ur-Chihuahua. */
+  /** What the site was making the moment it folded. Prices the Ur-Core. */
   convergedRate: Rate | null;
   /** Wall clock covered, including everything spent away. */
   elapsedMs: number;
@@ -284,17 +284,17 @@ export function simulateCadence(opts: {
   seed: string;
   days: number;
   cadence: keyof typeof CHECK_INS | CheckInCadence;
-  style?: keyof typeof MILLER_STYLES | MillerStyle;
+  style?: keyof typeof RIVAL_STYLES | RivalStyle;
   stepMs?: number;
 }): CadenceResult {
   const step = opts.stepMs ?? 1_000;
   const cadence = typeof opts.cadence === "string" ? CHECK_INS[opts.cadence] : opts.cadence;
   const style =
     typeof opts.style === "string"
-      ? (MILLER_STYLES[opts.style] ?? MILLER_STYLES.keen!)
-      : (opts.style ?? MILLER_STYLES.keen!);
+      ? (RIVAL_STYLES[opts.style] ?? RIVAL_STYLES.keen!)
+      : (opts.style ?? RIVAL_STYLES.keen!);
 
-  let mill = createMill({ seed: opts.seed, startedAt: ms(0) });
+  let site = createSite({ seed: opts.seed, startedAt: ms(0) });
   const firstOwned: Partial<Record<SoloProducerId, number>> = {};
   let convergedAt: number | null = null;
   let convergedRate: Rate | null = null;
@@ -302,41 +302,41 @@ export function simulateCadence(opts: {
 
   const note = (at: number) => {
     for (const prod of SOLO_PRODUCERS) {
-      if (firstOwned[prod.id] === undefined && (mill.producers[prod.id] ?? 0) > 0) {
+      if (firstOwned[prod.id] === undefined && (site.producers[prod.id] ?? 0) > 0) {
         firstOwned[prod.id] = at;
       }
     }
-    if (convergedAt === null && mill.converged) {
+    if (convergedAt === null && site.converged) {
       convergedAt = at;
-      convergedRate = currentRate(mill);
+      convergedRate = currentRate(site);
     }
   };
 
-  const apply = (cmd: MillCommand, t: Millis) => {
-    const res = applyMillCommand(mill, cmd, t);
-    if (res.ok) mill = res.mill;
+  const apply = (cmd: SiteCommand, t: Millis) => {
+    const res = applySiteCommand(site, cmd, t);
+    if (res.ok) site = res.site;
   };
 
   const gap = DAY_MS / cadence.sessionsPerDay;
   for (let d = 0; d < opts.days; d++) {
     for (let s = 0; s < cadence.sessionsPerDay; s++) {
       const start = Math.round(d * DAY_MS + s * gap);
-      // Everything between check-ins happens to a mill with nobody in it.
-      mill = advance(mill, ms(start), true).mill;
-      let whistleCarry = 0;
+      // Everything between check-ins happens to a site with nobody in it.
+      site = advance(site, ms(start), true).site;
+      let clickCarry = 0;
       let nextDecision = start;
       for (let t = start; t < start + cadence.sessionMs; t += step) {
-        whistleCarry += (style.whistlesPerSecond * step) / 1000;
-        const whistles = Math.floor(whistleCarry);
-        if (whistles > 0) {
-          whistleCarry -= whistles;
-          apply({ type: "whistle", count: whistles }, ms(t));
+        clickCarry += (style.clicksPerSecond * step) / 1000;
+        const clicks = Math.floor(clickCarry);
+        if (clicks > 0) {
+          clickCarry -= clicks;
+          apply({ type: "click", count: clicks }, ms(t));
         }
         if (t >= nextDecision) {
           nextDecision = t + style.decisionMs;
-          for (const cmd of millerTurn(mill, style)) apply(cmd, ms(t));
+          for (const cmd of rivalTurn(site, style)) apply(cmd, ms(t));
         }
-        mill = advance(mill, ms(t + step)).mill;
+        site = advance(site, ms(t + step)).site;
         note(t + step);
       }
       playedMs += cadence.sessionMs;
@@ -344,7 +344,7 @@ export function simulateCadence(opts: {
   }
 
   const end = Math.round(opts.days * DAY_MS);
-  mill = advance(mill, ms(end), true).mill;
+  site = advance(site, ms(end), true).site;
   note(end);
-  return { mill, firstOwned, convergedAt, convergedRate, elapsedMs: end, playedMs };
+  return { site, firstOwned, convergedAt, convergedRate, elapsedMs: end, playedMs };
 }

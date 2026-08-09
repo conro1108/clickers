@@ -5,32 +5,32 @@
  *
  * The homestead's top rung costs 8e18, which is past 2^53, so prices up there
  * are no longer exact integers. Nothing depends on that: costs are compared and
- * subtracted, never counted. A fortnight-long run reaches about 5e24 raised,
- * where `format` still has eight suffixes of headroom and a single whistle is some
- * nine orders of magnitude larger than the representable step, so whistling still
+ * subtracted, never counted. A fortnight-long run reaches about 5e24 produced,
+ * where `format` still has eight suffixes of headroom and a single click is some
+ * nine orders of magnitude larger than the representable step, so clicking still
  * registers. Worth knowing rather than worth fixing — but the brand is here if
  * that ever changes.
  */
 
-export type Puppies = number & { readonly __brand: "Puppies" };
+export type Yield = number & { readonly __brand: "Yield" };
 
 /** Milliseconds since epoch, always server time. Never `Date.now()` in sim code. */
 export type Millis = number & { readonly __brand: "Millis" };
 
-/** Puppies per second. */
+/** Yield per second. */
 export type Rate = number & { readonly __brand: "Rate" };
 
-export const P = {
-  of: (n: number): Puppies => n as Puppies,
-  zero: 0 as Puppies,
-  add: (a: Puppies, b: Puppies): Puppies => (a + b) as Puppies,
-  sub: (a: Puppies, b: Puppies): Puppies => (a - b) as Puppies,
-  mul: (a: Puppies, k: number): Puppies => (a * k) as Puppies,
-  gte: (a: Puppies, b: Puppies): boolean => a >= b,
-  max: (a: Puppies, b: Puppies): Puppies => (a > b ? a : b),
-  min: (a: Puppies, b: Puppies): Puppies => (a < b ? a : b),
-  /** Puppies produced by running at `rate` for `ms` milliseconds. */
-  overTime: (rate: Rate, ms: number): Puppies => ((rate * ms) / 1000) as Puppies,
+export const Y = {
+  of: (n: number): Yield => n as Yield,
+  zero: 0 as Yield,
+  add: (a: Yield, b: Yield): Yield => (a + b) as Yield,
+  sub: (a: Yield, b: Yield): Yield => (a - b) as Yield,
+  mul: (a: Yield, k: number): Yield => (a * k) as Yield,
+  gte: (a: Yield, b: Yield): boolean => a >= b,
+  max: (a: Yield, b: Yield): Yield => (a > b ? a : b),
+  min: (a: Yield, b: Yield): Yield => (a < b ? a : b),
+  /** Yield produced by running at `rate` for `ms` milliseconds. */
+  overTime: (rate: Rate, ms: number): Yield => ((rate * ms) / 1000) as Yield,
 } as const;
 
 export const ms = (n: number): Millis => n as Millis;

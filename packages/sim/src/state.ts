@@ -1,4 +1,4 @@
-import type { Millis, Puppies } from "./numbers.js";
+import type { Millis, Yield } from "./numbers.js";
 import type { AttackId, DefenseId, ProducerId, UpgradeId } from "./content.js";
 
 export type PlayerId = string;
@@ -37,12 +37,12 @@ export interface PlayerState {
   name: string;
   isBot: boolean;
 
-  /** Checkpoint: puppies on hand as of `checkpointAt`. */
-  puppies: Puppies;
+  /** Checkpoint: stock on hand as of `checkpointAt`. */
+  stock: Yield;
   checkpointAt: Millis;
 
-  /** Lifetime puppies raised, also checkpointed at `checkpointAt`. */
-  raised: Puppies;
+  /** Lifetime stock produced, also checkpointed at `checkpointAt`. */
+  produced: Yield;
 
   producers: Partial<Record<ProducerId, number>>;
   /**
@@ -58,15 +58,15 @@ export interface PlayerState {
   effects: ActiveEffect[];
 
   /**
-   * Whistles left in the bucket, and when it was last drawn from. Refilled by
+   * Clicks left in the bucket, and when it was last drawn from. Refilled by
    * elapsed time in `applyCommand`, so it's folded from the log like everything
    * else — no wall clock, no state the database has to hold.
    */
-  whistles: number;
-  whistleAt: Millis;
+  clicks: number;
+  clickAt: Millis;
 }
 
-export type ScoringRule = "total_raised" | "on_hand";
+export type ScoringRule = "total_produced" | "on_hand";
 
 export interface MatchConfig {
   seed: string;

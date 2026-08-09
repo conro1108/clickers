@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { P, solo, type Millis, type Potatoes } from "@battle/sim";
+import { Y, solo, type Millis, type Yield } from "@clickers/sim";
 
 import { nowMs } from "./clock.js";
 
@@ -16,17 +16,17 @@ const RENDER_MS = 100;
 const AUTOSAVE_MS = 10_000;
 
 export interface FarmRuntime {
-  farm: solo.FarmState;
+  farm: solo.SiteState;
   now: Millis;
   /** What happened while the tab was closed, until it's dismissed. */
   report: solo.OfflineReport | null;
   dismissReport(): void;
   /** The pile, including digs not yet flushed — what you can actually spend. */
-  budget: Potatoes;
+  budget: Yield;
   pendingDigs: number;
   error: string | null;
   dig(): void;
-  dispatch(cmd: solo.FarmCommand): void;
+  dispatch(cmd: solo.SiteCommand): void;
   /** Burn the save and start over. Not prestige — this keeps nothing. */
   abandon(): void;
 }
@@ -39,18 +39,20 @@ export function hasSavedFarm(): boolean {
   }
 }
 
-function loadFarm(): { farm: solo.FarmState; report: solo.OfflineReport | null } {
-  let saved: solo.FarmState | null = null;
+function loadFarm(): { farm: solo.SiteState; report: solo.OfflineReport | null } {
+  let saved: solo.SiteState | null = null;
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) saved = solo.parseFarm(raw);
+    if (raw) saved = solo.parseSite(raw);
   } catch {
     saved = null;
   }
   if (!saved) {
-    return { farm: solo.createFarm({ seed: newSeed(), startedAt: nowMs() }), report: null };
+    return { farm: solo.createSite({ seed: newSeed(), startedAt: nowMs() }), report: null };
   }
-  return solo.resumeFarm(saved, nowMs());
+  // The engine calls it a site; in here it's a farm.
+  const resumed = solo.resumeSite(saved, nowMs());
+  return { farm: resumed.site, report: resumed.report };
 }
 
 function newSeed(): string {
@@ -59,14 +61,14 @@ function newSeed(): string {
 
 /**
  * Drives the homestead in the browser. Every mutation goes through the same
- * `applyFarmCommand` a server would call, so moving this behind a network
+ * `applySiteCommand` a server would call, so moving this behind a network
  * round-trip later doesn't touch any game logic.
  */
 export function useFarm(): FarmRuntime {
-  const initial = useRef<{ farm: solo.FarmState; report: solo.OfflineReport | null }>();
+  const initial = useRef<{ farm: solo.SiteState; report: solo.OfflineReport | null }>();
   initial.current ??= loadFarm();
 
-  const [farm, setFarmRaw] = useState<solo.FarmState>(initial.current.farm);
+  const [farm, setFarmRaw] = useState<solo.SiteState>(initial.current.farm);
   const [now, setNow] = useState<Millis>(() => nowMs());
   const [pendingDigs, setPendingDigs] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -77,14 +79,14 @@ export function useFarm(): FarmRuntime {
   const farmRef = useRef(farm);
   const pendingRef = useRef(0);
 
-  const setFarm = useCallback((next: solo.FarmState) => {
+  const setFarm = useCallback((next: solo.SiteState) => {
     farmRef.current = next;
     setFarmRaw(next);
   }, []);
 
   const save = useCallback(() => {
     try {
-      localStorage.setItem(SAVE_KEY, solo.serializeFarm(farmRef.current, nowMs()));
+      localStorage.setItem(SAVE_KEY, solo.serializeSite(farmRef.current, nowMs()));
     } catch {
       // A full or blocked localStorage shouldn't take the game down with it.
     }
@@ -95,22 +97,22 @@ export function useFarm(): FarmRuntime {
     if (count === 0) return;
     pendingRef.current = 0;
     setPendingDigs(0);
-    const res = solo.applyFarmCommand(farmRef.current, { type: "dig", count }, nowMs());
-    if (res.ok) setFarm(res.farm);
+    const res = solo.applySiteCommand(farmRef.current, { type: "click", count }, nowMs());
+    if (res.ok) setFarm(res.site);
   }, [setFarm]);
 
   const dispatch = useCallback(
-    (cmd: solo.FarmCommand) => {
+    (cmd: solo.SiteCommand) => {
       // Bank what you've already dug before spending, or the pile you can see
       // is a flush ahead of the pile you can spend.
       flushDigs();
-      const res = solo.applyFarmCommand(farmRef.current, cmd, nowMs());
+      const res = solo.applySiteCommand(farmRef.current, cmd, nowMs());
       if (!res.ok) {
         setError(res.reason);
         return;
       }
       setError(null);
-      setFarm(res.farm);
+      setFarm(res.site);
       save();
     },
     [flushDigs, save, setFarm],
@@ -124,7 +126,7 @@ export function useFarm(): FarmRuntime {
   // Truth: advance the sim so weather actually lands.
   useEffect(() => {
     const id = setInterval(() => {
-      const { farm: next, events } = solo.advance(farmRef.current, nowMs());
+      const { site: next, events } = solo.advance(farmRef.current, nowMs());
       if (events.length > 0 || next.checkpointAt !== farmRef.current.checkpointAt) setFarm(next);
     }, TICK_MS);
     return () => clearInterval(id);
@@ -165,17 +167,17 @@ export function useFarm(): FarmRuntime {
     setPendingDigs(0);
     setError(null);
     setReport(null);
-    const fresh = solo.createFarm({ seed: newSeed(), startedAt: nowMs() });
+    const fresh = solo.createSite({ seed: newSeed(), startedAt: nowMs() });
     setFarm(fresh);
     try {
-      localStorage.setItem(SAVE_KEY, solo.serializeFarm(fresh, nowMs()));
+      localStorage.setItem(SAVE_KEY, solo.serializeSite(fresh, nowMs()));
     } catch {
       /* see `save` */
     }
   }, [setFarm]);
 
   const budget = useMemo(
-    () => P.add(solo.projectedPotatoes(farm, now), P.mul(solo.clickYield(farm), pendingDigs)),
+    () => Y.add(solo.projectedStock(farm, now), Y.mul(solo.clickYield(farm), pendingDigs)),
     [farm, now, pendingDigs],
   );
 

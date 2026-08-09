@@ -1,4 +1,4 @@
-import { UPGRADES, solo, type ProducerId, type Upgrade } from "@mill/sim";
+import { UPGRADES, solo, type ProducerId, type Upgrade } from "@clickers/sim";
 
 import { PRODUCER_MARKS } from "./render/art.js";
 import type { Art } from "./render/pixel.js";
@@ -36,12 +36,12 @@ function artAt(id: keyof typeof PRODUCER_MARKS, level: number): Art {
   return marks[Math.min(marks.length - 1, level)] ?? marks[0];
 }
 
-export function producerMark(mill: solo.MillState, id: solo.SoloProducerId): number {
+export function producerMark(mill: solo.SiteState, id: solo.SoloProducerId): number {
   return markOf(mill.upgrades, solo.SOLO_UPGRADES, id);
 }
 
 /** The art for a producer as it currently stands on this mill. */
-export function producerArt(mill: solo.MillState, id: solo.SoloProducerId): Art {
+export function producerArt(mill: solo.SiteState, id: solo.SoloProducerId): Art {
   return artAt(id, producerMark(mill, id));
 }
 
@@ -54,7 +54,7 @@ export function producerArt(mill: solo.MillState, id: solo.SoloProducerId): Art 
  * have nothing to show and get no thumbnail.
  */
 export function upgradePreview(
-  mill: solo.MillState,
+  mill: solo.SiteState,
   upgrade: solo.SoloUpgrade,
 ): Art | undefined {
   const effect = upgrade.effect;

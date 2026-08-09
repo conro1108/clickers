@@ -7,7 +7,7 @@ import {
   type PointerEventHandler,
   type ReactNode,
 } from "react";
-import { PRODUCERS, solo, type PlayerState, type Puppies } from "@mill/sim";
+import { PRODUCERS, solo, type PlayerState, type Yield } from "@clickers/sim";
 
 import { matchMark, producerMark } from "../marks.js";
 import { EMPTY_VIEW, MillScene as Scene, type MillView } from "../render/millScene.js";
@@ -98,8 +98,8 @@ function whistleAt(
  * is the discoverable version of the same verb.
  */
 export const MillScene = forwardRef<MillSceneHandle, {
-  mill: solo.MillState;
-  hoard: Puppies;
+  mill: solo.SiteState;
+  hoard: Yield;
   /** Given where on the buffer you tapped, when the whistle came from the scene. */
   onWhistle: (at?: { x: number; y: number }) => void;
   /**
@@ -137,7 +137,7 @@ export const MillScene = forwardRef<MillSceneHandle, {
       working,
       broken,
       marks,
-      bedding: mill.bedding,
+      condition: mill.condition,
       hoard,
       seed: mill.seed,
       // Zero once it's happened: `convergenceProgress` pins at 1 forever, and
@@ -174,8 +174,8 @@ export const MillScene = forwardRef<MillSceneHandle, {
  */
 export const MatchScene = forwardRef<MillSceneHandle, {
   me: PlayerState;
-  /** Puppies on hand, including the clicks that haven't flushed yet. */
-  hoard: Puppies;
+  /** Yield on hand, including the clicks that haven't flushed yet. */
+  hoard: Yield;
   onWhistle: (at?: { x: number; y: number }) => void;
   children?: ReactNode;
 }>(function MatchScene({ me, hoard, onWhistle, children }, ref) {
@@ -207,7 +207,7 @@ export const MatchScene = forwardRef<MillSceneHandle, {
 /** A mill nobody owns, running on the title screen so it isn't a blank page. */
 const DEMO_VIEW: MillView = {
   ...EMPTY_VIEW,
-  working: { pen: 9, hand: 2, heatlamp: 1, van: 1 },
+  working: { patch: 9, hand: 2, rig: 1, hauler: 1 },
   hoard: 400,
   seed: "title",
 };

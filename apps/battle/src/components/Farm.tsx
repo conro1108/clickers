@@ -1,9 +1,9 @@
 import {
-  P,
+  Y,
   brokenRate,
   clickYield,
   format,
-  potatoesAt,
+  stockAt,
   rateAt,
   scoreOf,
   slowMultiplier,
@@ -11,7 +11,7 @@ import {
   type MatchState,
   type Millis,
   type PlayerState,
-} from "@battle/sim";
+} from "@clickers/sim";
 
 function EffectChip({ effect, now }: { effect: PlayerState["effects"][number]; now: Millis }) {
   const left = Math.max(0, effect.expiresAt - now) / 1000;
@@ -45,8 +45,8 @@ export function Farm({
 }) {
   const perClick = clickYield(me);
   // Unflushed clicks are shown optimistically so the button feels instant.
-  const onHand = P.add(potatoesAt(me, now), P.mul(perClick, pendingClicks));
-  const score = P.add(scoreOf(me, now, state.config.scoring), P.mul(perClick, pendingClicks));
+  const onHand = Y.add(stockAt(me, now), Y.mul(perClick, pendingClicks));
+  const score = Y.add(scoreOf(me, now, state.config.scoring), Y.mul(perClick, pendingClicks));
   const rate = rateAt(me, now);
   const slow = slowMultiplier(me, now);
   const lost = brokenRate(me);
@@ -92,7 +92,7 @@ export function Farm({
       </dl>
 
       <div className="dig-layout">
-        <button className="dig" onClick={onClick} disabled={disabled}>
+        <button className="click" onClick={onClick} disabled={disabled}>
           <span className="dig-emoji" aria-hidden>
             🥔
           </span>

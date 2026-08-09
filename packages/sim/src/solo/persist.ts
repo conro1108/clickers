@@ -1,15 +1,15 @@
 /**
- * Saving the mill, and picking it back up.
+ * Saving the site, and picking it back up.
  *
- * A save is just the `MillState` plus a version tag — there's no derived data to
+ * A save is just the `SiteState` plus a version tag — there's no derived data to
  * rebuild, because the state already is a checkpoint. Coming back after an
  * absence is the same `advance` a live tick uses, handed a bigger interval.
  */
 
-import { P, ms, type Millis, type Puppies } from "../numbers.js";
-import { MAX_BEDDING, type World } from "./content.js";
-import { advance, CONVERGENCE_UPGRADE, rebase } from "./mill.js";
-import type { MillState } from "./state.js";
+import { Y, ms, type Millis, type Yield } from "../numbers.js";
+import { MAX_CONDITION, type World } from "./content.js";
+import { advance, CONVERGENCE_UPGRADE, rebase } from "./site.js";
+import type { SiteState } from "./state.js";
 import type { WeatherEvent } from "./weather.js";
 
 export const SAVE_VERSION = 1;
@@ -17,18 +17,18 @@ export const SAVE_VERSION = 1;
 export interface SaveFile {
   version: number;
   savedAt: number;
-  mill: MillState;
+  site: SiteState;
 }
 
-export function serializeMill(mill: MillState, savedAt: Millis): string {
-  return JSON.stringify({ version: SAVE_VERSION, savedAt, mill } satisfies SaveFile);
+export function serializeSite(site: SiteState, savedAt: Millis): string {
+  return JSON.stringify({ version: SAVE_VERSION, savedAt, site } satisfies SaveFile);
 }
 
 /**
  * Parse a save. Returns null for anything we can't trust rather than throwing —
- * a corrupt save should cost you a mill, not the ability to open the page.
+ * a corrupt save should cost you a site, not the ability to open the page.
  */
-export function parseMill(raw: string): MillState | null {
+export function parseSite(raw: string): SiteState | null {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
@@ -37,61 +37,61 @@ export function parseMill(raw: string): MillState | null {
   }
   if (typeof parsed !== "object" || parsed === null) return null;
   const save = parsed as Partial<SaveFile>;
-  if (save.version !== SAVE_VERSION || typeof save.mill !== "object" || save.mill === null) {
+  if (save.version !== SAVE_VERSION || typeof save.site !== "object" || save.site === null) {
     return null;
   }
-  const f = save.mill as Partial<MillState>;
+  const f = save.site as Partial<SiteState>;
   if (typeof f.seed !== "string" || typeof f.checkpointAt !== "number") return null;
 
   const upgrades = Array.isArray(f.upgrades) ? (f.upgrades as string[]) : [];
 
   // Saves written before the flag existed still know whether the world folded:
-  // they're holding the upgrade that did it. Without this backfill a mill that
+  // they're holding the upgrade that did it. Without this backfill a site that
   // had already converged would open with its sky back.
   const converged = f.converged ?? upgrades.includes(CONVERGENCE_UPGRADE);
   // And one written before there were two worlds was standing in whichever one
-  // it had reached, which for a folded mill is inside the puppy.
+  // it had reached, which for a folded site is inside the unit.
   const world: World = converged && f.world !== "outside" ? "inside" : "outside";
 
   // Fill anything a hand-edited or partial save is missing, so one absent field
-  // doesn't produce NaN puppies forever.
+  // doesn't produce NaN stock forever.
   return {
     seed: f.seed,
     startedAt: ms(f.startedAt ?? f.checkpointAt),
-    puppies: finite(f.puppies),
-    raised: finite(f.raised),
+    stock: finite(f.stock),
+    produced: finite(f.produced),
     checkpointAt: ms(f.checkpointAt),
     producers: { ...(f.producers ?? {}) },
     broken: { ...(f.broken ?? {}) },
     upgrades,
     land: f.land ?? {},
-    bedding: Number.isFinite(f.bedding) ? Math.min(MAX_BEDDING, f.bedding as number) : MAX_BEDDING,
+    condition: Number.isFinite(f.condition) ? Math.min(MAX_CONDITION, f.condition as number) : MAX_CONDITION,
     weatherIndex: Math.max(0, Math.floor(f.weatherIndex ?? 0)),
     nextWeatherAt: ms(f.nextWeatherAt ?? f.checkpointAt),
     converged,
     world,
-    papers: Math.max(0, Math.floor(f.papers ?? 0)),
+    heirlooms: Math.max(0, Math.floor(f.heirlooms ?? 0)),
     perks: f.perks ?? {},
-    lifetimeRaised: finite(f.lifetimeRaised),
+    lifetimeProduced: finite(f.lifetimeProduced),
     generation: Math.max(1, Math.floor(f.generation ?? 1)),
     runStartedAt: ms(f.runStartedAt ?? f.startedAt ?? f.checkpointAt),
     log: Array.isArray(f.log) ? f.log.slice(-60) : [],
   };
 }
 
-function finite(n: unknown): Puppies {
-  return P.of(typeof n === "number" && Number.isFinite(n) && n >= 0 ? n : 0);
+function finite(n: unknown): Yield {
+  return Y.of(typeof n === "number" && Number.isFinite(n) && n >= 0 ? n : 0);
 }
 
 export interface OfflineReport {
   awayMs: number;
-  /** Puppies produced while away, before anything the weather handed back. */
-  earned: Puppies;
+  /** Yield produced while away, before anything the weather handed back. */
+  earned: Yield;
   events: WeatherEvent[];
   brokeTotal: number;
-  beddingLost: number;
+  conditionLost: number;
   /** Boons and insurance payouts collected in your absence. */
-  gained: Puppies;
+  gained: Yield;
 }
 
 /**
@@ -99,27 +99,27 @@ export interface OfflineReport {
  *
  * A clock that moved backwards (an NTP correction, a fiddled system clock, the
  * back room's skew lever being put back) is no time passing rather than an
- * error: the mill rebases onto the earlier clock and carries on. It used to keep
+ * error: the site rebases onto the earlier clock and carries on. It used to keep
  * the later checkpoint, which is the same thing as freezing the game until the
  * wall clock caught up — see `rebase`.
  */
-export function resumeMill(saved: MillState, now: Millis): { mill: MillState; report: OfflineReport | null } {
-  if (now <= saved.checkpointAt) return { mill: rebase(saved, now), report: null };
+export function resumeSite(saved: SiteState, now: Millis): { site: SiteState; report: OfflineReport | null } {
+  if (now <= saved.checkpointAt) return { site: rebase(saved, now), report: null };
 
-  const before = saved.puppies;
-  const { mill, events } = advance(saved, now, true);
+  const before = saved.stock;
+  const { site, events } = advance(saved, now, true);
   const awayMs = now - saved.checkpointAt;
 
-  const gained = P.of(events.reduce((sum, e) => sum + e.gained, 0));
+  const gained = Y.of(events.reduce((sum, e) => sum + e.gained, 0));
   const report: OfflineReport = {
     awayMs,
-    earned: P.of(Math.max(0, mill.puppies - before - gained)),
+    earned: Y.of(Math.max(0, site.stock - before - gained)),
     events,
     brokeTotal: events.reduce((sum, e) => sum + e.brokeTotal, 0),
-    beddingLost: events.reduce((sum, e) => sum + e.beddingLost, 0),
+    conditionLost: events.reduce((sum, e) => sum + e.conditionLost, 0),
     gained,
   };
-  return { mill, report };
+  return { site, report };
 }
 
 /** Below this, an absence isn't worth interrupting anyone with a report. */

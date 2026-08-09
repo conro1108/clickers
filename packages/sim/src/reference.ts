@@ -10,7 +10,7 @@ import {
   repairCost,
   repeatCost,
 } from "./economy.js";
-import { P, type Millis, type Puppies } from "./numbers.js";
+import { Y, type Millis, type Yield } from "./numbers.js";
 import { clampToMatch, isOver } from "./match.js";
 import type { Command, MatchState, PlayerId, PlayerState } from "./state.js";
 
@@ -20,14 +20,14 @@ import type { Command, MatchState, PlayerId, PlayerState } from "./state.js";
  * isn't degenerate; they can't tell you whether `nasty` is beatable, and that's
  * the question that matters when someone sits down to play.
  *
- * Modelled on how the game actually gets played: whistle hard while whistling is the
+ * Modelled on how the game actually gets played: click hard while clicking is the
  * only income, then settle into buying whatever the shop flags as best value
  * and steadily adding capacity. Deliberately *not* an optimal player — it makes
  * the same call a reasonable person makes with the information the UI gives
  * them, which is what the ladder should be graded against.
  */
 export interface HumanStyle {
-  /** Clicks per second while whistling is still worth the effort. */
+  /** Clicks per second while clicking is still worth the effort. */
   openingClicksPerSecond: number;
   /** Seconds of that before attention moves to the shop. */
   openingSeconds: number;
@@ -40,12 +40,12 @@ export interface HumanStyle {
   /** How often they touch the shop. */
   decisionMs: number;
   /**
-   * 0..1 — how much worse than the best rate-per-puppy in the shop they'll
+   * 0..1 — how much worse than the best rate-per-unit in the shop they'll
    * settle for rather than sit on the pile and wait for the good tier. Same
    * knob as the bot's, and the same reason it exists: a shelf priced at
-   * `growth^N` makes the tenth Puppy Pen a worse buy than a first Grooming Rig
+   * `growth^N` makes the tenth Unit Pen a worse buy than a first Grooming Rig
    * by orders of magnitude, and a person reading prices next to rates works
-   * that out. Modelling them as spending every puppy the instant they have it
+   * that out. Modelling them as spending every unit the instant they have it
    * understated a real player by two orders of magnitude, which made the whole
    * difficulty ladder look harder than it was.
    */
@@ -73,7 +73,7 @@ export const HUMAN_STYLES: Record<string, HumanStyle> = {
     decisionMs: 1000,
     thrift: 0.5,
   },
-  /** Never looks away from the whistle button. The wrist-speed end of the range. */
+  /** Never looks away from the click button. The wrist-speed end of the range. */
   masher: {
     openingClicksPerSecond: 10,
     openingSeconds: 300,
@@ -81,7 +81,7 @@ export const HUMAN_STYLES: Record<string, HumanStyle> = {
     attacks: true,
     defends: true,
     decisionMs: 1000,
-    // Eyes on the whistle, not the price list — takes the decent buy in front
+    // Eyes on the click, not the price list — takes the decent buy in front
     // of them rather than waiting for the great one.
     thrift: 0.3,
   },
@@ -96,13 +96,13 @@ export function clicksPerSecondAt(style: HumanStyle, elapsedSeconds: number): nu
 /** Priciest of `items` costing no more than `budget`. */
 function pick<T>(
   items: readonly T[],
-  costOf: (item: T) => Puppies,
-  budget: Puppies,
-): { item: T; cost: Puppies } | undefined {
-  let best: { item: T; cost: Puppies } | undefined;
+  costOf: (item: T) => Yield,
+  budget: Yield,
+): { item: T; cost: Yield } | undefined {
+  let best: { item: T; cost: Yield } | undefined;
   for (const item of items) {
     const cost = costOf(item);
-    if (P.gte(budget, cost) && (!best || cost > best.cost)) best = { item, cost };
+    if (Y.gte(budget, cost) && (!best || cost > best.cost)) best = { item, cost };
   }
   return best;
 }
@@ -121,8 +121,8 @@ export function humanTurn(
 
   const out: Command[] = [];
   let me: PlayerState = checkpoint(raw, t);
-  const pay = (cost: Puppies) => {
-    me = { ...me, puppies: P.sub(me.puppies, cost) };
+  const pay = (cost: Yield) => {
+    me = { ...me, stock: Y.sub(me.stock, cost) };
   };
 
   // Damage is loud in the UI, so it gets dealt with first.
@@ -131,7 +131,7 @@ export function humanTurn(
       const broken = Math.min(me.broken[prod.id] ?? 0, me.producers[prod.id] ?? 0);
       if (broken <= 0) continue;
       const cost = repairCost(me, prod.id);
-      if (cost <= 0 || !P.gte(me.puppies, cost)) continue;
+      if (cost <= 0 || !Y.gte(me.stock, cost)) continue;
       out.push({ type: "repair", player: id, producer: prod.id });
       pay(cost);
       me = { ...me, broken: { ...me.broken, [prod.id]: 0 } };
@@ -142,7 +142,7 @@ export function humanTurn(
     const got = pick(
       DEFENSES,
       (d) => repeatCost(d.baseCost, d.growth, me.defensesUsed[d.id] ?? 0),
-      P.mul(me.puppies, 0.35),
+      Y.mul(me.stock, 0.35),
     );
     if (got) {
       out.push({ type: "defend", player: id, defense: got.item.id });
@@ -162,7 +162,7 @@ export function humanTurn(
       const got = pick(
         ATTACKS,
         (a) => attackCost(a, me.attacksUsed[a.id] ?? 0, targetRate),
-        P.mul(me.puppies, 0.3),
+        Y.mul(me.stock, 0.3),
       );
       if (got) {
         out.push({ type: "attack", player: id, target: foe, attack: got.item.id });
@@ -178,7 +178,7 @@ export function humanTurn(
   for (const up of UPGRADES) {
     if (me.upgrades.includes(up.id)) continue;
     if (up.requires && (me.producers[up.requires.producer] ?? 0) < up.requires.count) continue;
-    if (!P.gte(me.puppies, up.cost)) continue;
+    if (!Y.gte(me.stock, up.cost)) continue;
     out.push({ type: "buy_upgrade", player: id, upgrade: up.id });
     pay(up.cost);
     me = { ...me, upgrades: [...me.upgrades, up.id] };
@@ -192,7 +192,7 @@ export function humanTurn(
       return { id: prod.id, cost, value: (prod.baseRate * producerMultiplier(me, prod.id)) / cost };
     }).sort((a, b) => b.value - a.value);
     const got = ranked.find(
-      (r) => P.gte(me.puppies, r.cost) && r.value >= ranked[0]!.value * style.thrift,
+      (r) => Y.gte(me.stock, r.cost) && r.value >= ranked[0]!.value * style.thrift,
     );
     // Nothing here is worth it yet — hold the pile for the next tier up.
     if (!got) break;

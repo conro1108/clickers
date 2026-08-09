@@ -3,7 +3,12 @@
   "compilerOptions": {
     "lib": ["ES2022"],
     "noEmit": true,
-    "types": []
+    "types": [],
+    "paths": {
+      // With no game attached the engine themes itself. Each app overrides this
+      // to point at its own src/theme.ts.
+      "@clickers/theme": ["./src/reference-theme.ts"]
+    }
   },
   "include": ["src"]
 }

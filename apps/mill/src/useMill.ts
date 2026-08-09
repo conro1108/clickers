@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { P, solo, type Millis, type Puppies } from "@mill/sim";
+import { Y, solo, type Millis, type Yield } from "@clickers/sim";
 
 import { nowMs } from "./clock.js";
 
@@ -16,17 +16,17 @@ const RENDER_MS = 100;
 const AUTOSAVE_MS = 10_000;
 
 export interface MillRuntime {
-  mill: solo.MillState;
+  mill: solo.SiteState;
   now: Millis;
   /** What happened while the tab was closed, until it's dismissed. */
   report: solo.OfflineReport | null;
   dismissReport(): void;
   /** The pile, including whistles not yet flushed — what you can actually spend. */
-  budget: Puppies;
+  budget: Yield;
   pendingWhistles: number;
   error: string | null;
   whistle(): void;
-  dispatch(cmd: solo.MillCommand): void;
+  dispatch(cmd: solo.SiteCommand): void;
   /** Burn the save and start over. Not prestige — this keeps nothing. */
   abandon(): void;
 }
@@ -39,18 +39,20 @@ export function hasSavedMill(): boolean {
   }
 }
 
-function loadMill(): { mill: solo.MillState; report: solo.OfflineReport | null } {
-  let saved: solo.MillState | null = null;
+function loadMill(): { mill: solo.SiteState; report: solo.OfflineReport | null } {
+  let saved: solo.SiteState | null = null;
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) saved = solo.parseMill(raw);
+    if (raw) saved = solo.parseSite(raw);
   } catch {
     saved = null;
   }
   if (!saved) {
-    return { mill: solo.createMill({ seed: newSeed(), startedAt: nowMs() }), report: null };
+    return { mill: solo.createSite({ seed: newSeed(), startedAt: nowMs() }), report: null };
   }
-  return solo.resumeMill(saved, nowMs());
+  // The engine calls it a site; in here it's a mill.
+  const resumed = solo.resumeSite(saved, nowMs());
+  return { mill: resumed.site, report: resumed.report };
 }
 
 function newSeed(): string {
@@ -59,14 +61,14 @@ function newSeed(): string {
 
 /**
  * Drives the homestead in the browser. Every mutation goes through the same
- * `applyMillCommand` a server would call, so moving this behind a network
+ * `applySiteCommand` a server would call, so moving this behind a network
  * round-trip later doesn't touch any game logic.
  */
 export function useMill(): MillRuntime {
-  const initial = useRef<{ mill: solo.MillState; report: solo.OfflineReport | null }>();
+  const initial = useRef<{ mill: solo.SiteState; report: solo.OfflineReport | null }>();
   initial.current ??= loadMill();
 
-  const [mill, setMillRaw] = useState<solo.MillState>(initial.current.mill);
+  const [mill, setMillRaw] = useState<solo.SiteState>(initial.current.mill);
   const [now, setNow] = useState<Millis>(() => nowMs());
   const [pendingWhistles, setPendingWhistles] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -77,14 +79,14 @@ export function useMill(): MillRuntime {
   const millRef = useRef(mill);
   const pendingRef = useRef(0);
 
-  const setMill = useCallback((next: solo.MillState) => {
+  const setMill = useCallback((next: solo.SiteState) => {
     millRef.current = next;
     setMillRaw(next);
   }, []);
 
   const save = useCallback(() => {
     try {
-      localStorage.setItem(SAVE_KEY, solo.serializeMill(millRef.current, nowMs()));
+      localStorage.setItem(SAVE_KEY, solo.serializeSite(millRef.current, nowMs()));
     } catch {
       // A full or blocked localStorage shouldn't take the game down with it.
     }
@@ -95,22 +97,22 @@ export function useMill(): MillRuntime {
     if (count === 0) return;
     pendingRef.current = 0;
     setPendingWhistles(0);
-    const res = solo.applyMillCommand(millRef.current, { type: "whistle", count }, nowMs());
-    if (res.ok) setMill(res.mill);
+    const res = solo.applySiteCommand(millRef.current, { type: "click", count }, nowMs());
+    if (res.ok) setMill(res.site);
   }, [setMill]);
 
   const dispatch = useCallback(
-    (cmd: solo.MillCommand) => {
+    (cmd: solo.SiteCommand) => {
       // Bank what you've already whistled before spending, or the pile you can see
       // is a flush ahead of the pile you can spend.
       flushWhistles();
-      const res = solo.applyMillCommand(millRef.current, cmd, nowMs());
+      const res = solo.applySiteCommand(millRef.current, cmd, nowMs());
       if (!res.ok) {
         setError(res.reason);
         return;
       }
       setError(null);
-      setMill(res.mill);
+      setMill(res.site);
       save();
     },
     [flushWhistles, save, setMill],
@@ -124,7 +126,7 @@ export function useMill(): MillRuntime {
   // Truth: advance the sim so weather actually lands.
   useEffect(() => {
     const id = setInterval(() => {
-      const { mill: next, events } = solo.advance(millRef.current, nowMs());
+      const { site: next, events } = solo.advance(millRef.current, nowMs());
       if (events.length > 0 || next.checkpointAt !== millRef.current.checkpointAt) setMill(next);
     }, TICK_MS);
     return () => clearInterval(id);
@@ -165,17 +167,17 @@ export function useMill(): MillRuntime {
     setPendingWhistles(0);
     setError(null);
     setReport(null);
-    const fresh = solo.createMill({ seed: newSeed(), startedAt: nowMs() });
+    const fresh = solo.createSite({ seed: newSeed(), startedAt: nowMs() });
     setMill(fresh);
     try {
-      localStorage.setItem(SAVE_KEY, solo.serializeMill(fresh, nowMs()));
+      localStorage.setItem(SAVE_KEY, solo.serializeSite(fresh, nowMs()));
     } catch {
       /* see `save` */
     }
   }, [setMill]);
 
   const budget = useMemo(
-    () => P.add(solo.projectedPuppies(mill, now), P.mul(solo.clickYield(mill), pendingWhistles)),
+    () => Y.add(solo.projectedStock(mill, now), Y.mul(solo.clickYield(mill), pendingWhistles)),
     [mill, now, pendingWhistles],
   );
 

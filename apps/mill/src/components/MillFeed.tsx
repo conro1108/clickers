@@ -1,4 +1,4 @@
-import { solo, type Millis } from "@mill/sim";
+import { solo, type Millis } from "@clickers/sim";
 
 /** Wall-clock-ish, since a homestead has no match clock to count against. */
 function ago(at: Millis, now: Millis): string {
@@ -9,7 +9,7 @@ function ago(at: Millis, now: Millis): string {
   return `${Math.round(s / 86_400)}d`;
 }
 
-export function MillFeed({ mill, now }: { mill: solo.MillState; now: Millis }) {
+export function MillFeed({ mill, now }: { mill: solo.SiteState; now: Millis }) {
   const entries = [...mill.log].reverse().slice(0, 40);
   if (entries.length === 0) return <p className="muted">Quiet so far.</p>;
   return (

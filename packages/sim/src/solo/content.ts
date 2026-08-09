@@ -1,5 +1,5 @@
 /**
- * Content for the solo homestead — a mill you keep, not a match you finish.
+ * Content for the solo homestead — a site you keep, not a match you finish.
  *
  * Deliberately separate from the versus content set. That ladder is tuned so a
  * five-minute match can climb the whole thing; this one is tuned for a run that
@@ -7,40 +7,41 @@
  * balance change to either mode silently retunes the other.
  */
 
-import { P, type Puppies } from "../numbers.js";
+import { Y, type Yield } from "../numbers.js";
+import { named, THEME, type Shape } from "../theme.js";
 
 /**
- * The two places a mill exists in.
+ * The two places a site exists in.
  *
- * `outside` is the mill you started with — yard, sky, weather. `inside` is what
- * the Convergence opens: the nest the Ur-Chihuahua burrowed into, which you
+ * `outside` is the site you started with — yard, sky, weather. `inside` is what
+ * the Convergence opens: the core the Ur-Core burrowed into, which you
  * turn out to have been standing on the whole time. After the fold you own both at once. The outside
- * mill keeps producing whether you're looking at it or not, and the inside is a
+ * site keeps producing whether you're looking at it or not, and the inside is a
  * fresh ladder with its own shop, its own land, and its own picture.
  *
- * `MillState.world` is only ever "which one am I looking at". It has no effect
+ * `SiteState.world` is only ever "which one am I looking at". It has no effect
  * on production — see `currentRate`, which sums the lot.
  */
 export type World = "outside" | "inside";
 
 export type SoloProducerId =
-  | "pen"
+  | "patch"
   | "hand"
-  | "heatlamp"
-  | "van"
-  | "groomer"
+  | "rig"
+  | "hauler"
+  | "machine"
   | "lab"
-  | "kibble"
+  | "refinery"
   | "tower"
-  | "zeppelin"
+  | "airship"
   | "reactor"
   | "orbital"
   | "singularity"
-  | "hem"
-  | "linthand"
-  | "fleece"
+  | "fold"
+  | "deephand"
+  | "face"
   | "well"
-  | "seam"
+  | "main"
   | "chorus"
   | "heart"
   | "second";
@@ -51,32 +52,32 @@ export interface SoloProducer {
   blurb: string;
   /**
    * What a damaged one of these is, and what putting it right is called. A
-   * van breaks; a kennel hand doesn't, and a chorus of other yous really
-   * doesn't. Reads as "2 maimed" and "Patch up Kennel Hand".
+   * hauler breaks; a hand doesn't, and a chorus of other yous really
+   * doesn't. Reads as "2 maimed" and "Patch up Hand".
    */
   hurt: string;
   mend: string;
-  /** Puppies per second, per unit owned, before any multipliers. */
+  /** Yield per second, per unit owned, before any multipliers. */
   baseRate: number;
-  baseCost: Puppies;
+  baseCost: Yield;
   /** Cost of the Nth unit is baseCost * growth^N. */
   growth: number;
   /**
-   * Which of the two mills it stands on. Everything `inside` is hidden and
-   * unbuyable until the Convergence, which is enforced in `applyMillCommand`
-   * rather than only in the shop — the sim is the authority on what a mill is
+   * Which of the two sites it stands on. Everything `inside` is hidden and
+   * unbuyable until the Convergence, which is enforced in `applySiteCommand`
+   * rather than only in the shop — the sim is the authority on what a site is
    * allowed to own.
    */
   world: World;
   /**
-   * Rate scales with bedding health *as well as* being multiplied by it, so
-   * re-bedding is a live decision at the top of the ladder instead of a
-   * rounding error. Bedding only moves on weather events and purchases, so this
+   * Rate scales with condition health *as well as* being multiplied by it, so
+   * re-condition is a live decision at the top of the ladder instead of a
+   * rounding error. Condition only moves on weather events and purchases, so this
    * leaves the rate piecewise-constant — which is what the whole offline model
    * rests on.
    */
-  beddingScaled?: boolean;
-  /** Rate scales with `generation`. Every mill you handed down is still working. */
+  conditionScaled?: boolean;
+  /** Rate scales with `generation`. Every site you handed down is still working. */
   generationScaled?: boolean;
   /**
    * Stretches the gap between weather events, per unit owned, on the same
@@ -97,149 +98,101 @@ export interface SoloProducer {
  * determined player busy for several real-world days before the ladder is
  * cleared. `solo.test.ts` is the check on this curve — retune here, run that.
  */
-export const SOLO_PRODUCERS: readonly SoloProducer[] = [
+const SOLO_PRODUCER_SHAPES: readonly Shape<SoloProducer>[] = [
   {
-    id: "pen",
-    name: "Puppy Pen",
-    blurb: "A square of yard with a fence round it. Nature does the rest.",
-    hurt: "trampled",
-    mend: "Re-peg",
+    id: "patch",
     baseRate: 1,
-    baseCost: P.of(20),
+    baseCost: Y.of(20),
     growth: 1.19,
     world: "outside",
   },
   {
     id: "hand",
-    name: "Kennel Hand",
-    blurb: "Pays for themselves. Eventually.",
-    hurt: "worn out",
-    mend: "Talk round",
     baseRate: 8,
-    baseCost: P.of(280),
+    baseCost: Y.of(280),
     growth: 1.19,
     world: "outside",
   },
   {
-    id: "heatlamp",
-    name: "Heat Lamp",
-    blurb: "Warmth, on purpose, at the right time.",
-    hurt: "blown",
-    mend: "Re-bulb",
+    id: "rig",
     baseRate: 60,
-    baseCost: P.of(3_600),
+    baseCost: Y.of(3_600),
     growth: 1.19,
     world: "outside",
   },
   {
-    id: "van",
-    name: "Transport Van",
-    blurb: "Diesel-powered puppy logistics.",
-    hurt: "broken",
-    mend: "Repair",
+    id: "hauler",
     baseRate: 450,
-    baseCost: P.of(52_000),
+    baseCost: Y.of(52_000),
     growth: 1.19,
     world: "outside",
   },
   {
-    id: "groomer",
-    name: "Grooming Rig",
-    blurb: "Fluffs a hundred an hour. Do not stand in front of it.",
-    hurt: "jammed",
-    mend: "Unjam",
+    id: "machine",
     baseRate: 3_400,
-    baseCost: P.of(800_000),
+    baseCost: Y.of(800_000),
     growth: 1.19,
     world: "outside",
   },
   {
     id: "lab",
-    name: "Genetics Lab",
-    blurb: "The chihuahuas are asking questions now.",
-    hurt: "contaminated",
-    mend: "Decontaminate",
     baseRate: 26_000,
-    baseCost: P.of(12_000_000),
+    baseCost: Y.of(12_000_000),
     growth: 1.19,
     world: "outside",
   },
   {
-    id: "kibble",
-    name: "Kibble Plant",
-    blurb: "Puppies in one end, more puppies out the other. Don't ask.",
-    hurt: "clogged",
-    mend: "Unclog",
+    id: "refinery",
     baseRate: 200_000,
-    baseCost: P.of(200_000_000),
+    baseCost: Y.of(200_000_000),
     growth: 1.19,
     world: "outside",
   },
   {
     id: "tower",
-    name: "Kennel Tower",
-    blurb: "Forty floors of yard-free ambition.",
-    hurt: "shorted",
-    mend: "Rewire",
     baseRate: 1_500_000,
-    baseCost: P.of(3_200_000_000),
+    baseCost: Y.of(3_200_000_000),
     growth: 1.19,
     world: "outside",
   },
   {
-    id: "zeppelin",
-    name: "Kennel Zeppelin",
-    blurb: "Weather is a thing that happens below you now. Mostly.",
-    hurt: "grounded",
-    mend: "Get flying",
+    id: "airship",
     baseRate: 12_000_000,
-    baseCost: P.of(50_000_000_000),
+    baseCost: Y.of(50_000_000_000),
     growth: 1.19,
     world: "outside",
   },
   {
     id: "reactor",
-    name: "Fusion Whelper",
-    blurb: "Binds four small chihuahuas into one enormous one.",
-    hurt: "scrammed",
-    mend: "Restart",
     baseRate: 90_000_000,
-    baseCost: P.of(800_000_000_000),
+    baseCost: Y.of(800_000_000_000),
     growth: 1.19,
     world: "outside",
   },
   {
     id: "orbital",
-    name: "Orbital Kennel",
-    blurb: "No frost in low earth orbit. Different problems up there.",
-    hurt: "holed",
-    mend: "Reseal",
     baseRate: 700_000_000,
-    baseCost: P.of(13_000_000_000_000),
+    baseCost: Y.of(13_000_000_000_000),
     growth: 1.19,
     world: "outside",
   },
   {
     id: "singularity",
-    name: "Chihuahua Singularity",
-    blurb: "Produces chihuahuas that have always already been born.",
-    hurt: "collapsed",
-    mend: "Re-open",
     baseRate: 5_500_000_000,
-    baseCost: P.of(200_000_000_000_000),
+    baseCost: Y.of(200_000_000_000_000),
     growth: 1.19,
     world: "outside",
   },
 
-  // --- Inside the nest -----------------------------------------------------
+  // --- Inside the core -----------------------------------------------------
   //
-  // The second mill, and the reason the Convergence is worth reaching: a ladder
-  // of its own, standing in bedding rather than dirt, bought with the puppies
-  // the old mill is still turning out while you're down here.
+  // The second site, and the reason the Convergence is worth reaching: a ladder
+  // of its own, standing in condition rather than dirt, bought with the stock
+  // the old site is still turning out while you're down here.
   //
   // It used to be four rungs bolted onto the end of the outside ladder, which
   // made the whole endgame "four more rows in the same shop". Eight now, over
-  // the same span from the Chihuahua Singularity to the Second Chihuahua — so
+  // the same span from the Core Singularity to the Second Core — so
   // no rung moved at either end and the run is the length it always was, but the
   // inside is a climb you can spend time on rather than four purchases. Cost
   // steps by ~3.8x and output by ~2.8x per rung, which keeps payback rising the
@@ -247,7 +200,7 @@ export const SOLO_PRODUCERS: readonly SoloProducer[] = [
   //
   // The first one is deliberately affordable more or less on arrival. Walking
   // into a new world and being able to buy the bottom of its shop is the point:
-  // it's a place you start over in, not a wing of the old mill.
+  // it's a place you start over in, not a wing of the old site.
   //
   // **The ladder is a descent.** Each rung is further in than the one above it,
   // through four strata of two: the hem you came in at, the packed fleece under
@@ -257,115 +210,85 @@ export const SOLO_PRODUCERS: readonly SoloProducer[] = [
   // cream, and buying into a new stratum is a small reveal, which the endgame
   // had none of after the fold.
   {
-    id: "hem",
-    name: "Hem Hollow",
-    blurb: "Work a hollow into the hem and it packs down around you. Gather what it pushes out.",
-    hurt: "collapsed",
-    mend: "Re-line",
+    id: "fold",
     baseRate: 15_000_000_000,
-    baseCost: P.of(750_000_000_000_000),
+    baseCost: Y.of(750_000_000_000_000),
     growth: 1.19,
     world: "inside",
     // The one thing at the top of the ladder that feeds back into the land
     // half, which otherwise caps at four buildings and stops mattering.
     //
     // The calming and the production are the same act rather than two facts
-    // about one row: you burrow into the hem, the nest packs down and pushes
-    // the loose down out ahead of you, you gather it — and a nest with somebody
-    // already settled in it is a nest that turns over less. That's the stirring
+    // about one row: you burrow into the hem, the core packs down and pushes
+    // the loose down out ahead of you, you gather it — and a core with somebody
+    // already settled in it is a core that turns over less. That's the stirring
     // mitigated by the thing that feeds you.
     calmPerUnit: 0.004,
   },
   {
-    id: "linthand",
-    name: "Lint Hand",
-    // The inside's Kennel Hand, and deliberately at the same height on the
+    id: "deephand",
+    // The inside's Hand, and deliberately at the same height on the
     // ladder: outside, rung 2 is the first people you hire, and it's most of
-    // what makes that mill feel worked rather than automated. The inside had no
+    // what makes that site feel worked rather than automated. The inside had no
     // people until the Chorus at rung 6 — three quarters of the way up a ladder
     // that takes days — so for almost the whole descent the place was machinery
     // running in an empty building. Cheap and early is the whole point.
-    blurb: "Someone has to be down here with you. They bring their own torch.",
-    hurt: "trapped",
-    mend: "Pull out",
     baseRate: 42_000_000_000,
-    baseCost: P.of(2_800_000_000_000_000),
+    baseCost: Y.of(2_800_000_000_000_000),
     growth: 1.19,
     world: "inside",
   },
   {
-    id: "fleece",
-    name: "Fleece Face",
-    blurb: "Past the hem it goes solid. Cut a face into it and work back.",
-    hurt: "caved in",
-    mend: "Shore up",
+    id: "face",
     baseRate: 120_000_000_000,
-    baseCost: P.of(10_600_000_000_000_000),
+    baseCost: Y.of(10_600_000_000_000_000),
     growth: 1.19,
     world: "inside",
   },
   {
     id: "well",
-    name: "Down Well",
-    blurb: "Sunk through the packed fleece. It fills from the yard you left up top.",
-    hurt: "run dry",
-    mend: "Re-bore",
     baseRate: 340_000_000_000,
-    baseCost: P.of(40_000_000_000_000_000),
+    baseCost: Y.of(40_000_000_000_000_000),
     growth: 1.19,
     world: "inside",
-    // A well is bedding-scaled with the reason drawn on it: it fills from
-    // above, and above is the mill you left standing on its own ground. Let
-    // that bedding go and the wells come up short, which is what puts the yard
+    // A well is condition-scaled with the reason drawn on it: it fills from
+    // above, and above is the site you left standing on its own ground. Let
+    // that condition go and the wells come up short, which is what puts the yard
     // back on the table at the top of the ladder.
-    beddingScaled: true,
+    conditionScaled: true,
   },
   {
-    id: "seam",
-    name: "Seam Main",
-    blurb: "Under the fleece it is all seams. Unpick one and it feeds you instead.",
-    hurt: "split",
-    mend: "Restitch",
+    id: "main",
     baseRate: 960_000_000_000,
-    baseCost: P.of(150_000_000_000_000_000),
+    baseCost: Y.of(150_000_000_000_000_000),
     growth: 1.19,
     world: "inside",
   },
   {
     id: "chorus",
-    name: "Chorus",
-    blurb: "The other yous, still working. Down here you can hear them.",
-    hurt: "silenced",
-    mend: "Call back",
     baseRate: 2_700_000_000_000,
-    baseCost: P.of(560_000_000_000_000_000),
+    baseCost: Y.of(560_000_000_000_000_000),
     growth: 1.19,
     world: "inside",
     generationScaled: true,
   },
   {
     id: "heart",
-    name: "Warm Heart",
-    blurb: "Every nest has a warm spot at the middle. Something has to be in it.",
-    hurt: "gone cold",
-    mend: "Warm through",
     baseRate: 7_700_000_000_000,
-    baseCost: P.of(2_100_000_000_000_000_000),
+    baseCost: Y.of(2_100_000_000_000_000_000),
     growth: 1.19,
     world: "inside",
   },
   {
     id: "second",
-    name: "Second Chihuahua",
-    blurb: "Curled in the warm spot. Nobody has asked what it is curled around.",
-    hurt: "gone quiet",
-    mend: "Tend",
     baseRate: 22_000_000_000_000,
-    baseCost: P.of(8_000_000_000_000_000_000),
+    baseCost: Y.of(8_000_000_000_000_000_000),
     growth: 1.19,
     world: "inside",
   },
 ];
+
+export const SOLO_PRODUCERS: readonly SoloProducer[] = named(SOLO_PRODUCER_SHAPES, THEME.soloProducers, "producer");
 
 /** The rungs that stand in one world or the other, in ladder order. */
 export function producersIn(world: World): readonly SoloProducer[] {
@@ -385,13 +308,13 @@ export type SoloUpgradeEffect =
   | { kind: "global_mult"; factor: number }
   | { kind: "producer_mult"; producer: SoloProducerId; factor: number }
   /**
-   * Ties whistling to the mill you've built: a whistle is worth this many seconds of
+   * Ties clicking to the site you've built: a click is worth this many seconds of
    * production. Without it, clicking is dead weight within the first hour and
    * the game stops having a verb.
    *
    * The seconds are deliberately fractional. This effect is a feedback loop —
-   * income scales with the rate it's spent on — so at a whole second per whistle a
-   * player clicking twice a second is worth twice the entire mill, and the
+   * income scales with the rate it's spent on — so at a whole second per click a
+   * player clicking twice a second is worth twice the entire site, and the
    * whole ladder falls over in half an hour. Everything here is meant to sum to
    * a couple of seconds at most, even fully perked.
    */
@@ -401,7 +324,7 @@ export interface SoloUpgrade {
   id: string;
   name: string;
   blurb: string;
-  cost: Puppies;
+  cost: Yield;
   effect: SoloUpgradeEffect;
   /** Hidden until the player owns this many of the producer. */
   requires?: { producer: SoloProducerId; count: number };
@@ -416,10 +339,10 @@ export interface SoloUpgrade {
  * every time: an upgrade priced for a 170M tier is a giveaway once that tier
  * costs 1.1B, and giveaways are how a day-long run turns into an hour.
  */
-function fleetCost(id: SoloProducerId, count: number, share = 1): Puppies {
+function fleetCost(id: SoloProducerId, count: number, share = 1): Yield {
   const prod = SOLO_PRODUCERS.find((p) => p.id === id)!;
   const units = (Math.pow(prod.growth, count) - 1) / (prod.growth - 1);
-  return P.of(Math.ceil(prod.baseCost * units * share));
+  return Y.of(Math.ceil(prod.baseCost * units * share));
 }
 
 /**
@@ -439,31 +362,11 @@ function fleetCost(id: SoloProducerId, count: number, share = 1): Puppies {
  * All three are priced against the fleet you must already own.
  */
 function tierUpgrades(): SoloUpgrade[] {
-  const naming: Record<SoloProducerId, [string, string, string]> = {
-    pen: ["Straw Bedding", "Underfloor Heating", "Show Lineage"],
-    hand: ["Overtime Pay", "Profit Sharing", "Equity Stake"],
-    heatlamp: ["Ceramic Bulbs", "Thermostats", "Whole-Yard Radiant"],
-    van: ["Turbo Diesel", "Air Suspension", "Six Wheels"],
-    groomer: ["Wider Head", "Night Shift", "Twin Drums"],
-    lab: ["Peer Review", "Tenure", "The Prize"],
-    kibble: ["Twin Extruders", "Continuous Flow", "Own Rendering Line"],
-    tower: ["Express Lifts", "Kennel Telemetry", "Sky Lobby"],
-    zeppelin: ["Helium Refit", "Jet Stream Permit", "Above the Weather"],
-    reactor: ["Magnetic Confinement", "Tritium Blanket", "Ignition"],
-    orbital: ["Solar Sails", "Second Belt", "Lagrange Station"],
-    singularity: ["Closed Timelike Litter", "Retroactive Yield", "Event Horizon Lease"],
-    hem: ["Deeper Burrow", "It Packs Faster", "It Stops Minding"],
-    linthand: ["Second Shift", "Danger Money", "They Live Down Here Now"],
-    fleece: ["Longwall Cut", "Deep Adit", "The Face Goes Down"],
-    well: ["Deeper Bore", "Yard Drainage", "It Never Runs Dry"],
-    seam: ["Longer Stitch", "Unpick It All", "The Whole Seam"],
-    chorus: ["Perfect Unison", "Every Generation", "All At Once"],
-    heart: ["Bank the Warm", "Warm Through", "It Was Always Warm"],
-    second: ["Breeding Stock", "It's Started", "It's Awake"],
-  };
   const out: SoloUpgrade[] = [];
   for (const prod of SOLO_PRODUCERS) {
-    const [first, second, third] = naming[prod.id];
+    const naming = THEME.soloTierUpgrades[prod.id];
+    if (!naming) throw new Error(`theme has no tier upgrade names for "${prod.id}"`);
+    const [first, second, third] = naming;
     out.push({
       id: `${prod.id}_x2a`,
       name: first,
@@ -492,55 +395,45 @@ function tierUpgrades(): SoloUpgrade[] {
   return out;
 }
 
-const CLICK_UPGRADES: SoloUpgrade[] = [
+const CLICK_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
   {
-    id: "silver_whistle",
-    name: "Silver Whistle",
-    blurb: "Whistling, but with intent. Whistles x3.",
-    cost: P.of(100),
+    id: "tool_1",
+    cost: Y.of(100),
     effect: { kind: "click_mult", factor: 3 },
   },
   {
-    id: "two_tone_whistle",
-    name: "Two-Tone Whistle",
-    blurb: "Both fingers. Whistles x5.",
+    id: "tool_2",
     cost: fleetCost("hand", 5),
     effect: { kind: "click_mult", factor: 5 },
     requires: { producer: "hand", count: 5 },
   },
   {
-    id: "gold_whistle",
-    name: "Ceremonial Gold Whistle",
-    blurb: "Impractical. Effective. Whistles x8.",
-    cost: fleetCost("van", 10),
+    id: "tool_3",
+    cost: fleetCost("hauler", 10),
     effect: { kind: "click_mult", factor: 8 },
-    requires: { producer: "van", count: 10 },
+    requires: { producer: "hauler", count: 10 },
   },
   {
-    id: "treats",
-    name: "Pocketful of Treats",
-    blurb: "Each whistle is also worth 0.25 seconds of production.",
+    id: "tool_4",
     cost: fleetCost("lab", 5, 1.5),
     effect: { kind: "click_from_rate", seconds: 0.25 },
     requires: { producer: "lab", count: 5 },
   },
   {
-    id: "squeaker",
-    name: "The Squeaky Toy",
-    blurb: "Each whistle is worth 0.5 more seconds of production.",
+    id: "tool_5",
     cost: fleetCost("tower", 10, 1.5),
     effect: { kind: "click_from_rate", seconds: 0.5 },
     requires: { producer: "tower", count: 10 },
   },
   {
-    id: "big_lap",
-    name: "The Big Lap",
-    blurb: "Each whistle is worth 0.75 more seconds of production.",
+    id: "tool_6",
     cost: fleetCost("orbital", 10, 1.5),
     effect: { kind: "click_from_rate", seconds: 0.75 },
     requires: { producer: "orbital", count: 10 },
   },
 ];
+
+const CLICK_UPGRADES: SoloUpgrade[] = [...named(CLICK_UPGRADE_SHAPES, THEME.soloClickUpgrades, "upgrade")];
 
 /**
  * Global multipliers deliberately kept modest, and deliberately **dear**.
@@ -551,7 +444,7 @@ const CLICK_UPGRADES: SoloUpgrade[] = [
  * production, so the thing that permanently lifts every rung of the ladder at
  * once cost less than the rung you were standing on. These are now priced in the
  * thousands of seconds each: a global is something you stop and save for, on
- * roughly the scale the Ur-Chihuahua always was, and passing one over to keep
+ * roughly the scale the Ur-Core always was, and passing one over to keep
  * climbing has to be a real option.
  *
  * The shares below look arbitrary because they are: each is tuned so the upgrade
@@ -560,59 +453,45 @@ const CLICK_UPGRADES: SoloUpgrade[] = [
  * `solo.test.ts` holds the floor; `probe` in this package's history is how the
  * band was measured.
  */
-const GLOBAL_UPGRADES: SoloUpgrade[] = [
+const GLOBAL_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
   {
-    id: "better_kibble",
-    name: "Better Kibble",
-    blurb: "Everything produces +30%.",
+    id: "boost_1",
     cost: fleetCost("hand", 15, 340),
     effect: { kind: "global_mult", factor: 1.3 },
     requires: { producer: "hand", count: 15 },
   },
   {
-    id: "rest_rotation",
-    name: "Rest Rotation",
-    blurb: "Everything produces +30%.",
-    cost: fleetCost("heatlamp", 25, 190),
+    id: "boost_2",
+    cost: fleetCost("rig", 25, 190),
     effect: { kind: "global_mult", factor: 1.3 },
-    requires: { producer: "heatlamp", count: 25 },
+    requires: { producer: "rig", count: 25 },
   },
   {
-    id: "designer_genes",
-    name: "Designer Genes",
-    blurb: "Everything produces +50%. Don't read the label.",
-    cost: fleetCost("groomer", 20, 42),
+    id: "boost_3",
+    cost: fleetCost("machine", 20, 42),
     effect: { kind: "global_mult", factor: 1.5 },
-    requires: { producer: "groomer", count: 20 },
+    requires: { producer: "machine", count: 20 },
   },
   {
     id: "co_op",
-    name: "Breeders' Co-op",
-    blurb: "Everything produces +50%.",
-    cost: fleetCost("kibble", 25, 14),
+    cost: fleetCost("refinery", 25, 14),
     effect: { kind: "global_mult", factor: 1.5 },
-    requires: { producer: "kibble", count: 25 },
+    requires: { producer: "refinery", count: 25 },
   },
   {
-    id: "kennel_club",
-    name: "Kennel Club Charter",
-    blurb: "Everything produces +50%. Paperwork was involved.",
-    cost: fleetCost("zeppelin", 25, 5),
+    id: "charter",
+    cost: fleetCost("airship", 25, 5),
     effect: { kind: "global_mult", factor: 1.5 },
-    requires: { producer: "zeppelin", count: 25 },
+    requires: { producer: "airship", count: 25 },
   },
   {
     id: "monopoly",
-    name: "Vertical Integration",
-    blurb: "Everything produces x2.",
     cost: fleetCost("reactor", 25, 3),
     effect: { kind: "global_mult", factor: 2 },
     requires: { producer: "reactor", count: 25 },
   },
   {
-    id: "habitat_charter",
-    name: "Habitat Charter",
-    blurb: "Everything produces x2.",
+    id: "habitat",
     cost: fleetCost("orbital", 25, 6),
     effect: { kind: "global_mult", factor: 2 },
     requires: { producer: "orbital", count: 25 },
@@ -620,7 +499,7 @@ const GLOBAL_UPGRADES: SoloUpgrade[] = [
   /**
    * The Convergence, on a button the player chose to press.
    *
-   * Gated at ten Chihuahua Singularities rather than twenty-five, which is what
+   * Gated at ten Core Singularities rather than twenty-five, which is what
    * pulls the endgame from five days of play to three and puts the fold inside
    * a single dedicated first run — the constraint the whole endgame design is
    * binding on. It still costs about a thousand seconds of production at the
@@ -628,8 +507,7 @@ const GLOBAL_UPGRADES: SoloUpgrade[] = [
    * well clear of the sixty-second floor `solo.test.ts` guards.
    */
   {
-    id: "ur_chihuahua",
-    name: "The Ur-Chihuahua",
+    id: "ur_form",
     /**
      * The only upgrade in the game that doesn't say what it does.
      *
@@ -639,44 +517,37 @@ const GLOBAL_UPGRADES: SoloUpgrade[] = [
      * Fertilizer at the exact moment the game most needs it off that shelf.
      * It still doubles everything; the shop just doesn't lead with it.
      */
-    blurb: "The first chihuahua. Everything since has been a copy.",
     cost: fleetCost("singularity", 10),
     effect: { kind: "global_mult", factor: 2 },
     requires: { producer: "singularity", count: 10 },
   },
   {
     id: "ceiling_rights",
-    name: "Right of Way Down",
-    blurb: "Nothing between you and the middle of it. Everything produces x2.",
-    cost: fleetCost("hem", 25, 5),
+    cost: fleetCost("fold", 25, 5),
     effect: { kind: "global_mult", factor: 2 },
-    requires: { producer: "hem", count: 25 },
+    requires: { producer: "fold", count: 25 },
   },
   {
     id: "deep_rights",
-    name: "Deed to the Deep",
-    blurb: "Whatever's further down was always yours. Everything produces x2.",
     cost: fleetCost("well", 25, 9),
     effect: { kind: "global_mult", factor: 2 },
     requires: { producer: "well", count: 25 },
   },
   {
     id: "unbroken_line",
-    name: "Unbroken Line",
-    blurb: "Nobody has stopped breeding. Everything produces x2.",
     cost: fleetCost("chorus", 25, 2),
     effect: { kind: "global_mult", factor: 2 },
     requires: { producer: "chorus", count: 25 },
   },
   {
-    id: "third_chihuahua",
-    name: "The Third Chihuahua",
-    blurb: "Everything produces x2. Try not to work out where it is.",
+    id: "third_form",
     cost: fleetCost("second", 25),
     effect: { kind: "global_mult", factor: 2 },
     requires: { producer: "second", count: 25 },
   },
 ];
+
+const GLOBAL_UPGRADES: SoloUpgrade[] = [...named(GLOBAL_UPGRADE_SHAPES, THEME.soloGlobalUpgrades, "upgrade")];
 
 export const SOLO_UPGRADES: readonly SoloUpgrade[] = [
   ...CLICK_UPGRADES,
@@ -702,19 +573,19 @@ export type LandId =
   | "drainage"
   | "pest_control"
   | "insurance"
-  | "padded_seams"
-  | "lullaby_rig"
-  | "fresh_ticking"
-  | "lint_reclaim";
+  | "inner_beds"
+  | "inner_calm"
+  | "inner_lining"
+  | "inner_reclaim";
 
 export type LandRole =
   /** Cuts how many units a disaster knocks offline. */
   | "breakage"
-  /** Cuts how much bedding health a disaster costs you. */
-  | "bedding"
+  /** Cuts how much condition health a disaster costs you. */
+  | "condition"
   /** Stretches the gap between disasters. */
   | "frequency"
-  /** Pays out puppies when something goes wrong. */
+  /** Pays out stock when something goes wrong. */
   | "payout";
 
 export interface Land {
@@ -728,105 +599,91 @@ export interface Land {
    * doing business, not something you can buy your way out of.
    */
   perLevel: number;
-  baseCost: Puppies;
+  baseCost: Yield;
   growth: number;
   /**
-   * Which mill it defends. The `inside` set is only buildable once the world has
+   * Which site it defends. The `inside` set is only buildable once the world has
    * folded, and it's what the inside's Upkeep panel sells instead of the four
    * that are about a sky.
    */
   world: World;
 }
 
-export const LANDS: readonly Land[] = [
+const LAND_SHAPES: readonly Shape<Land>[] = [
   {
     id: "windbreak",
-    name: "Windbreak",
-    blurb: "A wall of poplars. Storms take less of the kit.",
     role: "breakage",
     perLevel: 0.14,
-    baseCost: P.of(600),
+    baseCost: Y.of(600),
     growth: 1.9,
     world: "outside",
   },
   {
     id: "drainage",
-    name: "Drainage Ditches",
-    blurb: "Water leaves instead of sitting there rotting the bedding.",
-    role: "bedding",
+    role: "condition",
     perLevel: 0.14,
-    baseCost: P.of(2_500),
+    baseCost: Y.of(2_500),
     growth: 1.9,
     world: "outside",
   },
   {
     id: "pest_control",
-    name: "Pest Control Contract",
-    blurb: "Someone else's problem now. Trouble comes around less often.",
     role: "frequency",
     perLevel: 0.1,
-    baseCost: P.of(9_000),
+    baseCost: Y.of(9_000),
     growth: 2.1,
     world: "outside",
   },
   {
     id: "insurance",
-    name: "Kennel Insurance",
-    blurb: "Doesn't stop anything. Does cut you a cheque afterwards.",
     role: "payout",
     perLevel: 0.12,
-    baseCost: P.of(40_000),
+    baseCost: Y.of(40_000),
     growth: 1.9,
     world: "outside",
   },
-  // Inside the nest there is no sky, so the four above stop being about
+  // Inside the core there is no sky, so the four above stop being about
   // weather and the four below are what the second axis gets instead. Same
-  // roles, one for one, priced at the scale of the mill that can see them: the
+  // roles, one for one, priced at the scale of the site that can see them: the
   // first level of any of them is a few minutes of production at the moment the
   // world folds.
   {
-    id: "padded_seams",
-    name: "Padded Seams",
-    blurb: "Let the nest close where it wants to. It swallows less of the kit.",
+    id: "inner_beds",
     role: "breakage",
     perLevel: 0.13,
-    baseCost: P.of(500_000_000_000_000),
+    baseCost: Y.of(500_000_000_000_000),
     growth: 1.9,
     world: "inside",
   },
   {
-    id: "fresh_ticking",
-    name: "Fresh Ticking",
-    blurb: "Re-line it before it goes. What's underneath keeps its warmth.",
-    role: "bedding",
+    id: "inner_lining",
+    role: "condition",
     perLevel: 0.13,
-    baseCost: P.of(800_000_000_000_000),
+    baseCost: Y.of(800_000_000_000_000),
     growth: 1.9,
     world: "inside",
   },
   {
-    id: "lullaby_rig",
-    name: "Lullaby Rig",
-    blurb: "Convinces it that it is three in the morning. It stirs less often.",
+    id: "inner_calm",
     role: "frequency",
     perLevel: 0.09,
-    baseCost: P.of(1_500_000_000_000_000),
+    baseCost: Y.of(1_500_000_000_000_000),
     growth: 2.1,
     world: "inside",
   },
   {
-    id: "lint_reclaim",
-    name: "Lint Reclamation",
-    blurb: "Whatever it sheds when it turns over, you catch and sell.",
+    id: "inner_reclaim",
     role: "payout",
     perLevel: 0.12,
-    baseCost: P.of(3_000_000_000_000_000),
+    baseCost: Y.of(3_000_000_000_000_000),
     growth: 1.9,
     world: "inside",
   },
 ];
 
-/** The buildings that defend one mill or the other. */
+export const LANDS: readonly Land[] = named(LAND_SHAPES, THEME.lands, "land");
+
+/** The buildings that defend one site or the other. */
 export function landsIn(world: World): readonly Land[] {
   return LANDS.filter((l) => l.world === world);
 }
@@ -839,36 +696,36 @@ export const LAND_BY_ID: Record<LandId, Land> = Object.fromEntries(
 export const MAX_MITIGATION = 0.85;
 
 // ---------------------------------------------------------------------------
-// Bedding, damage, and the cost of putting things right.
+// Condition, damage, and the cost of putting things right.
 // ---------------------------------------------------------------------------
 
-/** Base puppies per whistle, before any multipliers. */
-export const SOLO_BASE_CLICK = P.of(1);
+/** Base stock per click, before any multipliers. */
+export const SOLO_BASE_CLICK = Y.of(1);
 
 /**
- * Bedding health multiplies your whole mill and only ever goes down on its own.
+ * Condition health multiplies your whole site and only ever goes down on its own.
  * Nothing brings it back but spending — that's the "force of nature" bargain:
  * the land degrades, and staying productive means paying to hold it steady.
  */
-export const MAX_BEDDING = 1;
+export const MAX_CONDITION = 1;
 
-/** Floor on bedding health, so a long time away is a setback and never a wipe. */
-export const MIN_BEDDING = 0.25;
+/** Floor on condition health, so a long time away is a setback and never a wipe. */
+export const MIN_CONDITION = 0.25;
 
 /**
- * Restoring bedding is priced against your production rate rather than a fixed
+ * Restoring condition is priced against your production rate rather than a fixed
  * table, so it stays a real decision at every scale instead of becoming free
  * the moment you out-grow it.
  *
- * The number is a payback time: fresh bedding buys back its own price in this
+ * The number is a payback time: fresh condition buys back its own price in this
  * many seconds. What it competes with is the next rung of the ladder, and that
  * pays back in one to five minutes for most of a run — so anything much above
  * five minutes here is a button no one should ever press, which is what twenty
  * minutes was. It also has to stay in the same league as `REPAIR_SECONDS`, or
  * the two halves of the same mechanic quote different prices for the same lost
- * puppy.
+ * unit.
  */
-export const BEDDING_RESTORE_SECONDS = 300;
+export const CONDITION_RESTORE_SECONDS = 300;
 
 /** Discount on the quoted repair price. See `repairCost` for what's quoted. */
 export const SOLO_REPAIR_COST_FRACTION = 0.7;
@@ -879,7 +736,7 @@ export const SOLO_REPAIR_COST_FRACTION = 0.7;
  * bites harder without touching how often anything breaks.
  *
  * `SOLO_REPAIR_COST_FRACTION` discounts this, so the real payback is about five
- * minutes: the same league as putting the bedding right, and near enough to the
+ * minutes: the same league as putting the condition right, and near enough to the
  * ladder's own payback that fixing what broke is usually the better buy.
  */
 export const REPAIR_SECONDS = 450;

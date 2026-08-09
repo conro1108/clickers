@@ -9,7 +9,7 @@ import {
   type ProducerId,
   type Upgrade,
 } from "./content.js";
-import { P, ms, rate as asRate, type Millis, type Puppies, type Rate } from "./numbers.js";
+import { Y, ms, rate as asRate, type Millis, type Yield, type Rate } from "./numbers.js";
 import type { ActiveEffect, PlayerState } from "./state.js";
 
 export function isActive(e: ActiveEffect, t: Millis): boolean {
@@ -30,15 +30,15 @@ export function producerMultiplier(p: PlayerState, id: ProducerId): number {
   return m;
 }
 
-export function clickYield(p: PlayerState): Puppies {
+export function clickYield(p: PlayerState): Yield {
   let m = 1;
   for (const u of ownedUpgrades(p)) {
     if (u.effect.kind === "click_mult") m *= u.effect.factor;
   }
-  return P.mul(BASE_CLICK, m);
+  return Y.mul(BASE_CLICK, m);
 }
 
-/** Units of `id` that are actually turning out puppies. */
+/** Units of `id` that are actually turning out stock. */
 export function workingCount(p: PlayerState, id: ProducerId): number {
   return Math.max(0, (p.producers[id] ?? 0) - (p.broken[id] ?? 0));
 }
@@ -71,7 +71,7 @@ export function brokenRate(p: PlayerState): Rate {
 
 /**
  * Combined slow multiplier at `t`, floored so stacked sabotage can never zero
- * a mill out (VISION.md: no knockouts).
+ * a site out (VISION.md: no knockouts).
  */
 export function slowMultiplier(p: PlayerState, t: Millis): number {
   let m = 1;
@@ -101,24 +101,24 @@ function rateBoundaries(p: PlayerState, from: Millis, to: Millis): Millis[] {
   return [...out].sort((a, b) => a - b).map(ms);
 }
 
-/** Puppies produced by this player over [from, to]. */
-function produced(p: PlayerState, from: Millis, to: Millis): Puppies {
-  if (to <= from) return P.zero;
-  let acc = P.zero;
+/** Yield produced by this player over [from, to]. */
+function produced(p: PlayerState, from: Millis, to: Millis): Yield {
+  if (to <= from) return Y.zero;
+  let acc = Y.zero;
   let cursor = from;
   for (const boundary of [...rateBoundaries(p, from, to), to]) {
-    acc = P.add(acc, P.overTime(rateAt(p, cursor), boundary - cursor));
+    acc = Y.add(acc, Y.overTime(rateAt(p, cursor), boundary - cursor));
     cursor = boundary;
   }
   return acc;
 }
 
-export function puppiesAt(p: PlayerState, t: Millis): Puppies {
-  return P.add(p.puppies, produced(p, p.checkpointAt, t));
+export function stockAt(p: PlayerState, t: Millis): Yield {
+  return Y.add(p.stock, produced(p, p.checkpointAt, t));
 }
 
-export function raisedAt(p: PlayerState, t: Millis): Puppies {
-  return P.add(p.raised, produced(p, p.checkpointAt, t));
+export function producedAt(p: PlayerState, t: Millis): Yield {
+  return Y.add(p.produced, produced(p, p.checkpointAt, t));
 }
 
 /**
@@ -129,8 +129,8 @@ export function raisedAt(p: PlayerState, t: Millis): Puppies {
 export function checkpoint(p: PlayerState, t: Millis): PlayerState {
   return {
     ...p,
-    puppies: puppiesAt(p, t),
-    raised: raisedAt(p, t),
+    stock: stockAt(p, t),
+    produced: producedAt(p, t),
     checkpointAt: t,
     effects: p.effects.filter((e) => isActive(e, t) && (e.kind !== "shield" || e.power > 0)),
   };
@@ -141,53 +141,53 @@ export function checkpoint(p: PlayerState, t: Millis): PlayerState {
 // ---------------------------------------------------------------------------
 
 /** Cost of the next `qty` units when `owned` are already owned. */
-export function producerCost(id: ProducerId, owned: number, qty = 1): Puppies {
+export function producerCost(id: ProducerId, owned: number, qty = 1): Yield {
   const { baseCost, growth } = PRODUCER_BY_ID[id];
   const geometric = (Math.pow(growth, qty) - 1) / (growth - 1);
-  return P.of(Math.ceil(baseCost * Math.pow(growth, owned) * geometric));
+  return Y.of(Math.ceil(baseCost * Math.pow(growth, owned) * geometric));
 }
 
 /** Repeatable actions (sabotage, defense) get pricier each time you use them. */
-export function repeatCost(baseCost: Puppies, growth: number, timesUsed: number): Puppies {
-  return P.of(Math.ceil(baseCost * Math.pow(growth, timesUsed)));
+export function repeatCost(baseCost: Yield, growth: number, timesUsed: number): Yield {
+  return Y.of(Math.ceil(baseCost * Math.pow(growth, timesUsed)));
 }
 
 /**
- * What it costs to swing at a mill producing `targetRate`.
+ * What it costs to swing at a site producing `targetRate`.
  *
  * Priced off the target's *clean* rate — what they'd be making with nothing
  * broken and no weather on them — rather than what they're producing right now.
  * If damage made the next hit cheaper, stacking sabotage would snowball toward
  * exactly the knockout VISION.md rules out.
  */
-export function attackCost(attack: Attack, timesUsed: number, targetRate: Rate): Puppies {
+export function attackCost(attack: Attack, timesUsed: number, targetRate: Rate): Yield {
   const base = Math.max(attack.baseCost, attack.costPerRate * targetRate);
-  return P.of(Math.ceil(base * Math.pow(attack.growth, timesUsed)));
+  return Y.of(Math.ceil(base * Math.pow(attack.growth, timesUsed)));
 }
 
 /**
  * What it costs to bring every broken unit of `id` back online. Priced off the
  * units you'd be re-buying at your current count, discounted — repairing beats
- * rebuilding, but it's still puppies that didn't go into growth.
+ * rebuilding, but it's still stock that didn't go into growth.
  */
-export function repairCost(p: PlayerState, id: ProducerId): Puppies {
+export function repairCost(p: PlayerState, id: ProducerId): Yield {
   const broken = Math.min(p.broken[id] ?? 0, p.producers[id] ?? 0);
-  if (broken <= 0) return P.zero;
+  if (broken <= 0) return Y.zero;
   const gross = producerCost(id, workingCount(p, id), broken);
-  return P.of(Math.ceil(gross * REPAIR_COST_FRACTION));
+  return Y.of(Math.ceil(gross * REPAIR_COST_FRACTION));
 }
 
 /** Total outstanding repair bill across every producer type. */
-export function totalRepairCost(p: PlayerState): Puppies {
+export function totalRepairCost(p: PlayerState): Yield {
   let total = 0;
   for (const prod of PRODUCERS) total += repairCost(p, prod.id);
-  return P.of(total);
+  return Y.of(total);
 }
 
 /** How many of `id` the player can afford right now. */
-export function affordableCount(p: PlayerState, id: ProducerId, budget: Puppies): number {
+export function affordableCount(p: PlayerState, id: ProducerId, budget: Yield): number {
   const owned = p.producers[id] ?? 0;
   let qty = 0;
-  while (qty < 1000 && P.gte(budget, producerCost(id, owned, qty + 1))) qty++;
+  while (qty < 1000 && Y.gte(budget, producerCost(id, owned, qty + 1))) qty++;
   return qty;
 }

@@ -1,4 +1,4 @@
-import { format, opponentView, type MatchState, type Millis, type PlayerId } from "@mill/sim";
+import { format, opponentView, type MatchState, type Millis, type PlayerId } from "@clickers/sim";
 
 /**
  * Everything shown here comes from `opponentView`, which is the only thing the

@@ -1,0 +1,293 @@
+/**
+ * Every word the puppy game puts in front of a player that the shared engine
+ * needs to know about.
+ *
+ * The engine in packages/sim owns the ids, the numbers and the shape of the
+ * ladder; this file owns what any of it is called. Both games are the same
+ * table underneath, so a balance change happens once, in the engine, and lands
+ * here as nothing at all.
+ *
+ * Reached through the "@clickers/theme" alias in vite.config.ts and
+ * tsconfig.json. That alias is the only thing that makes this build the puppy
+ * game rather than the potato one.
+ */
+import type { ThemeStrings } from "@clickers/sim";
+
+export const STRINGS: ThemeStrings = {
+  producers: {
+    patch: {
+      name: "Puppy Pen",
+      blurb: "A square of yard with a fence round it. Nature does the rest.",
+      hurt: "trampled",
+      mend: "Re-peg",
+    },
+    hand: {
+      name: "Kennel Hand",
+      blurb: "Pays for themselves. Eventually.",
+      hurt: "worn out",
+      mend: "Talk round",
+    },
+    rig: { name: "Heat Lamp", blurb: "Warmth, on purpose, at the right time.", hurt: "blown", mend: "Re-bulb" },
+    hauler: { name: "Transport Van", blurb: "Diesel-powered puppy logistics.", hurt: "broken", mend: "Repair" },
+    machine: {
+      name: "Grooming Rig",
+      blurb: "Fluffs a hundred an hour. Do not stand in front of it.",
+      hurt: "jammed",
+      mend: "Unjam",
+    },
+    lab: {
+      name: "Genetics Lab",
+      blurb: "The chihuahuas are asking questions now.",
+      hurt: "contaminated",
+      mend: "Decontaminate",
+    },
+  },
+  upgrades: {
+    tool_1: { name: "Silver Whistle", blurb: "Whistling, but with intent. Clicks x3." },
+    tool_2: { name: "Two-Tone Whistle", blurb: "Both fingers. Clicks x5." },
+    tool_3: { name: "Ceremonial Gold Whistle", blurb: "Impractical. Effective. Clicks x8." },
+    mult_patch: { name: "Straw Bedding", blurb: "Pens produce twice as much." },
+    mult_hand: { name: "Overtime Pay", blurb: "Kennel Hands produce twice as much." },
+    boost_1: { name: "Better Kibble", blurb: "All producers +50%." },
+    mult_rig: { name: "Ceramic Bulbs", blurb: "Heat lamps produce twice as much." },
+    boost_2: { name: "Rest Rotation", blurb: "All producers +50%." },
+    mult_hauler: { name: "Turbo Diesel", blurb: "Vans produce twice as much." },
+    boost_3: { name: "Designer Genes", blurb: "All producers x2. Don't read the label." },
+  },
+  attacks: {
+    vermin: { name: "Foxes", blurb: "Goes through their cheap stuff. Stays gone through." },
+    disease: { name: "Kennel Cough", blurb: "Runs through a chunk of their best producer. Needs seeing to." },
+    swelter: { name: "Heatwave", blurb: "-55% output for 40s. Passes on its own." },
+    rot: { name: "Ruined Bedding", blurb: "Wrecks half their best producer." },
+    sweep: { name: "Surprise Inspection", blurb: "Takes a slice of everything they own. Paperwork for days." },
+  },
+  defenses: {
+    ward: { name: "Guard Dog", blurb: "Absorbs 60 power for 90s." },
+    fence: { name: "Electric Fence", blurb: "Absorbs 200 power for 2m." },
+    shelter: { name: "Quarantine Barn", blurb: "Absorbs 550 power for 2m30s." },
+    insurance: { name: "Kennel Insurance", blurb: "Absorbs 1400 power for 3m." },
+  },
+  soloProducers: {
+    patch: {
+      name: "Puppy Pen",
+      blurb: "A square of yard with a fence round it. Nature does the rest.",
+      hurt: "trampled",
+      mend: "Re-peg",
+    },
+    hand: {
+      name: "Kennel Hand",
+      blurb: "Pays for themselves. Eventually.",
+      hurt: "worn out",
+      mend: "Talk round",
+    },
+    rig: { name: "Heat Lamp", blurb: "Warmth, on purpose, at the right time.", hurt: "blown", mend: "Re-bulb" },
+    hauler: { name: "Transport Van", blurb: "Diesel-powered puppy logistics.", hurt: "broken", mend: "Repair" },
+    machine: {
+      name: "Grooming Rig",
+      blurb: "Fluffs a hundred an hour. Do not stand in front of it.",
+      hurt: "jammed",
+      mend: "Unjam",
+    },
+    lab: {
+      name: "Genetics Lab",
+      blurb: "The chihuahuas are asking questions now.",
+      hurt: "contaminated",
+      mend: "Decontaminate",
+    },
+    refinery: {
+      name: "Kibble Plant",
+      blurb: "Puppies in one end, more puppies out the other. Don't ask.",
+      hurt: "clogged",
+      mend: "Unclog",
+    },
+    tower: {
+      name: "Kennel Tower",
+      blurb: "Forty floors of yard-free ambition.",
+      hurt: "shorted",
+      mend: "Rewire",
+    },
+    airship: {
+      name: "Kennel Zeppelin",
+      blurb: "Weather is a thing that happens below you now. Mostly.",
+      hurt: "grounded",
+      mend: "Get flying",
+    },
+    reactor: {
+      name: "Fusion Whelper",
+      blurb: "Binds four small chihuahuas into one enormous one.",
+      hurt: "scrammed",
+      mend: "Restart",
+    },
+    orbital: {
+      name: "Orbital Kennel",
+      blurb: "No frost in low earth orbit. Different problems up there.",
+      hurt: "holed",
+      mend: "Reseal",
+    },
+    singularity: {
+      name: "Chihuahua Singularity",
+      blurb: "Produces chihuahuas that have always already been born.",
+      hurt: "collapsed",
+      mend: "Re-open",
+    },
+    fold: {
+      name: "Hem Hollow",
+      blurb: "Work a hollow into the hem and it packs down around you. Gather what it pushes out.",
+      hurt: "collapsed",
+      mend: "Re-line",
+    },
+    deephand: {
+      name: "Lint Hand",
+      blurb: "Someone has to be down here with you. They bring their own torch.",
+      hurt: "trapped",
+      mend: "Pull out",
+    },
+    face: {
+      name: "Fleece Face",
+      blurb: "Past the hem it goes solid. Cut a face into it and work back.",
+      hurt: "caved in",
+      mend: "Shore up",
+    },
+    well: {
+      name: "Down Well",
+      blurb: "Sunk through the packed fleece. It fills from the yard you left up top.",
+      hurt: "run dry",
+      mend: "Re-bore",
+    },
+    main: {
+      name: "Seam Main",
+      blurb: "Under the fleece it is all seams. Unpick one and it feeds you instead.",
+      hurt: "split",
+      mend: "Restitch",
+    },
+    chorus: {
+      name: "Chorus",
+      blurb: "The other yous, still working. Down here you can hear them.",
+      hurt: "silenced",
+      mend: "Call back",
+    },
+    heart: {
+      name: "Warm Heart",
+      blurb: "Every nest has a warm spot at the middle. Something has to be in it.",
+      hurt: "gone cold",
+      mend: "Warm through",
+    },
+    second: {
+      name: "Second Chihuahua",
+      blurb: "Curled in the warm spot. Nobody has asked what it is curled around.",
+      hurt: "gone quiet",
+      mend: "Tend",
+    },
+  },
+  soloClickUpgrades: {
+    tool_1: { name: "Silver Whistle", blurb: "Whistling, but with intent. Whistles x3." },
+    tool_2: { name: "Two-Tone Whistle", blurb: "Both fingers. Whistles x5." },
+    tool_3: { name: "Ceremonial Gold Whistle", blurb: "Impractical. Effective. Whistles x8." },
+    tool_4: { name: "Pocketful of Treats", blurb: "Each whistle is also worth 0.25 seconds of production." },
+    tool_5: { name: "The Squeaky Toy", blurb: "Each whistle is worth 0.5 more seconds of production." },
+    tool_6: { name: "The Big Lap", blurb: "Each whistle is worth 0.75 more seconds of production." },
+  },
+  soloGlobalUpgrades: {
+    boost_1: { name: "Better Kibble", blurb: "Everything produces +30%." },
+    boost_2: { name: "Rest Rotation", blurb: "Everything produces +30%." },
+    boost_3: { name: "Designer Genes", blurb: "Everything produces +50%. Don't read the label." },
+    co_op: { name: "Breeders' Co-op", blurb: "Everything produces +50%." },
+    charter: { name: "Kennel Club Charter", blurb: "Everything produces +50%. Paperwork was involved." },
+    monopoly: { name: "Vertical Integration", blurb: "Everything produces x2." },
+    habitat: { name: "Habitat Charter", blurb: "Everything produces x2." },
+    ur_form: { name: "The Ur-Chihuahua", blurb: "The first chihuahua. Everything since has been a copy." },
+    ceiling_rights: {
+      name: "Right of Way Down",
+      blurb: "Nothing between you and the middle of it. Everything produces x2.",
+    },
+    deep_rights: {
+      name: "Deed to the Deep",
+      blurb: "Whatever's further down was always yours. Everything produces x2.",
+    },
+    unbroken_line: { name: "Unbroken Line", blurb: "Nobody has stopped breeding. Everything produces x2." },
+    third_form: {
+      name: "The Third Chihuahua",
+      blurb: "Everything produces x2. Try not to work out where it is.",
+    },
+  },
+  lands: {
+    windbreak: { name: "Windbreak", blurb: "A wall of poplars. Storms take less of the kit." },
+    drainage: { name: "Drainage Ditches", blurb: "Water leaves instead of sitting there rotting the bedding." },
+    pest_control: {
+      name: "Pest Control Contract",
+      blurb: "Someone else's problem now. Trouble comes around less often.",
+    },
+    insurance: { name: "Kennel Insurance", blurb: "Doesn't stop anything. Does cut you a cheque afterwards." },
+    inner_beds: {
+      name: "Padded Seams",
+      blurb: "Let the nest close where it wants to. It swallows less of the kit.",
+    },
+    inner_lining: {
+      name: "Fresh Ticking",
+      blurb: "Re-line it before it goes. What's underneath keeps its warmth.",
+    },
+    inner_calm: {
+      name: "Lullaby Rig",
+      blurb: "Convinces it that it is three in the morning. It stirs less often.",
+    },
+    inner_reclaim: {
+      name: "Lint Reclamation",
+      blurb: "Whatever it sheds when it turns over, you catch and sell.",
+    },
+  },
+  perks: {
+    knack: { name: "Good Stock", blurb: "+15% output per level, forever." },
+    head_start: { name: "Head Start", blurb: "Begin each generation with a bigger stake." },
+    deep_condition: {
+      name: "Deep Bedding",
+      blurb: "The ground holds together better. Weather takes 8% less per level.",
+    },
+    strong_click: { name: "Carrying Voice", blurb: "Whistles are worth 10% more per level." },
+    salvage: { name: "Salvage Yard", blurb: "Repairs cost 10% less per level." },
+    night_shift: { name: "Night Shift", blurb: "+20% production per level while you're away." },
+    core_tithe: { name: "Nest Tithe", blurb: "The nest pays rent. +40% output per level, forever." },
+    dormancy: { name: "Induced Dormancy", blurb: "It stirs 10% less often per level." },
+    ur_yield: { name: "Ur-Yield", blurb: "Everything above the fold produces +100% per level." },
+  },
+  weather: {
+    vermin: { name: "Foxes" },
+    hail: { name: "Hailstorm" },
+    disease: { name: "Kennel Cough" },
+    frost: { name: "Late Frost" },
+    swelter: { name: "Heatwave" },
+    rot: { name: "Bedding Rot" },
+    flood: { name: "Flooding" },
+    windfall: { name: "Big Litter" },
+    perfect: { name: "Perfect Season" },
+    settling: { name: "The Nest Settles" },
+    packing: { name: "Packing Down" },
+    inner_press: { name: "It Turns Over" },
+    static: { name: "Static Bloom" },
+    decay: { name: "Matting" },
+    surge: { name: "A Great Shedding" },
+    dormant: { name: "Deep Sleep" },
+    respite: { name: "A Contented Sigh" },
+  },
+  soloTierUpgrades: {
+    patch: ["Straw Bedding", "Underfloor Heating", "Show Lineage"],
+    hand: ["Overtime Pay", "Profit Sharing", "Equity Stake"],
+    rig: ["Ceramic Bulbs", "Thermostats", "Whole-Yard Radiant"],
+    hauler: ["Turbo Diesel", "Air Suspension", "Six Wheels"],
+    machine: ["Wider Head", "Night Shift", "Twin Drums"],
+    lab: ["Peer Review", "Tenure", "The Prize"],
+    refinery: ["Twin Extruders", "Continuous Flow", "Own Rendering Line"],
+    tower: ["Express Lifts", "Kennel Telemetry", "Sky Lobby"],
+    airship: ["Helium Refit", "Jet Stream Permit", "Above the Weather"],
+    reactor: ["Magnetic Confinement", "Tritium Blanket", "Ignition"],
+    orbital: ["Solar Sails", "Second Belt", "Lagrange Station"],
+    singularity: ["Closed Timelike Litter", "Retroactive Yield", "Event Horizon Lease"],
+    fold: ["Deeper Burrow", "It Packs Faster", "It Stops Minding"],
+    deephand: ["Second Shift", "Danger Money", "They Live Down Here Now"],
+    face: ["Longwall Cut", "Deep Adit", "The Face Goes Down"],
+    well: ["Deeper Bore", "Yard Drainage", "It Never Runs Dry"],
+    main: ["Longer Stitch", "Unpick It All", "The Whole Seam"],
+    chorus: ["Perfect Unison", "Every Generation", "All At Once"],
+    heart: ["Bank the Warm", "Warm Through", "It Was Always Warm"],
+    second: ["Breeding Stock", "It's Started", "It's Awake"],
+  },
+};

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { seconds, type ScoringRule } from "@mill/sim";
+import { seconds, type ScoringRule } from "@clickers/sim";
 
 import {
   acceptChallenge,
@@ -244,7 +244,7 @@ export function VersusLobby({
   // you're walking into, so picking and starting are two presses.
   const [bot, setBot] = useState(botProfile);
   const [durationMs, setDurationMs] = useState(seconds(300));
-  const [scoring, setScoring] = useState<ScoringRule>("total_raised");
+  const [scoring, setScoring] = useState<ScoringRule>("total_produced");
   const [code, setCode] = useState("");
   const [hosted, setHosted] = useState<MatchRow | null>(null);
   const [friend, setFriend] = useState("");
@@ -269,7 +269,7 @@ export function VersusLobby({
   return (
     <div className="lobby">
       <h1>
-        Puppies, <span>Inc.</span>
+        Yield, <span>Inc.</span>
       </h1>
       <p className="tagline">Grow puppies. Ruin someone else's. You can't afford to do both.</p>
 
@@ -308,8 +308,8 @@ export function VersusLobby({
         <span>Winner is</span>
         <div className="choices">
           <button
-            className={scoring === "total_raised" ? "on" : ""}
-            onClick={() => setScoring("total_raised")}
+            className={scoring === "total_produced" ? "on" : ""}
+            onClick={() => setScoring("total_produced")}
           >
             most raised
           </button>

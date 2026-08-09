@@ -1,17 +1,17 @@
 /**
  * The homestead's single authority for time and mutation.
  *
- * `advance` is the only thing that moves a farm forward, and every command runs
+ * `advance` is the only thing that moves a site forward, and every command runs
  * it first. Because solo has no timed effects, the only thing that can change a
  * rate mid-interval is a weather event — and those land at instants the state
  * already knows. So advancing across ten seconds and advancing across ten days
  * are the same code path, and both are exact.
  */
 
-import { P, ms, type Millis, type Potatoes } from "../numbers.js";
+import { Y, ms, type Millis, type Yield } from "../numbers.js";
 import {
   LAND_BY_ID,
-  MAX_SOIL,
+  MAX_CONDITION,
   SOLO_PRODUCERS,
   SOLO_PRODUCER_BY_ID,
   SOLO_UPGRADE_BY_ID,
@@ -31,18 +31,18 @@ import {
   perkLevel,
   producerCost,
   repairCost,
-  soilRestoreCost,
+  conditionRestoreCost,
   upkeepBill,
 } from "./economy.js";
-import { PERK_BY_ID, headStartPotatoes, perkCost, seedsFor } from "./prestige.js";
-import type { FarmCommand, FarmLogEntry, FarmResult, FarmState } from "./state.js";
+import { PERK_BY_ID, headStartStock, perkCost, heirloomsFor } from "./prestige.js";
+import type { SiteCommand, SiteLogEntry, SiteResult, SiteState } from "./state.js";
 import { fireWeather, scheduleNext, type WeatherEvent } from "./weather.js";
 
-/** Clamp on batched digs, matching the versus mode's flush window. */
-export const MAX_DIGS_PER_FLUSH = 25;
+/** Clamp on batched clicks, matching the versus mode's flush window. */
+export const MAX_CLICKS_PER_FLUSH = 25;
 
-/** The purchase that folds the horizon. See `converged` on `FarmState`. */
-export const CONVERGENCE_UPGRADE = "ur_potato";
+/** The purchase that folds the horizon. See `converged` on `SiteState`. */
+export const CONVERGENCE_UPGRADE = "ur_form";
 
 /** The rung that gates it, and so the first sign that anything is coming. */
 export const CONVERGENCE_GATE_PRODUCER: SoloProducerId =
@@ -51,60 +51,60 @@ export const CONVERGENCE_GATE_PRODUCER: SoloProducerId =
 /**
  * Ceiling on how many weather events one `advance` will resolve. A year-long
  * absence shouldn't spin for a hundred thousand iterations; past this the
- * remaining schedule is skipped and the farm just keeps producing. Generous
+ * remaining schedule is skipped and the site just keeps producing. Generous
  * enough that no realistic absence hits it.
  */
 const MAX_EVENTS_PER_ADVANCE = 20_000;
 
-export function createFarm(opts: { seed: string; startedAt: Millis }): FarmState {
-  const farm: FarmState = {
+export function createSite(opts: { seed: string; startedAt: Millis }): SiteState {
+  const site: SiteState = {
     seed: opts.seed,
     startedAt: opts.startedAt,
-    potatoes: P.zero,
-    harvested: P.zero,
+    stock: Y.zero,
+    produced: Y.zero,
     checkpointAt: opts.startedAt,
     producers: {},
     broken: {},
     upgrades: [],
     land: {},
-    soil: MAX_SOIL,
+    condition: MAX_CONDITION,
     weatherIndex: 0,
     nextWeatherAt: opts.startedAt,
     converged: false,
     world: "outside",
-    seeds: 0,
+    heirlooms: 0,
     perks: {},
-    lifetimeHarvested: P.zero,
+    lifetimeProduced: Y.zero,
     generation: 1,
     runStartedAt: opts.startedAt,
     log: [],
   };
-  return { ...farm, nextWeatherAt: scheduleNext(farm, opts.startedAt) };
+  return { ...site, nextWeatherAt: scheduleNext(site, opts.startedAt) };
 }
 
 /**
- * Bring a farm whose checkpoint is in the *future* back to now.
+ * Bring a site whose checkpoint is in the *future* back to now.
  *
  * Clocks move backwards: an NTP correction, a device someone set by hand, or the
  * back room's own skew lever being put back after a jump. Whatever the cause,
- * the farm comes out of it holding a checkpoint the wall clock hasn't reached.
+ * the site comes out of it holding a checkpoint the wall clock hasn't reached.
  *
  * That used to freeze the game solid. `integrate` clamps rather than paying out
  * negative production — correct on its own — but every command was refused with
  * "Time moved backwards." until the clock caught up, which after a week's jump
- * is a week of a farm that can't be dug, bought from or repaired. A dev lever
+ * is a week of a site that can't be clickd, bought from or repaired. A dev lever
  * that bricks the save for a week is not a lever, and a player whose phone
  * corrected its clock never touched a lever at all.
  *
- * So the farm rebases: the checkpoint comes back to now and everything scheduled
+ * So the site rebases: the checkpoint comes back to now and everything scheduled
  * off it comes back by the same amount, so the weather keeps its place in the
  * queue instead of arriving all at once. Nothing is paid out and nothing is
  * taken away — the time simply didn't happen. What it *doesn't* do is defend
  * against a player jumping the clock forward, taking the offline production and
  * jumping back for another go. That's a cheat available from a menu that also
- * hands out free potatoes, in a game with nobody else in it.
+ * hands out free stock, in a game with nobody else in it.
  */
-export function rebase(f: FarmState, now: Millis): FarmState {
+export function rebase(f: SiteState, now: Millis): SiteState {
   if (now >= f.checkpointAt) return f;
   const back = f.checkpointAt - now;
   return {
@@ -119,71 +119,71 @@ export function rebase(f: FarmState, now: Millis): FarmState {
   };
 }
 
-/** Roll the farm forward with no weather in between. */
-function integrate(f: FarmState, to: Millis, offline: boolean): FarmState {
+/** Roll the site forward with no weather in between. */
+function integrate(f: SiteState, to: Millis, offline: boolean): SiteState {
   if (to <= f.checkpointAt) return { ...f, checkpointAt: ms(Math.max(f.checkpointAt, to)) };
   // Night Shift is the only thing that distinguishes an hour away from an hour
   // watching, and it only ever pays *more* — being away is never punished for
   // its own sake, only for the weather you weren't there to fix.
   const bonus = offline ? 1 + 0.2 * perkLevel(f, "night_shift") : 1;
-  const made = P.of(P.overTime(currentRate(f), to - f.checkpointAt) * bonus);
+  const made = Y.of(Y.overTime(currentRate(f), to - f.checkpointAt) * bonus);
   return {
     ...f,
-    potatoes: P.add(f.potatoes, made),
-    harvested: P.add(f.harvested, made),
-    lifetimeHarvested: P.add(f.lifetimeHarvested, made),
+    stock: Y.add(f.stock, made),
+    produced: Y.add(f.produced, made),
+    lifetimeProduced: Y.add(f.lifetimeProduced, made),
     checkpointAt: to,
   };
 }
 
 export interface AdvanceResult {
-  farm: FarmState;
+  site: SiteState;
   /** Weather that landed in the interval, oldest first. */
   events: WeatherEvent[];
 }
 
 /**
- * Bring a farm up to `to`, resolving every weather event that falls in between.
+ * Bring a site up to `to`, resolving every weather event that falls in between.
  *
  * `offline` only affects the Night Shift bonus — the weather does not care
  * whether anyone was watching, which is the point of the mode.
  */
-export function advance(f: FarmState, to: Millis, offline = false): AdvanceResult {
+export function advance(f: SiteState, to: Millis, offline = false): AdvanceResult {
   const events: WeatherEvent[] = [];
-  // A farm ahead of the clock comes back to it first, so the tick loop heals a
+  // A site ahead of the clock comes back to it first, so the tick loop heals a
   // backwards clock by itself within a tick rather than sitting on a checkpoint
   // it can never reach.
-  let farm = rebase(f, to);
+  let site = rebase(f, to);
   let guard = 0;
 
-  while (farm.nextWeatherAt <= to && guard++ < MAX_EVENTS_PER_ADVANCE) {
-    const at = ms(Math.max(farm.nextWeatherAt, farm.checkpointAt));
-    farm = integrate(farm, at, offline);
-    const fired = fireWeather(farm, at);
-    farm = fired.farm;
+  while (site.nextWeatherAt <= to && guard++ < MAX_EVENTS_PER_ADVANCE) {
+    const at = ms(Math.max(site.nextWeatherAt, site.checkpointAt));
+    site = integrate(site, at, offline);
+    const fired = fireWeather(site, at);
+    site = fired.site;
     if (fired.event) events.push(fired.event);
   }
 
-  if (farm.nextWeatherAt <= to) {
-    // Bailed out on the guard. Push the schedule past `to` so the farm doesn't
+  if (site.nextWeatherAt <= to) {
+    // Bailed out on the guard. Push the schedule past `to` so the site doesn't
     // spend the rest of its life stuck resolving the same backlog.
-    farm = { ...farm, nextWeatherAt: scheduleNext(farm, to) };
+    site = { ...site, nextWeatherAt: scheduleNext(site, to) };
   }
 
-  farm = integrate(farm, to, offline);
-  if (events.length > 0) farm = { ...farm, log: appendLog(farm, events) };
-  return { farm, events };
+  site = integrate(site, to, offline);
+  if (events.length > 0) site = { ...site, log: appendLog(site, events) };
+  return { site, events };
 }
 
 /**
  * Monotonic, and deliberately not `log.length` — the feed is trimmed, so a
  * length-based index starts repeating itself the moment it fills up.
  */
-function nextLogIndex(f: FarmState): number {
+function nextLogIndex(f: SiteState): number {
   return (f.log[f.log.length - 1]?.index ?? -1) + 1;
 }
 
-function appendLog(f: FarmState, events: WeatherEvent[]): FarmLogEntry[] {
+function appendLog(f: SiteState, events: WeatherEvent[]): SiteLogEntry[] {
   const base = nextLogIndex(f);
   const entries = events.map((e, i) => ({
     index: base + i,
@@ -200,60 +200,60 @@ function appendLog(f: FarmState, events: WeatherEvent[]): FarmLogEntry[] {
 // Commands
 // ---------------------------------------------------------------------------
 
-function fail(reason: string): FarmResult {
+function fail(reason: string): SiteResult {
   return { ok: false, reason };
 }
 
 /**
- * Pure: the same (farm, command, time) always gives the same result. Same
+ * Pure: the same (site, command, time) always gives the same result. Same
  * contract as the versus `applyCommand`, so this can move behind a server later
  * without touching any game logic.
  */
-export function applyFarmCommand(f0: FarmState, cmd: FarmCommand, now: Millis): FarmResult {
+export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): SiteResult {
   // A clock that went backwards is `advance`'s problem and it deals with it by
-  // rebasing. This used to refuse the command instead, which meant a farm
-  // holding a future checkpoint couldn't be dug, bought from or repaired until
+  // rebasing. This used to refuse the command instead, which meant a site
+  // holding a future checkpoint couldn't be clickd, bought from or repaired until
   // the wall clock caught up with it.
   const advanced = advance(f0, now);
-  let farm = advanced.farm;
-  const entries: FarmLogEntry[] = [];
-  const at = farm.checkpointAt;
+  let site = advanced.site;
+  const entries: SiteLogEntry[] = [];
+  const at = site.checkpointAt;
 
-  const note = (text: string, tone: FarmLogEntry["tone"]) => {
-    entries.push({ index: nextLogIndex(farm) + entries.length, at, text, tone });
+  const note = (text: string, tone: SiteLogEntry["tone"]) => {
+    entries.push({ index: nextLogIndex(site) + entries.length, at, text, tone });
   };
 
-  const spend = (cost: Potatoes): boolean => {
-    if (!P.gte(farm.potatoes, cost)) return false;
-    farm = { ...farm, potatoes: P.sub(farm.potatoes, cost) };
+  const spend = (cost: Yield): boolean => {
+    if (!Y.gte(site.stock, cost)) return false;
+    site = { ...site, stock: Y.sub(site.stock, cost) };
     return true;
   };
 
   switch (cmd.type) {
-    case "dig": {
-      const count = Math.max(0, Math.min(MAX_DIGS_PER_FLUSH, Math.floor(cmd.count)));
+    case "click": {
+      const count = Math.max(0, Math.min(MAX_CLICKS_PER_FLUSH, Math.floor(cmd.count)));
       if (count === 0) return fail("Nothing to flush.");
-      const gained = P.mul(clickYield(farm), count);
-      farm = {
-        ...farm,
-        potatoes: P.add(farm.potatoes, gained),
-        harvested: P.add(farm.harvested, gained),
-        lifetimeHarvested: P.add(farm.lifetimeHarvested, gained),
+      const gained = Y.mul(clickYield(site), count);
+      site = {
+        ...site,
+        stock: Y.add(site.stock, gained),
+        produced: Y.add(site.produced, gained),
+        lifetimeProduced: Y.add(site.lifetimeProduced, gained),
       };
       break;
     }
 
     case "dev_grant": {
-      const digs = Math.max(0, Math.floor(cmd.digs));
-      if (digs === 0) return fail("Nothing to grant.");
-      const gained = P.mul(clickYield(farm), digs);
-      farm = {
-        ...farm,
-        potatoes: P.add(farm.potatoes, gained),
-        harvested: P.add(farm.harvested, gained),
-        lifetimeHarvested: P.add(farm.lifetimeHarvested, gained),
+      const clicks = Math.max(0, Math.floor(cmd.clicks));
+      if (clicks === 0) return fail("Nothing to grant.");
+      const gained = Y.mul(clickYield(site), clicks);
+      site = {
+        ...site,
+        stock: Y.add(site.stock, gained),
+        produced: Y.add(site.produced, gained),
+        lifetimeProduced: Y.add(site.lifetimeProduced, gained),
       };
-      note(`dev: granted ${digs} digs' worth.`, "neutral");
+      note(`dev: granted ${clicks} clicks' worth.`, "neutral");
       break;
     }
 
@@ -262,43 +262,43 @@ export function applyFarmCommand(f0: FarmState, cmd: FarmCommand, now: Millis): 
       // doesn't fire it here — the next tick does, through the ordinary path.
       // That matters: a hand-rolled `fireWeather` would skip the mitigation and
       // the log entry that the real schedule goes through.
-      farm = { ...farm, nextWeatherAt: at };
+      site = { ...site, nextWeatherAt: at };
       note("dev: pulled the next event forward.", "neutral");
       break;
     }
 
-    case "dev_seeds": {
-      const seeds = Math.max(0, Math.floor(cmd.seeds));
-      if (seeds === 0) return fail("Nothing to grant.");
-      farm = { ...farm, seeds: farm.seeds + seeds };
-      note(`dev: granted ${seeds} Heirloom Seed.`, "neutral");
+    case "dev_heirlooms": {
+      const heirlooms = Math.max(0, Math.floor(cmd.heirlooms));
+      if (heirlooms === 0) return fail("Nothing to grant.");
+      site = { ...site, heirlooms: site.heirlooms + heirlooms };
+      note(`dev: granted ${heirlooms} Heirloom.`, "neutral");
       break;
     }
 
     case "dev_fold": {
-      if (cmd.converged === farm.converged) return fail("It's already like that.");
+      if (cmd.converged === site.converged) return fail("It's already like that.");
       if (cmd.converged) {
-        farm = { ...farm, converged: true };
+        site = { ...site, converged: true };
         note("dev: folded the horizon.", "neutral");
         break;
       }
       // Everything that only exists under a ceiling goes with the ceiling. An
       // upgrade belongs to the world of the producer that gates it, which is
-      // also why `ur_potato` has to be named here rather than derived: it's
-      // gated on the Tuber Singularity, out under the sky.
+      // also why `ur_form` has to be named here rather than derived: it's
+      // gated on the Core Singularity, out under the sky.
       const inside = new Set(producersIn("inside").map((p) => p.id));
       const keep = <T extends Partial<Record<SoloProducerId, number>>>(rec: T) =>
         Object.fromEntries(Object.entries(rec).filter(([id]) => !inside.has(id as SoloProducerId)));
-      farm = {
-        ...farm,
+      site = {
+        ...site,
         converged: false,
         world: "outside",
-        producers: keep(farm.producers),
-        broken: keep(farm.broken),
+        producers: keep(site.producers),
+        broken: keep(site.broken),
         land: Object.fromEntries(
-          Object.entries(farm.land).filter(([id]) => LAND_BY_ID[id as LandId]?.world !== "inside"),
+          Object.entries(site.land).filter(([id]) => LAND_BY_ID[id as LandId]?.world !== "inside"),
         ),
-        upgrades: farm.upgrades.filter((id) => {
+        upgrades: site.upgrades.filter((id) => {
           if (id === CONVERGENCE_UPGRADE) return false;
           const req = SOLO_UPGRADE_BY_ID[id]?.requires?.producer;
           return !(req && inside.has(req));
@@ -311,20 +311,20 @@ export function applyFarmCommand(f0: FarmState, cmd: FarmCommand, now: Millis): 
     case "buy_producer": {
       const producer = SOLO_PRODUCER_BY_ID[cmd.producer];
       if (!producer) return fail("No such producer.");
-      if (!isProducerAvailable(farm, producer.id)) return fail("There's nowhere to put it yet.");
+      if (!isProducerAvailable(site, producer.id)) return fail("There's nowhere to put it yet.");
       const qty = Math.max(1, Math.floor(cmd.qty));
-      const cost = producerCost(farm, producer.id, qty);
-      const had = farm.producers[producer.id] ?? 0;
-      if (!spend(cost)) return fail("Not enough potatoes.");
-      farm = {
-        ...farm,
-        producers: { ...farm.producers, [producer.id]: had + qty },
+      const cost = producerCost(site, producer.id, qty);
+      const had = site.producers[producer.id] ?? 0;
+      if (!spend(cost)) return fail("Not enough stock.");
+      site = {
+        ...site,
+        producers: { ...site.producers, [producer.id]: had + qty },
       };
       // The one purchase in the game that's the start of something rather than
       // more of the same. Buying a rung is otherwise silent, and it should stay
       // that way — this is the exception because nothing else told you.
       if (had === 0 && producer.id === CONVERGENCE_GATE_PRODUCER) {
-        note("the first Tuber Singularity is running. the horizon looks wrong.", "neutral");
+        note("the first Core Singularity is running. the horizon looks wrong.", "neutral");
       }
       break;
     }
@@ -332,19 +332,19 @@ export function applyFarmCommand(f0: FarmState, cmd: FarmCommand, now: Millis): 
     case "buy_upgrade": {
       const upgrade = SOLO_UPGRADE_BY_ID[cmd.upgrade];
       if (!upgrade) return fail("No such upgrade.");
-      if (farm.upgrades.includes(upgrade.id)) return fail("Already owned.");
-      if (!isUnlocked(farm, upgrade)) return fail("Not unlocked yet.");
-      if (!spend(upgrade.cost)) return fail("Not enough potatoes.");
-      farm = { ...farm, upgrades: [...farm.upgrades, upgrade.id] };
+      if (site.upgrades.includes(upgrade.id)) return fail("Already owned.");
+      if (!isUnlocked(site, upgrade)) return fail("Not unlocked yet.");
+      if (!spend(upgrade.cost)) return fail("Not enough stock.");
+      site = { ...site, upgrades: [...site.upgrades, upgrade.id] };
       note(`bought ${upgrade.name}.`, "neutral");
-      // The Convergence. You acquire the first potato and discover you have
+      // The Convergence. You acquire the first unit and discover you have
       // always been inside it — on a button you chose to press, rather than on
       // a threshold crossing while you were looking somewhere else.
-      // The Convergence puts you *in* the potato, not merely under a new
-      // ceiling: the fold ends with you standing on the inside farm, with a
+      // The Convergence puts you *in* the unit, not merely under a new
+      // ceiling: the fold ends with you standing on the inside site, with a
       // shop you have never seen. Coming back out is a thing you go and ask for.
-      if (upgrade.id === CONVERGENCE_UPGRADE && !farm.converged) {
-        farm = { ...farm, converged: true, world: "inside" };
+      if (upgrade.id === CONVERGENCE_UPGRADE && !site.converged) {
+        site = { ...site, converged: true, world: "inside" };
         note("the horizon closed.", "good");
       }
       break;
@@ -353,11 +353,11 @@ export function applyFarmCommand(f0: FarmState, cmd: FarmCommand, now: Millis): 
     case "buy_land": {
       const land = LAND_BY_ID[cmd.land];
       if (!land) return fail("No such building.");
-      if (!isLandAvailable(farm, land.id)) return fail("Nothing to build that against yet.");
-      const cost = landCost(farm, land.id);
-      if (!spend(cost)) return fail("Not enough potatoes.");
-      const level = (farm.land[land.id] ?? 0) + 1;
-      farm = { ...farm, land: { ...farm.land, [land.id]: level } };
+      if (!isLandAvailable(site, land.id)) return fail("Nothing to build that against yet.");
+      const cost = landCost(site, land.id);
+      if (!spend(cost)) return fail("Not enough stock.");
+      const level = (site.land[land.id] ?? 0) + 1;
+      site = { ...site, land: { ...site.land, [land.id]: level } };
       note(`built ${land.name} ${romanish(level)}.`, "good");
       break;
     }
@@ -365,39 +365,39 @@ export function applyFarmCommand(f0: FarmState, cmd: FarmCommand, now: Millis): 
     case "repair": {
       const producer = SOLO_PRODUCER_BY_ID[cmd.producer];
       if (!producer) return fail("No such producer.");
-      const broken = brokenCount(farm, producer.id);
+      const broken = brokenCount(site, producer.id);
       if (broken <= 0) return fail("Nothing to put right there.");
-      const cost = repairCost(farm, producer.id);
-      if (!spend(cost)) return fail("Not enough potatoes.");
-      farm = { ...farm, broken: { ...farm.broken, [producer.id]: 0 } };
+      const cost = repairCost(site, producer.id);
+      if (!spend(cost)) return fail("Not enough stock.");
+      site = { ...site, broken: { ...site.broken, [producer.id]: 0 } };
       note(`put ${broken}x ${producer.name} back to work.`, "good");
       break;
     }
 
-    case "restore_soil": {
-      const cost = soilRestoreCost(farm);
-      if (cost <= 0) return fail("The soil is already fine.");
-      if (!spend(cost)) return fail("Not enough potatoes.");
-      farm = { ...farm, soil: MAX_SOIL };
-      note("put the soil right.", "good");
+    case "restore_condition": {
+      const cost = conditionRestoreCost(site);
+      if (cost <= 0) return fail("The condition is already fine.");
+      if (!spend(cost)) return fail("Not enough stock.");
+      site = { ...site, condition: MAX_CONDITION };
+      note("put the condition right.", "good");
       break;
     }
 
     case "fix_all": {
-      const cost = upkeepBill(farm);
+      const cost = upkeepBill(site);
       if (cost <= 0) return fail("Nothing here needs putting right.");
-      if (!spend(cost)) return fail("Not enough potatoes.");
-      const tiredSoil = farm.soil < MAX_SOIL;
+      if (!spend(cost)) return fail("Not enough stock.");
+      const tiredCondition = site.condition < MAX_CONDITION;
       let mended = 0;
-      const broken = { ...farm.broken };
-      for (const prod of producersIn(farm.world)) {
-        const n = brokenCount(farm, prod.id);
+      const broken = { ...site.broken };
+      for (const prod of producersIn(site.world)) {
+        const n = brokenCount(site, prod.id);
         if (n <= 0) continue;
         mended += n;
         broken[prod.id] = 0;
       }
-      farm = { ...farm, broken, soil: MAX_SOIL };
-      const put = [mended > 0 ? `${mended}x broken kit` : "", tiredSoil ? "the soil" : ""].filter(
+      site = { ...site, broken, condition: MAX_CONDITION };
+      const put = [mended > 0 ? `${mended}x broken kit` : "", tiredCondition ? "the condition" : ""].filter(
         Boolean,
       );
       note(`put ${put.join(" and ")} right.`, "good");
@@ -407,74 +407,74 @@ export function applyFarmCommand(f0: FarmState, cmd: FarmCommand, now: Millis): 
     case "buy_perk": {
       const perk = PERK_BY_ID[cmd.perk];
       if (!perk) return fail("No such perk.");
-      if (!isPerkAvailable(farm, perk.id)) return fail("Nothing to grow that in yet.");
-      const level = farm.perks[perk.id] ?? 0;
+      if (!isPerkAvailable(site, perk.id)) return fail("Nothing to grow that in yet.");
+      const level = site.perks[perk.id] ?? 0;
       if (level >= perk.maxLevel) return fail("Already fully grown.");
       const cost = perkCost(perk, level);
-      // Seeds spent stop counting toward the output multiplier. That's the
+      // Heirloom spent stop counting toward the output multiplier. That's the
       // whole trade, so it has to come out of the same number.
-      if (farm.seeds < cost) return fail("Not enough Heirloom Seed.");
-      farm = {
-        ...farm,
-        seeds: farm.seeds - cost,
-        perks: { ...farm.perks, [perk.id]: level + 1 },
+      if (site.heirlooms < cost) return fail("Not enough Heirloom.");
+      site = {
+        ...site,
+        heirlooms: site.heirlooms - cost,
+        perks: { ...site.perks, [perk.id]: level + 1 },
       };
       note(`grew ${perk.name} to ${romanish(level + 1)}.`, "good");
       break;
     }
 
     case "warp": {
-      if (!farm.converged) return fail("There's only the one world out here.");
-      if (farm.world === cmd.to) return fail("You're already there.");
-      farm = { ...farm, world: cmd.to };
+      if (!site.converged) return fail("There's only the one world out here.");
+      if (site.world === cmd.to) return fail("You're already there.");
+      site = { ...site, world: cmd.to };
       break;
     }
 
     case "prestige": {
-      const earned = seedsFor(farm.harvested);
+      const earned = heirloomsFor(site.produced);
       if (earned <= 0) return fail("Nothing worth handing down yet.");
-      const out = cmd.outside === true && farm.converged;
-      farm = resetForNextGeneration(farm, earned, at, out);
-      note(`handed the farm down. +${earned} Heirloom Seed.`, "good");
+      const out = cmd.outside === true && site.converged;
+      site = resetForNextGeneration(site, earned, at, out);
+      note(`handed the site down. +${earned} Heirloom.`, "good");
       if (out) note("the horizon is open again.", "neutral");
       break;
     }
   }
 
-  return { ok: true, farm: { ...farm, log: [...farm.log, ...entries].slice(-60) }, entries };
+  return { ok: true, site: { ...site, log: [...site.log, ...entries].slice(-60) }, entries };
 }
 
 /**
- * Everything a generation earns is wiped except the seeds and what they bought.
- * `lifetimeHarvested` deliberately survives — it's the only number in the game
- * that never goes backwards — and so does `converged`, unless the farm is being
+ * Everything a generation earns is wiped except the heirlooms and what they bought.
+ * `lifetimeProduced` deliberately survives — it's the only number in the game
+ * that never goes backwards — and so does `converged`, unless the site is being
  * handed down with the sky asked for.
  *
- * `outside` is the only way out of the potato, and it's a door rather than a
+ * `outside` is the only way out of the unit, and it's a door rather than a
  * consequence: it costs nothing, gives nothing, and hands the next generation a
  * world with a horizon in it and the Convergence to reach again. The four tiers
- * inside the potato go out of reach with it, which is the price and is meant to
+ * inside the unit go out of reach with it, which is the price and is meant to
  * be — a run under the sky that kept the ceiling's kit would just be the folded
  * run with different weather.
  */
 function resetForNextGeneration(
-  f: FarmState,
+  f: SiteState,
   earned: number,
   at: Millis,
   outside = false,
-): FarmState {
-  const seeds = f.seeds + earned;
+): SiteState {
+  const heirlooms = f.heirlooms + earned;
   const converged = f.converged && !outside;
-  const next: FarmState = {
+  const next: SiteState = {
     ...f,
-    potatoes: P.zero,
-    harvested: P.zero,
+    stock: Y.zero,
+    produced: Y.zero,
     checkpointAt: at,
     producers: {},
     broken: {},
     upgrades: [],
     land: {},
-    soil: MAX_SOIL,
+    condition: MAX_CONDITION,
     weatherIndex: f.weatherIndex,
     converged,
     /**
@@ -482,23 +482,23 @@ function resetForNextGeneration(
      *
      * Not where you were standing, which is what this did first and what soft-
      * locks the save: a hand-down clears `producers`, and the cheapest row in
-     * the inside shop is most of a quadrillion potatoes. Landing there with an
-     * empty farm means one unaffordable row, a dig worth one potato, and no
+     * the inside shop is most of a quadrillion stock. Landing there with an
+     * empty site means one unaffordable row, a click worth one unit, and no
      * signal at all that the way out is a lever in the back room.
      *
      * Starting in the fields is also the better read. The inside is somewhere
-     * you got to; a farm that hasn't been built yet hasn't got there yet, and
+     * you got to; a site that hasn't been built yet hasn't got there yet, and
      * the door is still open the moment you can afford to walk through it.
      */
     world: "outside",
-    seeds,
+    heirlooms,
     generation: f.generation + 1,
     runStartedAt: at,
   };
-  const stake = headStartPotatoes(perkLevel(next, "head_start"));
+  const stake = headStartStock(perkLevel(next, "head_start"));
   return {
     ...next,
-    potatoes: stake,
+    stock: stake,
     nextWeatherAt: scheduleNext(next, at),
   };
 }
@@ -517,27 +517,27 @@ function romanish(n: number): string {
  * which is why the app still ticks `advance` on a short interval and treats
  * this as a smoothing layer, not as truth.
  */
-export function projectedPotatoes(f: FarmState, now: Millis): Potatoes {
-  return P.add(f.potatoes, P.overTime(currentRate(f), Math.max(0, now - f.checkpointAt)));
+export function projectedStock(f: SiteState, now: Millis): Yield {
+  return Y.add(f.stock, Y.overTime(currentRate(f), Math.max(0, now - f.checkpointAt)));
 }
 
-export function projectedHarvested(f: FarmState, now: Millis): Potatoes {
-  return P.add(f.harvested, P.overTime(currentRate(f), Math.max(0, now - f.checkpointAt)));
+export function projectedProduced(f: SiteState, now: Millis): Yield {
+  return Y.add(f.produced, Y.overTime(currentRate(f), Math.max(0, now - f.checkpointAt)));
 }
 
 /** Convenience for tests: apply a command, throw if it was rejected. */
-export function mustApplyFarm(f: FarmState, cmd: FarmCommand, now: Millis): FarmState {
-  const res = applyFarmCommand(f, cmd, now);
+export function mustApplySite(f: SiteState, cmd: SiteCommand, now: Millis): SiteState {
+  const res = applySiteCommand(f, cmd, now);
   if (!res.ok) throw new Error(`command rejected: ${res.reason}`);
-  return res.farm;
+  return res.site;
 }
 
 /**
- * How close the horizon is to closing, 0..1, off whatever gates the Ur-Potato.
+ * How close the horizon is to closing, 0..1, off whatever gates the Ur-Core.
  *
  * The Convergence is the only thing in the game you can't be told about in
  * advance without spoiling it, and it was also the only thing with no build-up
- * at all: you bought a Tuber Singularity, nothing acknowledged it, and nine
+ * at all: you bought a Core Singularity, nothing acknowledged it, and nine
  * purchases later the world folded. This is what the scene leans on to start
  * showing its hand — the ceiling bleeding through the sky well before it lands —
  * so the fold reads as arriving rather than as happening to you.
@@ -546,7 +546,7 @@ export function mustApplyFarm(f: FarmState, cmd: FarmCommand, now: Millis): Farm
  * for the three seconds it takes to come down and it shouldn't snap back to
  * blue on the frame you press the button.
  */
-export function convergenceProgress(f: FarmState): number {
+export function convergenceProgress(f: SiteState): number {
   if (f.converged) return 1;
   const gate = SOLO_UPGRADE_BY_ID[CONVERGENCE_UPGRADE]?.requires;
   if (!gate || gate.count <= 0) return 0;
@@ -554,26 +554,26 @@ export function convergenceProgress(f: FarmState): number {
 }
 
 /**
- * The Ur-Potato is on the table and unbought — the last stretch of the run.
+ * The Ur-Core is on the table and unbought — the last stretch of the run.
  *
  * The shop empties itself down to this one row while it's true, which is the
  * only place in the game a purchase is made the only thing you can do. It's the
- * point: the tenth Tuber Singularity is a threshold nothing in the shop marked,
+ * point: the tenth Core Singularity is a threshold nothing in the shop marked,
  * and a player who reaches it with a screen full of rungs will keep buying rungs
  * and never notice what the tier was counting down to. There is roughly a
  * thousand seconds of production between the gate opening and the price being
  * met, and the whole of it should be spent looking at the thing you're saving
  * for.
  */
-export function convergencePending(f: FarmState): boolean {
+export function convergencePending(f: SiteState): boolean {
   const upgrade = SOLO_UPGRADE_BY_ID[CONVERGENCE_UPGRADE];
   if (!upgrade || f.converged || f.upgrades.includes(CONVERGENCE_UPGRADE)) return false;
   return isUnlocked(f, upgrade);
 }
 
 /** What a prestige right now would pay. Zero means it isn't worth doing yet. */
-export function pendingSeeds(f: FarmState): number {
-  return seedsFor(f.harvested);
+export function pendingHeirlooms(f: SiteState): number {
+  return heirloomsFor(f.produced);
 }
 
 export { SOLO_PRODUCERS, type SoloProducerId };

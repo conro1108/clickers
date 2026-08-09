@@ -49,7 +49,7 @@
  * the same puppies and the fold doesn't take your money off you.
  */
 
-import type { solo } from "@mill/sim";
+import type { solo } from "@clickers/sim";
 
 import {
   HOIST_CAGE,
@@ -87,16 +87,16 @@ export { SCENE_W };
 
 type InsideId = Extract<
   solo.SoloProducerId,
-  "hem" | "linthand" | "fleece" | "well" | "seam" | "chorus" | "heart" | "second"
+  "fold" | "deephand" | "face" | "well" | "main" | "chorus" | "heart" | "second"
 >;
 
 /** Ladder order, shallowest first, which is also top-of-screen first. */
 export const ORDER: InsideId[] = [
-  "hem",
-  "linthand",
-  "fleece",
+  "fold",
+  "deephand",
+  "face",
   "well",
-  "seam",
+  "main",
   "chorus",
   "heart",
   "second",
@@ -134,8 +134,8 @@ export interface Zone {
  */
 export const ZONES: readonly Zone[] = [
   {
-    id: "hem",
-    tiers: ["hem", "linthand"],
+    id: "fold",
+    tiers: ["fold", "deephand"],
     lit: "#f6efe4",
     weave: "#e6dccb",
     deep: "#c2b6a2",
@@ -143,8 +143,8 @@ export const ZONES: readonly Zone[] = [
     weight: 1,
   },
   {
-    id: "fleece",
-    tiers: ["fleece", "well"],
+    id: "face",
+    tiers: ["face", "well"],
     lit: "#e4d3ae",
     weave: "#cdb488",
     deep: "#a48a5e",
@@ -152,8 +152,8 @@ export const ZONES: readonly Zone[] = [
     weight: 1.15,
   },
   {
-    id: "seam",
-    tiers: ["seam", "chorus"],
+    id: "main",
+    tiers: ["main", "chorus"],
     lit: "#a06a62",
     weave: "#7a4a48",
     deep: "#48282a",
@@ -203,11 +203,11 @@ export function openZones(working: Partial<Record<string, number>>): number {
 
 /** What a hundred-owned tier throws light in. Same rule the outside mill uses. */
 const PRIME_GLOW: Record<InsideId, string> = {
-  hem: "#ffd8e0",
-  linthand: "#a8f07a",
-  fleece: "#fff4e0",
+  fold: "#ffd8e0",
+  deephand: "#a8f07a",
+  face: "#fff4e0",
   well: "#ff9a3c",
-  seam: "#e0a8dc",
+  main: "#e0a8dc",
   chorus: "#fff4c0",
   heart: "#ff7a6a",
   second: "#ffd166",
@@ -217,7 +217,7 @@ const PRIME_GLOW: Record<InsideId, string> = {
 // The place
 // ---------------------------------------------------------------------------
 
-/** The hem: the underside of what closed over you, still the brightest thing. */
+/** The fold: the underside of what closed over you, still the brightest thing. */
 const LID_LIT = "#f2e0b4";
 const LID_DEEP = "#c9a05c";
 
@@ -381,12 +381,12 @@ export function shownCount(owned: number, cap: number, spread = 2.4): number {
 type Layout = "bench" | "knot" | "niche" | "sunk" | "hang";
 
 const LAYOUT: Record<InsideId, Layout> = {
-  hem: "knot",
+  fold: "knot",
   // Never drawn from a slot — the Pit Hands are the crew.
-  linthand: "bench",
-  fleece: "niche",
+  deephand: "bench",
+  face: "niche",
   well: "sunk",
-  seam: "hang",
+  main: "hang",
   chorus: "knot",
   heart: "niche",
   // Two of them, and each is most of a stratum. Anything but standing there.
@@ -436,11 +436,11 @@ interface Slot {
 
 /** How many of each tier ever appear on its ledge, however many you own. */
 const CAP: Record<InsideId, number> = {
-  hem: 5,
-  linthand: 6,
-  fleece: 5,
+  fold: 5,
+  deephand: 6,
+  face: 5,
   well: 4,
-  seam: 5,
+  main: 5,
   chorus: 6,
   heart: 4,
   second: 2,
@@ -1057,7 +1057,7 @@ export class InsideScene {
   }
 
   /**
-   * The hem: the underside of what closed over you.
+   * The fold: the underside of what closed over you.
    *
    * The one warm, bright thing in the picture, and it's above everything — so
    * the eye enters at the top, where you came in, and travels down the shaft
@@ -1310,7 +1310,7 @@ export class InsideScene {
       // The Pit Hands aren't drawn here: they *are* the crew, walking the whole
       // shaft. Blitting a static row of them on their own bench as well would
       // put the same rung on the screen twice, once alive and once not.
-      if (id === "linthand") return;
+      if (id === "deephand") return;
       const slots = this.slots(id, band);
       if (slots.length === 0) return;
       const art = artCanvas(this.mark(id));
@@ -1579,7 +1579,7 @@ export class InsideScene {
         // A Pit Hand turns pup up wherever they happen to be standing, which is
         // the point of making the people a rung: what they produce comes out of
         // the figure you can watch, not out of a slot on a shelf.
-        if (id === "linthand") {
+        if (id === "deephand") {
           const who = this.crew[Math.floor(Math.random() * this.crew.length)];
           if (who && who.state === "work") this.cut(who.x + 2, who.y - 3, id);
           return;
@@ -1669,7 +1669,7 @@ export class InsideScene {
    */
   private crewSize(bands: Band[]): number {
     if (bands.filter((b) => b.zone >= 0).length === 0) return 0;
-    return Math.min(MAX_CREW, shownCount(this.owned("linthand"), MAX_CREW, 1.7));
+    return Math.min(MAX_CREW, shownCount(this.owned("deephand"), MAX_CREW, 1.7));
   }
 
   /** Which benches exist to stand on, as `(zone, first)` pairs. */
@@ -1984,7 +1984,7 @@ export class InsideScene {
       // upgrades visibly re-kits the people. The arms-up pose is the one shared
       // sprite: four more of it for four marks is a lot of char grids for a pose
       // you see a third of the time.
-      const art = artCanvas(up ? SHAFT_CREW_UP : this.mark("linthand"));
+      const art = artCanvas(up ? SHAFT_CREW_UP : this.mark("deephand"));
       const bob = c.state === "walk" ? Math.round(Math.sin(this.clock * 7 + c.phase) * 0.5) : 0;
       const x = Math.round(c.x);
       const y = Math.round(c.y) - art.h + bob;
@@ -2136,7 +2136,7 @@ export class InsideScene {
    * storage because you already know what a crate stack is; a dome has no such luck and
    * has to earn it. Three things do that here, and they're the parts to keep:
    *
-   *  - **You can see the pup through it.** Puppies packed inside, showing as
+   *  - **You can see the pup through it.** Yield packed inside, showing as
    *    dark rounds under a translucent ticking. A container you can see into is a
    *    container. This is the whole fix; the rest is polish.
    *  - **It breathes.** A slow swell on a phase taken from its own slot, so a

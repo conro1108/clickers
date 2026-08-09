@@ -7,7 +7,7 @@ import {
   type PointerEventHandler,
   type ReactNode,
 } from "react";
-import { solo, type Potatoes } from "@battle/sim";
+import { solo, type Yield } from "@clickers/sim";
 
 import { producerMark } from "../marks.js";
 import { EMPTY_VIEW, FarmScene as Scene, type FarmView } from "../render/farmScene.js";
@@ -81,8 +81,8 @@ const SceneCanvas = forwardRef<FarmSceneHandle, {
  * is the discoverable version of the same verb.
  */
 export const FarmScene = forwardRef<FarmSceneHandle, {
-  farm: solo.FarmState;
-  hoard: Potatoes;
+  farm: solo.SiteState;
+  hoard: Yield;
   /** Given where on the buffer you tapped, when the dig came from the scene. */
   onDig: (at?: { x: number; y: number }) => void;
   /**
@@ -120,7 +120,7 @@ export const FarmScene = forwardRef<FarmSceneHandle, {
       working,
       broken,
       marks,
-      soil: farm.soil,
+      condition: farm.condition,
       hoard,
       seed: farm.seed,
       // Zero once it's happened: `convergenceProgress` pins at 1 forever, and
@@ -158,7 +158,7 @@ export const FarmScene = forwardRef<FarmSceneHandle, {
 /** A farm nobody owns, running on the title screen so it isn't a blank page. */
 const DEMO_VIEW: FarmView = {
   ...EMPTY_VIEW,
-  working: { plot: 9, hand: 2, irrigation: 1, tractor: 1 },
+  working: { patch: 9, hand: 2, rig: 1, hauler: 1 },
   hoard: 400,
   seed: "title",
 };

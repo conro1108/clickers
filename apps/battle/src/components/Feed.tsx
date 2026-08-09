@@ -1,4 +1,4 @@
-import { formatDuration, type MatchState } from "@battle/sim";
+import { formatDuration, type MatchState } from "@clickers/sim";
 
 export function Feed({ state }: { state: MatchState }) {
   const entries = [...state.log].reverse().slice(0, 40);

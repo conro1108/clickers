@@ -2150,25 +2150,25 @@ const SECOND_CHIHUAHUA_4: Art = {
  * The fourth is always a redraw — see the note above.
  */
 export const PRODUCER_MARKS = {
-  pen: [PEN_PUP, PEN_PUP_2, PEN_PUP_3, PEN_PUP_4],
+  patch: [PEN_PUP, PEN_PUP_2, PEN_PUP_3, PEN_PUP_4],
   hand: [
     KENNEL_HAND,
     repaint(KENNEL_HAND, { b: "#e08a3c", t: "#f2e3c8" }),
     repaint(KENNEL_HAND, { b: "#3f8f86", t: "#e0c04a" }),
     KENNEL_HAND_4,
   ],
-  heatlamp: [HEAT_LAMP, HEAT_LAMP_2, HEAT_LAMP_3, HEAT_LAMP_4],
-  van: [VAN, VAN_2, VAN_3, VAN_4],
-  groomer: [GROOMER, GROOMER_2, GROOMER_3, GROOMER_4],
+  rig: [HEAT_LAMP, HEAT_LAMP_2, HEAT_LAMP_3, HEAT_LAMP_4],
+  hauler: [VAN, VAN_2, VAN_3, VAN_4],
+  machine: [GROOMER, GROOMER_2, GROOMER_3, GROOMER_4],
   lab: [
     LAB,
     repaint(LAB, { g: "#7fe0a0" }),
     repaint(LAB, { g: "#c88fe6", w: "#eee8f4" }),
     LAB_4,
   ],
-  kibble: [KIBBLE, KIBBLE_2, KIBBLE_3, KIBBLE_4],
+  refinery: [KIBBLE, KIBBLE_2, KIBBLE_3, KIBBLE_4],
   tower: [TOWER, TOWER_2, TOWER_3, TOWER_4],
-  zeppelin: [ZEPPELIN, ZEPPELIN_2, ZEPPELIN_3, ZEPPELIN_4],
+  airship: [ZEPPELIN, ZEPPELIN_2, ZEPPELIN_3, ZEPPELIN_4],
   reactor: [
     REACTOR,
     repaint(REACTOR, { g: "#6fd8e6" }),
@@ -2187,7 +2187,7 @@ export const PRODUCER_MARKS = {
     repaint(SINGULARITY, { p: "#e0c04a", v: "#a8792c", n: "#120c1c" }),
     SINGULARITY_4,
   ],
-  hem: [
+  fold: [
     HEM_HOLLOW,
     repaint(HEM_HOLLOW, { b: "#4f8f7a", g: "#b6f2fb" }),
     repaint(HEM_HOLLOW, { b: "#7a5ac0", g: "#ffd166", m: "#e2e8ee" }),
@@ -2209,19 +2209,19 @@ export const PRODUCER_MARKS = {
   // rather than changing the shape: a hand who gets a better lamp and a better
   // jacket is still visibly the same hand, and at eleven pixels a redrawn
   // silhouette just reads as a different rung of worker.
-  linthand: [
+  deephand: [
     SHAFT_CREW,
     repaint(SHAFT_CREW, { t: "#4f8f7a", b: "#4a5c7a", l: "#b6f2fb" }),
     repaint(SHAFT_CREW, { t: "#c9a24a", b: "#7a5ac0", l: "#fff0b8", v: "#5b4f58" }),
     LINT_HAND_4,
   ],
-  fleece: [
+  face: [
     FLEECE_FACE,
     repaint(FLEECE_FACE, { s: "#ffffff", w: "#efe6cc" }),
     repaint(FLEECE_FACE, { s: "#d8f0f8", w: "#f4ecd0", m: "#cfd6dc" }),
     FLEECE_FACE_4,
   ],
-  seam: [
+  main: [
     SEAM_MAIN,
     repaint(SEAM_MAIN, { v: "#a86ea2", g: "#f0c6ec" }),
     repaint(SEAM_MAIN, { v: "#c48ac0", g: "#ffd166", m: "#cfd6dc" }),

@@ -1,4 +1,4 @@
-import { solo } from "@battle/sim";
+import { solo } from "@clickers/sim";
 
 import { PRODUCER_MARKS } from "./render/art.js";
 import type { Art } from "./render/pixel.js";
@@ -11,7 +11,7 @@ import type { Art } from "./render/pixel.js";
  * convention, so renaming or adding a tier upgrade doesn't quietly stop the art
  * from changing.
  */
-export function producerMark(farm: solo.FarmState, id: solo.SoloProducerId): number {
+export function producerMark(farm: solo.SiteState, id: solo.SoloProducerId): number {
   let level = 0;
   for (const upgrade of solo.SOLO_UPGRADES) {
     const effect = upgrade.effect;
@@ -22,7 +22,7 @@ export function producerMark(farm: solo.FarmState, id: solo.SoloProducerId): num
 }
 
 /** The art for a producer as it currently stands on this farm. */
-export function producerArt(farm: solo.FarmState, id: solo.SoloProducerId): Art {
+export function producerArt(farm: solo.SiteState, id: solo.SoloProducerId): Art {
   const marks = PRODUCER_MARKS[id];
   return marks[Math.min(marks.length - 1, producerMark(farm, id))] ?? marks[0];
 }
@@ -36,7 +36,7 @@ export function producerArt(farm: solo.FarmState, id: solo.SoloProducerId): Art 
  * have nothing to show and get no thumbnail.
  */
 export function upgradePreview(
-  farm: solo.FarmState,
+  farm: solo.SiteState,
   upgrade: solo.SoloUpgrade,
 ): Art | undefined {
   const effect = upgrade.effect;

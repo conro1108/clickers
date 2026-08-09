@@ -8,7 +8,7 @@
  * in `db/schema.sql`; this is just the calling code.
  */
 
-import type { ScoringRule } from "@mill/sim";
+import type { ScoringRule } from "@clickers/sim";
 
 import { lookup, supabase } from "./supabase.js";
 

@@ -17,7 +17,7 @@
  * vanish. Animation is translation only.
  */
 
-import type { solo } from "@battle/sim";
+import type { solo } from "@clickers/sim";
 
 import {
   BARROW,
@@ -81,8 +81,8 @@ export interface FarmView {
    */
   marks: Partial<Record<solo.SoloProducerId, number>>;
   /** 0..1. Drags the field's colour and wilts a share of the crop. */
-  soil: number;
-  /** Potatoes on hand. Drives the whole yard. */
+  condition: number;
+  /** Yield on hand. Drives the whole yard. */
   hoard: number;
   /** Stable across reloads, so the farm's layout is *your* farm's layout. */
   seed: string;
@@ -109,7 +109,7 @@ export const EMPTY_VIEW: FarmView = {
   working: {},
   broken: {},
   marks: {},
-  soil: 1,
+  condition: 1,
   hoard: 0,
   seed: "0",
   looming: 0,
@@ -359,7 +359,7 @@ interface Prop {
 }
 
 interface Stage {
-  /** Potatoes on hand at which this stage arrives. */
+  /** Yield on hand at which this stage arrives. */
   at: number;
   /** How big the working heap grows before the next stage takes it away. */
   heap: number;
@@ -419,7 +419,7 @@ export const YARD: Stage[] = [
 interface YardLayout {
   /** Index into YARD. Everything up to and including it is standing. */
   stage: number;
-  /** Potatoes in the working heap, 0..the stage's cap. */
+  /** Yield in the working heap, 0..the stage's cap. */
   heap: number;
 }
 
@@ -529,15 +529,15 @@ const PORTER_TIP = 300;
  */
 type OutsideId = Extract<
   solo.SoloProducerId,
-  | "plot"
+  | "patch"
   | "hand"
-  | "irrigation"
-  | "tractor"
-  | "harvester"
+  | "rig"
+  | "hauler"
+  | "machine"
   | "lab"
   | "refinery"
   | "tower"
-  | "seeder"
+  | "airship"
   | "reactor"
   | "orbital"
   | "singularity"
@@ -564,17 +564,17 @@ interface Placement {
 const PLACEMENT: Record<OutsideId, Placement> = {
   // The crop doesn't use the log curve — the field draws a bed per plot until
   // the land is full — so its cap is only the ceiling on broken ones.
-  plot: { band: "field", cap: 108 },
+  patch: { band: "field", cap: 108 },
   hand: { band: "walk", cap: 16, spread: 3 },
-  irrigation: { band: "field", cap: 12, spread: 2.6 },
+  rig: { band: "field", cap: 12, spread: 2.6 },
   // Slow. A tractor that crosses the screen in fifteen seconds is a tractor
   // working a field; one that does it in five is a toy being pushed along.
-  tractor: { band: "field", cap: 6, spread: 1.4, speed: 6 },
-  harvester: { band: "field", cap: 5, spread: 1.2, speed: 4.5 },
+  hauler: { band: "field", cap: 6, spread: 1.4, speed: 6 },
+  machine: { band: "field", cap: 5, spread: 1.2, speed: 4.5 },
   lab: { band: "back", cap: 5 },
   refinery: { band: "back", cap: 5 },
   tower: { band: "back", cap: 5 },
-  seeder: { band: "sky", cap: 5, spread: 1.6, speed: 2.5 },
+  airship: { band: "sky", cap: 5, spread: 1.6, speed: 2.5 },
   reactor: { band: "back", cap: 4 },
   orbital: { band: "sky", cap: 4, spread: 1.4, speed: 7 },
   singularity: { band: "sky", cap: 3, spread: 1.2 },
@@ -595,30 +595,30 @@ const PLACEMENT: Record<OutsideId, Placement> = {
  * mark's jet is drawn in.
  */
 const PRIME_GLOW: Record<OutsideId, string> = {
-  plot: "#a8f07a",
+  patch: "#a8f07a",
   hand: "#ffd782",
-  irrigation: "#8ec9e6",
-  tractor: "#ff8a4a",
-  harvester: "#ffe08a",
+  rig: "#8ec9e6",
+  hauler: "#ff8a4a",
+  machine: "#ffe08a",
   lab: "#c88fe6",
   refinery: "#f0913c",
   tower: "#a8f07a",
-  seeder: "#ffe066",
+  airship: "#ffe066",
   reactor: "#fff0b8",
   orbital: "#a4e884",
   singularity: "#ffe08a",
 };
 
 const ORDER: OutsideId[] = [
-  "plot",
+  "patch",
   "hand",
-  "irrigation",
-  "tractor",
-  "harvester",
+  "rig",
+  "hauler",
+  "machine",
   "lab",
   "refinery",
   "tower",
-  "seeder",
+  "airship",
   "reactor",
   "orbital",
   "singularity",
@@ -1179,7 +1179,7 @@ export class FarmScene {
   private rows: Row[] = [];
   /** Fresh furrow behind a tractor, fading. */
   private tills: { x: number; y: number; born: number }[] = [];
-  private seeds: Seed[] = [];
+  private heirlooms: Seed[] = [];
   /** The seeders aloft, one entry each, kept between frames. */
   private flyers: Flyer[] = [];
   /** This frame's singularities. Placed before the sky, so the sky can feel them. */
@@ -1746,7 +1746,7 @@ export class FarmScene {
         this.sacks = this.sacks.filter((s) => s !== sack);
       });
     }
-    // Potatoes on the pipeline's horizontal run, lifted straight out of it.
+    // Yield on the pipeline's horizontal run, lifted straight out of it.
     const pipeY = this.pipeY(horizon) + 3;
     for (const lump of this.lumps) {
       const px = lump.from - lump.d;
@@ -2162,7 +2162,7 @@ export class FarmScene {
 
   private drawGround(horizon: number, yardY: number): void {
     const ctx = this.ctx;
-    const soil = this.view.soil;
+    const soil = this.view.condition;
     // Tired soil isn't a number on this screen — the field goes the colour of a
     // field that needs help.
     const dry = 1 - Math.max(0, Math.min(1, soil));
@@ -2863,9 +2863,9 @@ export class FarmScene {
     // are not dead space, they're the thing you're filling in, and one plot
     // buying one visible plant is a straighter line between the button and the
     // farm than any curve was.
-    const stages = cropStages(this.mark("plot"));
-    const plant = artCanvas(this.mark("plot"));
-    const wiltShare = 1 - this.view.soil;
+    const stages = cropStages(this.mark("patch"));
+    const plant = artCanvas(this.mark("patch"));
+    const wiltShare = 1 - this.view.condition;
     const step = plant.w + 1;
     // Wide, but leaving a rig's width of headland at each end: the irrigation
     // stands off the ends of the rows it waters, and a row that runs to the
@@ -2877,7 +2877,7 @@ export class FarmScene {
     // One plot, one bed, until the land runs out — which it does at ninety
     // plots, deep into a run and well past the point where the field stopped
     // being the thing you're watching.
-    const plants = Math.min(slots, this.view.working.plot ?? 0);
+    const plants = Math.min(slots, this.view.working.patch ?? 0);
     const rowWidth = perRow * step - 1;
     const rowLeft = marginX + Math.round((usable - rowWidth) / 2);
 
@@ -2907,8 +2907,8 @@ export class FarmScene {
     // same place. So it's there as soon as anybody's working, not just when
     // there's a machine.
     const works =
-      (this.view.working.tractor ?? 0) +
-        (this.view.working.harvester ?? 0) +
+      (this.view.working.hauler ?? 0) +
+        (this.view.working.machine ?? 0) +
         (this.view.working.hand ?? 0) >
         0 || this.troughFill > 0;
     this.troughBox = works ? { x: 26, w: 112, y: lane(0.99) } : null;
@@ -2925,7 +2925,7 @@ export class FarmScene {
       // planters; a marked-out line reads as the land being there and waiting,
       // which is what it is.
       const worked = count > 0 ? count * step + 1 : 0;
-      ctx.fillStyle = this.view.soil < 0.7 ? "#8a7a3c" : DIRT;
+      ctx.fillStyle = this.view.condition < 0.7 ? "#8a7a3c" : DIRT;
       ctx.fillRect(left - 2, ground - 2, worked, 3);
       ctx.fillStyle = DIRT_DARK;
       ctx.fillRect(left - 2, ground + 1, worked, 1);
@@ -2938,12 +2938,12 @@ export class FarmScene {
       // of the row rather than a halo per plant: at ninety beds the haloes
       // would merge into a single wash anyway, and cost ninety gradients a
       // frame to arrive at it.
-      if (count > 0 && this.primed("plot")) {
+      if (count > 0 && this.primed("patch")) {
         const lit = (0.7 + 0.3 * Math.sin(t * 1.2 + r)) * this.lightGain();
         const band = ctx.createLinearGradient(0, ground - plant.h - 3, 0, ground + 2);
-        band.addColorStop(0, rgba(PRIME_GLOW.plot, 0));
-        band.addColorStop(0.65, rgba(PRIME_GLOW.plot, 0.26 * lit));
-        band.addColorStop(1, rgba(PRIME_GLOW.plot, 0));
+        band.addColorStop(0, rgba(PRIME_GLOW.patch, 0));
+        band.addColorStop(0.65, rgba(PRIME_GLOW.patch, 0.26 * lit));
+        band.addColorStop(1, rgba(PRIME_GLOW.patch, 0));
         ctx.fillStyle = band;
         ctx.fillRect(left - 3, ground - plant.h - 3, worked + 2, plant.h + 5);
       }
@@ -2979,8 +2979,8 @@ export class FarmScene {
 
     // Irrigation stands at the ends of the rows it waters, alternating sides,
     // and throws across them. A rig in the middle of nowhere was just a pole.
-    const sprinklers = shownCount(this.view.working.irrigation ?? 0, PLACEMENT.irrigation.cap, PLACEMENT.irrigation.spread);
-    const sprinkler = artCanvas(this.mark("irrigation"));
+    const sprinklers = shownCount(this.view.working.rig ?? 0, PLACEMENT.rig.cap, PLACEMENT.rig.spread);
+    const sprinkler = artCanvas(this.mark("rig"));
     for (let i = 0; i < sprinklers; i++) {
       const row = this.rows[i % Math.max(1, this.rows.length)];
       const side = i % 2 === 0 ? 1 : -1;
@@ -2990,7 +2990,7 @@ export class FarmScene {
           : Math.max(2, row.left - sprinkler.w - 3)
         : 14 + i * 42;
       const ground = row ? row.y : lane(0.2);
-      this.primeGlow("irrigation", x, ground - sprinkler.h, sprinkler.w, sprinkler.h, t, i);
+      this.primeGlow("rig", x, ground - sprinkler.h, sprinkler.w, sprinkler.h, t, i);
       ctx.drawImage(sprinkler.canvas, x, ground - sprinkler.h);
       // Droplets sweep out over the crop on a slow sine, so the arc reads as
       // one head turning rather than a static spray.
@@ -3003,8 +3003,8 @@ export class FarmScene {
     // Machines work the rows: they drive the headland just in front of a row,
     // reach back over it, and something happens to the crop as they pass.
     for (const [id, fallback] of [
-      ["tractor", 0.5],
-      ["harvester", 0.78],
+      ["hauler", 0.5],
+      ["machine", 0.78],
     ] as const) {
       const place = PLACEMENT[id];
       const n = shownCount(this.view.working[id] ?? 0, place.cap, place.spread);
@@ -3015,15 +3015,15 @@ export class FarmScene {
         // so on a farm with two rows they aren't nose to tail on the same one.
         // With nothing planted they fall back to their own lanes on open grass.
         const pick =
-          id === "harvester" ? this.rows.length - 1 - (i % Math.max(1, this.rows.length)) : i % Math.max(1, this.rows.length);
-        const row = this.rows.length > (id === "harvester" && this.rows.length < 2 ? 1 : 0) ? this.rows[pick] : undefined;
+          id === "machine" ? this.rows.length - 1 - (i % Math.max(1, this.rows.length)) : i % Math.max(1, this.rows.length);
+        const row = this.rows.length > (id === "machine" && this.rows.length < 2 ? 1 : 0) ? this.rows[pick] : undefined;
         const ground = row ? row.y + 5 : lane(fallback);
         // Phase and pace are hashed per machine rather than dealt out evenly.
         // Evenly spaced starts at one shared speed drew two perfect diagonals
         // — the tractors going one way down the rows and the combines the
         // other — and a farm that renders a clean X across itself all day is
         // clearly a formula and not a place where work is happening.
-        const h = fract(Math.sin((i + 1) * (id === "harvester" ? 63.7 : 21.3)) * 4375.85);
+        const h = fract(Math.sin((i + 1) * (id === "machine" ? 63.7 : 21.3)) * 4375.85);
         const pace = place.speed! * (0.78 + 0.44 * fract(h * 7.13));
         const x = Math.floor((((t * pace + h * span) % span) + span) % span) - sprite.w;
         // Where it's drawn, once anything hanging over the field has had its
@@ -3036,7 +3036,7 @@ export class FarmScene {
         ctx.drawImage(sprite.canvas, mx, my);
         if (this.chance(2.5)) this.puff(x + 1, ground - 2, "dust");
 
-        if (id === "tractor") {
+        if (id === "hauler") {
           // A tractor ploughs. The furrow it leaves is the whole reason to
           // watch one cross a field.
           if (this.tills.length < 90 && this.chance(14)) {
@@ -3047,7 +3047,7 @@ export class FarmScene {
         // Both of them lift what's ready under the header as they pass, and
         // both of them unload the same way a real one does: an auger swung out
         // over the trough, with the crop visibly going down it.
-        const reach = id === "harvester" ? 6 : 2;
+        const reach = id === "machine" ? 6 : 2;
         const key = `${id}${i}`;
         for (let b = 0; b < this.beds.length; b++) {
           const bed = this.beds[b]!;
@@ -3105,8 +3105,8 @@ export class FarmScene {
     const { deck, hang } = this.decks(horizon);
 
     this.stepFlyers(
-      shownCount(this.view.working.seeder ?? 0, PLACEMENT.seeder.cap, PLACEMENT.seeder.spread),
-      artCanvas(this.mark("seeder")),
+      shownCount(this.view.working.airship ?? 0, PLACEMENT.airship.cap, PLACEMENT.airship.spread),
+      artCanvas(this.mark("airship")),
       t,
       deck,
     );
@@ -3218,7 +3218,7 @@ export class FarmScene {
     });
   }
 
-  /** Furrow behind a tractor: fresh dark soil that grasses back over. */
+  /** Furrow behind a hauler: fresh dark soil that grasses back over. */
   private drawTills(now: number): void {
     const ctx = this.ctx;
     this.tills = this.tills.filter((till) => {
@@ -3261,7 +3261,7 @@ export class FarmScene {
         f.drip -= this.dt;
         if (f.drip <= 0) {
           f.drip = 0.22 + Math.random() * 0.16;
-          if (this.seeds.length < 24) this.dropSeedNear(f.x + sprite.w / 2, f.y + sprite.h);
+          if (this.heirlooms.length < 24) this.dropSeedNear(f.x + sprite.w / 2, f.y + sprite.h);
         }
         if (f.hold <= 0) this.aimFlyer(f, sprite.w, band);
       } else {
@@ -3283,7 +3283,7 @@ export class FarmScene {
       const at = this.warp(f.x + sprite.w / 2, f.y + bob + sprite.h / 2);
       const fx = Math.round(at.x - sprite.w / 2);
       const fy = Math.round(at.y - sprite.h / 2);
-      this.primeGlow("seeder", fx, fy, sprite.w, sprite.h, t, i);
+      this.primeGlow("airship", fx, fy, sprite.w, sprite.h, t, i);
       ctx.drawImage(sprite.canvas, fx, fy);
     }
   }
@@ -3358,14 +3358,14 @@ export class FarmScene {
       }
     }
     if (pick < 0) return;
-    this.seeds.push({ x, y, vy: 30 + Math.random() * 12, crop: pick });
+    this.heirlooms.push({ x, y, vy: 30 + Math.random() * 12, crop: pick });
   }
 
   /** Seeds falling, and what they do when they land. */
   private stepSeeds(t: number): void {
     const ctx = this.ctx;
     ctx.fillStyle = "#e6d78a";
-    this.seeds = this.seeds.filter((seed) => {
+    this.heirlooms = this.heirlooms.filter((seed) => {
       seed.y += seed.vy * this.dt;
       const bed = this.beds[seed.crop];
       if (!bed || seed.y >= bed.y) {
@@ -3775,7 +3775,7 @@ export class FarmScene {
     ctx.globalAlpha = 1;
   }
 
-  /** Potatoes being carried between columns, drawn over the columns themselves. */
+  /** Yield being carried between columns, drawn over the columns themselves. */
   private drawBundles(now: number): void {
     const ctx = this.ctx;
     for (const b of this.bundles) {
@@ -3988,7 +3988,7 @@ export class FarmScene {
     ctx.fillRect(x1 - 1, y1 + 1, W + 2, 2);
   }
 
-  /** Potatoes on an auger or a spout: straight line, constant speed, no arc. */
+  /** Yield on an auger or a spout: straight line, constant speed, no arc. */
   private drawHauls(now: number): void {
     const ctx = this.ctx;
     const sprite = artCanvas(POTATO_SPRITE);

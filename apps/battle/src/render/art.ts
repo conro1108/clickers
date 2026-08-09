@@ -531,7 +531,7 @@ export const SILO: Art = {
 };
 
 /**
- * A barrow of potatoes: the first thing in the yard that isn't just potatoes,
+ * A barrow of stock: the first thing in the yard that isn't just potatoes,
  * and the first hint that this is becoming an operation.
  */
 export const BARROW: Art = {
@@ -1137,7 +1137,7 @@ const PLANT_2: Art = {
   palette: PLANT.palette,
 };
 
-/** Potatoes really do flower, and it's the clearest "this bed is doing well". */
+/** Yield really do flower, and it's the clearest "this bed is doing well". */
 const PLANT_3: Art = {
   rows: [
     "..w.w.w..",
@@ -1813,16 +1813,16 @@ const SECOND_POTATO_4: Art = {
  * The fourth is always a redraw — see the note above.
  */
 export const PRODUCER_MARKS = {
-  plot: [PLANT, PLANT_2, PLANT_3, PLANT_4],
+  patch: [PLANT, PLANT_2, PLANT_3, PLANT_4],
   hand: [
     FARMHAND,
     repaint(FARMHAND, { b: "#e08a3c", t: "#f2e3c8" }),
     repaint(FARMHAND, { b: "#3f8f86", t: "#e0c04a" }),
     FARMHAND_4,
   ],
-  irrigation: [SPRINKLER, SPRINKLER_2, SPRINKLER_3, SPRINKLER_4],
-  tractor: [TRACTOR, TRACTOR_2, TRACTOR_3, TRACTOR_4],
-  harvester: [COMBINE, COMBINE_2, COMBINE_3, COMBINE_4],
+  rig: [SPRINKLER, SPRINKLER_2, SPRINKLER_3, SPRINKLER_4],
+  hauler: [TRACTOR, TRACTOR_2, TRACTOR_3, TRACTOR_4],
+  machine: [COMBINE, COMBINE_2, COMBINE_3, COMBINE_4],
   lab: [
     LAB,
     repaint(LAB, { g: "#7fe0a0" }),
@@ -1831,7 +1831,7 @@ export const PRODUCER_MARKS = {
   ],
   refinery: [REFINERY, REFINERY_2, REFINERY_3, REFINERY_4],
   tower: [TOWER, TOWER_2, TOWER_3, TOWER_4],
-  seeder: [SEEDER, SEEDER_2, SEEDER_3, SEEDER_4],
+  airship: [SEEDER, SEEDER_2, SEEDER_3, SEEDER_4],
   reactor: [
     REACTOR,
     repaint(REACTOR, { g: "#6fd8e6" }),
@@ -1850,7 +1850,7 @@ export const PRODUCER_MARKS = {
     repaint(SINGULARITY, { p: "#e0c04a", v: "#a8792c", n: "#120c1c" }),
     SINGULARITY_4,
   ],
-  bruise: [
+  fold: [
     BRUISE_BED,
     repaint(BRUISE_BED, { b: "#4f8f7a", g: "#b6f2fb" }),
     repaint(BRUISE_BED, { b: "#7a5ac0", g: "#ffd166", m: "#e2e8ee" }),
@@ -1872,19 +1872,19 @@ export const PRODUCER_MARKS = {
   // rather than changing the shape: a hand who gets a better lamp and a better
   // jacket is still visibly the same hand, and at eleven pixels a redrawn
   // silhouette just reads as a different rung of worker.
-  pithand: [
+  deephand: [
     SHAFT_CREW,
     repaint(SHAFT_CREW, { t: "#4f8f7a", b: "#4a5c7a", l: "#b6f2fb" }),
     repaint(SHAFT_CREW, { t: "#c9a24a", b: "#7a5ac0", l: "#fff0b8", v: "#5b4f58" }),
     PIT_HAND_4,
   ],
-  quarry: [
+  face: [
     STARCH_FACE,
     repaint(STARCH_FACE, { s: "#ffffff", w: "#efe6cc" }),
     repaint(STARCH_FACE, { s: "#d8f0f8", w: "#f4ecd0", m: "#cfd6dc" }),
     STARCH_FACE_4,
   ],
-  ring: [
+  main: [
     RING_MAIN,
     repaint(RING_MAIN, { v: "#a86ea2", g: "#f0c6ec" }),
     repaint(RING_MAIN, { v: "#c48ac0", g: "#ffd166", m: "#cfd6dc" }),

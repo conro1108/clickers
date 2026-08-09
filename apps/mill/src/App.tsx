@@ -8,19 +8,19 @@ import {
   type PointerEvent,
 } from "react";
 import {
-  P,
+  Y,
   brokenRate,
   format,
   formatDuration,
   opponentView,
   rateAt,
-  whistleGain,
-  whistlesReady,
+  clickGain,
+  clicksReady,
   seconds,
   slowMultiplier,
   solo,
   standings,
-} from "@mill/sim";
+} from "@clickers/sim";
 
 import { clockSkew, setClockSkew } from "./clock.js";
 import { abandon, joinByCode, type MatchRow } from "./online/matches.js";
@@ -282,7 +282,7 @@ const FOLD_SWAP_MS = Math.round(CONVERGE_MS * 0.3);
  * Only ever asked before the fold — see the effect that reads it. Past the fold
  * there is nothing left to hint at.
  */
-function omenNudge(mill: solo.MillState): string {
+function omenNudge(mill: solo.SiteState): string {
   const p = solo.convergenceProgress(mill);
   if (p >= 1) return "It's in reach";
   if (p >= 0.7) return "Nearly";
@@ -323,11 +323,11 @@ function BackRoom({
   onAbandon,
   dispatch,
 }: {
-  mill: solo.MillState;
+  mill: solo.SiteState;
   onVersus: () => void;
   onTitle: () => void;
   onAbandon: () => void;
-  dispatch: (cmd: solo.MillCommand) => void;
+  dispatch: (cmd: solo.SiteCommand) => void;
 }) {
   // Read once per open rather than watched. Nothing else in the app can change
   // it, and a skew that re-rendered every tick would be a clock, which invites
@@ -393,8 +393,8 @@ function BackRoom({
             ["+100 whistles", 100],
             ["+10k whistles", 10_000],
             ["+1M whistles", 1_000_000],
-          ] as const).map(([label, whistles]) => (
-            <button key={whistles} className="ghost" onClick={() => dispatch({ type: "dev_grant", whistles })}>
+          ] as const).map(([label, clicks]) => (
+            <button key={clicks} className="ghost" onClick={() => dispatch({ type: "dev_grant", clicks })}>
               {label}
             </button>
           ))}
@@ -419,9 +419,9 @@ function BackRoom({
           first run.
         </p>
         <div className="choices">
-          {[10, 1_000, 100_000].map((papers) => (
-            <button key={papers} className="ghost" onClick={() => dispatch({ type: "dev_papers", papers })}>
-              +{papers.toLocaleString()}
+          {[10, 1_000, 100_000].map((heirlooms) => (
+            <button key={heirlooms} className="ghost" onClick={() => dispatch({ type: "dev_heirlooms", heirlooms })}>
+              +{heirlooms.toLocaleString()}
             </button>
           ))}
         </div>
@@ -617,7 +617,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   // over there is still worth knowing, and the panel says so once you're in it.
   // Bedding is one number for both mills, so it counts wherever you're standing.
   const needsAttention =
-    mill.bedding < 1 ||
+    mill.condition < 1 ||
     solo.producersIn(mill.world).some((p) => solo.brokenCount(mill, p.id) > 0);
   // Shown the moment a hand-down would pay anything, and then never taken away.
   //
@@ -634,7 +634,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   // regardless of what this run has earned, which also covers a save that
   // converged and prestiged before `converged` existed as a flag.
   const showPapers =
-    mill.converged || mill.papers > 0 || mill.generation > 1 || solo.pendingPapers(mill) > 0;
+    mill.converged || mill.heirlooms > 0 || mill.generation > 1 || solo.pendingHeirlooms(mill) > 0;
 
   // Right to left in order of how often you reach for it. The far left of a
   // bottom bar is the corner a thumb has to travel for, and Shop is where you
@@ -665,7 +665,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
 
   useSpaceToWhistle(onWhistle, report === null && sheet === null && omen === null && !converging);
 
-  const beddingPct = Math.round(mill.bedding * 100);
+  const beddingPct = Math.round(mill.condition * 100);
   const hold = useHold(useCallback(() => setSheet("back"), []));
   const kitOnTheLand = solo.SOLO_PRODUCERS.reduce((n, p) => n + (mill.producers[p.id] ?? 0), 0);
 
@@ -696,11 +696,11 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           <div className="bedding" title="Bedding health">
             <div className="bedding-track">
               <div
-                className={`bedding-fill ${mill.bedding < 0.75 ? "low" : ""}`}
+                className={`bedding-fill ${mill.condition < 0.75 ? "low" : ""}`}
                 style={{ width: `${beddingPct}%` }}
               />
             </div>
-            <span className={mill.bedding < 1 ? "hurt" : "muted"}>bedding {beddingPct}%</span>
+            <span className={mill.condition < 1 ? "hurt" : "muted"}>bedding {beddingPct}%</span>
           </div>
         </div>
       </header>
@@ -723,7 +723,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           the label that says so and the number that says how hard, which is the
           part worth keeping around. */}
       <div className="whistlebar">
-        <button className="whistle" onClick={() => onWhistle()}>
+        <button className="click" onClick={() => onWhistle()}>
           <PxIcon name="puppy" size={14} />
           <span className="whistle-label">Whistle</span>
           <span className="whistle-yield">+{format(perWhistle)}</span>
@@ -971,11 +971,11 @@ function Match({
   const opponents = opponentIds.map((id) => state.players[id]!);
   // Clicks you've made but that haven't been flushed into the sim yet still
   // count — `dispatch` banks them before it spends, so this is honest. Priced
-  // through `whistleGain` rather than `clickYield` for the same reason: while
+  // through `clickGain` rather than `clickYield` for the same reason: while
   // the whistle bucket is drained a tap is worth less than a whole tap, and a
   // budget that doesn't know that shows you a pile the shop then refuses.
   const budget = useMemo(
-    () => P.add(me.puppies, whistleGain(me, now, pendingClicks)),
+    () => Y.add(me.stock, clickGain(me, now, pendingClicks)),
     [me, now, pendingClicks],
   );
   const yourScore = table.find((s) => s.player.id === me.id)?.score ?? 0;
@@ -991,11 +991,11 @@ function Match({
   const bestRival = rival?.count ?? 0;
   const timeLeft = state.startedAt + state.config.durationMs - now;
   // What the *next* whistle is worth, which is not always a whole one.
-  const perClick = whistleGain(me, now, pendingClicks + 1) - whistleGain(me, now, pendingClicks);
+  const perClick = clickGain(me, now, pendingClicks + 1) - clickGain(me, now, pendingClicks);
   // Whistling faster than the puppies can come. Worth saying out loud — the
   // yield quietly dropping is the kind of thing a player reads as the game
   // being broken rather than as a rule they've hit.
-  const winded = whistlesReady(me, now) - pendingClicks < 1;
+  const winded = clicksReady(me, now) - pendingClicks < 1;
   const rate = rateAt(me, now);
   const slow = slowMultiplier(me, now);
   const broken = brokenRate(me) > 0;
@@ -1225,7 +1225,7 @@ function OnlineMatch({
     return (
       <div className="lobby">
         <h1>
-          Puppies, <span>Inc.</span>
+          Yield, <span>Inc.</span>
         </h1>
         <p className="tagline">Catching up on the match…</p>
         {runtime.error && <div className="error">{runtime.error}</div>}

@@ -50,7 +50,7 @@ export function simulateMatch(opts: {
   const startedAt = ms(0);
 
   let state = createMatch({
-    config: { seed: opts.seed, durationMs: opts.durationMs, scoring: opts.scoring ?? "total_raised" },
+    config: { seed: opts.seed, durationMs: opts.durationMs, scoring: opts.scoring ?? "total_produced" },
     startedAt,
     players: opts.players.map((p) => ({ id: p.id, name: p.name, isBot: !p.human })),
   });

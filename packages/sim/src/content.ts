@@ -1,11 +1,12 @@
-import { P, seconds, type Puppies } from "./numbers.js";
+import { Y, seconds, type Yield } from "./numbers.js";
+import { named, THEME, type Shape } from "./theme.js";
 
 export type ProducerId =
-  | "pen"
+  | "patch"
   | "hand"
-  | "heatlamp"
-  | "van"
-  | "groomer"
+  | "rig"
+  | "hauler"
+  | "machine"
   | "lab";
 
 export interface Producer {
@@ -14,14 +15,14 @@ export interface Producer {
   blurb: string;
   /**
    * What a damaged one of these is, and what putting it right is called. Kept
-   * per-producer because a van breaks and a kennel hand doesn't. Reads as
-   * "2 worn out" and "Talk round Kennel Hand".
+   * per-producer because a hauler breaks and a hand doesn't. Reads as
+   * "2 worn out" and "Talk round Hand".
    */
   hurt: string;
   mend: string;
-  /** Puppies per second, per unit owned, before multipliers. */
+  /** Yield per second, per unit owned, before multipliers. */
   baseRate: number;
-  baseCost: Puppies;
+  baseCost: Yield;
   /** Cost of the Nth unit is baseCost * growth^N. */
   growth: number;
 }
@@ -33,68 +34,46 @@ export interface Producer {
  * whole tree before the clock runs out. `packages/sim/src/balance.test.ts` is
  * the check on this — retune here, run that.
  */
-export const PRODUCERS: readonly Producer[] = [
+const PRODUCER_SHAPES: readonly Shape<Producer>[] = [
   {
-    id: "pen",
-    name: "Puppy Pen",
-    blurb: "A square of yard with a fence round it. Nature does the rest.",
-    hurt: "trampled",
-    mend: "Re-peg",
+    id: "patch",
     baseRate: 1.25,
-    baseCost: P.of(15),
+    baseCost: Y.of(15),
     growth: 1.12,
   },
   {
     id: "hand",
-    name: "Kennel Hand",
-    blurb: "Pays for themselves. Eventually.",
-    hurt: "worn out",
-    mend: "Talk round",
     baseRate: 9,
-    baseCost: P.of(110),
+    baseCost: Y.of(110),
     growth: 1.12,
   },
   {
-    id: "heatlamp",
-    name: "Heat Lamp",
-    blurb: "Warmth, on purpose, at the right time.",
-    hurt: "blown",
-    mend: "Re-bulb",
+    id: "rig",
     baseRate: 65,
-    baseCost: P.of(800),
+    baseCost: Y.of(800),
     growth: 1.12,
   },
   {
-    id: "van",
-    name: "Transport Van",
-    blurb: "Diesel-powered puppy logistics.",
-    hurt: "broken",
-    mend: "Repair",
+    id: "hauler",
     baseRate: 480,
-    baseCost: P.of(6_000),
+    baseCost: Y.of(6_000),
     growth: 1.12,
   },
   {
-    id: "groomer",
-    name: "Grooming Rig",
-    blurb: "Fluffs a hundred an hour. Do not stand in front of it.",
-    hurt: "jammed",
-    mend: "Unjam",
+    id: "machine",
     baseRate: 3_500,
-    baseCost: P.of(45_000),
+    baseCost: Y.of(45_000),
     growth: 1.12,
   },
   {
     id: "lab",
-    name: "Genetics Lab",
-    blurb: "The chihuahuas are asking questions now.",
-    hurt: "contaminated",
-    mend: "Decontaminate",
     baseRate: 26_000,
-    baseCost: P.of(340_000),
+    baseCost: Y.of(340_000),
     growth: 1.12,
   },
 ];
+
+export const PRODUCERS: readonly Producer[] = named(PRODUCER_SHAPES, THEME.producers, "producer");
 
 export const PRODUCER_BY_ID: Record<ProducerId, Producer> = Object.fromEntries(
   PRODUCERS.map((p) => [p.id, p]),
@@ -105,16 +84,16 @@ export const PRODUCER_BY_ID: Record<ProducerId, Producer> = Object.fromEntries(
 // ---------------------------------------------------------------------------
 
 export type UpgradeId =
-  | "silver_whistle"
-  | "two_tone_whistle"
-  | "gold_whistle"
-  | "better_kibble"
-  | "rest_rotation"
-  | "designer_genes"
-  | "straw_bedding"
-  | "overtime_pay"
-  | "ceramic_bulbs"
-  | "turbo_diesel";
+  | "tool_1"
+  | "tool_2"
+  | "tool_3"
+  | "boost_1"
+  | "boost_2"
+  | "boost_3"
+  | "mult_patch"
+  | "mult_hand"
+  | "mult_rig"
+  | "mult_hauler";
 
 export type UpgradeEffect =
   | { kind: "click_mult"; factor: number }
@@ -125,93 +104,75 @@ export interface Upgrade {
   id: UpgradeId;
   name: string;
   blurb: string;
-  cost: Puppies;
+  cost: Yield;
   effect: UpgradeEffect;
   /** Hidden until the player owns this many of the producer. */
   requires?: { producer: ProducerId; count: number };
 }
 
-export const UPGRADES: readonly Upgrade[] = [
+const UPGRADE_SHAPES: readonly Shape<Upgrade>[] = [
   {
-    id: "silver_whistle",
-    name: "Silver Whistle",
-    blurb: "Whistling, but with intent. Clicks x3.",
-    cost: P.of(100),
+    id: "tool_1",
+    cost: Y.of(100),
     effect: { kind: "click_mult", factor: 3 },
   },
   {
-    id: "two_tone_whistle",
-    name: "Two-Tone Whistle",
-    blurb: "Both fingers. Clicks x5.",
-    cost: P.of(2_000),
+    id: "tool_2",
+    cost: Y.of(2_000),
     effect: { kind: "click_mult", factor: 5 },
     requires: { producer: "hand", count: 5 },
   },
   {
-    id: "gold_whistle",
-    name: "Ceremonial Gold Whistle",
-    blurb: "Impractical. Effective. Clicks x8.",
-    cost: P.of(120_000),
+    id: "tool_3",
+    cost: Y.of(120_000),
     effect: { kind: "click_mult", factor: 8 },
-    requires: { producer: "van", count: 10 },
+    requires: { producer: "hauler", count: 10 },
   },
   {
-    id: "straw_bedding",
-    name: "Straw Bedding",
-    blurb: "Pens produce twice as much.",
-    cost: P.of(500),
-    effect: { kind: "producer_mult", producer: "pen", factor: 2 },
-    requires: { producer: "pen", count: 10 },
+    id: "mult_patch",
+    cost: Y.of(500),
+    effect: { kind: "producer_mult", producer: "patch", factor: 2 },
+    requires: { producer: "patch", count: 10 },
   },
   {
-    id: "overtime_pay",
-    name: "Overtime Pay",
-    blurb: "Kennel Hands produce twice as much.",
-    cost: P.of(3_500),
+    id: "mult_hand",
+    cost: Y.of(3_500),
     effect: { kind: "producer_mult", producer: "hand", factor: 2 },
     requires: { producer: "hand", count: 10 },
   },
   {
-    id: "better_kibble",
-    name: "Better Kibble",
-    blurb: "All producers +50%.",
-    cost: P.of(12_000),
+    id: "boost_1",
+    cost: Y.of(12_000),
     effect: { kind: "global_mult", factor: 1.5 },
     requires: { producer: "hand", count: 15 },
   },
   {
-    id: "ceramic_bulbs",
-    name: "Ceramic Bulbs",
-    blurb: "Heat lamps produce twice as much.",
-    cost: P.of(30_000),
-    effect: { kind: "producer_mult", producer: "heatlamp", factor: 2 },
-    requires: { producer: "heatlamp", count: 10 },
+    id: "mult_rig",
+    cost: Y.of(30_000),
+    effect: { kind: "producer_mult", producer: "rig", factor: 2 },
+    requires: { producer: "rig", count: 10 },
   },
   {
-    id: "rest_rotation",
-    name: "Rest Rotation",
-    blurb: "All producers +50%.",
-    cost: P.of(90_000),
+    id: "boost_2",
+    cost: Y.of(90_000),
     effect: { kind: "global_mult", factor: 1.5 },
-    requires: { producer: "heatlamp", count: 15 },
+    requires: { producer: "rig", count: 15 },
   },
   {
-    id: "turbo_diesel",
-    name: "Turbo Diesel",
-    blurb: "Vans produce twice as much.",
-    cost: P.of(200_000),
-    effect: { kind: "producer_mult", producer: "van", factor: 2 },
-    requires: { producer: "van", count: 10 },
+    id: "mult_hauler",
+    cost: Y.of(200_000),
+    effect: { kind: "producer_mult", producer: "hauler", factor: 2 },
+    requires: { producer: "hauler", count: 10 },
   },
   {
-    id: "designer_genes",
-    name: "Designer Genes",
-    blurb: "All producers x2. Don't read the label.",
-    cost: P.of(900_000),
+    id: "boost_3",
+    cost: Y.of(900_000),
     effect: { kind: "global_mult", factor: 2 },
-    requires: { producer: "groomer", count: 10 },
+    requires: { producer: "machine", count: 10 },
   },
 ];
+
+export const UPGRADES: readonly Upgrade[] = named(UPGRADE_SHAPES, THEME.upgrades, "upgrade");
 
 export const UPGRADE_BY_ID: Record<UpgradeId, Upgrade> = Object.fromEntries(
   UPGRADES.map((u) => [u.id, u]),
@@ -222,7 +183,7 @@ export const UPGRADE_BY_ID: Record<UpgradeId, Upgrade> = Object.fromEntries(
 // a defense with at least this much left absorbs the attack outright.
 // ---------------------------------------------------------------------------
 
-export type AttackId = "foxes" | "cough" | "heatwave" | "bedding_rot" | "inspection";
+export type AttackId = "vermin" | "disease" | "swelter" | "rot" | "sweep";
 
 /**
  * Which producers a breakage attack goes for.
@@ -248,13 +209,13 @@ export interface Attack {
   blurb: string;
   power: number;
   /** Floor price, and what you pay while the target is still small. */
-  baseCost: Puppies;
+  baseCost: Yield;
   /**
-   * Puppies charged per point of the target's production rate. Sabotage that
+   * Yield charged per point of the target's production rate. Sabotage that
    * costs a flat price does damage proportional to how big the target is, which
    * makes hitting a leader wildly better value than growing — the one outcome
    * that collapses the spend-on-yourself-vs-spend-on-them choice. Pricing the
-   * swing against the mill you're swinging at is what keeps it a real trade.
+   * swing against the site you're swinging at is what keeps it a real trade.
    */
   costPerRate: number;
   /** Repeat use gets pricier on top of that. */
@@ -262,58 +223,50 @@ export interface Attack {
   effect: AttackEffect;
 }
 
-export const ATTACKS: readonly Attack[] = [
+const ATTACK_SHAPES: readonly Shape<Attack>[] = [
   {
-    id: "foxes",
-    name: "Foxes",
-    blurb: "Goes through their cheap stuff. Stays gone through.",
+    id: "vermin",
     power: 40,
-    baseCost: P.of(200),
+    baseCost: Y.of(200),
     costPerRate: 0.15,
     growth: 1.3,
     effect: { kind: "break", share: 0.28, scope: "cheapest" },
   },
   {
-    id: "cough",
-    name: "Kennel Cough",
-    blurb: "Runs through a chunk of their best producer. Needs seeing to.",
+    id: "disease",
     power: 110,
-    baseCost: P.of(1_200),
+    baseCost: Y.of(1_200),
     costPerRate: 1,
     growth: 1.3,
     effect: { kind: "break", share: 0.28, scope: "best" },
   },
   {
-    id: "heatwave",
-    name: "Heatwave",
-    blurb: "-55% output for 40s. Passes on its own.",
+    id: "swelter",
     power: 260,
-    baseCost: P.of(6_000),
+    baseCost: Y.of(6_000),
     costPerRate: 3,
     growth: 1.35,
     effect: { kind: "slow", cut: 0.55, durationMs: seconds(40) },
   },
   {
-    id: "bedding_rot",
-    name: "Ruined Bedding",
-    blurb: "Wrecks half their best producer.",
+    id: "rot",
     power: 420,
-    baseCost: P.of(30_000),
+    baseCost: Y.of(30_000),
     costPerRate: 1.75,
     growth: 1.35,
     effect: { kind: "break", share: 0.46, scope: "best" },
   },
   {
-    id: "inspection",
-    name: "Surprise Inspection",
-    blurb: "Takes a slice of everything they own. Paperwork for days.",
+    id: "sweep",
     power: 750,
-    baseCost: P.of(150_000),
+    baseCost: Y.of(150_000),
     costPerRate: 2.2,
     growth: 1.4,
     effect: { kind: "break", share: 0.35, scope: "all" },
   },
 ];
+
+export const ATTACKS: readonly Attack[] = named(ATTACK_SHAPES, THEME.attacks, "attack");
 
 export const ATTACK_BY_ID: Record<AttackId, Attack> = Object.fromEntries(
   ATTACKS.map((a) => [a.id, a]),
@@ -324,7 +277,7 @@ export const ATTACK_BY_ID: Record<AttackId, Attack> = Object.fromEntries(
 // power until it runs dry or the window closes.
 // ---------------------------------------------------------------------------
 
-export type DefenseId = "guard_dog" | "fence" | "quarantine" | "insurance";
+export type DefenseId = "ward" | "fence" | "shelter" | "insurance";
 
 export interface Defense {
   id: DefenseId;
@@ -332,48 +285,42 @@ export interface Defense {
   blurb: string;
   power: number;
   durationMs: number;
-  baseCost: Puppies;
+  baseCost: Yield;
   growth: number;
 }
 
-export const DEFENSES: readonly Defense[] = [
+const DEFENSE_SHAPES: readonly Shape<Defense>[] = [
   {
-    id: "guard_dog",
-    name: "Guard Dog",
-    blurb: "Absorbs 60 power for 90s.",
+    id: "ward",
     power: 60,
     durationMs: seconds(90),
-    baseCost: P.of(300),
+    baseCost: Y.of(300),
     growth: 1.35,
   },
   {
     id: "fence",
-    name: "Electric Fence",
-    blurb: "Absorbs 200 power for 2m.",
     power: 200,
     durationMs: seconds(120),
-    baseCost: P.of(3_000),
+    baseCost: Y.of(3_000),
     growth: 1.35,
   },
   {
-    id: "quarantine",
-    name: "Quarantine Barn",
-    blurb: "Absorbs 550 power for 2m30s.",
+    id: "shelter",
     power: 550,
     durationMs: seconds(150),
-    baseCost: P.of(22_000),
+    baseCost: Y.of(22_000),
     growth: 1.4,
   },
   {
     id: "insurance",
-    name: "Kennel Insurance",
-    blurb: "Absorbs 1400 power for 3m.",
     power: 1_400,
     durationMs: seconds(180),
-    baseCost: P.of(150_000),
+    baseCost: Y.of(150_000),
     growth: 1.4,
   },
 ];
+
+export const DEFENSES: readonly Defense[] = named(DEFENSE_SHAPES, THEME.defenses, "defense");
 
 export const DEFENSE_BY_ID: Record<DefenseId, Defense> = Object.fromEntries(
   DEFENSES.map((d) => [d.id, d]),
@@ -381,24 +328,24 @@ export const DEFENSE_BY_ID: Record<DefenseId, Defense> = Object.fromEntries(
 
 // ---------------------------------------------------------------------------
 
-/** Base puppies per click, before click multipliers. */
-export const BASE_CLICK = P.of(1);
+/** Base stock per click, before click multipliers. */
+export const BASE_CLICK = Y.of(1);
 
 /**
- * No knockouts (VISION.md): stacked sabotage can never take a mill below this
+ * No knockouts (VISION.md): stacked sabotage can never take a site below this
  * fraction of its clean rate.
  */
 export const MIN_RATE_MULTIPLIER = 0.15;
 
 /**
  * And breakage can never take more than this share of a producer type you own,
- * so no single hit can flatten a mill however far ahead the attacker is.
+ * so no single hit can flatten a site however far ahead the attacker is.
  */
 export const MAX_BROKEN_SHARE = 0.6;
 
 /**
  * Repairing costs this share of what those units would cost to buy fresh at
  * your current count. Cheaper than rebuilding, so damage is a tax on your
- * momentum rather than a wipe — but it's still puppies that didn't compound.
+ * momentum rather than a wipe — but it's still stock that didn't compound.
  */
 export const REPAIR_COST_FRACTION = 0.75;

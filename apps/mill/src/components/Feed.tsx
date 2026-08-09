@@ -1,4 +1,4 @@
-import { formatDuration, type MatchState } from "@mill/sim";
+import { formatDuration, type MatchState } from "@clickers/sim";
 
 /** The match log, in the same list the homestead's yard report uses. */
 export function Feed({ state }: { state: MatchState }) {

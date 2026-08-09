@@ -1,4 +1,4 @@
-import { format, solo } from "@battle/sim";
+import { format, solo } from "@clickers/sim";
 
 /**
  * What's currently being taken off the top, and what it costs to stop.
@@ -8,17 +8,17 @@ import { format, solo } from "@battle/sim";
  * anywhere, and it belongs above the repair bill rather than in a tab of its
  * own — reading what broke and paying for it are the same errand.
  */
-export function Damage({ farm }: { farm: solo.FarmState }) {
+export function Damage({ farm }: { farm: solo.SiteState }) {
   const rate = solo.currentRate(farm);
   const lostToBreak = solo.brokenRate(farm);
-  const lostToSoil = solo.soilLossRate(farm);
+  const lostToSoil = solo.conditionLossRate(farm);
   if (lostToBreak <= 0 && lostToSoil <= 0) return null;
 
   // Each loss is measured against its own cause rather than a common total,
   // because that's what each one is exactly worth: damage is the share of
   // units offline, tired soil is the multiplier itself.
   const breakPct = Math.round((lostToBreak / Math.max(1e-9, lostToBreak + rate)) * 100);
-  const soilPct = Math.round((1 - farm.soil) * 100);
+  const soilPct = Math.round((1 - farm.condition) * 100);
 
   return (
     <div className="damage">
@@ -35,7 +35,7 @@ export function Damage({ farm }: { farm: solo.FarmState }) {
         {lostToSoil > 0 && (
           <div>
             <span className="hurt">−{soilPct}% production</span> tired soil ·{" "}
-            <span className="muted">{format(solo.soilRestoreCost(farm))} to put right</span>
+            <span className="muted">{format(solo.conditionRestoreCost(farm))} to put right</span>
           </div>
         )}
       </div>

@@ -8,7 +8,7 @@ import {
   type PointerEvent,
 } from "react";
 import {
-  P,
+  Y,
   clickYield,
   format,
   formatDuration,
@@ -16,7 +16,7 @@ import {
   solo,
   standings,
   type ScoringRule,
-} from "@battle/sim";
+} from "@clickers/sim";
 
 import { clockSkew, setClockSkew } from "./clock.js";
 import { AwayReport } from "./components/AwayReport.js";
@@ -114,7 +114,7 @@ function Home({ onGo }: { onGo: (screen: Screen) => void }) {
   return (
     <div className="lobby">
       <h1>
-        Potatoes, <span>Inc.</span>
+        Yield, <span>Inc.</span>
       </h1>
       <p className="tagline">
         Grow potatoes. The weather will have opinions about that.
@@ -255,7 +255,7 @@ const FOLD_SWAP_MS = Math.round(CONVERGE_MS * 0.3);
  * Only ever asked before the fold — see the effect that reads it. Past the fold
  * there is nothing left to hint at.
  */
-function omenNudge(farm: solo.FarmState): string {
+function omenNudge(farm: solo.SiteState): string {
   const p = solo.convergenceProgress(farm);
   if (p >= 1) return "It's in reach";
   if (p >= 0.7) return "Nearly";
@@ -296,11 +296,11 @@ function BackRoom({
   onAbandon,
   dispatch,
 }: {
-  farm: solo.FarmState;
+  farm: solo.SiteState;
   onVersus: () => void;
   onTitle: () => void;
   onAbandon: () => void;
-  dispatch: (cmd: solo.FarmCommand) => void;
+  dispatch: (cmd: solo.SiteCommand) => void;
 }) {
   // Read once per open rather than watched. Nothing else in the app can change
   // it, and a skew that re-rendered every tick would be a clock, which invites
@@ -366,8 +366,8 @@ function BackRoom({
             ["+100 digs", 100],
             ["+10k digs", 10_000],
             ["+1M digs", 1_000_000],
-          ] as const).map(([label, digs]) => (
-            <button key={digs} className="ghost" onClick={() => dispatch({ type: "dev_grant", digs })}>
+          ] as const).map(([label, clicks]) => (
+            <button key={clicks} className="ghost" onClick={() => dispatch({ type: "dev_grant", clicks })}>
               {label}
             </button>
           ))}
@@ -392,9 +392,9 @@ function BackRoom({
           first run.
         </p>
         <div className="choices">
-          {[10, 1_000, 100_000].map((seeds) => (
-            <button key={seeds} className="ghost" onClick={() => dispatch({ type: "dev_seeds", seeds })}>
-              +{seeds.toLocaleString()}
+          {[10, 1_000, 100_000].map((heirlooms) => (
+            <button key={heirlooms} className="ghost" onClick={() => dispatch({ type: "dev_heirlooms", heirlooms })}>
+              +{heirlooms.toLocaleString()}
             </button>
           ))}
         </div>
@@ -590,7 +590,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   // over there is still worth knowing, and the panel says so once you're in it.
   // Soil is one number for both farms, so it counts wherever you're standing.
   const needsAttention =
-    farm.soil < 1 ||
+    farm.condition < 1 ||
     solo.producersIn(farm.world).some((p) => solo.brokenCount(farm, p.id) > 0);
   // Shown the moment a hand-down would pay anything, and then never taken away.
   //
@@ -607,7 +607,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   // regardless of what this run has earned, which also covers a save that
   // converged and prestiged before `converged` existed as a flag.
   const showSeeds =
-    farm.converged || farm.seeds > 0 || farm.generation > 1 || solo.pendingSeeds(farm) > 0;
+    farm.converged || farm.heirlooms > 0 || farm.generation > 1 || solo.pendingHeirlooms(farm) > 0;
 
   // Right to left in order of how often you reach for it. The far left of a
   // bottom bar is the corner a thumb has to travel for, and Shop is where you
@@ -638,7 +638,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
 
   useSpaceToDig(onDig, report === null && sheet === null && omen === null && !converging);
 
-  const soilPct = Math.round(farm.soil * 100);
+  const soilPct = Math.round(farm.condition * 100);
   const hold = useHold(useCallback(() => setSheet("back"), []));
   const kitOnTheLand = solo.SOLO_PRODUCERS.reduce((n, p) => n + (farm.producers[p.id] ?? 0), 0);
 
@@ -666,11 +666,11 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           <div className="soil" title="Soil health">
             <div className="soil-track">
               <div
-                className={`soil-fill ${farm.soil < 0.75 ? "low" : ""}`}
+                className={`soil-fill ${farm.condition < 0.75 ? "low" : ""}`}
                 style={{ width: `${soilPct}%` }}
               />
             </div>
-            <span className={farm.soil < 1 ? "hurt" : "muted"}>soil {soilPct}%</span>
+            <span className={farm.condition < 1 ? "hurt" : "muted"}>soil {soilPct}%</span>
           </div>
         </div>
       </header>
@@ -693,7 +693,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           the label that says so and the number that says how hard, which is the
           part worth keeping around. */}
       <div className="digbar">
-        <button className="dig" onClick={() => onDig()}>
+        <button className="click" onClick={() => onDig()}>
           <PxIcon name="potato" size={16} />
           <span className="dig-label">Dig</span>
           <span className="dig-yield">+{format(perDig)}</span>
@@ -911,12 +911,12 @@ function VersusLobby({ onStart, onBack }: { onStart: (setup: MatchSetup) => void
   const [playerName, setPlayerName] = useState("");
   const [durationMs, setDurationMs] = useState(seconds(300));
   const [botProfile, setBotProfile] = useState<MatchSetup["botProfile"]>("chill");
-  const [scoring, setScoring] = useState<ScoringRule>("total_harvested");
+  const [scoring, setScoring] = useState<ScoringRule>("total_produced");
 
   return (
     <div className="lobby">
       <h1>
-        Potatoes, <span>Inc.</span>
+        Yield, <span>Inc.</span>
       </h1>
       <p className="tagline">
         Grow potatoes. Ruin someone else's. You can't afford to do both.
@@ -962,8 +962,8 @@ function VersusLobby({ onStart, onBack }: { onStart: (setup: MatchSetup) => void
         <span>Winner is</span>
         <div className="choices">
           <button
-            className={scoring === "total_harvested" ? "on" : ""}
-            onClick={() => setScoring("total_harvested")}
+            className={scoring === "total_produced" ? "on" : ""}
+            onClick={() => setScoring("total_produced")}
           >
             most harvested
           </button>
@@ -1002,7 +1002,7 @@ function Match({ setup, onExit }: { setup: MatchSetup; onExit: () => void }) {
   // Clicks you've made but that haven't been flushed into the sim yet still
   // count — `dispatch` banks them before it spends, so this is honest.
   const budget = useMemo(
-    () => P.add(me.potatoes, P.mul(clickYield(me), pendingClicks)),
+    () => Y.add(me.stock, Y.mul(clickYield(me), pendingClicks)),
     [me, pendingClicks],
   );
   const yourScore = table.find((s) => s.player.id === YOU)?.score ?? 0;
@@ -1015,7 +1015,7 @@ function Match({ setup, onExit }: { setup: MatchSetup; onExit: () => void }) {
           shopping, which is exactly when you need them. */}
       <header className="topbar">
         <div className="brand">
-          Potatoes, <span>Inc.</span>
+          Yield, <span>Inc.</span>
         </div>
         <div className={`clock ${timeLeft < seconds(30) ? "urgent" : ""}`}>
           {formatDuration(timeLeft)}

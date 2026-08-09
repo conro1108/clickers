@@ -11,14 +11,14 @@ import {
   checkpoint,
   cleanRate,
   clickYield,
-  raisedAt,
-  puppiesAt,
+  producedAt,
+  stockAt,
   producerCost,
   rateAt,
   repairCost,
   repeatCost,
 } from "./economy.js";
-import { P, format, ms, type Millis, type Puppies, type Rate } from "./numbers.js";
+import { Y, format, ms, type Millis, type Yield, type Rate } from "./numbers.js";
 import { rngFor } from "./rng.js";
 import type {
   Command,
@@ -44,37 +44,37 @@ export const MAX_CLICKS_PER_FLUSH = 25;
  * ahead of one tapping 1/s, all else equal. That isn't a skill curve, it's an
  * autoclicker tax, and it quietly penalises playing on a phone.
  *
- * So whistles come out of a bucket: `WHISTLE_RATE` a second, `WHISTLE_BURST` of
- * headroom to spend at once. Past that the puppies simply aren't ready to come
- * and a whistle is worth `WHISTLE_OVERFLOW` of the usual — reduced rather than
+ * So clicks come out of a bucket: `CLICK_RATE` a second, `CLICK_BURST` of
+ * headroom to spend at once. Past that the stock simply aren't ready to come
+ * and a click is worth `CLICK_OVERFLOW` of the usual — reduced rather than
  * refused, so mashing never feels broken and the "+N" over the button just gets
  * smaller. The rate is set where a person can comfortably sit without trying;
  * what it takes off the table is the difference between tapping fast and
  * holding down a macro.
  */
-export const WHISTLE_RATE = 5;
-export const WHISTLE_BURST = 15;
-export const WHISTLE_OVERFLOW = 0.15;
+export const CLICK_RATE = 5;
+export const CLICK_BURST = 15;
+export const CLICK_OVERFLOW = 0.15;
 
 /**
- * Whistles available at `t`, given the bucket's last state. Pure, so the UI can
+ * Clicks available at `t`, given the bucket's last state. Pure, so the UI can
  * ask the same question the sim answers without applying anything.
  */
-export function whistlesReady(p: PlayerState, t: Millis): number {
-  const refilled = p.whistles + ((t - p.whistleAt) / 1000) * WHISTLE_RATE;
-  return Math.max(0, Math.min(WHISTLE_BURST, refilled));
+export function clicksReady(p: PlayerState, t: Millis): number {
+  const refilled = p.clicks + ((t - p.clickAt) / 1000) * CLICK_RATE;
+  return Math.max(0, Math.min(CLICK_BURST, refilled));
 }
 
 /**
- * What `count` whistles at `t` are actually worth. The HUD has to ask this
+ * What `count` clicks at `t` are actually worth. The HUD has to ask this
  * rather than multiplying by `clickYield`, or the pile it shows you runs ahead
  * of the pile you can spend and the shop starts refusing things you're looking
  * at — the same bug batching clicks caused before `dispatch` learned to bank
  * them first.
  */
-export function whistleGain(p: PlayerState, t: Millis, count: number): Puppies {
-  const paid = Math.min(count, whistlesReady(p, t));
-  return P.mul(clickYield(p), paid + (count - paid) * WHISTLE_OVERFLOW);
+export function clickGain(p: PlayerState, t: Millis, count: number): Yield {
+  const paid = Math.min(count, clicksReady(p, t));
+  return Y.mul(clickYield(p), paid + (count - paid) * CLICK_OVERFLOW);
 }
 
 export function createPlayer(id: PlayerId, name: string, startedAt: Millis, isBot = false): PlayerState {
@@ -82,8 +82,8 @@ export function createPlayer(id: PlayerId, name: string, startedAt: Millis, isBo
     id,
     name,
     isBot,
-    puppies: P.zero,
-    raised: P.zero,
+    stock: Y.zero,
+    produced: Y.zero,
     checkpointAt: startedAt,
     producers: {},
     broken: {},
@@ -91,8 +91,8 @@ export function createPlayer(id: PlayerId, name: string, startedAt: Millis, isBo
     attacksUsed: {},
     defensesUsed: {},
     effects: [],
-    whistles: WHISTLE_BURST,
-    whistleAt: startedAt,
+    clicks: CLICK_BURST,
+    clickAt: startedAt,
   };
 }
 
@@ -132,13 +132,13 @@ export function clampToMatch(state: MatchState, t: Millis): Millis {
 // Scoring
 // ---------------------------------------------------------------------------
 
-export function scoreOf(p: PlayerState, t: Millis, scoring: ScoringRule): Puppies {
-  return scoring === "on_hand" ? puppiesAt(p, t) : raisedAt(p, t);
+export function scoreOf(p: PlayerState, t: Millis, scoring: ScoringRule): Yield {
+  return scoring === "on_hand" ? stockAt(p, t) : producedAt(p, t);
 }
 
 export interface Standing {
   player: PlayerState;
-  score: Puppies;
+  score: Yield;
   rate: Rate;
 }
 
@@ -162,7 +162,7 @@ export function standings(state: MatchState, now: Millis): Standing[] {
 export interface OpponentView {
   id: PlayerId;
   name: string;
-  count: Puppies;
+  count: Yield;
   rate: Rate;
 }
 
@@ -214,9 +214,9 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
   const entries: LogEntry[] = [];
   const players = { ...state.players };
 
-  const spend = (cost: Puppies): boolean => {
-    if (!P.gte(actor.puppies, cost)) return false;
-    actor = { ...actor, puppies: P.sub(actor.puppies, cost) };
+  const spend = (cost: Yield): boolean => {
+    if (!Y.gte(actor.stock, cost)) return false;
+    actor = { ...actor, stock: Y.sub(actor.stock, cost) };
     return true;
   };
 
@@ -224,16 +224,16 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
     case "click": {
       const count = Math.max(0, Math.min(MAX_CLICKS_PER_FLUSH, Math.floor(cmd.count)));
       if (count === 0) return fail("Nothing to flush.");
-      // Full price for what the bucket covers, `WHISTLE_OVERFLOW` for the rest.
-      const ready = whistlesReady(actor, t);
+      // Full price for what the bucket covers, `CLICK_OVERFLOW` for the rest.
+      const ready = clicksReady(actor, t);
       const paid = Math.min(count, ready);
-      const gained = whistleGain(actor, t, count);
+      const gained = clickGain(actor, t, count);
       actor = {
         ...actor,
-        puppies: P.add(actor.puppies, gained),
-        raised: P.add(actor.raised, gained),
-        whistles: ready - paid,
-        whistleAt: t,
+        stock: Y.add(actor.stock, gained),
+        produced: Y.add(actor.produced, gained),
+        clicks: ready - paid,
+        clickAt: t,
       };
       break;
     }
@@ -244,7 +244,7 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
       const qty = Math.max(1, Math.floor(cmd.qty));
       const owned = actor.producers[producer.id] ?? 0;
       const cost = producerCost(producer.id, owned, qty);
-      if (!spend(cost)) return fail("Not enough puppies.");
+      if (!spend(cost)) return fail("Not enough stock.");
       actor = { ...actor, producers: { ...actor.producers, [producer.id]: owned + qty } };
       break;
     }
@@ -257,7 +257,7 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
         const have = actor.producers[upgrade.requires.producer] ?? 0;
         if (have < upgrade.requires.count) return fail("Not unlocked yet.");
       }
-      if (!spend(upgrade.cost)) return fail("Not enough puppies.");
+      if (!spend(upgrade.cost)) return fail("Not enough stock.");
       actor = { ...actor, upgrades: [...actor.upgrades, upgrade.id] };
       entries.push(entry(state, t, actor.id, `bought ${upgrade.name}.`, "neutral"));
       break;
@@ -266,13 +266,13 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
     case "attack": {
       const attack = ATTACK_BY_ID[cmd.attack];
       if (!attack) return fail("No such attack.");
-      if (cmd.target === cmd.player) return fail("Can't sabotage your own mill.");
+      if (cmd.target === cmd.player) return fail("Can't sabotage your own site.");
       const target0 = state.players[cmd.target];
       if (!target0) return fail("No such target.");
 
       const used = actor.attacksUsed[attack.id] ?? 0;
       const cost = attackCost(attack, used, cleanRate(target0));
-      if (!spend(cost)) return fail("Not enough puppies.");
+      if (!spend(cost)) return fail("Not enough stock.");
       actor = { ...actor, attacksUsed: { ...actor.attacksUsed, [attack.id]: used + 1 } };
 
       const { defender, outcome } = resolveAttack({
@@ -290,7 +290,7 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
         text = `sent ${attack.name} at ${defender.name} — fully blocked.`;
       } else if (outcome.brokeTotal > 0) {
         // Phrased so the target is an object, not a possessive — the local
-        // player is literally named "You", and "You's Puppy Pen" is grim.
+        // player is literally named "You", and "You's Unit Pen" is grim.
         text = `hit ${defender.name} with ${attack.name} — ${describeBreak(outcome.broke)}.`;
       } else {
         text = `hit ${defender.name} with ${attack.name}.`;
@@ -308,7 +308,7 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
       const broken = Math.min(actor.broken[producer.id] ?? 0, actor.producers[producer.id] ?? 0);
       if (broken <= 0) return fail("Nothing to put right there.");
       const cost = repairCost(actor, producer.id);
-      if (!spend(cost)) return fail("Not enough puppies.");
+      if (!spend(cost)) return fail("Not enough stock.");
       actor = { ...actor, broken: { ...actor.broken, [producer.id]: 0 } };
       entries.push(
         entry(state, t, actor.id, `put ${broken}x ${producer.name} back to work.`, "good"),
@@ -321,7 +321,7 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
       if (!defense) return fail("No such defense.");
       const used = actor.defensesUsed[defense.id] ?? 0;
       const cost = repeatCost(defense.baseCost, defense.growth, used);
-      if (!spend(cost)) return fail("Not enough puppies.");
+      if (!spend(cost)) return fail("Not enough stock.");
       actor = {
         ...actor,
         defensesUsed: { ...actor.defensesUsed, [defense.id]: used + 1 },

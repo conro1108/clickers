@@ -35,9 +35,9 @@ describe("the ladder's depth", () => {
 
   it("opens a stratum for everything above the deepest thing you own", () => {
     expect(openZones({})).toBe(0);
-    expect(openZones({ bruise: 1 })).toBe(1);
-    expect(openZones({ bruise: 40, pithand: 12 })).toBe(1);
-    expect(openZones({ bruise: 40, quarry: 1 })).toBe(2);
+    expect(openZones({ fold: 1 })).toBe(1);
+    expect(openZones({ fold: 40, deephand: 12 })).toBe(1);
+    expect(openZones({ fold: 40, face: 1 })).toBe(2);
     expect(openZones({ second: 1 })).toBe(ZONES.length);
   });
 

@@ -29,7 +29,7 @@ function fiveMinuteMatch(seed: string) {
 }
 
 describe("match pacing", () => {
-  it("keeps both mills growing for the whole match", () => {
+  it("keeps both sites growing for the whole match", () => {
     for (const seed of SEEDS) {
       const result = fiveMinuteMatch(seed);
       for (const id of ["p1", "p2"]) {
@@ -71,7 +71,7 @@ describe("match pacing", () => {
 
   /**
    * The central question of the whole design: is reaching across the board ever
-   * worth the puppies you didn't spend on yourself? If pure growth wins by a
+   * worth the stock you didn't spend on yourself? If pure growth wins by a
    * mile, sabotage is decoration and there's no second axis. If sabotage wins by
    * a mile, growth is a tax you pay before the real game starts.
    *
@@ -82,8 +82,8 @@ describe("match pacing", () => {
    * the thing that was always meant by "neither is dominant".
    */
   it("leaves neither pure growth nor sabotage dominant", () => {
-    const seeds = Array.from({ length: 10 }, (_, i) => `dom-${i}`);
-    const ratios = seeds.map((seed) => {
+    const heirlooms = Array.from({ length: 10 }, (_, i) => `dom-${i}`);
+    const ratios = heirlooms.map((seed) => {
       const r = simulateMatch({
         seed,
         durationMs: seconds(300),
@@ -113,7 +113,7 @@ describe("match pacing", () => {
    * decision cadence and "buy the best thing you can afford right now" made
    * *slower or lazier* bots stronger, because acting less often means a bigger
    * pile and a bigger pile buys better tiers. Scores are noisy enough that this
-   * has to be a median over many seeds.
+   * has to be a median over many heirlooms.
    *
    * The foil is a reference *human*, not a `chill` bot. Against a punching bag
    * the aggressive rungs measure as weaker than the passive ones purely because
@@ -122,9 +122,9 @@ describe("match pacing", () => {
    * rung of the ladder against another rung of the ladder.
    */
   it("orders the difficulty ladder the way the lobby claims", () => {
-    const seeds = Array.from({ length: 21 }, (_, i) => `ladder-${i}`);
+    const heirlooms = Array.from({ length: 21 }, (_, i) => `ladder-${i}`);
     const medianFor = (profile: string) => {
-      const scores = seeds
+      const scores = heirlooms
         .map(
           (seed) =>
             simulateMatch({
@@ -160,15 +160,15 @@ describe("match pacing", () => {
    *
    * Sabotage is priced against the target's production rate, so a swing costs
    * about what the damage is worth whenever you throw it. What changes over a
-   * match is the other side of the trade: puppies spent in the first minute
+   * match is the other side of the trade: stock spent in the first minute
    * would have compounded for four more, so early sabotage is buying denial at
    * the moment growth is cheapest. That should make it a wash early and a good
    * buy later — a gradient, not a cliff, and never an outright self-own.
    */
   it("makes sabotage a wash early and a good buy later", () => {
-    const seeds = Array.from({ length: 15 }, (_, i) => `window-${i}`);
+    const heirlooms = Array.from({ length: 15 }, (_, i) => `window-${i}`);
     const marginFor = (attackWindow: [number, number]) => {
-      const ratios = seeds
+      const ratios = heirlooms
         .map((seed) => {
           const r = simulateMatch({
             seed,
@@ -196,7 +196,7 @@ describe("match pacing", () => {
     console.log(
       `sabotage window: early ${early.toFixed(2)}x  mid ${mid.toFixed(2)}x  late ${late.toFixed(2)}x`,
     );
-    // Spending early on a mill with nothing on it yet shouldn't cost you the
+    // Spending early on a site with nothing on it yet shouldn't cost you the
     // match — you should roughly get back what you put in.
     expect(early).toBeGreaterThan(0.95);
     // And it should be worth more once there's something there to wreck.

@@ -14,7 +14,7 @@ import {
   type Millis,
   type PlayerState,
   type ScoringRule,
-} from "@battle/sim";
+} from "@clickers/sim";
 
 import { nowMs } from "./clock.js";
 

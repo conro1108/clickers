@@ -99,7 +99,7 @@ describe("the ladder, played by a person", () => {
   it("pays a player for engaging with the other two tabs", () => {
     // Graded against a rung that's actually in the match. Sabotage measures as
     // worthless against `scrappy` for the same reason it does against a corpse:
-    // puppies spent hurting someone who finishes 200x behind you would have
+    // stock spent hurting someone who finishes 200x behind you would have
     // compounded better at home. That's the trade working, not failing.
     const builder = ladder("builder", "mean");
     const scrapper = ladder("scrapper", "mean");
@@ -109,7 +109,7 @@ describe("the ladder, played by a person", () => {
     // The whole pitch is that reaching across the board is a live option. If
     // ignoring sabotage entirely is just as good, there's only one axis.
     //
-    // Sabotage should beat a mill that's in reach, and waste your puppies
+    // Sabotage should beat a site that's in reach, and waste your stock
     // against one that isn't.
     expect(scrapper.median).toBeGreaterThan(builder.median * 1.1);
   });

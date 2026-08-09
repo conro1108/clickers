@@ -13,3 +13,4 @@ export * from "./bot.js";
  * would make it far too easy to price a homestead with match content.
  */
 export * as solo from "./solo/index.js";
+export * from "./theme.js";

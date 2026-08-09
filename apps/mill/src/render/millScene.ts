@@ -17,7 +17,7 @@
  * vanish. Animation is translation only.
  */
 
-import type { solo } from "@mill/sim";
+import type { solo } from "@clickers/sim";
 
 import {
   CLOUD,
@@ -116,8 +116,8 @@ export interface MillView {
    */
   marks: Partial<Record<solo.SoloProducerId, number>>;
   /** 0..1. Drags the field's colour and wilts a share of the pup. */
-  bedding: number;
-  /** Puppies on hand. Drives the whole yard. */
+  condition: number;
+  /** Yield on hand. Drives the whole yard. */
   hoard: number;
   /** Stable across reloads, so the mill's layout is *your* mill's layout. */
   seed: string;
@@ -144,7 +144,7 @@ export const EMPTY_VIEW: MillView = {
   working: {},
   broken: {},
   marks: {},
-  bedding: 1,
+  condition: 1,
   hoard: 0,
   seed: "0",
   looming: 0,
@@ -692,7 +692,7 @@ export function pickAction(dog: PackPup, t: number): void {
  * more dogs on the grass. What you built with your puppies is more puppies.
  */
 interface Stage {
-  /** Puppies on hand at which this stage arrives. */
+  /** Yield on hand at which this stage arrives. */
   at: number;
 }
 
@@ -737,7 +737,7 @@ export const YARD: Stage[] = [
 interface YardLayout {
   /** Index into YARD. Everything up to and including it is standing. */
   stage: number;
-  /** Puppies loose in the yard, 0..the stage's cap. */
+  /** Yield loose in the yard, 0..the stage's cap. */
   pack: number;
 }
 
@@ -881,15 +881,15 @@ function sameLayout(a: YardLayout, b: YardLayout): boolean {
  */
 type OutsideId = Extract<
   solo.SoloProducerId,
-  | "pen"
+  | "patch"
   | "hand"
-  | "heatlamp"
-  | "van"
-  | "groomer"
+  | "rig"
+  | "hauler"
+  | "machine"
   | "lab"
-  | "kibble"
+  | "refinery"
   | "tower"
-  | "zeppelin"
+  | "airship"
   | "reactor"
   | "orbital"
   | "singularity"
@@ -916,17 +916,17 @@ interface Placement {
 const PLACEMENT: Record<OutsideId, Placement> = {
   // The pup doesn't use the log curve — the field draws a bed per pen until
   // the land is full — so its cap is only the ceiling on broken ones.
-  pen: { band: "field", cap: 108 },
+  patch: { band: "field", cap: 108 },
   hand: { band: "walk", cap: 16, spread: 3 },
-  heatlamp: { band: "field", cap: 12, spread: 2.6 },
+  rig: { band: "field", cap: 12, spread: 2.6 },
   // Slow. A van that crosses the screen in fifteen seconds is a van
   // working a field; one that does it in five is a toy being pushed along.
-  van: { band: "field", cap: 6, spread: 1.4, speed: 6 },
-  groomer: { band: "field", cap: 5, spread: 1.2, speed: 4.5 },
+  hauler: { band: "field", cap: 6, spread: 1.4, speed: 6 },
+  machine: { band: "field", cap: 5, spread: 1.2, speed: 4.5 },
   lab: { band: "back", cap: 5 },
-  kibble: { band: "back", cap: 5 },
+  refinery: { band: "back", cap: 5 },
   tower: { band: "back", cap: 5 },
-  zeppelin: { band: "sky", cap: 5, spread: 1.6, speed: 2.5 },
+  airship: { band: "sky", cap: 5, spread: 1.6, speed: 2.5 },
   reactor: { band: "back", cap: 4 },
   orbital: { band: "sky", cap: 4, spread: 1.4, speed: 7 },
   singularity: { band: "sky", cap: 3, spread: 1.2 },
@@ -947,30 +947,30 @@ const PLACEMENT: Record<OutsideId, Placement> = {
  * mark's jet is drawn in.
  */
 const PRIME_GLOW: Record<OutsideId, string> = {
-  pen: "#a8f07a",
+  patch: "#a8f07a",
   hand: "#ffd782",
-  heatlamp: "#8ec9e6",
-  van: "#ff8a4a",
-  groomer: "#ffe08a",
+  rig: "#8ec9e6",
+  hauler: "#ff8a4a",
+  machine: "#ffe08a",
   lab: "#c88fe6",
-  kibble: "#f0913c",
+  refinery: "#f0913c",
   tower: "#a8f07a",
-  zeppelin: "#ffe066",
+  airship: "#ffe066",
   reactor: "#fff0b8",
   orbital: "#a4e884",
   singularity: "#ffe08a",
 };
 
 const ORDER: OutsideId[] = [
-  "pen",
+  "patch",
   "hand",
-  "heatlamp",
-  "van",
-  "groomer",
+  "rig",
+  "hauler",
+  "machine",
   "lab",
-  "kibble",
+  "refinery",
   "tower",
-  "zeppelin",
+  "airship",
   "reactor",
   "orbital",
   "singularity",
@@ -2104,7 +2104,7 @@ export class MillScene {
         this.baskets = this.baskets.filter((s) => s !== basket);
       });
     }
-    // Puppies on the pipeline's horizontal run, lifted straight out of it.
+    // Yield on the pipeline's horizontal run, lifted straight out of it.
     const pipeY = this.pipeY(horizon) + 3;
     for (const lump of this.lumps) {
       const px = lump.from - lump.d;
@@ -2520,7 +2520,7 @@ export class MillScene {
 
   private drawGround(horizon: number, yardY: number): void {
     const ctx = this.ctx;
-    const bedding = this.view.bedding;
+    const bedding = this.view.condition;
     // Tired bedding isn't a number on this screen — the ground goes the colour
     // of ground nobody has raked in a while. Churned and going to mud, rather
     // than the parched yellow a field went: hard standing doesn't wither, it
@@ -2880,12 +2880,12 @@ export class MillScene {
         if (this.chance(0.5)) this.puff(x + 8, top, "steam", 2);
         break;
       }
-      case "kibble": {
+      case "refinery": {
         // The flare stack, which is the one thing on the skyline that's alight.
         // Later marks draw a flame into the art, so the live one is anchored to
         // where the stack actually tops out rather than to the top of the
         // sprite — otherwise the upgrade lights a second fire above the first.
-        const stack = top + [0, 2, 3, 3][this.markLevel("kibble")]!;
+        const stack = top + [0, 2, 3, 3][this.markLevel("refinery")]!;
         const flick = fract(Math.sin(t * 11.3 + idx * 4.1) * 4375.85);
         const tall = 2 + Math.round(flick * 2);
         ctx.fillStyle = "#f0913c";
@@ -3233,9 +3233,9 @@ export class MillScene {
     // are not dead space, they're the thing you're filling in, and one pen
     // buying one visible pup is a straighter line between the button and the
     // mill than any curve was.
-    const stages = growthStages(this.mark("pen"));
-    const pup = artCanvas(this.mark("pen"));
-    const wiltShare = 1 - this.view.bedding;
+    const stages = growthStages(this.mark("patch"));
+    const pup = artCanvas(this.mark("patch"));
+    const wiltShare = 1 - this.view.condition;
     const step = pup.w + 1;
     // Wide, but leaving a rig's width of headland at each end: the heatlamp
     // stands off the ends of the rows it waters, and a row that runs to the
@@ -3247,7 +3247,7 @@ export class MillScene {
     // One pen, one bed, until the land runs out — which it does at ninety
     // pens, deep into a run and well past the point where the field stopped
     // being the thing you're watching.
-    const pups = Math.min(slots, this.view.working.pen ?? 0);
+    const pups = Math.min(slots, this.view.working.patch ?? 0);
     const rowWidth = perRow * step - 1;
     const rowLeft = marginX + Math.round((usable - rowWidth) / 2);
 
@@ -3277,8 +3277,8 @@ export class MillScene {
     // same place. So it's there as soon as anybody's working, not just when
     // there's a machine.
     const works =
-      (this.view.working.van ?? 0) +
-        (this.view.working.groomer ?? 0) +
+      (this.view.working.hauler ?? 0) +
+        (this.view.working.machine ?? 0) +
         (this.view.working.hand ?? 0) >
         0 || this.troughFill > 0;
     this.troughBox = works ? { x: 26, w: 112, y: lane(0.99) } : null;
@@ -3298,7 +3298,7 @@ export class MillScene {
       // The run each pen stands on: a poured pad, not a bed of soil. Which is
       // what a row of pens actually is, and it keeps the last of the brown off
       // the part of the picture the dogs are standing on.
-      ctx.fillStyle = this.view.bedding < 0.7 ? "#8e8878" : "#bab5a6";
+      ctx.fillStyle = this.view.condition < 0.7 ? "#8e8878" : "#bab5a6";
       ctx.fillRect(left - 2, ground - 2, worked, 3);
       ctx.fillStyle = "#8a8476";
       ctx.fillRect(left - 2, ground + 1, worked, 1);
@@ -3311,12 +3311,12 @@ export class MillScene {
       // of the row rather than a halo per pup: at ninety beds the haloes
       // would merge into a single wash anyway, and cost ninety gradients a
       // frame to arrive at it.
-      if (count > 0 && this.primed("pen")) {
+      if (count > 0 && this.primed("patch")) {
         const lit = (0.7 + 0.3 * Math.sin(t * 1.2 + r)) * this.lightGain();
         const band = ctx.createLinearGradient(0, ground - pup.h - 3, 0, ground + 2);
-        band.addColorStop(0, rgba(PRIME_GLOW.pen, 0));
-        band.addColorStop(0.65, rgba(PRIME_GLOW.pen, 0.26 * lit));
-        band.addColorStop(1, rgba(PRIME_GLOW.pen, 0));
+        band.addColorStop(0, rgba(PRIME_GLOW.patch, 0));
+        band.addColorStop(0.65, rgba(PRIME_GLOW.patch, 0.26 * lit));
+        band.addColorStop(1, rgba(PRIME_GLOW.patch, 0));
         ctx.fillStyle = band;
         ctx.fillRect(left - 3, ground - pup.h - 3, worked + 2, pup.h + 5);
       }
@@ -3352,8 +3352,8 @@ export class MillScene {
 
     // A lamp stands at the end of the rows it warms, alternating sides, and
     // throws across them. A lamp in the middle of nowhere was just a pole.
-    const lamps = shownCount(this.view.working.heatlamp ?? 0, PLACEMENT.heatlamp.cap, PLACEMENT.heatlamp.spread);
-    const lamp = artCanvas(this.mark("heatlamp"));
+    const lamps = shownCount(this.view.working.rig ?? 0, PLACEMENT.rig.cap, PLACEMENT.rig.spread);
+    const lamp = artCanvas(this.mark("rig"));
     for (let i = 0; i < lamps; i++) {
       const row = this.rows[i % Math.max(1, this.rows.length)];
       const side = i % 2 === 0 ? 1 : -1;
@@ -3363,7 +3363,7 @@ export class MillScene {
           : Math.max(2, row.left - lamp.w - 3)
         : 14 + i * 42;
       const ground = row ? row.y : lane(0.2);
-      this.primeGlow("heatlamp", x, ground - lamp.h, lamp.w, lamp.h, t, i);
+      this.primeGlow("rig", x, ground - lamp.h, lamp.w, lamp.h, t, i);
       ctx.drawImage(lamp.canvas, x, ground - lamp.h);
       // The warm spills out over the pens on a slow sine, so it reads as
       // one lamp swinging rather than a static glow.
@@ -3376,8 +3376,8 @@ export class MillScene {
     // Machines work the rows: they drive the headland just in front of a row,
     // reach back over it, and something happens to the pup as they pass.
     for (const [id, fallback] of [
-      ["van", 0.5],
-      ["groomer", 0.78],
+      ["hauler", 0.5],
+      ["machine", 0.78],
     ] as const) {
       const place = PLACEMENT[id];
       const n = shownCount(this.view.working[id] ?? 0, place.cap, place.spread);
@@ -3388,15 +3388,15 @@ export class MillScene {
         // so on a mill with two rows they aren't nose to tail on the same one.
         // With nothing stocked they fall back to their own lanes on open grass.
         const pick =
-          id === "groomer" ? this.rows.length - 1 - (i % Math.max(1, this.rows.length)) : i % Math.max(1, this.rows.length);
-        const row = this.rows.length > (id === "groomer" && this.rows.length < 2 ? 1 : 0) ? this.rows[pick] : undefined;
+          id === "machine" ? this.rows.length - 1 - (i % Math.max(1, this.rows.length)) : i % Math.max(1, this.rows.length);
+        const row = this.rows.length > (id === "machine" && this.rows.length < 2 ? 1 : 0) ? this.rows[pick] : undefined;
         const ground = row ? row.y + 5 : lane(fallback);
         // Phase and pace are hashed per machine rather than dealt out evenly.
         // Evenly spaced starts at one shared speed drew two perfect diagonals
         // — the vans going one way down the rows and the grooming rigs the
         // other — and a mill that renders a clean X across itself all day is
         // clearly a formula and not a place where work is happening.
-        const h = fract(Math.sin((i + 1) * (id === "groomer" ? 63.7 : 21.3)) * 4375.85);
+        const h = fract(Math.sin((i + 1) * (id === "machine" ? 63.7 : 21.3)) * 4375.85);
         const pace = place.speed! * (0.78 + 0.44 * fract(h * 7.13));
         const x = Math.floor((((t * pace + h * span) % span) + span) % span) - sprite.w;
         // Where it's drawn, once anything hanging over the field has had its
@@ -3409,7 +3409,7 @@ export class MillScene {
         ctx.drawImage(sprite.canvas, mx, my);
         if (this.chance(2.5)) this.puff(x + 1, ground - 2, "dust");
 
-        if (id === "van") {
+        if (id === "hauler") {
           // A van does a round. The track it leaves is the whole reason to
           // watch one cross a field.
           if (this.tracks.length < 90 && this.chance(14)) {
@@ -3420,7 +3420,7 @@ export class MillScene {
         // Both of them lift what's ready under the header as they pass, and
         // both of them unload the same way a real one does: an auger swung out
         // over the trough, with the pup visibly going down it.
-        const reach = id === "groomer" ? 6 : 2;
+        const reach = id === "machine" ? 6 : 2;
         const key = `${id}${i}`;
         for (let b = 0; b < this.beds.length; b++) {
           const bed = this.beds[b]!;
@@ -3478,8 +3478,8 @@ export class MillScene {
     const { deck, hang } = this.decks(horizon);
 
     this.stepFlyers(
-      shownCount(this.view.working.zeppelin ?? 0, PLACEMENT.zeppelin.cap, PLACEMENT.zeppelin.spread),
-      artCanvas(this.mark("zeppelin")),
+      shownCount(this.view.working.airship ?? 0, PLACEMENT.airship.cap, PLACEMENT.airship.spread),
+      artCanvas(this.mark("airship")),
       t,
       deck,
     );
@@ -3591,7 +3591,7 @@ export class MillScene {
     });
   }
 
-  /** Furrow behind a van: fresh dark bedding that grasses back over. */
+  /** Furrow behind a hauler: fresh dark bedding that grasses back over. */
   private drawTills(now: number): void {
     const ctx = this.ctx;
     this.tracks = this.tracks.filter((track) => {
@@ -3656,7 +3656,7 @@ export class MillScene {
       const at = this.warp(f.x + sprite.w / 2, f.y + bob + sprite.h / 2);
       const fx = Math.round(at.x - sprite.w / 2);
       const fy = Math.round(at.y - sprite.h / 2);
-      this.primeGlow("zeppelin", fx, fy, sprite.w, sprite.h, t, i);
+      this.primeGlow("airship", fx, fy, sprite.w, sprite.h, t, i);
       ctx.drawImage(sprite.canvas, fx, fy);
     }
   }
@@ -4629,7 +4629,7 @@ export class MillScene {
     ctx.fillRect(x1 - 1, y1 + 1, W + 2, 2);
   }
 
-  /** Puppies on an auger or a spout: straight line, constant speed, no arc. */
+  /** Yield on an auger or a spout: straight line, constant speed, no arc. */
   private drawHauls(now: number): void {
     const ctx = this.ctx;
     const sprite = artCanvas(PUPPY_SPRITE);

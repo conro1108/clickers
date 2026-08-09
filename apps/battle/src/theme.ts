@@ -1,0 +1,274 @@
+/**
+ * Every word the potato game puts in front of a player that the shared engine
+ * needs to know about.
+ *
+ * The engine in packages/sim owns the ids, the numbers and the shape of the
+ * ladder; this file owns what any of it is called. Both games are the same
+ * table underneath, so a balance change happens once, in the engine, and lands
+ * here as nothing at all.
+ *
+ * Reached through the "@clickers/theme" alias in vite.config.ts and
+ * tsconfig.json. That alias is the only thing that makes this build the potato
+ * game rather than the puppy one.
+ */
+import type { ThemeStrings } from "@clickers/sim";
+
+export const STRINGS: ThemeStrings = {
+  producers: {
+    patch: {
+      name: "Potato Plot",
+      blurb: "A patch of dirt. It does what dirt does.",
+      hurt: "trampled",
+      mend: "Turn over",
+    },
+    hand: { name: "Farmhand", blurb: "Pays for themselves. Eventually.", hurt: "maimed", mend: "Patch up" },
+    rig: {
+      name: "Irrigation Rig",
+      blurb: "Water, on purpose, at the right time.",
+      hurt: "burst",
+      mend: "Repair",
+    },
+    hauler: { name: "Tractor", blurb: "Diesel-powered crop math.", hurt: "broken", mend: "Repair" },
+    machine: { name: "Combine Harvester", blurb: "Eats a field for breakfast.", hurt: "jammed", mend: "Unjam" },
+    lab: {
+      name: "Tuber Lab",
+      blurb: "The potatoes are asking questions now.",
+      hurt: "contaminated",
+      mend: "Decontaminate",
+    },
+  },
+  upgrades: {
+    tool_1: { name: "Sharpened Spade", blurb: "Digging, but with intent. Clicks x3." },
+    tool_2: { name: "Two-Handed Spade", blurb: "Both hands. Clicks x5." },
+    tool_3: { name: "Ceremonial Gold Spade", blurb: "Impractical. Effective. Clicks x8." },
+    mult_patch: { name: "Raised Beds", blurb: "Plots produce twice as much." },
+    mult_hand: { name: "Overtime Pay", blurb: "Farmhands produce twice as much." },
+    boost_1: { name: "Fertilizer", blurb: "All producers +50%." },
+    mult_rig: { name: "Drip Lines", blurb: "Irrigation rigs produce twice as much." },
+    boost_2: { name: "Crop Rotation", blurb: "All producers +50%." },
+    mult_hauler: { name: "Turbo Diesel", blurb: "Tractors produce twice as much." },
+    boost_3: { name: "GMO Seed Stock", blurb: "All producers x2. Don't read the label." },
+  },
+  attacks: {
+    vermin: { name: "Moles", blurb: "Chews through their cheap stuff. Stays chewed." },
+    disease: { name: "Potato Blight", blurb: "Rots a chunk of their best producer. Needs repairing." },
+    swelter: { name: "Drought", blurb: "-55% output for 40s. Passes on its own." },
+    rot: { name: "Ruined Soil", blurb: "Wrecks half their best producer." },
+    sweep: { name: "Locust Swarm", blurb: "Takes a slice of everything they own. Repair bills for days." },
+  },
+  defenses: {
+    ward: { name: "Scarecrow", blurb: "Absorbs 60 power for 90s." },
+    fence: { name: "Electric Fence", blurb: "Absorbs 200 power for 2m." },
+    shelter: { name: "Greenhouse", blurb: "Absorbs 550 power for 2m30s." },
+    insurance: { name: "Crop Insurance", blurb: "Absorbs 1400 power for 3m." },
+  },
+  soloProducers: {
+    patch: {
+      name: "Potato Plot",
+      blurb: "A patch of dirt. It does what dirt does.",
+      hurt: "trampled",
+      mend: "Turn over",
+    },
+    hand: { name: "Farmhand", blurb: "Pays for themselves. Eventually.", hurt: "maimed", mend: "Patch up" },
+    rig: {
+      name: "Irrigation Rig",
+      blurb: "Water, on purpose, at the right time.",
+      hurt: "burst",
+      mend: "Repair",
+    },
+    hauler: { name: "Tractor", blurb: "Diesel-powered crop math.", hurt: "broken", mend: "Repair" },
+    machine: { name: "Combine Harvester", blurb: "Eats a field for breakfast.", hurt: "jammed", mend: "Unjam" },
+    lab: {
+      name: "Tuber Lab",
+      blurb: "The potatoes are asking questions now.",
+      hurt: "contaminated",
+      mend: "Decontaminate",
+    },
+    refinery: {
+      name: "Starch Refinery",
+      blurb: "Potatoes in one end, more potatoes out the other. Don't ask.",
+      hurt: "clogged",
+      mend: "Unclog",
+    },
+    tower: {
+      name: "Hydroponic Tower",
+      blurb: "Forty floors of dirt-free ambition.",
+      hurt: "shorted",
+      mend: "Rewire",
+    },
+    airship: {
+      name: "Cloud Seeder",
+      blurb: "The weather works for you now. Mostly.",
+      hurt: "grounded",
+      mend: "Get flying",
+    },
+    reactor: {
+      name: "Spud Fusion Reactor",
+      blurb: "Binds four small potatoes into one enormous one.",
+      hurt: "scrammed",
+      mend: "Restart",
+    },
+    orbital: {
+      name: "Orbital Greenhouse",
+      blurb: "No frost in low earth orbit. Different problems up there.",
+      hurt: "holed",
+      mend: "Reseal",
+    },
+    singularity: {
+      name: "Tuber Singularity",
+      blurb: "Grows potatoes that have always already been grown.",
+      hurt: "collapsed",
+      mend: "Re-open",
+    },
+    fold: {
+      name: "Bruise Bed",
+      blurb: "Press it until it darkens and it swells to seal itself. Crop the swelling.",
+      hurt: "split",
+      mend: "Dress",
+    },
+    deephand: {
+      name: "Pit Hand",
+      blurb: "Someone has to be down here with you. They bring their own lamp.",
+      hurt: "trapped",
+      mend: "Dig out",
+    },
+    face: {
+      name: "Starch Quarry",
+      blurb: "Past the hollow it goes solid. Cut a face into it and work back.",
+      hurt: "collapsed",
+      mend: "Shore up",
+    },
+    well: {
+      name: "Taproot Well",
+      blurb: "Sunk through the cortex. It fills from the field you left.",
+      hurt: "run dry",
+      mend: "Re-bore",
+    },
+    main: {
+      name: "Ring Main",
+      blurb: "Under the cortex it's all plumbing. Clamp one and it feeds you instead.",
+      hurt: "clamped",
+      mend: "Unclamp",
+    },
+    chorus: {
+      name: "Chorus",
+      blurb: "The other yous, still working. Down here you can hear them.",
+      hurt: "silenced",
+      mend: "Call back",
+    },
+    heart: {
+      name: "Hollow Heart",
+      blurb: "Every big one has a cavity at the middle. Something has to fill it.",
+      hurt: "closed up",
+      mend: "Open out",
+    },
+    second: {
+      name: "Second Potato",
+      blurb: "Growing in the cavity. Nobody has asked what's inside it.",
+      hurt: "gone soft",
+      mend: "Tend",
+    },
+  },
+  soloClickUpgrades: {
+    tool_1: { name: "Sharpened Spade", blurb: "Digging, but with intent. Digs x3." },
+    tool_2: { name: "Two-Handed Spade", blurb: "Both hands. Digs x5." },
+    tool_3: { name: "Ceremonial Gold Spade", blurb: "Impractical. Effective. Digs x8." },
+    tool_4: { name: "Prospector's Trowel", blurb: "Each dig is also worth 0.25 seconds of production." },
+    tool_5: { name: "Pocket Backhoe", blurb: "Each dig is worth 0.5 more seconds of production." },
+    tool_6: { name: "The Big Hands", blurb: "Each dig is worth 0.75 more seconds of production." },
+  },
+  soloGlobalUpgrades: {
+    boost_1: { name: "Fertilizer", blurb: "Everything produces +30%." },
+    boost_2: { name: "Crop Rotation", blurb: "Everything produces +30%." },
+    boost_3: { name: "GMO Seed Stock", blurb: "Everything produces +50%. Don't read the label." },
+    co_op: { name: "Growers' Co-op", blurb: "Everything produces +50%." },
+    charter: { name: "Agricultural Subsidy", blurb: "Everything produces +50%. Paperwork was involved." },
+    monopoly: { name: "Vertical Integration", blurb: "Everything produces x2." },
+    habitat: { name: "Terraforming Charter", blurb: "Everything produces x2." },
+    ur_form: { name: "The Ur-Potato", blurb: "The first potato. Everything since has been a copy." },
+    ceiling_rights: {
+      name: "Right of Way Down",
+      blurb: "Nothing between you and the middle of it. Everything produces x2.",
+    },
+    deep_rights: {
+      name: "Mineral Rights",
+      blurb: "Whatever's further down was always yours. Everything produces x2.",
+    },
+    unbroken_line: { name: "Unbroken Line", blurb: "Nobody has stopped farming. Everything produces x2." },
+    third_form: { name: "The Third Potato", blurb: "Everything produces x2. Try not to work out where it is." },
+  },
+  lands: {
+    windbreak: { name: "Windbreak", blurb: "A wall of poplars. Storms take less of the kit." },
+    drainage: { name: "Drainage Ditches", blurb: "Water leaves instead of sitting there taking your topsoil." },
+    pest_control: {
+      name: "Pest Control Contract",
+      blurb: "Someone else's problem now. Trouble comes around less often.",
+    },
+    insurance: { name: "Crop Insurance", blurb: "Doesn't stop anything. Does cut you a cheque afterwards." },
+    inner_beds: {
+      name: "Callus Beds",
+      blurb: "Let the flesh scar where it wants to. It closes around less of the kit.",
+    },
+    inner_lining: {
+      name: "Scar Tissue",
+      blurb: "Grow the wound over on purpose. What's underneath keeps its goodness.",
+    },
+    inner_calm: { name: "Dormancy Rig", blurb: "Convinces the tuber it is winter. It stirs less often." },
+    inner_reclaim: { name: "Sap Reclamation", blurb: "Whatever it weeps when it's hurt, you catch and sell." },
+  },
+  perks: {
+    knack: { name: "Green Thumb", blurb: "+15% output per level, forever." },
+    head_start: { name: "Head Start", blurb: "Begin each generation with a bigger stake." },
+    deep_condition: {
+      name: "Deep Roots",
+      blurb: "The land holds together better. Weather takes 8% less per level.",
+    },
+    strong_click: { name: "Strong Back", blurb: "Digs are worth 10% more per level." },
+    salvage: { name: "Salvage Yard", blurb: "Repairs cost 10% less per level." },
+    night_shift: { name: "Night Shift", blurb: "+20% production per level while you're away." },
+    core_tithe: { name: "Flesh Tithe", blurb: "The tuber pays rent. +40% output per level, forever." },
+    dormancy: { name: "Induced Dormancy", blurb: "It stirs 10% less often per level." },
+    ur_yield: { name: "Ur-Yield", blurb: "Everything above the fold produces +100% per level." },
+  },
+  weather: {
+    vermin: { name: "Voles" },
+    hail: { name: "Hailstorm" },
+    disease: { name: "Potato Blight" },
+    frost: { name: "Late Frost" },
+    swelter: { name: "Drought" },
+    rot: { name: "Topsoil Erosion" },
+    flood: { name: "Flooding" },
+    windfall: { name: "Bumper Crop" },
+    perfect: { name: "Perfect Season" },
+    settling: { name: "Skinning Over" },
+    packing: { name: "Callus Growth" },
+    inner_press: { name: "Sprout Pressure" },
+    static: { name: "Ring Surge" },
+    decay: { name: "Necrosis" },
+    surge: { name: "Starch Flood" },
+    dormant: { name: "Quiescence" },
+    respite: { name: "Sap Flush" },
+  },
+  soloTierUpgrades: {
+    patch: ["Raised Beds", "Terraced Slopes", "Heirloom Strain"],
+    hand: ["Overtime Pay", "Profit Sharing", "Equity Stake"],
+    rig: ["Drip Lines", "Aquifer Rights", "Centre Pivot"],
+    hauler: ["Turbo Diesel", "Autosteer", "Tracked Chassis"],
+    machine: ["Wider Header", "Night Shift Cab", "Twin Rotor"],
+    lab: ["Peer Review", "Tenure", "The Prize"],
+    refinery: ["Catalytic Cracking", "Continuous Flow", "Cogeneration"],
+    tower: ["Full Spectrum LEDs", "Nutrient Telemetry", "Cloud Deck"],
+    airship: ["Silver Iodide", "Jet Stream Permit", "Eye of the Storm"],
+    reactor: ["Magnetic Confinement", "Tritium Blanket", "Ignition"],
+    orbital: ["Solar Sails", "Second Ring", "Lagrange Station"],
+    singularity: ["Closed Timelike Furrow", "Retroactive Yield", "Event Horizon Lease"],
+    fold: ["Deeper Press", "It Swells Faster", "It Stops Minding"],
+    deephand: ["Second Shift", "Danger Money", "They Live Down Here Now"],
+    face: ["Longwall Cut", "Deep Adit", "The Face Goes Down"],
+    well: ["Deeper Bore", "Field Drainage", "It Never Runs Dry"],
+    main: ["Wider Bore", "Reverse Flow", "The Whole Circulation"],
+    chorus: ["Perfect Unison", "Every Generation", "All At Once"],
+    heart: ["Widen the Cavity", "Hollowed Through", "It Was Always Hollow"],
+    second: ["Seed Stock", "It's Started", "It's Awake"],
+  },
+};

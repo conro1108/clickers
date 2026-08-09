@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   ATTACKS,
   DEFENSES,
-  P,
+  Y,
   PRODUCERS,
   UPGRADES,
   affordableCount,
@@ -19,8 +19,8 @@ import {
   type Command,
   type Millis,
   type PlayerState,
-  type Potatoes,
-} from "@battle/sim";
+  type Yield,
+} from "@clickers/sim";
 
 type Tab = "grow" | "sabotage" | "defend";
 type BuyQty = 1 | 10 | "max";
@@ -37,7 +37,7 @@ function Row({
 }: {
   name: string;
   blurb: string;
-  cost: Potatoes;
+  cost: Yield;
   meta?: string;
   affordable: boolean;
   onBuy: () => void;
@@ -77,7 +77,7 @@ export function Shop({
 }: {
   me: PlayerState;
   now: Millis;
-  budget: Potatoes;
+  budget: Yield;
   opponents: PlayerState[];
   dispatch: (cmd: Command) => void;
 }) {
@@ -102,7 +102,7 @@ export function Shop({
       i === 0 ||
       owned > 0 ||
       (prev !== undefined && (me.producers[prev.id] ?? 0) > 0) ||
-      P.gte(P.mul(budget, 3), producerCost(prod.id, 0, 1));
+      Y.gte(Y.mul(budget, 3), producerCost(prod.id, 0, 1));
     if (!visible) return [];
     return [{ prod, owned, n, cost, each, broken }];
   });
@@ -110,7 +110,7 @@ export function Shop({
   // One dot, on whichever rung buys the most rate per potato right now. Only
   // among rows you can actually press — a badge on a price you can't meet is
   // trivia, not a nudge — and only when there's more than one to choose from.
-  const buyable = shelf.filter((r) => P.gte(budget, r.cost) && r.each > 0);
+  const buyable = shelf.filter((r) => Y.gte(budget, r.cost) && r.each > 0);
   const best =
     buyable.length > 1
       ? buyable.reduce((a, b) => (b.cost / (b.each * b.n) < a.cost / (a.each * a.n) ? b : a)).prod.id
@@ -152,7 +152,7 @@ export function Shop({
                 blurb={`${prod.blurb} +${format(each * n)}/s`}
                 cost={cost}
                 meta={qty === "max" ? `buy ${n}` : undefined}
-                affordable={P.gte(budget, cost)}
+                affordable={Y.gte(budget, cost)}
                 best={prod.id === best}
                 onBuy={() =>
                   dispatch({ type: "buy_producer", player: me.id, producer: prod.id, qty: n })
@@ -173,7 +173,7 @@ export function Shop({
                 name={u.name}
                 blurb={u.blurb}
                 cost={u.cost}
-                affordable={P.gte(budget, u.cost)}
+                affordable={Y.gte(budget, u.cost)}
                 onBuy={() => dispatch({ type: "buy_upgrade", player: me.id, upgrade: u.id })}
               />
             ))}
@@ -213,7 +213,7 @@ export function Shop({
                   blurb={a.blurb}
                   cost={cost}
                   meta={`power ${a.power}`}
-                  affordable={P.gte(budget, cost) && targetId !== ""}
+                  affordable={Y.gte(budget, cost) && targetId !== ""}
                   onBuy={() =>
                     dispatch({ type: "attack", player: me.id, target: targetId, attack: a.id })
                   }
@@ -245,7 +245,7 @@ export function Shop({
                       name={`${prod.mend} ${prod.name}`}
                       blurb={`${broken} ${prod.hurt} · restores +${format(back)}/s`}
                       cost={cost}
-                      affordable={P.gte(budget, cost)}
+                      affordable={Y.gte(budget, cost)}
                       onBuy={() => dispatch({ type: "repair", player: me.id, producer: prod.id })}
                     />
                   );
@@ -270,7 +270,7 @@ export function Shop({
                   blurb={d.blurb}
                   cost={cost}
                   meta={`+${d.power} absorb`}
-                  affordable={P.gte(budget, cost)}
+                  affordable={Y.gte(budget, cost)}
                   onBuy={() => dispatch({ type: "defend", player: me.id, defense: d.id })}
                 />
               );

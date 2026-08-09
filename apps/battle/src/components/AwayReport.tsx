@@ -1,4 +1,4 @@
-import { format, solo } from "@battle/sim";
+import { format, solo } from "@clickers/sim";
 
 function describeAway(msAway: number): string {
   const minutes = Math.round(msAway / 60_000);
@@ -51,10 +51,10 @@ export function AwayReport({
               <strong className="hurt">{report.brokeTotal} units</strong>
             </li>
           )}
-          {report.soilLost > 0.001 && (
+          {report.conditionLost > 0.001 && (
             <li>
               <span>Soil worn down</span>
-              <strong className="hurt">−{(report.soilLost * 100).toFixed(0)}% production</strong>
+              <strong className="hurt">−{(report.conditionLost * 100).toFixed(0)}% production</strong>
             </li>
           )}
         </ol>

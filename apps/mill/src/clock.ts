@@ -1,4 +1,4 @@
-import { ms, type Millis } from "@mill/sim";
+import { ms, type Millis } from "@clickers/sim";
 
 /**
  * Single source of "now" for the whole app. Locally this is just the wall

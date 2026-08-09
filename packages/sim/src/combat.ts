@@ -114,7 +114,7 @@ export function resolveAttack(args: {
     // A little jitter so identical attacks aren't perfectly predictable, and
     // so the seeded PRNG stays the only source of randomness in the sim.
     const rolled = share * rng.range(0.85, 1.15);
-    // At least one unit, or cheap attacks quietly do nothing to a small mill.
+    // At least one unit, or cheap attacks quietly do nothing to a small site.
     const want = Math.max(1, Math.round(working * rolled));
     // No knockouts: capped share of what they own, per type.
     const cap = Math.max(0, Math.floor(owned * MAX_BROKEN_SHARE) - already);
@@ -133,8 +133,8 @@ export function resolveAttack(args: {
 /** Human-readable summary of what an attack knocked out. */
 export function describeBreak(broke: Partial<Record<ProducerId, number>>): string {
   const parts = PRODUCERS.filter((prod) => (broke[prod.id] ?? 0) > 0).map(
-    // Each producer says what being hurt looks like for it — a van breaks,
-    // a kennel hand is maimed — so one verb doesn't have to cover both.
+    // Each producer says what being hurt looks like for it — a hauler breaks,
+    // a hand is maimed — so one verb doesn't have to cover both.
     (prod) => `${broke[prod.id]}x ${prod.name} ${prod.hurt}`,
   );
   return parts.join(", ");

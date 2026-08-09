@@ -3,7 +3,11 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "noEmit": true,
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "paths": {
+      "@clickers/sim": ["../../packages/sim/src/index.ts"],
+      "@clickers/theme": ["./src/theme.ts"]
+    }
   },
   "include": ["src", "vite.config.ts"]
 }

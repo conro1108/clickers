@@ -17,7 +17,7 @@ import {
   repairCost,
   repeatCost,
 } from "./economy.js";
-import { P, type Millis, type Puppies } from "./numbers.js";
+import { Y, type Millis, type Yield } from "./numbers.js";
 import { clampToMatch, isOver, scoreOf } from "./match.js";
 import { rngFor } from "./rng.js";
 import type { Command, MatchState, PlayerId, PlayerState } from "./state.js";
@@ -33,10 +33,10 @@ export interface BotProfile {
    * 0..1 — how well it plays the economy. This is the difficulty knob, and it
    * drives three things at once, all of which a beginner gets wrong:
    *
-   * - whether it buys the best rate-per-puppy on the board or just the
+   * - whether it buys the best rate-per-unit on the board or just the
    *   cheapest thing on the shelf,
    * - how much of its pile it converts into production each time it acts (a
-   *   beginner leaves puppies sitting idle, earning nothing),
+   *   beginner leaves stock sitting idle, earning nothing),
    * - whether it bothers repairing broken kit at all.
    */
   skill: number;
@@ -46,7 +46,7 @@ export interface BotProfile {
    * How far ahead of it you have to be before it reaches across the board, as a
    * share of its own score. At 0.6 it only swings at someone who's within
    * striking distance of overtaking it — which, once it's comfortably ahead,
-   * means it stops attacking altogether and just farms. That's the right
+   * means it stops attacking altogether and just sites. That's the right
    * instinct for the low rungs and the whole reason the old top rung played
    * passively. At 0 it swings every turn it can afford to, winning or not.
    */
@@ -59,27 +59,27 @@ export interface BotProfile {
    * This is the real difficulty knob at the top of the ladder, and the reason
    * the old top rung lost to moderately active farming: at 24 it physically
    * could not spend a late-game pile as fast as it earned one, so it sat on
-   * puppies that weren't producing while a person who keeps clicking Buy does
+   * stock that weren't producing while a person who keeps clicking Buy does
    * not. A number here that never binds (a few hundred) means the only thing
    * limiting it is what it can afford.
    */
   buysPerTurn: number;
   /**
    * 0..1 — how much worse than the best buy on the board it will settle for
-   * rather than save up, as a share of that best buy's rate-per-puppy.
+   * rather than save up, as a share of that best buy's rate-per-unit.
    *
    * This is the single biggest thing separating a good player from a bad one,
    * and the old bot was at 0. Every tier costs `growth^N` more each time you
-   * buy one, so the 60th Puppy Pen is ~13.5K puppies for 2.5/s while a first
-   * Grooming Rig is 45K for 3500/s — four hundred times the rate per puppy.
+   * buy one, so the 60th Unit Pen is ~13.5K stock for 2.5/s while a first
+   * Grooming Rig is 45K for 3500/s — four hundred times the rate per unit.
    * Buying the best thing you can *afford right now* means shovelling the pile
    * into pens forever and never reaching the tier that wins the match, which is
    * exactly why the old ladder got flattened by anyone who saved.
    *
    * At 0 it buys anything affordable. At 0.9 it sits on its hands unless the
-   * purchase is within 10% of the best rate-per-puppy in the shop — which
+   * purchase is within 10% of the best rate-per-unit in the shop — which
    * usually means waiting for the next tier. Not 1: some idling is worse than a
-   * slightly-off buy, since puppies you're sitting on earn nothing either.
+   * slightly-off buy, since stock you're sitting on earn nothing either.
    */
   thrift: number;
 }
@@ -100,9 +100,9 @@ export interface BotProfile {
  * Note that `aggression` does *not* climb with the ladder past `vicious`, and
  * falls at the top. It's a share of the pile spent per *turn*, so at a 250ms
  * cadence the same number is nearly three times the spend per second it is at
- * 700ms — and puppies thrown at a shielded opponent are puppies not compounding
+ * 700ms — and stock thrown at a shielded opponent are stock not compounding
  * at home. The hard rungs pressure you by swinging more often, not by betting
- * more of the farm on each swing.
+ * more of the site on each swing.
  */
 export const BOT_PROFILES: Record<string, BotProfile> = {
   // prettier-ignore-start
@@ -126,18 +126,18 @@ export const BOT_PROFILES: Record<string, BotProfile> = {
 /** Priciest item it can afford within `budget`. */
 function affordable<T extends Attack | Defense>(
   items: readonly T[],
-  costOf: (item: T) => Puppies,
-  budget: Puppies,
-): { item: T; cost: Puppies } | undefined {
-  let best: { item: T; cost: Puppies } | undefined;
+  costOf: (item: T) => Yield,
+  budget: Yield,
+): { item: T; cost: Yield } | undefined {
+  let best: { item: T; cost: Yield } | undefined;
   for (const item of items) {
     const cost = costOf(item);
-    if (P.gte(budget, cost) && (!best || cost > best.cost)) best = { item, cost };
+    if (Y.gte(budget, cost) && (!best || cost > best.cost)) best = { item, cost };
   }
   return best;
 }
 
-/** Rate per puppy for the next unit of each producer, best first. */
+/** Rate per unit for the next unit of each producer, best first. */
 function rankProducers(me: PlayerState) {
   return PRODUCERS.map((prod) => {
     const cost = producerCost(prod.id, me.producers[prod.id] ?? 0);
@@ -148,12 +148,12 @@ function rankProducers(me: PlayerState) {
 /**
  * A whole turn's worth of decisions, in the order a competent player would make
  * them: patch the damage, cover yourself, take your swing, then put every
- * remaining puppy to work.
+ * remaining unit to work.
  *
  * Returning a list rather than a single command is the point. A bot that buys
  * one thing per tick leaves a growing pile sitting idle in the late game, which
- * is exactly the mistake that made every difficulty crushable — puppies that
- * aren't producing are puppies you've already lost.
+ * is exactly the mistake that made every difficulty crushable — stock that
+ * aren't producing are stock you've already lost.
  */
 export function botTurn(
   state: MatchState,
@@ -170,8 +170,8 @@ export function botTurn(
   // A shadow copy so costs and affordability advance across the turn the same
   // way they will when these commands actually land.
   let me = checkpoint(raw, t);
-  const pay = (cost: Puppies) => {
-    me = { ...me, puppies: P.sub(me.puppies, cost) };
+  const pay = (cost: Yield) => {
+    me = { ...me, stock: Y.sub(me.stock, cost) };
   };
 
   // Rolled per turn, not per twenty-second bucket: difficulty shouldn't hinge
@@ -181,14 +181,14 @@ export function botTurn(
   const plays = () => roll.next() < profile.skill;
 
   // --- Repairs. Broken kit is rate you already paid for, so buying it back is
-  // normally the best puppy on the board. Same value test as everything else,
+  // normally the best unit on the board. Same value test as everything else,
   // though, or cheap chip damage becomes a way to bleed the bot dry.
   if (brokenRate(me) > 0 && plays()) {
     for (const prod of PRODUCERS) {
       const broken = Math.min(me.broken[prod.id] ?? 0, me.producers[prod.id] ?? 0);
       if (broken <= 0) continue;
       const cost = repairCost(me, prod.id);
-      if (cost <= 0 || !P.gte(me.puppies, cost)) continue;
+      if (cost <= 0 || !Y.gte(me.stock, cost)) continue;
       // Worth it if the rate it buys back is cheaper than buying that rate new.
       const back = broken * prod.baseRate * producerMultiplier(me, prod.id);
       const best = rankProducers(me)[0];
@@ -206,7 +206,7 @@ export function botTurn(
     const pick = affordable(
       DEFENSES,
       (d) => repeatCost(d.baseCost, d.growth, me.defensesUsed[d.id] ?? 0),
-      P.mul(me.puppies, profile.defensiveness),
+      Y.mul(me.stock, profile.defensiveness),
     );
     if (pick) {
       out.push({ type: "defend", player: botId, defense: pick.item.id });
@@ -230,16 +230,16 @@ export function botTurn(
   if (
     profile.aggression > 0 &&
     leader &&
-    leader.score > P.mul(scoreOf(me, t, state.config.scoring), profile.patience)
+    leader.score > Y.mul(scoreOf(me, t, state.config.scoring), profile.patience)
   ) {
     const targetRate = cleanRate(state.players[leader.id]!);
     // The budget is re-read from what's left after each swing, so stacking them
-    // costs geometrically less and a big `swings` can't empty the mill.
+    // costs geometrically less and a big `swings` can't empty the site.
     for (let i = 0; i < profile.swings; i++) {
       const pick = affordable(
         ATTACKS,
         (a) => attackCost(a, me.attacksUsed[a.id] ?? 0, targetRate),
-        P.mul(me.puppies, profile.aggression),
+        Y.mul(me.stock, profile.aggression),
       );
       if (!pick) break;
       out.push({ type: "attack", player: botId, target: leader.id, attack: pick.item.id });
@@ -253,7 +253,7 @@ export function botTurn(
   for (const up of UPGRADES) {
     if (me.upgrades.includes(up.id)) continue;
     if (up.requires && (me.producers[up.requires.producer] ?? 0) < up.requires.count) continue;
-    if (!P.gte(me.puppies, up.cost)) continue;
+    if (!Y.gte(me.stock, up.cost)) continue;
     out.push({ type: "buy_upgrade", player: botId, upgrade: up.id });
     pay(up.cost);
     me = { ...me, upgrades: [...me.upgrades, up.id] };
@@ -265,8 +265,8 @@ export function botTurn(
     // a first-timer does, and it quietly wrecks your curve — you pay ever more
     // per pen while the good tiers stay one save away.
     const pick = plays()
-      ? ranked.find((r) => P.gte(me.puppies, r.cost) && r.value >= ranked[0]!.value * profile.thrift)
-      : [...ranked].sort((a, b) => a.cost - b.cost).find((r) => P.gte(me.puppies, r.cost));
+      ? ranked.find((r) => Y.gte(me.stock, r.cost) && r.value >= ranked[0]!.value * profile.thrift)
+      : [...ranked].sort((a, b) => a.cost - b.cost).find((r) => Y.gte(me.stock, r.cost));
     // Nothing worth buying — hold the pile and let it grow into the next tier.
     if (!pick) break;
     out.push({ type: "buy_producer", player: botId, producer: pick.id, qty: 1 });

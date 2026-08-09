@@ -21,7 +21,7 @@ import {
   type Command,
   type MatchState,
   type Millis,
-} from "@mill/sim";
+} from "@clickers/sim";
 
 import { namesOf, settle, type MatchRow } from "./matches.js";
 import { serverNow, supabase } from "./supabase.js";
