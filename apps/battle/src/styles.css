@@ -1,0 +1,1853 @@
+/*
+ * Cozy pixel-farm skin.
+ *
+ * Same visual language as cozy_sprites: a cream-and-wood palette, a monospace
+ * stack, chunky 2px borders with a hard drop shadow instead of a blur, and
+ * bottom sheets rather than centred dialogs. Nothing here is round-and-soft;
+ * everything is a wooden sign someone nailed up.
+ */
+
+:root {
+  --wood: #7a5237;
+  --wood-dark: #5e3e29;
+  --cream: #f7ecd8;
+  --cream-2: #efe0c2;
+  --cream-3: #fffdf7;
+  --ink: #4a3527;
+  --ink-soft: #8a6f57;
+  --accent: #e07a4a;
+  --gold: #d29a3c;
+  --leaf: #5f9c46;
+  --blood: #c0492f;
+  --panel-shadow: 0 4px 0 rgba(94, 62, 41, 0.28);
+
+  color-scheme: light;
+  font-family: ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Mono", "Courier New", monospace;
+  font-size: 15px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  /* The app is a fixed single screen, not a document. Without this the page
+     itself scrolls whenever the shell is a few pixels taller than the visual
+     viewport, which reads as the whole game sliding under your thumb. */
+  overflow: hidden;
+}
+
+/* iOS standalone leaves a strip below the layout viewport that only the root
+   background can paint. The app's bottom edge is the cream nav, so paint it
+   cream and the strip reads as the nav running to the screen edge. */
+html {
+  background: var(--cream);
+}
+
+body {
+  height: 100%;
+  background: radial-gradient(circle at 50% 0%, #8a5f3f 0%, #6b4630 60%, #4a2f20 100%);
+  color: var(--ink);
+  /* Rapid tapping otherwise reads as a double-tap zoom, which makes the dig
+     button feel broken exactly when you're using it hardest. */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Pinned to the viewport rather than sized in viewport units.
+ *
+ * Every vh flavour lies somewhere: vh ignores browser chrome, dvh recomputes
+ * lazily on iOS standalone, and lvh assumes the chrome is hidden. Any of them
+ * being a few pixels tall means the bottom nav is off the bottom of a screen
+ * that can't scroll. `position: fixed` with all four insets is measured against
+ * the layout viewport itself, so the shell is exactly as tall as there is room
+ * for and the nav always lands on-screen.
+ *
+ * The top inset is padding *inside* that box (border-box), so the HUD clears a
+ * translucent status bar without making the shell taller than the screen. */
+#root {
+  position: fixed;
+  inset: 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #caa980;
+  padding-top: env(safe-area-inset-top);
+}
+
+input,
+textarea {
+  user-select: auto;
+  -webkit-user-select: auto;
+}
+
+/* Pixel art everywhere — keep it crisp at any size. */
+.pxicon {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* --- Controls ------------------------------------------------------------ */
+
+button {
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  border: 2px solid var(--wood);
+  background: var(--cream-3);
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-weight: 700;
+  box-shadow: var(--panel-shadow);
+  transition: transform 0.06s ease, box-shadow 0.06s ease, background 0.12s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(94, 62, 41, 0.28);
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  box-shadow: none;
+}
+button.on {
+  background: var(--wood);
+  border-color: var(--wood-dark);
+  color: var(--cream);
+}
+button.ghost {
+  background: var(--cream-2);
+}
+button.danger {
+  color: var(--blood);
+  border-color: var(--blood);
+}
+button.wide {
+  width: 100%;
+  margin-top: 14px;
+}
+button.start {
+  background: var(--accent);
+  border-color: var(--wood-dark);
+  color: #fff8ec;
+  font-size: 1.05rem;
+  padding: 12px 18px;
+  width: 100%;
+}
+
+input {
+  font: inherit;
+  color: var(--ink);
+  background: var(--cream-3);
+  border: 2px solid var(--wood);
+  border-radius: 10px;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+.small {
+  font-size: 0.85em;
+}
+.hurt {
+  color: var(--blood);
+}
+.error {
+  background: var(--blood);
+  color: #fff4ee;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  text-align: center;
+}
+
+/* --- Lobby / home -------------------------------------------------------- */
+
+.lobby {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 22px calc(28px + env(safe-area-inset-bottom));
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.lobby h1,
+.brand {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--wood-dark);
+}
+.lobby h1 {
+  font-size: 2.1rem;
+  margin: 0;
+  line-height: 1.1;
+}
+.lobby h1 span,
+.brand span {
+  color: var(--accent);
+}
+.tagline {
+  color: var(--ink-soft);
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+}
+.home-note {
+  margin: 0;
+}
+.home-aside {
+  margin-top: auto;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+.field > span {
+  font-weight: 700;
+  color: var(--wood-dark);
+}
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Two halves of one decision — which world the next generation gets — so they
+   sit side by side and the same size rather than wrapping into a staircase. */
+.choices.halves {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 14px;
+}
+
+/* A live diorama, not a hero image — same scene the game runs, sized down. */
+.title-scene {
+  height: 220px;
+  border: 3px solid var(--wood);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--panel-shadow);
+}
+
+/* --- Farm shell ---------------------------------------------------------- */
+
+.app {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.farm-app {
+  background: var(--cream);
+}
+
+.hud {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 14px 7px;
+  background: var(--cream);
+  border-bottom: 3px solid var(--wood);
+  z-index: 3;
+}
+
+.hud-bank {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Held for 700ms to reach the back room, which on a phone is otherwise long
+     enough to start a text selection and pop the copy/define callout over the
+     top of it. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.hud-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--wood-dark);
+  font-variant-numeric: tabular-nums;
+}
+.hud-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+.hud-side {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.hud-rate {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--leaf);
+  font-variant-numeric: tabular-nums;
+}
+
+.soil {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.soil-track {
+  width: 62px;
+  height: 8px;
+  background: var(--cream-2);
+  border: 2px solid var(--wood);
+}
+.soil-fill {
+  height: 100%;
+  background: var(--leaf);
+  transition: width 0.3s ease;
+}
+.soil-fill.low {
+  background: var(--gold);
+}
+
+/* --- The scene ----------------------------------------------------------- */
+
+.stage {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.scene {
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* Composed to be safe to bleed off-frame, so cover reads as a window onto a
+     bigger farm rather than a letterboxed picture of one. */
+  object-fit: cover;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  cursor: pointer;
+}
+
+/* One sentence over the farm, until the first dig retires it for good. */
+.tap-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Low enough to sit on open grass rather than across the crop rows. */
+  top: 54%;
+  margin: 0;
+  text-align: center;
+  pointer-events: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fff8ec;
+  text-shadow: 0 2px 0 rgba(40, 26, 16, 0.65);
+  animation: hint-breathe 2s ease-in-out infinite;
+}
+
+@keyframes hint-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* --- The omen ------------------------------------------------------------ */
+
+/* The lights going out. Over everything — HUD, nav, whichever sheet the
+   purchase was made from — and eating input for its seven seconds, because a
+   dig landing in the middle of this would say it was only ever a banner.
+   Timings track `OMEN_MS` in App.tsx. */
+.omen-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 0 24px;
+  text-align: center;
+  background: #06040a;
+  animation: omen-veil 7600ms ease both;
+}
+/* Something behind the words, in the colour of the thing that caused all this,
+   swelling in under the instruction and going out with it. The dark alone held
+   for seven seconds is a loading screen. */
+.omen-veil:not(.flash)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 52%, rgba(122, 90, 192, 0.55), rgba(6, 4, 10, 0) 62%);
+  animation: omen-bloom 7600ms ease both;
+}
+/* Every Singularity after the first of a run. Same darkness, a quarter of the
+   time, lit from the middle so it reads as the sky answering rather than as a
+   frame that dropped. Tracks `OMEN_FLASH_MS`. */
+.omen-veil.flash {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(122, 90, 192, 0.5), rgba(6, 4, 10, 0) 55%),
+    #06040a;
+  animation: omen-flash 1900ms ease both;
+}
+.omen-line {
+  margin: 0;
+  /* Two even lines rather than four words and an orphaned "it". The max-width
+     is what does the work; `balance` just evens the two out where it's had. */
+  max-width: 19ch;
+  text-wrap: balance;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #efe2cd;
+  animation: omen-line 7600ms ease both;
+  /* Everything in here sits over the bloom. */
+  position: relative;
+  z-index: 1;
+}
+/* The instruction, and the only part of it that's allowed to be loud. It opens
+   out as it holds — the tracking grows a tenth of an em over four seconds, which
+   is too slow to catch happening and impossible to miss having happened. */
+.omen-call {
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  font-size: 1.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  /* Indented by the tracking, which otherwise hangs a gap off the right. */
+  text-indent: 0.24em;
+  color: #ffcf90;
+  text-shadow: 0 0 22px rgba(255, 176, 84, 0.45);
+  animation: omen-call 7600ms ease both;
+}
+/* The short one's whole message. Smaller than the call — it's a nudge in
+   passing, not the moment — and it has to arrive, be read and leave inside two
+   seconds, so it doesn't move while it's up. */
+.omen-nudge {
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  max-width: 20ch;
+  text-wrap: balance;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+  color: #ffcf90;
+  text-shadow: 0 0 18px rgba(255, 176, 84, 0.4);
+  animation: omen-nudge 1900ms ease both;
+}
+
+@keyframes omen-veil {
+  0% {
+    opacity: 0;
+  }
+  /* 900ms down to black, then a beat of nothing before the first word — and a
+     slow 1.5s back off it at the end, because the farm arriving is the reveal. */
+  12%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes omen-bloom {
+  0%,
+  30% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  60%,
+  76% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+@keyframes omen-flash {
+  0% {
+    opacity: 0;
+  }
+  /* On in 300ms, held long enough to read four words, then let go over the last
+     half — the same shape as the long one, in a quarter of it. */
+  16%,
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes omen-line {
+  0%,
+  24% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  36%,
+  76% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  84%,
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes omen-call {
+  0%,
+  45% {
+    opacity: 0;
+    transform: scale(0.94);
+    letter-spacing: 0.18em;
+  }
+  57% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  76% {
+    opacity: 1;
+    transform: scale(1);
+    letter-spacing: 0.28em;
+  }
+  84%,
+  100% {
+    opacity: 0;
+    transform: scale(1.05);
+    letter-spacing: 0.3em;
+  }
+}
+@keyframes omen-nudge {
+  0%,
+  14% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  28%,
+  62% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  82%,
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* --- The Convergence ------------------------------------------------------ */
+
+/* The trip inside. Over everything — HUD, nav, the shop it was bought from —
+   and it takes every input with it for its ten seconds. Timings track
+   `CONVERGE_MS` in App.tsx; every layer runs on that same duration with
+   percentage offsets so the beats can't drift apart.
+
+   Fixed rather than absolute, because the omen's `.app`-relative box is the
+   farm screen and this is not a thing happening on the farm screen. */
+.converge {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  background: #06040a;
+  animation: converge-veil 9600ms linear both;
+}
+/* The light of the thing you're falling toward, before it's big enough to be
+   anything. Kept on the backdrop rather than on the tuber itself: a blurred
+   shadow scaled thirty times is a lot of pixels to ask a phone for. */
+.converge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 191, 122, 0.22), rgba(6, 4, 10, 0) 48%);
+  animation: converge-halo 9600ms ease-in both;
+}
+
+/* The potato, from outside, getting closer. It's a lopsided blob with two eyes
+   on it, which is all it needs to be — for the four seconds it's small enough
+   to read as an object it's barely more than a lit speck, and by the time it's
+   big enough to inspect you're already through it. */
+.converge-skin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44vmin;
+  height: 33vmin;
+  margin: -16.5vmin 0 0 -22vmin;
+  border-radius: 54% 46% 48% 52% / 60% 58% 42% 40%;
+  background: radial-gradient(72% 78% at 36% 30%, #b07c4c 0%, #8a5a35 42%, #5d3a22 74%, #341f13 100%);
+  will-change: transform;
+  animation: converge-skin 9600ms cubic-bezier(0.62, 0, 0.9, 0.4) both;
+}
+/* Two eyes, so the last thing that passes the camera on the way in is a sprout
+   pit the size of the screen. */
+.converge-skin::before,
+.converge-skin::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #2a1a10 0%, #46291a 62%, rgba(70, 41, 26, 0) 100%);
+  box-shadow: 0 -0.35vmin 0 rgba(214, 160, 106, 0.45);
+}
+.converge-skin::before {
+  left: 25%;
+  top: 41%;
+  width: 7%;
+  height: 9%;
+}
+.converge-skin::after {
+  left: 58%;
+  top: 25%;
+  width: 5%;
+  height: 6.5%;
+}
+
+/* Inside. Cut flesh lit from where you came in, going to shadow at the edges,
+   with the same vascular rings the ceiling has — this is the same place the
+   canvas is about to draw over the sky, seen from much closer. */
+.converge-flesh {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-radial-gradient(
+      circle at 50% 44%,
+      rgba(93, 58, 34, 0.17) 0 2px,
+      rgba(93, 58, 34, 0) 2px 30px
+    ),
+    radial-gradient(circle at 50% 44%, #f2e2b4 0%, #ecd9a6 18%, #c9a473 45%, #7d5330 74%, #3d2415 100%);
+  animation: converge-flesh 9600ms cubic-bezier(0.16, 0.6, 0.24, 1) both;
+}
+/* The skin going past the lens. One frame's worth of white, which is what
+   turns a crossfade into a passage through something. */
+.converge-flesh::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #fff3d6;
+  animation: converge-flash 9600ms ease-out both;
+}
+
+.converge-words {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 26px;
+  text-align: center;
+}
+/* All three in the same cell, so a line arriving doesn't shove the last one
+   off its mark on the way out. */
+.converge-words > p {
+  grid-area: 1 / 1;
+  margin: 0;
+  max-width: 22ch;
+  text-wrap: balance;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+/* Said in the dark, on the way in. Held up out of the middle, because the
+   middle is where the tuber is and a sentence across it makes the one object
+   on the screen look like a background. */
+.converge-line {
+  align-self: start;
+  padding-top: 16vh;
+  font-size: 1rem;
+  line-height: 1.4;
+  letter-spacing: 0.1em;
+  color: #efe2cd;
+  text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+  animation: converge-line 9600ms ease both;
+}
+/* The card, and the only time the game names anything at itself. Last, and it
+   doesn't leave: the farm comes back up underneath it. */
+.converge-title {
+  font-size: clamp(1.7rem, 9vw, 2.7rem);
+  line-height: 1.1;
+  /* Indented by about the tracking it settles at, which otherwise hangs the
+     whole card a few pixels left of the middle. */
+  text-indent: 0.22em;
+  color: #4a2a17;
+  text-shadow: 0 0 8vmin rgba(255, 240, 200, 0.95);
+  animation: converge-title 9600ms ease-out both;
+}
+/* The reveal, on the frame you can first see where you are. */
+.converge-call {
+  font-size: 1.1rem;
+  line-height: 1.45;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+  color: #3b2412;
+  text-shadow: 0 0 6vmin rgba(255, 240, 200, 0.8);
+  animation: converge-call 9600ms ease both;
+}
+
+@keyframes converge-veil {
+  0% {
+    opacity: 0;
+  }
+  /* 800ms to take the screen, and 800ms at the end to give it back — the farm
+     arriving under a ceiling that hasn't landed yet is the last beat. */
+  8%,
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes converge-halo {
+  0% {
+    opacity: 0;
+  }
+  44% {
+    opacity: 1;
+  }
+  48%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes converge-skin {
+  0% {
+    opacity: 0;
+    transform: scale(0.05) rotate(-8deg);
+  }
+  /* A speck in the dark for a second and a half, then the fall — nearly all of
+     the distance is covered in the last quarter of it. */
+  8% {
+    opacity: 1;
+    transform: scale(0.1) rotate(-7deg);
+  }
+  44% {
+    opacity: 1;
+    transform: scale(24) rotate(4deg);
+  }
+  48%,
+  100% {
+    opacity: 0;
+    transform: scale(34) rotate(6deg);
+  }
+}
+@keyframes converge-flesh {
+  0%,
+  42% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+  /* Through, and then still moving: it keeps opening out for another four
+     seconds, so being inside reads as arriving somewhere rather than as a
+     picture that replaced the last one. */
+  46% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes converge-flash {
+  0%,
+  41% {
+    opacity: 0;
+  }
+  45% {
+    opacity: 0.9;
+  }
+  54%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes converge-line {
+  0%,
+  10% {
+    opacity: 0;
+  }
+  15%,
+  36% {
+    opacity: 1;
+  }
+  42%,
+  100% {
+    opacity: 0;
+  }
+}
+/* Through the skin at 43%, and this is the first thing you read in there. */
+@keyframes converge-call {
+  0%,
+  44% {
+    opacity: 0;
+  }
+  50%,
+  64% {
+    opacity: 1;
+  }
+  70%,
+  100% {
+    opacity: 0;
+  }
+}
+/* And the card, which opens out as it holds and is still holding when the veil
+   goes — the tracking grows a fifth of an em over the last two and a half
+   seconds, which is too slow to catch happening and impossible to miss having
+   happened. */
+@keyframes converge-title {
+  0%,
+  68% {
+    opacity: 0;
+    letter-spacing: 0.12em;
+  }
+  76% {
+    opacity: 1;
+    letter-spacing: 0.22em;
+  }
+  100% {
+    opacity: 1;
+    letter-spacing: 0.32em;
+  }
+}
+
+/* --- Dig ----------------------------------------------------------------- */
+
+/* Deliberately small. The scene is the dig button; this is the label that says
+   so, plus the number telling you what a dig is currently worth — which is the
+   one thing the scene can't show you. */
+.digbar {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 5px 14px 6px;
+  background: var(--cream);
+  border-top: 3px solid var(--wood);
+}
+
+.dig {
+  background: var(--accent);
+  border-color: var(--wood-dark);
+  color: #fff8ec;
+  font-size: 0.9rem;
+  padding: 5px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.04em;
+}
+.dig-label {
+  text-transform: uppercase;
+  font-weight: 800;
+}
+.dig-yield {
+  font-weight: 700;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dug potatoes announce themselves above the button rather than on it, so the
+   number never shifts under a thumb that's mid-mash. */
+.pops {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -6px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: none;
+}
+.pop {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--wood-dark);
+  text-shadow: 0 1px 0 var(--cream);
+  animation: pop-up 0.7s ease-out forwards;
+}
+@keyframes pop-up {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-26px);
+    opacity: 0;
+  }
+}
+
+/* --- Bottom nav ---------------------------------------------------------- */
+
+.nav {
+  flex-shrink: 0;
+  display: flex;
+  background: var(--cream);
+  border-top: 3px solid var(--wood);
+  z-index: 3;
+}
+.nav button {
+  flex: 1;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 5px 2px calc(5px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  position: relative;
+}
+.nav button:active {
+  transform: none;
+  background: var(--cream-2);
+}
+.nav-dot {
+  position: absolute;
+  top: 5px;
+  right: 22%;
+  width: 7px;
+  height: 7px;
+  background: var(--blood);
+  border: 1px solid var(--cream);
+}
+.nav button.alert .pxicon {
+  animation: nudge 0.9s ease-in-out infinite;
+}
+/* The shop, once the only thing in it is the Ur-Potato. Not the weather's
+   red dot and jump — nothing is wrong and nothing needs doing this minute.
+   It's a slow warm light under one tab, and the only cool colour in the bar. */
+.nav button.waiting {
+  color: #3d2a4d;
+  background: radial-gradient(120% 90% at 50% 120%, rgba(122, 90, 192, 0.26), rgba(122, 90, 192, 0) 70%);
+  animation: nav-waiting 3.6s ease-in-out infinite;
+}
+@keyframes nav-waiting {
+  0%,
+  100% {
+    background-color: rgba(122, 90, 192, 0);
+  }
+  50% {
+    background-color: rgba(122, 90, 192, 0.14);
+  }
+}
+@keyframes nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* --- Sheets and overlays ------------------------------------------------- */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(42, 30, 20, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 10;
+  animation: fade-in 0.15s ease;
+  padding-top: calc(env(safe-area-inset-top) + 10px);
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.sheet,
+.result {
+  width: 100%;
+  max-height: 100%;
+  background: var(--cream);
+  border-top: 4px solid var(--wood);
+  border-radius: 18px 18px 0 0;
+  animation: slide-up 0.2s ease;
+}
+.result {
+  overflow-y: auto;
+  padding: 16px 18px calc(18px + env(safe-area-inset-bottom));
+}
+/* The sheet is a column so its footer can't be scrolled off: header and foot
+   are fixed rows and only the body scrolls between them. */
+.sheet {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sheet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 10px;
+}
+.sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 18px;
+}
+.sheet:not(:has(.sheet-foot)) .sheet-body {
+  padding-bottom: calc(18px + env(safe-area-inset-bottom));
+}
+@keyframes slide-up {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+
+.sheet h2,
+.result h2 {
+  margin: 0 0 4px;
+  font-size: 1.25rem;
+  color: var(--wood-dark);
+}
+.sheet-sub {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+/* Divides a sheet that carries more than one subject — the weather tab holds
+   both the bill and the log of what caused it. */
+.sheet-section {
+  margin: 22px 0 8px;
+  padding-top: 12px;
+  border-top: 3px solid var(--wood);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+.sheet-close {
+  flex-shrink: 0;
+  border: none;
+  background: var(--cream-2);
+  box-shadow: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--wood-dark);
+  padding: 0;
+}
+.sheet-foot {
+  flex-shrink: 0;
+  padding: 10px 18px calc(10px + env(safe-area-inset-bottom));
+  background: var(--cream-2);
+  border-top: 2px solid var(--wood);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+.sheet-foot strong {
+  color: var(--wood-dark);
+  font-size: 1.05rem;
+}
+
+/* --- The shop, once there's one thing left in it -------------------------- */
+
+/* Everything in this block exists to stop the last purchase of the run from
+   looking like shopping. The palette is the omens' — #06040a, the Singularity's
+   purple, the same amber the sky calls in — so the sheet reads as the thing
+   that's been staining the horizon for the last three days rather than as a
+   tab of the shop with the lights off. */
+.overlay-grave {
+  background: rgba(6, 4, 10, 0.88);
+}
+.sheet-grave {
+  background: #0b0810;
+  border-top-color: #ffcf90;
+  color: #d9cdbb;
+}
+.sheet-grave h2 {
+  color: #ffcf90;
+  font-size: 0.92rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  text-shadow: 0 0 20px rgba(255, 176, 84, 0.35);
+}
+.sheet-grave .sheet-sub {
+  color: #8c7f9a;
+}
+.sheet-grave .sheet-close {
+  background: #1a1326;
+  color: #cbbfd6;
+}
+
+.grave {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 20px 0 calc(24px + env(safe-area-inset-bottom));
+}
+/* The thing itself, out there. Same lopsided blob the Convergence falls into,
+   at rest and breathing — a player who buys this is about to watch it fill the
+   screen, and this is the first time they see it at all.
+
+   Darker than the one in the fold, and by a lot. That one is lit because you're
+   falling into it; this one is a long way off in the dark with the same amber
+   behind it as the sky has been carrying, and at full brightness it stops being
+   an object out there and turns into a bread roll on a shelf. */
+.grave-mark {
+  position: relative;
+  flex-shrink: 0;
+  width: 104px;
+  height: 78px;
+  border-radius: 54% 46% 48% 52% / 60% 58% 42% 40%;
+  background: radial-gradient(72% 78% at 36% 30%, #7d5433 0%, #5c3b23 42%, #3a2415 74%, #1c110a 100%);
+  box-shadow: 0 0 54px 14px rgba(255, 176, 84, 0.16), inset -10px -12px 22px rgba(0, 0, 0, 0.55);
+  animation: grave-breathe 6.5s ease-in-out infinite;
+}
+/* One sprout pit, low and off to the side. The fold's tuber has the pair, and
+   the pair is what makes this one a face: two dark dots at eye height on a blob
+   is a cartoon no matter how the rest of it is lit. */
+.grave-mark::before {
+  content: "";
+  position: absolute;
+  left: 29%;
+  top: 56%;
+  width: 7%;
+  height: 9%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #150c07 0%, #2d1a10 62%, rgba(45, 26, 16, 0) 100%);
+  box-shadow: 0 -1px 0 rgba(214, 160, 106, 0.22);
+}
+@keyframes grave-breathe {
+  50% {
+    transform: scale(1.045);
+    box-shadow: 0 0 80px 24px rgba(255, 176, 84, 0.34);
+  }
+}
+.grave-name {
+  margin: 0;
+  font-size: clamp(1.2rem, 6.5vw, 1.6rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  /* Indented by the tracking, which otherwise hangs a gap off the right. */
+  text-indent: 0.2em;
+  color: #ffcf90;
+  text-shadow: 0 0 26px rgba(255, 176, 84, 0.45);
+}
+.grave-blurb {
+  margin: 0;
+  max-width: 30ch;
+  text-wrap: balance;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #efe2cd;
+}
+.grave-line {
+  margin: 0;
+  max-width: 26ch;
+  text-wrap: balance;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: #8c7f9a;
+}
+
+/* The price, as a thing you are filling rather than a tag you are reading.
+   Every other cost in the game is a number you either have or don't; this one
+   is hours away when it first appears, so what the player wants from it is
+   *how far*, and a bar answers that from across the room. */
+.grave-price {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+.grave-track {
+  height: 7px;
+  background: #1a1326;
+  border: 1px solid #33254a;
+  overflow: hidden;
+}
+.grave-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7a5ac0, #ffcf90);
+  transition: width 0.3s linear;
+}
+.grave-figures {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #d9cdbb;
+}
+
+.grave-take {
+  width: 100%;
+  max-width: 320px;
+  padding: 14px;
+  border: 2px solid #4a3a5f;
+  border-radius: 12px;
+  background: #150f22;
+  box-shadow: none;
+  color: #8c7f9a;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+}
+/* Affordable, and it says so from the other side of the room. */
+.grave-take:not(:disabled) {
+  border-color: #ffcf90;
+  background: linear-gradient(#ffd79f, #e0a45c);
+  color: #2a1a10;
+  animation: grave-ready 2.6s ease-in-out infinite;
+}
+@keyframes grave-ready {
+  0%,
+  100% {
+    box-shadow: 0 0 18px rgba(255, 176, 84, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 176, 84, 0.6);
+  }
+}
+.grave-wait {
+  margin: -6px 0 0;
+  font-size: 0.72rem;
+  color: #6f6480;
+}
+
+/* --- The back room ------------------------------------------------------- */
+
+.backroom {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.backroom section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.backroom h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--wood-dark);
+}
+.backroom p {
+  margin: 0;
+}
+
+/* --- Shop rows ----------------------------------------------------------- */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: var(--cream-3);
+  border: 2px solid var(--wood);
+  border-radius: 12px;
+  padding: 9px 11px;
+  font-weight: 400;
+}
+/* A fixed-width slot rather than an intrinsic one, so the names down the
+   column line up whether the row's thing is a 7px potato plant or a 24px
+   combine harvester. */
+.row-art {
+  flex-shrink: 0;
+  width: 40px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.row-art img {
+  max-width: 40px;
+  max-height: 30px;
+  width: auto;
+  height: auto;
+}
+
+.row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.row-name {
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: var(--wood-dark);
+}
+.row-blurb {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  line-height: 1.3;
+}
+/* Best rate per potato. Deliberately unlabelled — a row that's worth a sentence
+   of explanation isn't the minimal version of this. */
+.row-best {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--leaf);
+  vertical-align: middle;
+}
+.row-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.row-cost {
+  font-weight: 800;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+.row-meta {
+  font-size: 0.65rem;
+  color: var(--ink-soft);
+}
+.row-locked {
+  opacity: 0.5;
+}
+.row-upgrade {
+  border-color: var(--gold);
+  background: #fdf4e0;
+}
+.row-repair {
+  border-color: var(--blood);
+  background: #fdeee9;
+}
+.row-defend {
+  border-color: var(--leaf);
+  background: #f0f7e6;
+}
+
+/* One bill for the whole farm. It keeps the repair rows' colour, because it is
+   those rows — but it's the answer to all of them rather than another item in
+   the list, so it's the filled one and they're the outlines. Drawn like the
+   sheet's own button rather than like stock. */
+.row-fixall {
+  background: var(--blood);
+  border-color: #8f3320;
+  box-shadow: 0 2px 0 #8f3320;
+  margin-bottom: 4px;
+}
+.row-fixall .row-name,
+.row-fixall .row-cost {
+  color: #fff6ef;
+}
+.row-fixall .row-blurb {
+  color: #f7d3c8;
+}
+/* ...and when you can't afford it, it stops being the answer and goes back to
+   being an outline like the rows it summarizes.
+
+   `row-locked` alone is `opacity: 0.5`, which is plenty of signal on a pale
+   outline row and almost none on a filled dark-red one — a half-dimmed solid
+   button above a stack of faded outlines still reads as the most pressable
+   thing on the sheet. It was wired the whole time; it just looked live while
+   refusing to do anything, which is the same bug from the player's side. */
+.row-fixall.row-locked {
+  background: #fdeee9;
+  border-color: var(--blood);
+  box-shadow: none;
+}
+.row-fixall.row-locked .row-name,
+.row-fixall.row-locked .row-cost {
+  color: var(--ink);
+}
+.row-fixall.row-locked .row-blurb {
+  color: var(--wood);
+}
+
+.qty-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  font-size: 0.78rem;
+}
+.qty-toggle button {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+}
+
+.hint {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+  margin: 0 0 10px;
+  border-left: 3px solid var(--cream-2);
+  padding-left: 9px;
+}
+
+.legacy-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+.legacy-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--wood-dark);
+  line-height: 1;
+}
+/* Two harvest figures stacked against the seed count, right-aligned so the
+   numbers line up with each other rather than with the labels. */
+.legacy-runs {
+  text-align: right;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The door between the two farms, at the head of the Upkeep sheet. Sits above
+   the buildings rather than among them, because it changes what the rest of the
+   sheet is about. */
+.world-door {
+  margin-bottom: 12px;
+}
+
+/* --- Status list --------------------------------------------------------- */
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0 0 14px;
+}
+.stats > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px dashed rgba(138, 111, 87, 0.4);
+  font-size: 0.88rem;
+}
+.stats dt {
+  font-weight: 700;
+  color: var(--wood-dark);
+}
+.stats dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.damage {
+  border: 2px solid var(--blood);
+  background: #fdeee9;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+}
+.damage-head {
+  font-weight: 800;
+  font-size: 0.78rem;
+  color: var(--blood);
+  margin-bottom: 5px;
+}
+.damage-body {
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+/* --- Field report -------------------------------------------------------- */
+
+.feed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.feed-item {
+  display: flex;
+  gap: 9px;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(138, 111, 87, 0.35);
+}
+.feed-time {
+  color: var(--ink-soft);
+  flex-shrink: 0;
+  width: 30px;
+  text-align: right;
+}
+.feed-good .feed-text {
+  color: var(--leaf);
+}
+.feed-bad .feed-text {
+  color: var(--blood);
+}
+
+/* --- Away report / results ----------------------------------------------- */
+
+.final {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.final li {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px dashed rgba(138, 111, 87, 0.4);
+  font-size: 0.88rem;
+}
+.final strong {
+  color: var(--wood-dark);
+  font-variant-numeric: tabular-nums;
+}
+.away-kinds {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.away-kinds li {
+  background: var(--cream-2);
+  border: 2px solid var(--wood);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* --- Versus (the older prototype, same skin) ----------------------------- */
+
+.topbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--cream);
+  border-bottom: 3px solid var(--wood);
+  font-size: 0.8rem;
+}
+.brand {
+  font-size: 0.9rem;
+}
+.clock {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--wood-dark);
+  font-variant-numeric: tabular-nums;
+}
+.clock.urgent {
+  color: var(--blood);
+}
+.topbar-bank {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.topbar-bank-value {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.topbar-bank-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* The scoring rule is a lobby decision you can't change mid-match, and on a
+   phone-width topbar it's the first thing that should give up its room. */
+.rule {
+  display: none;
+}
+
+.grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
+  background: var(--cream);
+}
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel {
+  background: var(--cream-3);
+  border: 2px solid var(--wood);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: var(--panel-shadow);
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.panel-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--wood-dark);
+}
+.tabs {
+  gap: 6px;
+}
+.tabs button {
+  flex: 1;
+  padding: 6px 4px;
+  font-size: 0.8rem;
+  position: relative;
+}
+.tab-alert {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  background: var(--blood);
+}
+.shop-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 2px solid var(--cream-2);
+  padding-top: 9px;
+  font-size: 0.85rem;
+}
+
+.tally {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.bank-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--wood-dark);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.bank-label,
+.tally-score-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+}
+.tally-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.tally-score-value {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.dig-layout {
+  margin: 10px 0;
+}
+.dig-emoji {
+  font-size: 1.2rem;
+}
+
+.opp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.opp {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 0.82rem;
+}
+.opp-name {
+  font-weight: 700;
+}
+.opp-count,
+.opp-rate {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+.fog {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  margin: 8px 0 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip-name {
+  font-weight: 700;
+}
+.chip-detail,
+.chip-timer {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+.stat-note {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pop,
+  .nav button.alert .pxicon,
+  .sheet,
+  .result,
+  .overlay,
+  /* The blackout still happens — it's the moment, not decoration — but it
+     arrives and leaves without the drift and the scale on the type. */
+  .omen-line,
+  .omen-call,
+  .omen-nudge,
+  .omen-veil:not(.flash)::after,
+  /* The last purchase keeps its palette and its glow, and loses the two things
+     in it that move on their own. */
+  .grave-mark,
+  .grave-take:not(:disabled),
+  .nav button.waiting {
+    animation: none;
+  }
+
+  /* The Convergence still takes the screen and still ends up inside the potato,
+     because that's the run's one payoff and cutting it would be cutting the
+     ending. What goes is the flight: no rush toward the tuber and no scaling on
+     the flesh, so it's a lit place you arrive in rather than one you're thrown
+     at. Everything else is opacity, which is already safe. */
+  .converge-skin {
+    display: none;
+  }
+  .converge-flesh {
+    animation-name: converge-flesh-still;
+  }
+}
+
+@keyframes converge-flesh-still {
+  0%,
+  42% {
+    opacity: 0;
+  }
+  46%,
+  100% {
+    opacity: 1;
+  }
+}
