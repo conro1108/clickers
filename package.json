@@ -1,5 +1,5 @@
 {
-  "name": "puppy-mill",
+  "name": "clickers",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -7,14 +7,18 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @mill/web",
-    "build": "npm run build -w @mill/web",
+    "dev": "npm run dev -w @clickers/battle",
+    "dev:battle": "npm run dev -w @clickers/battle",
+    "dev:mill": "npm run dev -w @clickers/mill",
+    "build": "npm run build:battle && npm run build:mill",
+    "build:battle": "npm run build -w @clickers/battle",
+    "build:mill": "npm run build -w @clickers/mill",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p packages/sim --noEmit && tsc -p apps/web --noEmit",
+    "typecheck": "tsc -p packages/sim --noEmit && tsc -p apps/battle --noEmit && tsc -p apps/mill --noEmit",
     "db:push": "node db/push.mjs db/schema.sql",
     "db:verify": "node db/verify.mjs",
-    "test:online": "vite-node --config apps/web/vite.config.ts tools/two-players.mts --"
+    "test:online": "vite-node --config apps/mill/vite.config.ts tools/two-players.mts --"
   },
   "devDependencies": {
     "playwright-core": "^1.62.1",
