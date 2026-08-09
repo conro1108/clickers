@@ -18,7 +18,8 @@
     "typecheck": "tsc -p packages/sim --noEmit && tsc -p apps/battle --noEmit && tsc -p apps/mill --noEmit",
     "db:push": "node db/push.mjs db/schema.sql",
     "db:verify": "node db/verify.mjs",
-    "test:online": "vite-node --config apps/mill/vite.config.ts tools/two-players.mts --"
+    "test:online": "vite-node --config apps/mill/vite.config.ts tools/two-players.mts --",
+    "test:online:battle": "vite-node --config apps/battle/vite.config.ts tools/two-players.mts -- game=battle"
   },
   "devDependencies": {
     "playwright-core": "^1.62.1",

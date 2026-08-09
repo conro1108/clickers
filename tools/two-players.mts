@@ -7,11 +7,17 @@
  * handle, call somebody out by name, have them take it, and check that two
  * machines holding no shared state agree about the score.
  *
- *   npx vite apps/web --port 5199 &
- *   npx vite-node --config apps/web/vite.config.ts tools/two-players.mts -- out=/tmp/vs
+ *   npx vite --config apps/mill/vite.config.ts --port 5199 apps/mill &
+ *   npm run test:online -- port=5199 out=/tmp/vs
  *
- * Args: `out=` screenshot stem, `rounds=` whistle-and-spend passes per side,
- * `port=`.
+ * Or the potato game, which runs the same engine and the same lobby behind a
+ * different set of selectors:
+ *
+ *   npx vite --config apps/battle/vite.config.ts --port 5199 apps/battle &
+ *   npm run test:online:battle -- port=5199 out=/tmp/vs
+ *
+ * Args: `game=` battle|mill, `out=` screenshot stem, `rounds=` click-and-spend
+ * passes per side, `port=`.
  *
  * The two players are real accounts, made and deleted through the admin API.
  * They were anonymous sign-ins once, which was tidier — and then a few runs in a
@@ -27,7 +33,7 @@ import { join } from "node:path";
 
 import { chromium, type Page } from "playwright-core";
 
-import { solo } from "@mill/sim";
+import { solo } from "@clickers/sim";
 
 const args = Object.fromEntries(
   process.argv
@@ -37,6 +43,15 @@ const args = Object.fromEntries(
 );
 const stem = args.out ?? "/tmp/vs";
 const port = args.port ?? "5199";
+/**
+ * Which game is being driven. Both run the same engine and the same lobby, so
+ * this only decides the localStorage keys and which dev server to talk to.
+ */
+const game = (args.game ?? "mill") as "battle" | "mill";
+const KEYS = {
+  battle: { save: "potatoes-inc:farm", taught: "potatoes-inc:taught-tap", clock: ".clock", tap: ".click" },
+  mill: { save: "puppy-mill:mill", taught: "puppy-mill:taught-tap", clock: ".hud-clock", tap: ".scene" },
+}[game];
 const rounds = Number(args.rounds ?? 3);
 
 const env: Record<string, string> = {};
@@ -135,16 +150,16 @@ async function open(label: string, user: { session: unknown }): Promise<Page> {
   // splash, and the session beside it so the versus screen never has to sign
   // anybody in.
   const now = Date.now();
-  const mill = solo.createMill({ seed: `${label}-vs`, startedAt: now });
-  mill.producers.pen = 20;
+  const site = solo.createSite({ seed: `${label}-vs`, startedAt: now });
+  site.producers.patch = 20;
   await page.goto(`http://localhost:${port}/`);
   await page.evaluate(
-    ([millKey, save, authKey, session]) => {
-      localStorage.setItem(millKey as string, save as string);
-      localStorage.setItem("puppy-mill:taught-tap", "1");
+    ([saveKey, save, taughtKey, authKey, session]) => {
+      localStorage.setItem(saveKey as string, save as string);
+      localStorage.setItem(taughtKey as string, "1");
       localStorage.setItem(authKey as string, session as string);
     },
-    ["puppy-mill:mill", solo.serializeMill(mill, now), STORAGE_KEY, JSON.stringify(user.session)] as const,
+    [KEYS.save, solo.serializeSite(site, now), KEYS.taught, STORAGE_KEY, JSON.stringify(user.session)] as const,
   );
   await page.reload();
   await page.waitForTimeout(1000);
@@ -160,21 +175,37 @@ async function open(label: string, user: { session: unknown }): Promise<Page> {
   return page;
 }
 
-/** Whistle a stake up off the scene, then spend it in the shop. */
+/**
+ * Click a stake up, then spend it in the shop.
+ *
+ * The two games disagree about what you click: the puppy match hands you the
+ * scene itself, the potato match a button under it. Both end in the same
+ * command, so the harness only needs to know which thing to hit.
+ */
 async function playARound(page: Page) {
-  const box = (await page.locator(".scene").boundingBox())!;
+  const target = page.locator(KEYS.tap).first();
+  const box = (await target.boundingBox())!;
   for (let i = 0; i < 45; i++) {
-    await page.mouse.click(box.x + 60 + (i % 7) * 30, box.y + box.height * 0.62);
+    if (KEYS.tap === ".scene") {
+      await page.mouse.click(box.x + 60 + (i % 7) * 30, box.y + box.height * 0.62);
+    } else {
+      await target.click();
+    }
   }
-  await page.getByRole("button", { name: "Shop", exact: true }).click();
-  await page.waitForTimeout(400);
+  // And they disagree about the shop too: the puppy game opens it as a sheet,
+  // the potato game keeps it on screen under a row of tabs.
+  const sheet = KEYS.tap === ".scene";
+  if (sheet) {
+    await page.getByRole("button", { name: "Shop", exact: true }).click();
+    await page.waitForTimeout(400);
+  }
   for (let i = 0; i < 4; i++) {
-    const rows = page.locator(".sheet .row:not([disabled])");
+    const rows = page.locator(sheet ? ".sheet .row:not([disabled])" : ".panel.shop .row:not([disabled])");
     if ((await rows.count()) === 0) break;
     await rows.first().click();
     await page.waitForTimeout(250);
   }
-  await page.getByRole("button", { name: "Close" }).click();
+  if (sheet) await page.getByRole("button", { name: "Close" }).click();
   await page.waitForTimeout(1200);
 }
 
@@ -226,8 +257,8 @@ await b.getByRole("button", { name: "Race" }).click();
 
 // And the challenger is pulled in without pressing anything either.
 try {
-  await b.waitForSelector(".hud-clock", { timeout: 25000 });
-  await a.waitForSelector(".hud-clock", { timeout: 25000 });
+  await b.waitForSelector(KEYS.clock, { timeout: 25000 });
+  await a.waitForSelector(KEYS.clock, { timeout: 25000 });
   check("both players land in the match", true);
 } catch {
   check("both players land in the match", false, "somebody was left in the lobby");
@@ -259,21 +290,37 @@ if (failures === 0) {
    * other client also has an opinion about. Comparing the two across machines is
    * the actual claim: no shared state, same answer.
    */
-  async function readScores(page: Page) {
-    await page.getByRole("button", { name: "Match", exact: true }).click();
-    await page.waitForTimeout(500);
+  async function readScores(page: Page, label: string) {
+    // Standings live behind a sheet in the puppy game and on the screen in the
+    // potato one, and the two word the gap differently — but both are showing
+    // the same two numbers off the same folded log, which is the whole claim.
+    const sheet = KEYS.tap === ".scene";
+    if (sheet) {
+      await page.getByRole("button", { name: "Match", exact: true }).click();
+      await page.waitForTimeout(500);
+    }
     const theirs = unformat(await page.locator(".opp-count").first().innerText());
-    const delta = unformat(await page.locator(".lead span").innerText());
-    await page.screenshot({ path: `${stem}-standings.png` });
-    await page.getByRole("button", { name: "Close" }).click();
+    const deltaText = sheet
+      ? await page.locator(".lead span").innerText()
+      : await page.locator(".opp-delta").first().innerText();
+    const behind = /trail/i.test(deltaText);
+    // "you lead by 1.23K" — take the number off the end rather than stripping
+    // characters, or the "b" in "by" ends up looking like a magnitude suffix.
+    const amount = /([\d.]+\s*[KMBT]?)\s*$/.exec(deltaText.trim())?.[1] ?? deltaText;
+    const delta = unformat(amount) * (behind ? -1 : 1);
+    await page.screenshot({ path: `${stem}-standings-${label}.png` });
+    if (sheet) await page.getByRole("button", { name: "Close" }).click();
     return { theirs, mine: theirs + delta };
   }
 
-  const sa = await readScores(a);
-  const sb = await readScores(b);
-  // A tolerance rather than an equality: both mills are still producing between
-  // the two reads. A fold that had actually drifted would be out by a run of
-  // purchases, not by half a second of puppies.
+  // Both at once, not one after the other. Read sequentially, the second client
+  // is sampled a second or more later and has genuinely produced more in the
+  // meantime — which looks exactly like the drift this is here to detect, and
+  // swamps it at the small scores a three-round race reaches.
+  const [sa, sb] = await Promise.all([readScores(a, "you"), readScores(b, "brad")]);
+  // Still a tolerance rather than an equality: the two reads are concurrent but
+  // not simultaneous. A fold that had actually drifted would be out by a run of
+  // purchases, not by a few hundred milliseconds of production.
   const agrees = (x: number, y: number) =>
     Math.abs(x - y) <= Math.max(3, 0.06 * Math.max(Math.abs(x), Math.abs(y)));
   check(
@@ -306,7 +353,7 @@ console.log("\nthe play link");
 
   const guest = await openInvite("linkguest", link);
   try {
-    await guest.waitForSelector(".hud-clock", { timeout: 30000 });
+    await guest.waitForSelector(KEYS.clock, { timeout: 30000 });
     check("a stranger following the link lands straight in the race", true);
   } catch {
     check(
@@ -321,8 +368,8 @@ console.log("\nthe play link");
     "the code is taken back out of the address bar",
     !(await guest.evaluate(() => window.location.search)).includes("join"),
   );
-  await hostPage.waitForSelector(".hud-clock", { timeout: 25000 }).catch(() => {});
-  check("and the host is pulled in with them", (await hostPage.locator(".hud-clock").count()) > 0);
+  await hostPage.waitForSelector(KEYS.clock, { timeout: 25000 }).catch(() => {});
+  check("and the host is pulled in with them", (await hostPage.locator(KEYS.clock).count()) > 0);
 }
 
 for (const id of made) {

@@ -60,7 +60,7 @@ async function claimed(label) {
   return { token: res.access_token, id: made.id, label };
 }
 
-function rest(user, path, opts = {}, schema = "puppy_mill") {
+function rest(user, path, opts = {}, schema = "clickers") {
   return fetch(`${URL_}/rest/v1/${path}`, {
     ...opts,
     headers: {
@@ -123,7 +123,7 @@ const made = await check(
   "host opens a match",
   await rest(host, "matches", {
     method: "POST",
-    body: JSON.stringify({ host: host.id, join_code: CODE, duration_ms: 300000 }),
+    body: JSON.stringify({ game: "mill", host: host.id, join_code: CODE, duration_ms: 300000 }),
   }),
   201,
 );
@@ -133,7 +133,7 @@ await check(
   "a host cannot open a match in somebody else's name",
   await rest(host, "matches", {
     method: "POST",
-    body: JSON.stringify({ host: guest.id, join_code: `${CODE}X`, duration_ms: 300000 }),
+    body: JSON.stringify({ game: "mill", host: guest.id, join_code: `${CODE}X`, duration_ms: 300000 }),
   }),
   403,
 );
@@ -156,19 +156,19 @@ await check(
 
 await check(
   "a stranger cannot join with the wrong code",
-  await rest(stranger, "rpc/join_match", { method: "POST", body: JSON.stringify({ p_code: "NOPE" }) }),
+  await rest(stranger, "rpc/join_match", { method: "POST", body: JSON.stringify({ p_code: "NOPE", p_game: "mill" }) }),
   400,
 );
 const joined = await check(
   "guest joins by code",
-  await rest(guest, "rpc/join_match", { method: "POST", body: JSON.stringify({ p_code: CODE }) }),
+  await rest(guest, "rpc/join_match", { method: "POST", body: JSON.stringify({ p_code: CODE, p_game: "mill" }) }),
   200,
 );
 claim("the match is active", joined?.status === "active");
 claim("the clock started on the server", Boolean(joined?.started_at));
 await check(
   "the code is spent — a second player cannot walk in",
-  await rest(stranger, "rpc/join_match", { method: "POST", body: JSON.stringify({ p_code: CODE }) }),
+  await rest(stranger, "rpc/join_match", { method: "POST", body: JSON.stringify({ p_code: CODE, p_game: "mill" }) }),
   400,
 );
 
@@ -220,7 +220,7 @@ await check(
   "an anonymous player cannot challenge anyone",
   await rest(host, "challenges", {
     method: "POST",
-    body: JSON.stringify({ challenger: host.id, opponent: guest.id, duration_ms: 300000 }),
+    body: JSON.stringify({ game: "mill", challenger: host.id, opponent: guest.id, duration_ms: 300000 }),
   }),
   403,
 );
@@ -232,7 +232,7 @@ await check(
   "a real account still cannot challenge an anonymous one",
   await rest(you, "challenges", {
     method: "POST",
-    body: JSON.stringify({ challenger: you.id, opponent: host.id, duration_ms: 300000 }),
+    body: JSON.stringify({ game: "mill", challenger: you.id, opponent: host.id, duration_ms: 300000 }),
   }),
   403,
 );
@@ -241,7 +241,7 @@ const challenge = await check(
   "a real account can challenge a real account",
   await rest(you, "challenges", {
     method: "POST",
-    body: JSON.stringify({ challenger: you.id, opponent: brad.id, duration_ms: 300000 }),
+    body: JSON.stringify({ game: "mill", challenger: you.id, opponent: brad.id, duration_ms: 300000 }),
   }),
   201,
 );
@@ -289,7 +289,7 @@ await check(
 console.log("\nrealtime");
 {
   const rt = createClient(URL_, KEY, {
-    db: { schema: "puppy_mill" },
+    db: { schema: "clickers" },
     auth: { persistSession: false },
   });
   // As a player: realtime applies the same RLS as a select, so a watcher who
@@ -305,7 +305,7 @@ console.log("\nrealtime");
     rt.channel(`verify:${id}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "puppy_mill", table: "commands", filter: `match_id=eq.${id}` },
+        { event: "INSERT", schema: "clickers", table: "commands", filter: `match_id=eq.${id}` },
         (p) => arrived.push(p.new.seq),
       )
       .subscribe((status, err) => {
