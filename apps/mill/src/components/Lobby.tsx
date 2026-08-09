@@ -10,15 +10,15 @@ import {
   type ChallengeRow,
   type MatchRow,
   type MatchTerms,
-} from "../online/matches.js";
+} from "@clickers/online";
 import {
   claimWithEmail,
   handleProblem,
   normalizeHandle,
   setHandle,
   type Me,
-} from "../online/supabase.js";
-import { errorText, type Lobby as LobbyState } from "../online/useLobby.js";
+} from "@clickers/online";
+import { errorText, type Lobby as LobbyState } from "@clickers/online";
 import { TitleScene } from "./MillScene.js";
 import { PxIcon } from "./PxIcon.js";
 

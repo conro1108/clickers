@@ -1,3 +1,4 @@
+import type { MatchRuntime } from "@clickers/online";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BOT_PROFILES,
@@ -12,7 +13,6 @@ import {
   type Command,
   type MatchState,
   type Millis,
-  type PlayerState,
   type ScoringRule,
 } from "@clickers/sim";
 
@@ -36,20 +36,6 @@ export interface MatchSetup {
   durationMs: number;
   botProfile: keyof typeof BOT_PROFILES;
   scoring: ScoringRule;
-}
-
-export interface MatchRuntime {
-  state: MatchState;
-  now: Millis;
-  /** You, integrated forward to `now`. */
-  me: PlayerState;
-  /** Clicks banked client-side but not yet flushed — shown optimistically. */
-  pendingClicks: number;
-  over: boolean;
-  error: string | null;
-  click(): void;
-  dispatch(cmd: Command): void;
-  restart(): void;
 }
 
 function buildMatch(setup: MatchSetup, startedAt: Millis): MatchState {
@@ -204,3 +190,5 @@ export function useMatch(setup: MatchSetup): MatchRuntime {
 }
 
 export { clickYield };
+
+export type { MatchRuntime };

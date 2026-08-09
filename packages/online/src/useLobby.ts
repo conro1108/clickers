@@ -15,10 +15,19 @@ import {
   type ChallengeRow,
   type MatchRow,
 } from "./matches.js";
+import { channelName, SCHEMA } from "./config.js";
 import { refreshMe, signIn, supabase, syncClock, type Me } from "./supabase.js";
 
 export function errorText(e: unknown): string {
-  const message = e instanceof Error ? e.message : String(e);
+  // PostgrestError is a plain object, not an Error, so the `instanceof` arm
+  // alone turns every database failure into the words "[object Object]" — which
+  // is how a 406 from a schema that isn't exposed yet reaches a player.
+  const message =
+    e instanceof Error
+      ? e.message
+      : typeof e === "object" && e !== null && typeof (e as { message?: unknown }).message === "string"
+        ? (e as { message: string }).message
+        : String(e);
   // Anonymous sign-in is rate limited per IP per hour, which is invisible until
   // it isn't: the lobby just fails to load with a sentence out of an API. It's
   // reachable by a room full of people opening the game at once, and the way out
@@ -105,20 +114,20 @@ export function useLobby(): Lobby {
     const id = me?.id;
     if (!id) return;
     const channel = supabase
-      .channel(`puppy-mill:lobby:${id}`)
+      .channel(channelName("lobby", id))
       .on(
         "postgres_changes",
-        { event: "*", schema: "puppy_mill", table: "challenges", filter: `opponent=eq.${id}` },
+        { event: "*", schema: SCHEMA, table: "challenges", filter: `opponent=eq.${id}` },
         refresh,
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "puppy_mill", table: "challenges", filter: `challenger=eq.${id}` },
+        { event: "*", schema: SCHEMA, table: "challenges", filter: `challenger=eq.${id}` },
         refresh,
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "puppy_mill", table: "matches", filter: `host=eq.${id}` },
+        { event: "UPDATE", schema: SCHEMA, table: "matches", filter: `host=eq.${id}` },
         (payload) => setLive(payload.new as MatchRow),
       )
       .subscribe();

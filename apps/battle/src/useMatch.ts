@@ -1,3 +1,4 @@
+import type { MatchRuntime } from "@clickers/online";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BOT_PROFILES,
@@ -12,7 +13,6 @@ import {
   type Command,
   type MatchState,
   type Millis,
-  type PlayerState,
   type ScoringRule,
 } from "@clickers/sim";
 
@@ -38,20 +38,6 @@ export interface MatchSetup {
   scoring: ScoringRule;
 }
 
-export interface MatchRuntime {
-  state: MatchState;
-  now: Millis;
-  /** You, integrated forward to `now`. */
-  me: PlayerState;
-  /** Clicks banked client-side but not yet flushed — shown optimistically. */
-  pendingClicks: number;
-  over: boolean;
-  error: string | null;
-  click(): void;
-  dispatch(cmd: Command): void;
-  restart(): void;
-}
-
 function buildMatch(setup: MatchSetup, startedAt: Millis): MatchState {
   return createMatch({
     config: {
@@ -67,8 +53,20 @@ function buildMatch(setup: MatchSetup, startedAt: Millis): MatchState {
   });
 }
 
+/** The full roster the engine ships, with faces on. */
+export const BOTS: Record<string, { name: string; blurb: string }> = {
+  chill: { name: "Sleepy Pete", blurb: "Grows slowly, rarely swings. A warm-up." },
+  scrappy: { name: "Marge", blurb: "Keeps pace, and will hit you back." },
+  nasty: { name: "Big Russet", blurb: "Faster than you, and comes for your kit." },
+  mean: { name: "Trish", blurb: "Doesn't wait to fall behind before she swings at you." },
+  vicious: { name: "The Vicar", blurb: "Swings every turn he can afford to, winning or not." },
+  ruthless: { name: "Ma Tullock", blurb: "Two swings a turn, and a field that never stops compounding." },
+  merciless: { name: "Silas Crowe", blurb: "Out-earns you outright. You'll need the sabotage tab." },
+  tyrant: { name: "The Duchess", blurb: "Saves for the good tiers instead of the cheap ones. Beating her is the point." },
+};
+
 function botName(profile: keyof typeof BOT_PROFILES): string {
-  return { chill: "Sleepy Pete", scrappy: "Marge", nasty: "Big Russet" }[profile] ?? "Bot";
+  return BOTS[profile]?.name ?? "Bot";
 }
 
 /**
@@ -186,3 +184,5 @@ export function useMatch(setup: MatchSetup): MatchRuntime {
 }
 
 export { clickYield };
+
+export type { MatchRuntime };

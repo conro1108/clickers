@@ -1,7 +1,7 @@
 import {
   Y,
   brokenRate,
-  clickYield,
+  clickGain,
   format,
   stockAt,
   rateAt,
@@ -43,10 +43,13 @@ export function Farm({
   onClick: () => void;
   disabled: boolean;
 }) {
-  const perClick = clickYield(me);
+  // What the next dig is actually worth, which is less than a full one once
+  // the click bucket has been drained.
+  const perClick = clickGain(me, now, pendingClicks + 1) - clickGain(me, now, pendingClicks);
+  const pending = clickGain(me, now, pendingClicks);
   // Unflushed clicks are shown optimistically so the button feels instant.
-  const onHand = Y.add(stockAt(me, now), Y.mul(perClick, pendingClicks));
-  const score = Y.add(scoreOf(me, now, state.config.scoring), Y.mul(perClick, pendingClicks));
+  const onHand = Y.add(stockAt(me, now), pending);
+  const score = Y.add(scoreOf(me, now, state.config.scoring), pending);
   const rate = rateAt(me, now);
   const slow = slowMultiplier(me, now);
   const lost = brokenRate(me);

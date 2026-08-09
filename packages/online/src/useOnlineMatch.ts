@@ -24,8 +24,9 @@ import {
 } from "@clickers/sim";
 
 import { namesOf, settle, type MatchRow } from "./matches.js";
+import { channelName, SCHEMA } from "./config.js";
 import { serverNow, supabase } from "./supabase.js";
-import type { MatchRuntime } from "../useMatch.js";
+import type { MatchRuntime } from "./runtime.js";
 
 /** How often batched clicks are flushed into the log (STACK.md). */
 const CLICK_FLUSH_MS = 500;
@@ -82,10 +83,10 @@ export function useOnlineMatch(initialRow: MatchRow | null, meId: string | null)
     const id = initialRow?.id;
     if (!id) return;
     const channel = supabase
-      .channel(`puppy-mill:row:${id}`)
+      .channel(channelName("row", id))
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "puppy_mill", table: "matches", filter: `id=eq.${id}` },
+        { event: "UPDATE", schema: SCHEMA, table: "matches", filter: `id=eq.${id}` },
         (payload) => setRow(payload.new as MatchRow),
       )
       .subscribe();
@@ -161,10 +162,10 @@ export function useOnlineMatch(initialRow: MatchRow | null, meId: string | null)
   useEffect(() => {
     if (!matchId) return;
     const channel = supabase
-      .channel(`puppy-mill:match:${matchId}`)
+      .channel(channelName("match", matchId))
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "puppy_mill", table: "commands", filter: `match_id=eq.${matchId}` },
+        { event: "INSERT", schema: SCHEMA, table: "commands", filter: `match_id=eq.${matchId}` },
         (payload) => {
           const next = payload.new as CommandRow;
           const have = logRef.current;

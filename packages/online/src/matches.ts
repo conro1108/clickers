@@ -10,6 +10,7 @@
 
 import type { ScoringRule } from "@clickers/sim";
 
+import { GAME } from "./config.js";
 import { lookup, supabase } from "./supabase.js";
 
 export interface MatchRow {
@@ -55,6 +56,7 @@ export async function hostMatch(terms: MatchTerms): Promise<MatchRow> {
   const { data, error } = await supabase
     .from("matches")
     .insert({
+      game: GAME,
       host: session.user.id,
       join_code: makeCode(),
       duration_ms: terms.durationMs,
@@ -67,7 +69,7 @@ export async function hostMatch(terms: MatchTerms): Promise<MatchRow> {
 }
 
 export async function joinByCode(code: string): Promise<MatchRow> {
-  const { data, error } = await supabase.rpc("join_match", { p_code: code.trim().toUpperCase() });
+  const { data, error } = await supabase.rpc("join_match", { p_code: code.trim().toUpperCase(), p_game: GAME });
   // The function raises rather than returning nothing, so the message is already
   // the sentence worth showing.
   if (error) throw new Error(error.message.replace(/^.*no open match/, "No open match"));
@@ -94,7 +96,7 @@ export async function challenge(handle: string, terms: MatchTerms): Promise<Chal
 
   const { data, error } = await supabase
     .from("challenges")
-    .insert({ opponent: them.id, duration_ms: terms.durationMs, scoring: terms.scoring })
+    .insert({ game: GAME, opponent: them.id, duration_ms: terms.durationMs, scoring: terms.scoring })
     .select()
     .single();
   if (error) throw error;
@@ -116,6 +118,7 @@ export async function openChallenges(): Promise<ChallengeRow[]> {
   const { data, error } = await supabase
     .from("challenges")
     .select("*")
+    .eq("game", GAME)
     .eq("status", "pending")
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -133,6 +136,7 @@ export async function liveMatch(): Promise<MatchRow | null> {
   const { data, error } = await supabase
     .from("matches")
     .select("*")
+    .eq("game", GAME)
     .in("status", ["waiting", "active"])
     .order("created_at", { ascending: false })
     .limit(1);

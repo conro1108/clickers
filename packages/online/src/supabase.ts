@@ -8,11 +8,13 @@
 
 import { createClient } from "@supabase/supabase-js";
 
+import { SCHEMA } from "./config.js";
+
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
   {
-    db: { schema: "puppy_mill" },
+    db: { schema: SCHEMA },
     auth: { persistSession: true, autoRefreshToken: true },
   },
 );

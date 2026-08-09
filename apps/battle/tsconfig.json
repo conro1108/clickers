@@ -6,6 +6,7 @@
     "types": ["vite/client"],
     "paths": {
       "@clickers/sim": ["../../packages/sim/src/index.ts"],
+      "@clickers/online": ["../../packages/online/src/index.ts"],
       "@clickers/theme": ["./src/theme.ts"]
     }
   },

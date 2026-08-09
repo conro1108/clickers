@@ -23,9 +23,9 @@ import {
 } from "@clickers/sim";
 
 import { clockSkew, setClockSkew } from "./clock.js";
-import { abandon, joinByCode, type MatchRow } from "./online/matches.js";
-import { errorText, useLobby } from "./online/useLobby.js";
-import { useOnlineMatch } from "./online/useOnlineMatch.js";
+import { abandon, joinByCode, type MatchRow } from "@clickers/online";
+import { errorText, useLobby } from "@clickers/online";
+import { useOnlineMatch } from "@clickers/online";
 import { AwayReport } from "./components/AwayReport.js";
 import { Conditions } from "./components/Conditions.js";
 import { Damage } from "./components/Damage.js";
