@@ -179,7 +179,7 @@ describe("the ladder", () => {
    * the floor is only there to catch one of them falling back into the couple-
    * of-hundred-seconds range the whole set used to sit in.
    *
-   * No ceiling on purpose: the Ur-Core and the Third Unit are deliberately
+   * No ceiling on purpose: the `ur_form` and the `third_form` are deliberately
    * dearer still, and the Convergence test below holds their end of it.
    */
   it("makes every cross-site multiplier something you stop and save for", () => {
@@ -529,7 +529,7 @@ describe("weather", () => {
 
   it("leaves an idle site alone until it has something worth wrecking", () => {
     // Ten minutes of a brand-new site should not be spent watching your four
-    // unit pens break.
+    // patches break.
     const early = simulateSite({ seed: "grace", durationMs: seconds(600), style: "keen" });
     expect(early.brokeTotal).toBe(0);
   });
@@ -610,7 +610,7 @@ describe("the Convergence", () => {
   it("is reachable in one playthrough at a modest check-in cadence", () => {
     for (const seed of ["one", "two"]) {
       const run = simulateCadence({ seed, days: 7, cadence: "normal", style: "keen" });
-      // What the Ur-Core actually costs at the moment it's affordable, in the
+      // What the `ur_form` actually costs at the moment it's affordable, in the
       // only unit an early upgrade and a late one are comparable in. The other
       // late globals are in the hundreds-to-thousands range; this has to stay
       // there or moving its gate to ten turned it into a giveaway.
@@ -646,7 +646,7 @@ describe("the Convergence", () => {
 
   /**
    * What the shop hangs its one piece of tunnel vision on. The window opens on
-   * the tenth Core Singularity and shuts on the purchase, and nowhere else —
+   * the tenth `singularity` and shuts on the purchase, and nowhere else —
    * a site that's already folded must not get an empty shop for the rest of
    * the run.
    */
@@ -686,7 +686,7 @@ describe("the Convergence", () => {
     const next = (res as { site: SiteState }).site;
     expect(next.converged).toBe(false);
     // And the world above the fold goes with it: the tiers that site the inside
-    // of the unit are unbuyable again, whatever you can afford.
+    // of the core are unbuyable again, whatever you can afford.
     const rich: SiteState = { ...next, stock: 1e30 as never };
     for (const prod of SOLO_PRODUCERS.filter((p) => p.world === "inside")) {
       expect(
@@ -738,11 +738,11 @@ describe("the Convergence", () => {
   });
 
   /**
-   * The Down Well's wrinkle: its rate scales *with* condition as well as being
+   * The `well`'s wrinkle: its rate scales *with* condition as well as being
    * multiplied by it, so letting the dirt go costs it twice and restoring the
    * dirt is a live decision at the top instead of a rounding error.
    */
-  it("makes the Down Well care about the condition twice over", () => {
+  it("makes the `well` care about the condition twice over", () => {
     const base: SiteState = {
       ...developedSite("well"),
       converged: true,
@@ -760,7 +760,7 @@ describe("the Convergence", () => {
     expect(conditionLossRate(half)).toBeCloseTo(whole - currentRate(half), 6);
   });
 
-  it("holds the perks that only make sense inside the unit until it happens", () => {
+  it("holds the perks that only make sense inside the core until it happens", () => {
     const base = developedSite("perks");
     const rich: SiteState = { ...base, heirlooms: 1_000_000 };
     for (const perk of PERKS.filter((p) => p.afterFold)) {
@@ -815,7 +815,7 @@ describe("the two worlds", () => {
     const firstInside = SOLO_PRODUCERS.findIndex((p) => p.world === "inside");
     expect(SOLO_PRODUCERS.slice(firstInside).every((p) => p.world === "inside")).toBe(true);
     // And the bottom of the inside shop is buyable more or less on arrival: the
-    // Ur-Core costs more than the first rung of the world it opens.
+    // `ur_form` costs more than the first rung of the world it opens.
     expect(inside[0]!.baseCost).toBeLessThan(SOLO_UPGRADE_BY_ID.ur_form!.cost);
   });
 
@@ -975,7 +975,7 @@ describe("the back room", () => {
     expect(opened.world).toBe("outside");
     expect(opened.producers.fold).toBeUndefined();
     expect(opened.broken.fold).toBeUndefined();
-    // The Ur-Core goes back on the shelf, which is the whole point: the fold
+    // The `ur_form` goes back on the shelf, which is the whole point: the fold
     // only animates on a real purchase, so this is the state to watch it from.
     expect(opened.upgrades).not.toContain(CONVERGENCE_UPGRADE);
     expect(opened.upgrades).not.toContain("fold_x2a");

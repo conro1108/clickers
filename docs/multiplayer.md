@@ -1,12 +1,14 @@
-# CLAUDE.md
+# Multiplayer
+
+Applies to both games — `packages/online` and `db/schema.sql` are shared.
 
 ## Multiplayer is a command log, and nothing else
 
-`db/schema.sql` is Puppy Mill's slice of the shared toybox Supabase project (see
+`db/schema.sql` is The clickers' slice of the shared toybox Supabase project (see
 the Shared Supabase section of `~/projects/CLAUDE.md`). It is a full rebuild, not
 a migration: pushing drops the schema and every in-progress match with it.
 
-**Never put game state in Postgres.** No puppies column, no rate, no shield. The
+**Never put game state in Postgres.** No stock column, no rate, no shield. The
 only mutable thing a match owns is an append-only log of commands, and both
 clients fold it into a `MatchState` with the same `applyCommand` the offline game
 uses. That's what makes the hard bug impossible rather than merely unlikely:

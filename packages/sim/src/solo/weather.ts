@@ -135,7 +135,7 @@ export const MEAN_WEATHER_GAP_MS = seconds(300);
 
 /**
  * A site this small has nothing worth wrecking, so the weather leaves it alone.
- * Without this, the first ten minutes are a player with four unit pens
+ * Without this, the first ten minutes are a player with four patches
  * watching two of them break.
  */
 export const WEATHER_MIN_RATE = 25;

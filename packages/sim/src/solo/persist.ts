@@ -50,7 +50,7 @@ export function parseSite(raw: string): SiteState | null {
   // had already converged would open with its sky back.
   const converged = f.converged ?? upgrades.includes(CONVERGENCE_UPGRADE);
   // And one written before there were two worlds was standing in whichever one
-  // it had reached, which for a folded site is inside the unit.
+  // it had reached, which for a folded site is inside the core.
   const world: World = converged && f.world !== "outside" ? "inside" : "outside";
 
   // Fill anything a hand-edited or partial save is missing, so one absent field

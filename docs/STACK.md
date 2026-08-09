@@ -12,7 +12,7 @@
 ## The core idea: no tick loop
 
 Game state is a pure function of `(checkpoint, elapsed, rate, active
-effects)`. Store `{puppies_at_t0, rate, t0}` plus a timestamped event log;
+effects)`. Store `{stock_at_t0, rate, t0}` plus a timestamped event log;
 client and server both integrate forward to "now" on demand. There is no
 server game loop — which is what makes a request/response backend like Edge
 Functions viable at all.
@@ -54,7 +54,7 @@ without a lock will corrupt.
 offset handshake so client extrapolation aligns with authority. Client clocks
 lie, and retrofitting this is miserable.
 
-**Wrap the resource in a `Puppies` type.** f64 dies around 1e15 and idle
+**Wrap the resource in a `Yield` type.** f64 dies around 1e15 and idle
 numbers climb fast. Not building bignum now, just keeping the swap contained.
 
 **Clicks batch.** Accumulate client-side, flush a count every ~500ms with a

@@ -43,7 +43,7 @@ export interface HumanStyle {
    * 0..1 — how much worse than the best rate-per-unit in the shop they'll
    * settle for rather than sit on the pile and wait for the good tier. Same
    * knob as the bot's, and the same reason it exists: a shelf priced at
-   * `growth^N` makes the tenth Unit Pen a worse buy than a first Grooming Rig
+   * `growth^N` makes the tenth `patch` a worse buy than a first `machine`
    * by orders of magnitude, and a person reading prices next to rates works
    * that out. Modelling them as spending every unit the instant they have it
    * understated a real player by two orders of magnitude, which made the whole

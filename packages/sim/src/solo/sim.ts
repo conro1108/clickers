@@ -80,7 +80,7 @@ export const RIVAL_STYLES: Record<string, RivalStyle> = {
 /**
  * Production per unit spent — the only ranking that matters when buying.
  * Measured as what the unit would actually add to the site's rate as it stands,
- * not its clean rate, so the Down Well gets discounted for tired condition the way
+ * not its clean rate, so the `well` gets discounted for tired condition the way
  * a buyer looking at the shop would discount it.
  */
 function valueOf(f: SiteState, id: SoloProducerId): number {
@@ -270,7 +270,7 @@ export interface CadenceResult {
   firstOwned: Partial<Record<SoloProducerId, number>>;
   /** Elapsed ms at which the horizon closed, or null if it never did. */
   convergedAt: number | null;
-  /** What the site was making the moment it folded. Prices the Ur-Core. */
+  /** What the site was making the moment it folded. Prices the `ur_form`. */
   convergedRate: Rate | null;
   /** Wall clock covered, including everything spent away. */
   elapsedMs: number;

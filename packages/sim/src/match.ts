@@ -290,7 +290,7 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
         text = `sent ${attack.name} at ${defender.name} — fully blocked.`;
       } else if (outcome.brokeTotal > 0) {
         // Phrased so the target is an object, not a possessive — the local
-        // player is literally named "You", and "You's Unit Pen" is grim.
+        // player is literally named "You", and "You's `patch`" is grim.
         text = `hit ${defender.name} with ${attack.name} — ${describeBreak(outcome.broke)}.`;
       } else {
         text = `hit ${defender.name} with ${attack.name}.`;

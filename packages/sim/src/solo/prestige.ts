@@ -138,7 +138,7 @@ export const MULT_PER_UNSPENT_HEIRLOOM = 0.02;
  * The ladder didn't grow evenly when the fold was added: output above the fold
  * runs about a million times a pre-fold run's, so a cube root turned a converged
  * week into 55,000 heirlooms — a x1,100 output multiplier from the unspent pile
- * alone, handed to a site that starts again at four unit pens. The second
+ * alone, handed to a site that starts again at four patches. The second
  * generation wasn't a run, it was a victory lap. A fourth root damps the same
  * span to a few hundred, and damps the run-to-run feedback with it: a generation
  * that raises 10x more than the last mints only 1.8x the heirlooms, so the meta

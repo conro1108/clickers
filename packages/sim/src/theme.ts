@@ -26,7 +26,7 @@ export interface Named {
 
 /**
  * A producer also needs words for being damaged, because a hauler breaks and a
- * hand doesn't. Reads as "2 maimed" and "Patch up Farmhand".
+ * hand doesn't. Reads as "2 maimed" and "Patch up" whatever the game calls it.
  */
 export interface ProducerNamed extends Named {
   hurt: string;

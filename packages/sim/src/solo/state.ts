@@ -104,7 +104,7 @@ export type SiteCommand =
   | { type: "buy_perk"; perk: PerkId }
   /**
    * `outside` opens the horizon back up on the way down: the next generation
-   * starts under a sky, with the four tiers inside the unit out of reach and
+   * starts under a sky, with the four tiers inside the core out of reach and
    * the Convergence to climb to all over again. Ignored by a site that never
    * folded, which has nowhere to come out of.
    */
@@ -126,7 +126,7 @@ export type SiteCommand =
    * Pull the next weather event forward to now. The schedule is a pure function
    * of the seed and `weatherIndex`, so this changes *when* the next one lands
    * and nothing about which one it is — you get the event the site was always
-   * going to get, early. Refused inside the unit only in the sense that the
+   * going to get, early. Refused inside the core only in the sense that the
    * core's table is what fires there, which is correct: the lever is "send the
    * next hazard", not "send rain".
    */
@@ -137,7 +137,7 @@ export type SiteCommand =
    * Fold the horizon, or open it back up.
    *
    * Opening it back up is the only lever here that destroys anything: it strips
-   * the kit that only exists inside the unit and takes `ur_form` back off
+   * the kit that only exists inside the core and takes `ur_form` back off
    * the shelf, because the state it has to leave behind is "a site one purchase
    * short of the fold" — which is the only state the fold animation can be
    * watched from. The yard and the run's output are left alone.

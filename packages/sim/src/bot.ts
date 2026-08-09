@@ -70,8 +70,8 @@ export interface BotProfile {
    *
    * This is the single biggest thing separating a good player from a bad one,
    * and the old bot was at 0. Every tier costs `growth^N` more each time you
-   * buy one, so the 60th Unit Pen is ~13.5K stock for 2.5/s while a first
-   * Grooming Rig is 45K for 3500/s — four hundred times the rate per unit.
+   * buy one, so the 60th `patch` is ~13.5K stock for 2.5/s while a first
+   * `machine` is 45K for 3500/s — four hundred times the rate per unit.
    * Buying the best thing you can *afford right now* means shovelling the pile
    * into pens forever and never reaching the tier that wins the match, which is
    * exactly why the old ladder got flattened by anyone who saved.

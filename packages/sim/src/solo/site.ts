@@ -285,7 +285,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       // Everything that only exists under a ceiling goes with the ceiling. An
       // upgrade belongs to the world of the producer that gates it, which is
       // also why `ur_form` has to be named here rather than derived: it's
-      // gated on the Core Singularity, out under the sky.
+      // gated on the `singularity`, out under the sky.
       const inside = new Set(producersIn("inside").map((p) => p.id));
       const keep = <T extends Partial<Record<SoloProducerId, number>>>(rec: T) =>
         Object.fromEntries(Object.entries(rec).filter(([id]) => !inside.has(id as SoloProducerId)));
@@ -324,7 +324,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       // more of the same. Buying a rung is otherwise silent, and it should stay
       // that way — this is the exception because nothing else told you.
       if (had === 0 && producer.id === CONVERGENCE_GATE_PRODUCER) {
-        note("the first Core Singularity is running. the horizon looks wrong.", "neutral");
+        note("the first `singularity` is running. the horizon looks wrong.", "neutral");
       }
       break;
     }
@@ -340,7 +340,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       // The Convergence. You acquire the first unit and discover you have
       // always been inside it — on a button you chose to press, rather than on
       // a threshold crossing while you were looking somewhere else.
-      // The Convergence puts you *in* the unit, not merely under a new
+      // The Convergence puts you *in* the core, not merely under a new
       // ceiling: the fold ends with you standing on the inside site, with a
       // shop you have never seen. Coming back out is a thing you go and ask for.
       if (upgrade.id === CONVERGENCE_UPGRADE && !site.converged) {
@@ -450,10 +450,10 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
  * that never goes backwards — and so does `converged`, unless the site is being
  * handed down with the sky asked for.
  *
- * `outside` is the only way out of the unit, and it's a door rather than a
+ * `outside` is the only way out of the core, and it's a door rather than a
  * consequence: it costs nothing, gives nothing, and hands the next generation a
  * world with a horizon in it and the Convergence to reach again. The four tiers
- * inside the unit go out of reach with it, which is the price and is meant to
+ * inside the core go out of reach with it, which is the price and is meant to
  * be — a run under the sky that kept the ceiling's kit would just be the folded
  * run with different weather.
  */
@@ -533,11 +533,11 @@ export function mustApplySite(f: SiteState, cmd: SiteCommand, now: Millis): Site
 }
 
 /**
- * How close the horizon is to closing, 0..1, off whatever gates the Ur-Core.
+ * How close the horizon is to closing, 0..1, off whatever gates the `ur_form`.
  *
  * The Convergence is the only thing in the game you can't be told about in
  * advance without spoiling it, and it was also the only thing with no build-up
- * at all: you bought a Core Singularity, nothing acknowledged it, and nine
+ * at all: you bought a `singularity`, nothing acknowledged it, and nine
  * purchases later the world folded. This is what the scene leans on to start
  * showing its hand — the ceiling bleeding through the sky well before it lands —
  * so the fold reads as arriving rather than as happening to you.
@@ -554,11 +554,11 @@ export function convergenceProgress(f: SiteState): number {
 }
 
 /**
- * The Ur-Core is on the table and unbought — the last stretch of the run.
+ * The `ur_form` is on the table and unbought — the last stretch of the run.
  *
  * The shop empties itself down to this one row while it's true, which is the
  * only place in the game a purchase is made the only thing you can do. It's the
- * point: the tenth Core Singularity is a threshold nothing in the shop marked,
+ * point: the tenth `singularity` is a threshold nothing in the shop marked,
  * and a player who reaches it with a screen full of rungs will keep buying rungs
  * and never notice what the tier was counting down to. There is roughly a
  * thousand seconds of production between the gate opening and the price being

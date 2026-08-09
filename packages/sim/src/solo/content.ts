@@ -14,7 +14,7 @@ import { named, THEME, type Shape } from "../theme.js";
  * The two places a site exists in.
  *
  * `outside` is the site you started with — yard, sky, weather. `inside` is what
- * the Convergence opens: the core the Ur-Core burrowed into, which you
+ * the Convergence opens: the core the `ur_form` burrowed into, which you
  * turn out to have been standing on the whole time. After the fold you own both at once. The outside
  * site keeps producing whether you're looking at it or not, and the inside is a
  * fresh ladder with its own shop, its own land, and its own picture.
@@ -71,7 +71,7 @@ export interface SoloProducer {
   world: World;
   /**
    * Rate scales with condition health *as well as* being multiplied by it, so
-   * re-condition is a live decision at the top of the ladder instead of a
+   * restoring condition is a live decision at the top of the ladder instead of a
    * rounding error. Condition only moves on weather events and purchases, so this
    * leaves the rate piecewise-constant — which is what the whole offline model
    * rests on.
@@ -187,12 +187,12 @@ const SOLO_PRODUCER_SHAPES: readonly Shape<SoloProducer>[] = [
   // --- Inside the core -----------------------------------------------------
   //
   // The second site, and the reason the Convergence is worth reaching: a ladder
-  // of its own, standing in condition rather than dirt, bought with the stock
+  // of its own, standing in the core rather than out in the yard, bought with the stock
   // the old site is still turning out while you're down here.
   //
   // It used to be four rungs bolted onto the end of the outside ladder, which
   // made the whole endgame "four more rows in the same shop". Eight now, over
-  // the same span from the Core Singularity to the Second Core — so
+  // the same span from the `singularity` to the `second` — so
   // no rung moved at either end and the run is the length it always was, but the
   // inside is a climb you can spend time on rather than four purchases. Cost
   // steps by ~3.8x and output by ~2.8x per rung, which keeps payback rising the
@@ -444,7 +444,7 @@ const CLICK_UPGRADES: SoloUpgrade[] = [...named(CLICK_UPGRADE_SHAPES, THEME.solo
  * production, so the thing that permanently lifts every rung of the ladder at
  * once cost less than the rung you were standing on. These are now priced in the
  * thousands of seconds each: a global is something you stop and save for, on
- * roughly the scale the Ur-Core always was, and passing one over to keep
+ * roughly the scale the `ur_form` always was, and passing one over to keep
  * climbing has to be a real option.
  *
  * The shares below look arbitrary because they are: each is tuned so the upgrade
