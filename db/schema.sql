@@ -93,7 +93,7 @@ create table clickers.matches (
   id          uuid primary key default gen_random_uuid(),
   -- Which clicker this belongs to. Not a security boundary — it's what stops
   -- the two lobbies being one lobby.
-  game        text not null check (game in ('battle', 'mill')),
+  game        text not null check (game in ('potatoes', 'puppies')),
 
   -- Cleared once someone joins, so a shared code stops working after it's used.
   -- The stranger path: no identity needed, you read it aloud across a room.
@@ -184,7 +184,7 @@ create table clickers.challenges (
   id          uuid primary key default gen_random_uuid(),
   -- Which clicker this belongs to. Not a security boundary — it's what stops
   -- the two lobbies being one lobby.
-  game        text not null check (game in ('battle', 'mill')),
+  game        text not null check (game in ('potatoes', 'puppies')),
 
   challenger  uuid not null default auth.uid() references auth.users on delete cascade,
   opponent    uuid not null references auth.users on delete cascade,

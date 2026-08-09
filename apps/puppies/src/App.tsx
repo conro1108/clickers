@@ -69,7 +69,7 @@ const BOT_ROSTER = ([
   blurb: BOTS[id]?.blurb ?? "",
 }));
 
-type Screen = { kind: "home" } | { kind: "mill" } | { kind: "versus" };
+type Screen = { kind: "home" } | { kind: "puppies" } | { kind: "versus" };
 
 /**
  * Space always whistles, so the shop stays a mouse-only surface. Without the blur,
@@ -151,7 +151,7 @@ function Home({ onGo }: { onGo: (screen: Screen) => void }) {
           shouldn't be a page of type. */}
       <TitleScene />
 
-      <button className="start" onClick={() => onGo({ kind: "mill" })}>
+      <button className="start" onClick={() => onGo({ kind: "puppies" })}>
         {returning ? "Back to your mill" : "Start your mill"}
       </button>
       <p className="muted small home-note">
@@ -1350,14 +1350,14 @@ export function App() {
   // title screen first is asking them to find their way to a race they were
   // already sent to.
   const [screen, setScreen] = useState<Screen>(() =>
-    invite ? { kind: "versus" } : hasSavedMill() ? { kind: "mill" } : { kind: "home" },
+    invite ? { kind: "versus" } : hasSavedMill() ? { kind: "puppies" } : { kind: "home" },
   );
 
   switch (screen.kind) {
-    case "mill":
+    case "puppies":
       return <Homefarm onGo={setScreen} />;
     case "versus":
-      return <Versus invite={invite} onLeave={() => setScreen({ kind: "mill" })} />;
+      return <Versus invite={invite} onLeave={() => setScreen({ kind: "puppies" })} />;
     default:
       return <Home onGo={setScreen} />;
   }

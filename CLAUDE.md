@@ -2,8 +2,8 @@
 
 Two clicker games that are one game underneath.
 
-`apps/battle` is the potato one (Yield, Inc. — a farm, weather, sabotage).
-`apps/mill` is the puppy one (Puppy Mill — a kennel, same shape, different
+`apps/potatoes` is the potato one (Yield, Inc. — a farm, weather, sabotage).
+`apps/puppies` is the puppy one (Puppy Mill — a kennel, same shape, different
 world). They share `packages/sim` outright: same numbers, same cost curves,
 same balance. What differs is every word and every pixel.
 
@@ -47,8 +47,8 @@ tests run against that game's real theme, which is what catches a stale pack.
 
 ## The games are allowed to diverge
 
-Nothing about the visual layer is shared. `apps/battle/src/render/farmScene.ts`
-and `apps/mill/src/render/millScene.ts` are ~4k lines each of independent art,
+Nothing about the visual layer is shared. `apps/potatoes/src/render/farmScene.ts`
+and `apps/puppies/src/render/millScene.ts` are ~4k lines each of independent art,
 and the components, styles and copy are per-game. Divergence there is expected
 and costs nothing.
 
@@ -59,7 +59,7 @@ is "what you own", not "what it looks like".
 
 ```
 npm run dev            # the potato game, port 5173
-npm run dev:mill       # the puppy game, port 5174 (both can run at once)
+npm run dev:puppies    # the puppy game, port 5174 (both can run at once)
 npm test               # sim + both apps' tests
 npm run typecheck      # sim, online, both apps
 npm run build          # both apps
@@ -80,5 +80,5 @@ See `db/schema.sql` for why there is no game state in the database.
 
 Both games were separate repos (`battle_clicker`, `puppy_mill`) until they were
 merged here. Each repo's paths were rewritten to their monorepo homes before the
-merge, so `git log apps/battle/src/App.tsx` reaches all the way back to the
+merge, so `git log apps/potatoes/src/App.tsx` reaches all the way back to the
 original prototype. The old GitHub repos are archives; nothing pushes to them.

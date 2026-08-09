@@ -7,19 +7,19 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @clickers/battle",
-    "dev:battle": "npm run dev -w @clickers/battle",
-    "dev:mill": "npm run dev -w @clickers/mill",
-    "build": "npm run build:battle && npm run build:mill",
-    "build:battle": "npm run build -w @clickers/battle",
-    "build:mill": "npm run build -w @clickers/mill",
+    "dev": "npm run dev -w @clickers/potatoes",
+    "dev:potatoes": "npm run dev -w @clickers/potatoes",
+    "dev:puppies": "npm run dev -w @clickers/puppies",
+    "build": "npm run build:potatoes && npm run build:puppies",
+    "build:potatoes": "npm run build -w @clickers/potatoes",
+    "build:puppies": "npm run build -w @clickers/puppies",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p packages/sim --noEmit && tsc -p apps/battle --noEmit && tsc -p apps/mill --noEmit",
+    "typecheck": "tsc -p packages/sim --noEmit && tsc -p apps/potatoes --noEmit && tsc -p apps/puppies --noEmit",
     "db:push": "node db/push.mjs db/schema.sql",
     "db:verify": "node db/verify.mjs",
-    "test:online": "vite-node --config apps/mill/vite.config.ts tools/two-players.mts --",
-    "test:online:battle": "vite-node --config apps/battle/vite.config.ts tools/two-players.mts -- game=battle"
+    "test:online": "vite-node --config apps/puppies/vite.config.ts tools/two-players.mts --",
+    "test:online:potatoes": "vite-node --config apps/potatoes/vite.config.ts tools/two-players.mts -- game=potatoes"
   },
   "devDependencies": {
     "playwright-core": "^1.62.1",

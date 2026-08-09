@@ -11,13 +11,13 @@
 
 export const SCHEMA = "clickers";
 
-export type GameId = "battle" | "mill";
+export type GameId = "potatoes" | "puppies";
 
-/** Set per app in its .env — see apps/battle/.env and apps/mill/.env. */
+/** Set per app in its .env — see apps/potatoes/.env and apps/puppies/.env. */
 export const GAME = import.meta.env.VITE_GAME as GameId;
 
-if (GAME !== "battle" && GAME !== "mill") {
-  throw new Error(`VITE_GAME must be "battle" or "mill", got ${JSON.stringify(GAME)}`);
+if (GAME !== "potatoes" && GAME !== "puppies") {
+  throw new Error(`VITE_GAME must be "potatoes" or "puppies", got ${JSON.stringify(GAME)}`);
 }
 
 /** Realtime channel names have to be unique per game as well as per row. */

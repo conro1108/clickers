@@ -18,6 +18,6 @@ const project = (name: string, include: string, theme: string) => ({
 
 export default [
   project("sim", "packages/sim/src/**/*.test.ts", "./packages/sim/src/reference-theme.ts"),
-  project("battle", "apps/battle/src/**/*.test.ts", "./apps/battle/src/theme.ts"),
-  project("mill", "apps/mill/src/**/*.test.ts", "./apps/mill/src/theme.ts"),
+  project("potatoes", "apps/potatoes/src/**/*.test.ts", "./apps/potatoes/src/theme.ts"),
+  project("puppies", "apps/puppies/src/**/*.test.ts", "./apps/puppies/src/theme.ts"),
 ];

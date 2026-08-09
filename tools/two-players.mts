@@ -7,14 +7,14 @@
  * handle, call somebody out by name, have them take it, and check that two
  * machines holding no shared state agree about the score.
  *
- *   npx vite --config apps/mill/vite.config.ts --port 5199 apps/mill &
+ *   npx vite --config apps/puppies/vite.config.ts --port 5199 apps/puppies &
  *   npm run test:online -- port=5199 out=/tmp/vs
  *
  * Or the potato game, which runs the same engine and the same lobby behind a
  * different set of selectors:
  *
- *   npx vite --config apps/battle/vite.config.ts --port 5199 apps/battle &
- *   npm run test:online:battle -- port=5199 out=/tmp/vs
+ *   npx vite --config apps/potatoes/vite.config.ts --port 5199 apps/potatoes &
+ *   npm run test:online:potatoes -- port=5199 out=/tmp/vs
  *
  * Args: `game=` battle|mill, `out=` screenshot stem, `rounds=` click-and-spend
  * passes per side, `port=`.
@@ -47,7 +47,7 @@ const port = args.port ?? "5199";
  * Which game is being driven. Both run the same engine and the same lobby, so
  * this only decides the localStorage keys and which dev server to talk to.
  */
-const game = (args.game ?? "mill") as "battle" | "mill";
+const game = (args.game ?? "puppies") as "potatoes" | "puppies";
 const KEYS = {
   battle: { save: "potatoes-inc:farm", taught: "potatoes-inc:taught-tap", clock: ".clock", tap: ".click" },
   mill: { save: "puppy-mill:mill", taught: "puppy-mill:taught-tap", clock: ".hud-clock", tap: ".scene" },
