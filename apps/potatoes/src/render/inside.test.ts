@@ -147,6 +147,16 @@ describe("the bore", () => {
     for (let n = 1; n <= 2000; n++) expect(boreWidth(n)).toBeGreaterThan(potato);
   });
 
+  it("is open before the first rung is bought", () => {
+    // Sinking the shaft is how the fold left you standing over a sump with
+    // your mound in it, so the crack exists on a farm that owns nothing — and
+    // the farm overhead needs somewhere to tip its harvest from the first
+    // second. A sealed brown wall was the old arrival, and it read as "you
+    // lost everything".
+    expect(boreWidth(0)).toBeGreaterThan(5);
+    expect(boreWidth(1)).toBeGreaterThanOrEqual(boreWidth(0));
+  });
+
   it("visibly widens between a first purchase and a finished ladder", () => {
     expect(boreWidth(800)).toBeGreaterThan(boreWidth(1) + 8);
   });

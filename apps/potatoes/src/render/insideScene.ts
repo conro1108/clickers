@@ -80,6 +80,23 @@
  *
  * The mound stays in the bottom-left corner it occupies outside, because it is
  * the same potatoes and the fold doesn't take your money off you.
+ *
+ * ---
+ *
+ * Three later additions, all in service of one complaint — the strata read as
+ * sealed floors with a lift lobby between them, not as levels of one working:
+ *
+ * - **The pit-head.** The shaft runs up through the lid and off the top of the
+ *   frame, with daylight in it, and the farm overhead tips its harvest down it
+ *   from the first second after the fold — the income the HUD never stopped
+ *   showing finally has a visible source. The winding gear hangs under the lid,
+ *   and a sheave turns exactly as fast as its rope pays out.
+ * - **The manway.** A fixed ladder beside the rope. Crew climb to the next
+ *   bench and ride only for the long hauls, so the cage is a working hoist
+ *   rather than the only door in the building.
+ * - **The pulse.** Once the Hollow Heart is open, a beat of warm light climbs
+ *   the bore from the core to the lid — the deepest thing you own touching
+ *   everything above it, against the traffic.
  */
 
 import type { solo } from "@clickers/sim";
@@ -265,6 +282,13 @@ const INK = "#402e3a";
  */
 const GLOOM = 0.26;
 
+/**
+ * The heartbeat's period, once the Hollow Heart is open. Slow for a heart
+ * because it's a big one, and off any round number of seconds so it can't
+ * fall into step with the sheaves or the accents.
+ */
+const HEART_PULSE_S = 2.7;
+
 /** The lid's share of the buffer, clamped so it's a lip and never a ceiling. */
 const LID_MIN = 11;
 const LID_MAX = 20;
@@ -349,7 +373,10 @@ export function bandsFor(sh: number, openF: number): Band[] {
  * every other count that has to survive running into the hundreds.
  */
 export function boreWidth(total: number): number {
-  return Math.round(territory(total, 11, 34));
+  // Never sealed: sinking the shaft is how you reached the sump at all, so the
+  // fold leaves a crack before the first rung is bought. Without it the arrival
+  // is a solid brown wall standing over a mound it can't explain.
+  return Math.max(10, Math.round(territory(total, 11, 34)));
 }
 
 /** Where the bore's left edge sits. Under the mound, which is the point. */
@@ -556,9 +583,20 @@ interface Crop {
   /** Fall speed, and the spin it's carrying while it does. */
   vy: number;
   spin: number;
-  /** Which tier cut it, for the tint on the puff it lands in. */
-  from: InsideId;
+  /** Which tier cut it — or the farm overhead, tipping its harvest down. */
+  from: InsideId | "above";
 }
+
+/**
+ * How often the farm overhead sends a potato down the shaft, per second.
+ *
+ * The other site keeps producing the whole time you're down here — the HUD
+ * says so — and this is the picture agreeing with it, from the first second
+ * after the fold, before you own a single rung. A constant, not a metering of
+ * the real rate: like everything else in the scene it's a token of the fact,
+ * and the fact doesn't change with the number.
+ */
+const OUTSIDE_FLOW = 0.4;
 
 /**
  * One of the shaft crew, and the reason the place stops looking abandoned.
@@ -576,13 +614,20 @@ interface Crew {
   x: number;
   y: number;
   post: { zone: number; first: boolean };
-  state: "walk" | "work" | "wait" | "ride" | "mingle";
+  state: "walk" | "work" | "wait" | "ride" | "mingle" | "climb";
   /** Where they're heading along the bench. */
   tx: number;
   /** Scene-clock time the current state runs out. */
   until: number;
   /** Where they're going when the cage comes, while waiting or riding. */
   bound: { zone: number; first: boolean } | null;
+  /**
+   * Whether the current trip goes by the manway rather than the cage. One
+   * bench up or down is a ladder climb; anything further is a fare. Without
+   * the split every stratum is a sealed room with a lift lobby, and the cage
+   * spends its life on hops a miner would never ring for.
+   */
+  ladder: boolean;
   facing: 1 | -1;
   /** Phase for the walk bob, so a line of them isn't in lockstep. */
   phase: number;
@@ -592,6 +637,8 @@ interface Crew {
 const WORK_BEAT_S = 0.45;
 
 const CREW_SPEED = 13;
+/** Slower than the walk: it's a ladder, and they're carrying lamps. */
+const CLIMB_SPEED = 10;
 const MAX_CREW = 9;
 
 /**
@@ -619,6 +666,13 @@ interface Hoist {
   errand: Crew | null;
   /** Which lane of the bore it runs in, as an offset from `BORE_X`. */
   lane: number;
+  /**
+   * Rope paid out over the cage's whole life, in pixels. The sheave at the
+   * pit-head turns off this and nothing else, so the wheel moves exactly when
+   * the cage does — a wheel that idles round with nothing on the rope is the
+   * patrol bug back again, wearing a hat.
+   */
+  spin: number;
 }
 
 /**
@@ -930,6 +984,15 @@ export class InsideScene {
     return BORE_X + boreWidth(total);
   }
 
+  /**
+   * The manway's left rail: against the bore's working side, clear of the
+   * cage lanes, which hang from the other wall. A falling potato crosses it
+   * now and then, which is what a ladderway beside an ore pass looks like.
+   */
+  private manwayX(): number {
+    return this.boreRight() - 4;
+  }
+
   /** Which mark of a tier to draw, given the upgrades bought on it. */
   private mark(id: InsideId): Art {
     const marks = PRODUCER_MARKS[id];
@@ -1087,6 +1150,7 @@ export class InsideScene {
     }
     this.drawSump(sump);
     this.drawBore(bands, t);
+    this.drawHeadgear(bands);
     this.drawGloom(bands[0]!.bottom, sump.top);
 
     // Everything standing in the strata, deepest first so the near ledges
@@ -1098,8 +1162,10 @@ export class InsideScene {
 
     this.stepHoist(bands, t);
     this.stepCrew(bands, t);
+    this.drawLadderway(bands);
     this.drawHoist(bands);
     this.drawCrew();
+    this.drawPulse(bands, t);
 
     this.drawMotes(bands[0]!.bottom, sump.top, t);
     this.drawHoard(sump.top);
@@ -1558,6 +1624,109 @@ export class InsideScene {
   }
 
   /**
+   * The pit-head: the shaft carrying on up through the lid, and the winding
+   * gear hung under it.
+   *
+   * The lid used to seal the picture — the bore stopped dead against its
+   * underside, which quietly told the player the world above was gone. It
+   * isn't: the outside farm is up there producing the income the HUD never
+   * stopped showing. So the shaft runs off the top of the frame with daylight
+   * in it, and `OUTSIDE_FLOW` potatoes falling out of it are that farm's
+   * harvest arriving. One cut and one gradient, and the picture stops
+   * contradicting the economy at the exact moment the player is most likely to
+   * think the fold took everything.
+   */
+  private drawHeadgear(bands: Band[]): void {
+    const ctx = this.ctx;
+    const lid = bands[0]!;
+    const right = this.boreRight();
+    const x0 = BORE_X + 1;
+    const w = right - x0 - 1;
+    if (w <= 2) return;
+
+    // The shaft above, lit from the top: there's a sky up there, and this is
+    // the only place in the picture it shows.
+    const grad = ctx.createLinearGradient(0, 0, 0, lid.bottom);
+    grad.addColorStop(0, mix(LID_LIT, "#fff7e0", 0.5));
+    grad.addColorStop(0.55, mix(VOID, LID_DEEP, 0.4));
+    grad.addColorStop(1, mix(VOID, LID_DEEP, 0.15));
+    ctx.fillStyle = grad;
+    ctx.fillRect(x0 + 1, 0, w - 1, lid.bottom);
+    // Its walls, cut through the lid's own material: lit on the side the light
+    // falls down, in shadow on the other, same as the bore below.
+    ctx.fillStyle = rgba("#8a5a2c", 0.9);
+    ctx.fillRect(x0, 0, 1, lid.bottom);
+    ctx.fillStyle = rgba(LID_DEEP, 0.9);
+    ctx.fillRect(right - 1, 0, 1, lid.bottom);
+
+    // The beam, bolted across the mouth, and a sheave per rope hung off it.
+    const beamY = lid.bottom - 4;
+    ctx.fillStyle = "#4d4148";
+    ctx.fillRect(x0 - 1, beamY, w + 2, 2);
+    ctx.fillStyle = rgba("#8a8f96", 0.6);
+    ctx.fillRect(x0 - 1, beamY, w + 2, 1);
+
+    // One idle sheave even with no cages hung yet: the gear came down with
+    // you, and a pit-head with no wheel is scaffolding.
+    const lanes = Math.max(1, this.hoists.length);
+    for (let i = 0; i < lanes; i++) {
+      const h = this.hoists[i];
+      const cx = BORE_X + 1 + (h ? h.lane : 0) + 4;
+      this.drawSheave(cx, bands[0]!.bottom, h ? h.spin : 0);
+    }
+  }
+
+  /** One sheave: a steel ring whose bright rim pixel walks as the rope pays out. */
+  private drawSheave(cx: number, cy: number, spin: number): void {
+    const ctx = this.ctx;
+    ctx.fillStyle = "#b8c0c8";
+    ctx.fillRect(cx - 2, cy - 1, 1, 3);
+    ctx.fillRect(cx + 2, cy - 1, 1, 3);
+    ctx.fillRect(cx - 1, cy - 2, 3, 1);
+    ctx.fillRect(cx - 1, cy + 2, 3, 1);
+    ctx.fillStyle = "#3a2a30";
+    ctx.fillRect(cx - 1, cy - 1, 3, 3);
+    // Four stations round the rim, advanced by rope travel — the wheel turns
+    // exactly as fast as its cage moves, and not at all when it doesn't.
+    const spots = [
+      [0, -2],
+      [2, 0],
+      [0, 2],
+      [-2, 0],
+    ] as const;
+    const at = spots[Math.floor(spin / 6) % 4]!;
+    ctx.fillStyle = "#fff4c0";
+    ctx.fillRect(cx + at[0], cy + at[1], 1, 1);
+    ctx.fillStyle = "#8a8f96";
+    ctx.fillRect(cx, cy, 1, 1);
+  }
+
+  /**
+   * The manway: a fixed ladder down the shaft's working side.
+   *
+   * The cage used to be the only way between benches, which made every stratum
+   * a sealed room with a lift lobby. A working shaft has a ladderway beside the
+   * rope for exactly the trips a cage is overkill for; the crew climb one bench
+   * and ride the rest, and the strata stop being floors of a building.
+   */
+  private drawLadderway(bands: Band[]): void {
+    const posts = this.posts(bands);
+    if (posts.length < 2) return;
+    const ctx = this.ctx;
+    const rx = this.manwayX();
+    const top = this.postY(bands, posts[0]!) - 9;
+    const bottom = this.postY(bands, posts[posts.length - 1]!);
+    if (bottom <= top) return;
+    // Timber rails, not steel: it shares the shaft with the ropes and has to
+    // read as the other thing.
+    ctx.fillStyle = rgba("#8a6a58", 0.75);
+    ctx.fillRect(rx, top, 1, bottom - top);
+    ctx.fillRect(rx + 3, top, 1, bottom - top);
+    ctx.fillStyle = rgba("#b8977a", 0.55);
+    for (let y = top + 2; y < bottom; y += 4) ctx.fillRect(rx + 1, y, 2, 1);
+  }
+
+  /**
    * The sump: the floor of the workings, where everything ends up.
    *
    * Dark, and that's a decision rather than an accident of being deepest — the
@@ -1628,6 +1797,9 @@ export class InsideScene {
    * every rung on the ladder.
    */
   private emit(bands: Band[], t: number): void {
+    // The farm overhead, tipping its harvest down the shaft it left you in.
+    // Runs from the first frame after the fold, whether or not you own a thing.
+    if (this.chance(OUTSIDE_FLOW)) this.dropFromAbove();
     for (const band of bands) {
       if (band.zone < 0) continue;
       ZONES[band.zone]!.tiers.forEach((id, ti) => {
@@ -1665,6 +1837,28 @@ export class InsideScene {
     if (this.crop.length >= MAX_CROP) return;
     this.crop.push({ phase: "roll", x, y, vy: 0, spin: Math.random() * 6.28, from });
     this.puff(x, y, Math.random() > 0.5 ? 6 : -6);
+  }
+
+  /**
+   * A potato from the farm above, entering at the very top of the frame so
+   * there's no doubt about where it came from: it falls out of the daylight in
+   * the pit-head cut, past everything you've built, into the same mound.
+   */
+  private dropFromAbove(): void {
+    if (this.crop.length >= MAX_CROP) return;
+    const potato = artCanvas(POTATO_SPRITE);
+    const right = this.boreRight();
+    const x = BORE_X + 2 + Math.random() * Math.max(1, right - BORE_X - 4 - potato.w);
+    this.crop.push({
+      phase: "fall",
+      x,
+      y: 1,
+      // Already moving when it clears the lid: it's been falling since the
+      // farm, not dropped off a shelf at the frame line.
+      vy: 26 + Math.random() * 18,
+      spin: Math.random() * 6.28,
+      from: "above",
+    });
   }
 
   private stepCrop(bands: Band[], sumpTop: number): void {
@@ -1772,6 +1966,7 @@ export class InsideScene {
         tx: this.boreRight() + 10 + this.rng() * 60,
         until: 0,
         bound: null,
+        ladder: false,
         facing: 1,
         phase: this.rng() * 6.28,
       });
@@ -1785,7 +1980,7 @@ export class InsideScene {
         c.post = posts[Math.floor(this.rng() * posts.length)]!;
         c.state = "walk";
       }
-      if (c.state !== "ride") c.y = this.postY(bands, c.post);
+      if (c.state !== "ride" && c.state !== "climb") c.y = this.postY(bands, c.post);
 
       switch (c.state) {
         case "walk": {
@@ -1794,7 +1989,7 @@ export class InsideScene {
           if (Math.abs(d) <= 1) {
             c.x = c.tx;
             if (c.tx <= head + 2 && c.bound) {
-              c.state = "wait";
+              c.state = c.ladder ? "climb" : "wait";
             } else {
               // Most of the time, go and lean on a machine. Sometimes go and
               // stand next to whoever else is on this bench instead.
@@ -1832,6 +2027,13 @@ export class InsideScene {
               to = posts[(posts.indexOf(c.post) + 1) % posts.length] ?? to;
             }
             c.bound = to;
+            // One bench over is a climb down the manway; further is a fare.
+            // `posts` is built top-of-shaft first, so index distance is bench
+            // distance.
+            const at = posts.findIndex(
+              (p) => p.zone === c.post.zone && p.first === c.post.first,
+            );
+            c.ladder = Math.abs(posts.indexOf(to) - at) === 1;
             c.tx = head;
           } else {
             c.bound = null;
@@ -1859,6 +2061,31 @@ export class InsideScene {
           if (cage) {
             c.state = "ride";
             cage.riders.push(c);
+          }
+          break;
+        }
+        case "climb": {
+          const to = c.bound;
+          // The bench they were climbing to stopped existing — sold out from
+          // under them, or the farm was wiped. Back onto the one they left.
+          if (!to || !posts.some((p) => p.zone === to.zone && p.first === to.first)) {
+            c.bound = null;
+            c.state = "walk";
+            c.tx = this.wanderTo(c, bands);
+            break;
+          }
+          // On the rails of the manway, hands up, moving at ladder pace. Same
+          // arrive-exactly contract as the cage, for the same reason: a climber
+          // who stops a pixel short of a bench steps off into the wall.
+          c.x = this.manwayX() - 2;
+          const step = hoistRun(c.y, this.postY(bands, to), CLIMB_SPEED * this.dt);
+          c.y = step.y;
+          if (step.arrived) {
+            c.post = to;
+            c.bound = null;
+            c.state = "walk";
+            c.x = head;
+            c.tx = this.wanderTo(c, bands);
           }
           break;
         }
@@ -1941,6 +2168,7 @@ export class InsideScene {
         riders: [],
         errand: null,
         lane: i * HOIST_LANE,
+        spin: 0,
       });
     }
 
@@ -1960,10 +2188,13 @@ export class InsideScene {
       if (to === null) {
         // Idle, so it sits at a level rather than halfway between two. A cage
         // stopped in the middle of the shaft reads as broken down.
-        h.y = hoistRun(h.y, this.nearestPost(posts, bands, h.y), HOIST_SPEED * this.dt).y;
+        const park = hoistRun(h.y, this.nearestPost(posts, bands, h.y), HOIST_SPEED * this.dt);
+        h.spin += Math.abs(park.y - h.y);
+        h.y = park.y;
         continue;
       }
       const step = hoistRun(h.y, this.postY(bands, to), HOIST_SPEED * this.dt);
+      h.spin += Math.abs(step.y - h.y);
       h.y = step.y;
       // Doors, at both ends of the trip: long enough for whoever called it to get
       // on, and for whoever's aboard to get off.
@@ -2036,7 +2267,7 @@ export class InsideScene {
       // Arms up on the ladder and at the face; down while walking or standing
       // about. Two poses is the whole animation budget at eleven pixels, and it's
       // enough as long as which one you see means something.
-      const up = c.state === "ride" || c.state === "work";
+      const up = c.state === "ride" || c.state === "work" || c.state === "climb";
       // Walking crew wear whichever mark the Pit Hand tier is on, so buying its
       // upgrades visibly re-kits the people. The arms-up pose is the one shared
       // sprite: four more of it for four marks is a lot of char grids for a pose
@@ -2048,6 +2279,14 @@ export class InsideScene {
       // The lamp, which is what makes them findable in the deep strata at all.
       this.glow(x + 3, y + 2, 9, "#ffe6a0", 0.22);
       ctx.drawImage(art.canvas, x, y);
+      // The call: a blink at the lip while somebody stands at the shaft head,
+      // so a body waiting reads as having rung for the cage rather than as
+      // stuck against the wall.
+      if (c.state === "wait" && Math.sin(this.clock * 6 + c.phase) > 0) {
+        ctx.fillStyle = "#ffd166";
+        ctx.fillRect(this.boreRight() - 1, y + 1, 1, 1);
+        this.glow(this.boreRight() - 1, y + 1, 4, "#ffd166", 0.3);
+      }
     }
   }
 
@@ -2244,6 +2483,31 @@ export class InsideScene {
       ctx.fillStyle = rgba("#e6dcc0", 0.35 * (1 - age));
       ctx.fillRect(x, y, 2, 2);
     }
+  }
+
+  /**
+   * The heartbeat: a beat of warm light that leaves the core and climbs the
+   * bore to the lid, brushing every stratum's lip on the way past.
+   *
+   * The one signal in the scene that travels *against* the crop, which is why
+   * it reads as circulation rather than as more logistics — and it's the
+   * deepest thing you own touching everything above it, which is the whole
+   * argument the strata needed for being one organ instead of four rooms.
+   */
+  private drawPulse(bands: Band[], t: number): void {
+    if (this.owned("heart") <= 0) return;
+    const heart = bands.find((b) => b.zone === 3);
+    if (!heart) return;
+    const k = (t % HEART_PULSE_S) / HEART_PULSE_S;
+    // The beat is the first half of the period; the rest is diastole.
+    if (k > 0.55) return;
+    const p = k / 0.55;
+    const from = (heart.top + heart.bottom) / 2;
+    const to = bands[0]!.bottom;
+    const y = from + (to - from) * p;
+    this.glow((BORE_X + this.boreRight()) / 2, y, 13, "#ff7a6a", 0.11 * (1 - p * 0.45));
+    this.ctx.fillStyle = rgba("#ff7a6a", 0.05 * (1 - p));
+    this.ctx.fillRect(0, Math.round(y), SCENE_W, 1);
   }
 
   /** The dark the shaft is in before anything of yours is standing in it. */
