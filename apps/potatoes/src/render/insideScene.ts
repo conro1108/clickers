@@ -628,6 +628,17 @@ interface Crew {
    * spends its life on hops a miner would never ring for.
    */
   ladder: boolean;
+  /**
+   * Carrying a fresh-cut potato up to the Bruise Beds to be pressed.
+   *
+   * This is the one journey in the scene that runs *against* the bore, and
+   * it's what makes the ladder of rungs read as one works instead of eight
+   * parallel generators: the deep tiers cut, the crew carry, the beds press,
+   * and only then does the crop take the fall. Not a metering of anything —
+   * the sim pays out the moment the tier produced — but the picture's claim
+   * about who does what to whose material, which is the claim a farm is.
+   */
+  cargo: boolean;
   facing: 1 | -1;
   /** Phase for the walk bob, so a line of them isn't in lockstep. */
   phase: number;
@@ -640,6 +651,12 @@ const CREW_SPEED = 13;
 /** Slower than the walk: it's a ladder, and they're carrying lamps. */
 const CLIMB_SPEED = 10;
 const MAX_CREW = 9;
+/**
+ * How many can be carrying at once. Two: enough that the trip is usually
+ * happening somewhere, few enough that the bore stays the crop's road and the
+ * carry stays the exception you notice.
+ */
+const MAX_CARRY = 2;
 
 /**
  * The hoist: a cage on a rope, fetching and carrying people between benches.
@@ -858,6 +875,13 @@ export class InsideScene {
    */
   private openShown = 0;
   private revealAt: number | null = null;
+  /**
+   * Where the heartbeat's wavefront was last frame, or null between beats.
+   * `drawAccent` reads it a frame late, which at sixty of them is invisible;
+   * the accents brightening as the pulse passes is what makes the beat touch
+   * the strata rather than slide over them.
+   */
+  private pulseY: number | null = null;
   /**
    * The hoard the sump is currently showing, which chases the real one rather
    * than snapping to it — spending should look like spending here too.
@@ -1152,6 +1176,8 @@ export class InsideScene {
     this.drawBore(bands, t);
     this.drawHeadgear(bands);
     this.drawGloom(bands[0]!.bottom, sump.top);
+    // Over the gloom, like the kit: it's lit sap, not terrain.
+    this.drawVein(bands, t);
 
     // Everything standing in the strata, deepest first so the near ledges
     // overlap the far ones where a sprite overhangs its cut.
@@ -1401,16 +1427,19 @@ export class InsideScene {
     for (let i = 0; i < n; i++) {
       const x = Math.round(rng() * (SCENE_W - 8)) + 4;
       const y = band.top + 2 + Math.round(rng() * Math.max(1, h - 6));
-      const pulse = 0.35 + 0.3 * Math.sin(t * 0.9 + i * 1.9);
+      // The heartbeat passing lifts whatever it passes: the flesh answering
+      // the deepest thing you own, one stratum at a time.
+      const lift = this.pulseY !== null && Math.abs(this.pulseY - y) < 9 ? 1.9 : 1;
+      const pulse = (0.35 + 0.3 * Math.sin(t * 0.9 + i * 1.9)) * lift;
       if (band.zone === 0) {
         // Pale stems: a potato sprouting in the dark etiolates, and keeping them
         // off green is also what stops the one growing thing down here reading
         // as crop.
-        ctx.fillStyle = rgba(mix(zone.accent, "#f7f1dc", 0.55), 0.5);
+        ctx.fillStyle = rgba(mix(zone.accent, "#f7f1dc", 0.55), Math.min(0.85, 0.5 * lift));
         ctx.fillRect(x, y, 1, 3);
         ctx.fillRect(x + 1, y - 1, 1, 1);
       } else if (band.zone === 1) {
-        ctx.fillStyle = rgba(zone.accent, 0.3);
+        ctx.fillStyle = rgba(zone.accent, Math.min(0.8, 0.3 * lift));
         ctx.fillRect(x, y, 2, 1);
       } else if (band.zone === 2) {
         // Sap, beading and running. The colour that says this is an organ.
@@ -1470,8 +1499,10 @@ export class InsideScene {
         // comes back, and throws a spark off its face. It's two pixels of motion
         // and it's the difference between "a potato appeared near that thing" and
         // "that thing made a potato".
+        // `worked` can hold a *future* time — the chorus wave books beats in
+        // advance — so a unit whose turn hasn't come yet holds still.
         const since = t - (this.worked.get(`${id}:${i}`) ?? -99);
-        const beat = since < WORK_BEAT_S ? 1 - since / WORK_BEAT_S : 0;
+        const beat = since >= 0 && since < WORK_BEAT_S ? 1 - since / WORK_BEAT_S : 0;
         const drop = Math.round(Math.sin(beat * Math.PI) * 2);
         this.setting(kind, zone, slot, art.w, art.h, roof, foot);
         this.primeGlow(id, slot.x, slot.y, art.w, art.h, t, i);
@@ -1621,6 +1652,78 @@ export class InsideScene {
     // even on a farm that isn't producing.
     const drift = ((t * 9) % (floor - top + 40)) - 20;
     this.glow(BORE_X + (right - BORE_X) / 2, top + drift, 14, "#f0c68c", 0.07);
+  }
+
+  /**
+   * The sap vein: what the Ring Main is once you own it.
+   *
+   * Before this, the ring was five pumps hung in their own seam — the most
+   * expensive cluster in a picture the whole complaint about which was that it
+   * was clusters. Now the pumps hang off one vessel that runs the full height
+   * of the workings, sap climbing it, a drip-feed elbowing off into every
+   * stratum it passes. Buying the Ring Main is buying plumbing for the whole
+   * shaft, and the deep half of the farm finally does something the top half
+   * can see.
+   *
+   * Sap only. The bore stays the one road crop travels; this carries light.
+   */
+  private drawVein(bands: Band[], t: number): void {
+    if (this.owned("main") <= 0) return;
+    const ctx = this.ctx;
+    const open = bands.filter((b) => b.zone >= 0);
+    if (open.length === 0) return;
+    const trunkX = SCENE_W - 8;
+    const top = open[0]!.top + 3;
+    const bottom = open[open.length - 1]!.bottom - 2;
+    if (bottom <= top) return;
+    const vein = ZONES[2]!.accent;
+    for (let y = top; y < bottom; y++) {
+      const jag = Math.round(Math.sin(y * 0.16 + 2) * 1.5);
+      // Shadowed on both sides: over the pale worked faces a bare pink line
+      // vanished entirely, and a vessel with no walls is a scratch in the art.
+      ctx.fillStyle = rgba("#4e2833", 0.6);
+      ctx.fillRect(trunkX + jag - 1, y, 1, 1);
+      ctx.fillStyle = rgba(vein, 0.85);
+      ctx.fillRect(trunkX + jag, y, 1, 1);
+      ctx.fillStyle = rgba("#4e2833", 0.6);
+      ctx.fillRect(trunkX + jag + 1, y, 1, 1);
+    }
+    // Sap moving up it — with the heartbeat, one of the two flows in the
+    // scene that climbs, and both of them are the deep tiers talking.
+    for (let i = 0; i < 2; i++) {
+      const y = bottom - ((t * 20 + (i * (bottom - top)) / 2) % (bottom - top));
+      const jag = Math.round(Math.sin(y * 0.16 + 2) * 1.5);
+      ctx.fillStyle = rgba(mix(vein, "#ffffff", 0.5), 0.8);
+      ctx.fillRect(trunkX + jag, Math.round(y), 1, 2);
+    }
+    // The branch along the pumps' own seam, so the trunk is visibly theirs.
+    const ring = bands.find((b) => b.zone === 2);
+    if (ring) {
+      const slots = this.slots("main", ring);
+      if (slots.length > 0) {
+        const y = ring.top + 2;
+        const from = slots[0]!.x + 2;
+        ctx.fillStyle = rgba(vein, 0.45);
+        ctx.fillRect(from, y, Math.max(1, trunkX - from), 1);
+      }
+    }
+    // A drip-feed into each stratum: elbow, a drop crawling down, a splash.
+    for (const band of open) {
+      const floor = band.bottom - 3;
+      const elbowY = band.top + Math.round((band.bottom - band.top) * 0.35);
+      const jag = Math.round(Math.sin(elbowY * 0.16 + 2) * 1.5);
+      ctx.fillStyle = rgba(vein, 0.45);
+      ctx.fillRect(trunkX + jag - 3, elbowY, 4, 1);
+      const p = (t * 0.45 + band.zone * 0.37) % 1;
+      if (p < 0.7) {
+        const y = elbowY + 1 + (p / 0.7) * Math.max(1, floor - elbowY - 1);
+        ctx.fillStyle = rgba(mix(vein, "#ffffff", 0.35), 0.7);
+        ctx.fillRect(trunkX + jag - 3, Math.round(y), 1, 1);
+      } else if (p < 0.8) {
+        ctx.fillStyle = rgba(mix(vein, "#ffffff", 0.5), 0.5);
+        ctx.fillRect(trunkX + jag - 4, floor, 3, 1);
+      }
+    }
   }
 
   /**
@@ -1819,10 +1922,14 @@ export class InsideScene {
         if (!from) return;
         this.worked.set(`${id}:${pick}`, t);
         const art = artCanvas(this.mark(id));
+        const cx = from.x + art.w / 2;
+        // A hand on this bench may shoulder it for the presses instead of
+        // letting it roll — see `tryCarry`.
+        if (this.tryCarry(id, band, ti, cx, bands)) return;
         // Off the bench it was cut on, not off the band's floor — a potato that
         // appears a bench below the machine that made it breaks the one link the
         // whole scene is trying to draw.
-        this.cut(from.x + art.w / 2, this.benchY(band, ti === 0) - 4, id);
+        this.cut(cx, this.benchY(band, ti === 0) - 4, id);
       });
     }
     // The Second Potato is the one rung that fruits rather than being worked, so
@@ -1830,6 +1937,99 @@ export class InsideScene {
     // the picture ignores the ledges.
     if (this.owned("second") > 0 && this.chance(0.2)) {
       this.puff(this.boreRight() + 2, bands[bands.length - 1]!.top - 6, -4);
+    }
+    // The Chorus, coordinating: every so often the whole shaft answers it,
+    // band by band — a wave of work-beats radiating out from the singers'
+    // seam. It's the only thing in the picture every tier does *together*,
+    // which is the point of a chorus.
+    if (
+      this.owned("chorus") > 0 &&
+      bands.filter((b) => b.zone >= 0).length > 1 &&
+      this.chance(0.14)
+    ) {
+      this.chorusWave(bands, t);
+    }
+  }
+
+  /**
+   * Whether a hand on this bench shoulders a fresh cut and carries it to the
+   * Bruise Beds, rather than the crop rolling for the bore where it was made.
+   *
+   * The chain this draws — deep tiers cut, crew carry, beds press, bore takes
+   * the fall — is the scene's whole answer to the eight rungs reading as eight
+   * separate generators. Rationed hard: the bore must stay the road, and a
+   * carry should be something you watch happen, not a second logistics layer.
+   */
+  private tryCarry(id: InsideId, band: Band, ti: number, cutX: number, bands: Band[]): boolean {
+    // The beds don't feed themselves, and the Pit Hands' own cuts happen in
+    // the crew's hands already — a hand carrying its own dig to a press it was
+    // standing next to reads as make-work.
+    if (id === "fold" || id === "deephand") return false;
+    if (this.owned("fold") <= 0) return false;
+    if (Math.random() > 0.35) return false;
+    if (this.crew.filter((c) => c.cargo).length >= MAX_CARRY) return false;
+    const posts = this.posts(bands);
+    const beds = posts.find((p) => p.zone === 0 && p.first);
+    if (!beds) return false;
+    const here = posts.findIndex((p) => p.zone === band.zone && p.first === (ti === 0));
+    if (here < 0) return false;
+    const porter = this.crew.find(
+      (c) =>
+        !c.cargo &&
+        (c.state === "walk" || c.state === "work" || c.state === "mingle") &&
+        c.post.zone === band.zone &&
+        c.post.first === (ti === 0) &&
+        Math.abs(c.x - cutX) < 45,
+    );
+    if (!porter) return false;
+    porter.cargo = true;
+    porter.bound = beds;
+    porter.ladder = Math.abs(posts.indexOf(beds) - here) === 1;
+    porter.state = "walk";
+    porter.tx = this.boreRight() - 4;
+    return true;
+  }
+
+  /**
+   * The end of a carry: pressed into the nearest bed if the trip got there, or
+   * set down to roll for the bore if the bench it was bound for stopped
+   * existing under it. Nothing is deleted mid-journey — a potato vanishing out
+   * of a hand's arms is worse than no carry at all.
+   */
+  private deliver(c: Crew, bands: Band[], t: number): void {
+    c.cargo = false;
+    const band = bands.find((b) => b.zone === 0);
+    if (band && c.post.zone === 0 && c.post.first) {
+      const slots = this.slots("fold", band);
+      if (slots.length > 0) {
+        let best = 0;
+        slots.forEach((s, i) => {
+          if (Math.abs(s.x - c.x) < Math.abs(slots[best]!.x - c.x)) best = i;
+        });
+        const art = artCanvas(this.mark("fold"));
+        const slot = slots[best]!;
+        // The press takes its beat, and the pressed crop rolls from the bed —
+        // the same exit every other cut takes.
+        this.worked.set(`fold:${best}`, t);
+        this.cut(slot.x + art.w / 2, this.benchY(band, true) - 4, "fold");
+        return;
+      }
+    }
+    this.cut(c.x + 3, c.y - 4, "fold");
+  }
+
+  /** Every visible unit answers the Chorus, later the further from the seam. */
+  private chorusWave(bands: Band[], t: number): void {
+    for (const band of bands) {
+      if (band.zone < 0) continue;
+      for (const id of ZONES[band.zone]!.tiers) {
+        if (id === "deephand") continue;
+        const n = this.working(id);
+        for (let i = 0; i < n; i++) {
+          const delay = 0.12 + Math.abs(band.zone - 2) * 0.16 + i * 0.04;
+          this.worked.set(`${id}:${i}`, t + delay);
+        }
+      }
     }
   }
 
@@ -1967,6 +2167,7 @@ export class InsideScene {
         until: 0,
         bound: null,
         ladder: false,
+        cargo: false,
         facing: 1,
         phase: this.rng() * 6.28,
       });
@@ -1991,6 +2192,9 @@ export class InsideScene {
             if (c.tx <= head + 2 && c.bound) {
               c.state = c.ladder ? "climb" : "wait";
             } else {
+              // A carry ends the moment the walk does: pressed if this is the
+              // beds' bench, set down to roll if the trip fell through.
+              if (c.cargo) this.deliver(c, bands, t);
               // Most of the time, go and lean on a machine. Sometimes go and
               // stand next to whoever else is on this bench instead.
               const near = this.crew.find(
@@ -2279,6 +2483,12 @@ export class InsideScene {
       // The lamp, which is what makes them findable in the deep strata at all.
       this.glow(x + 3, y + 2, 9, "#ffe6a0", 0.22);
       ctx.drawImage(art.canvas, x, y);
+      // The load, held overhead — up the ladder, into the cage, along the
+      // bench, one potato riding the whole way to the presses in plain sight.
+      if (c.cargo) {
+        const potato = artCanvas(POTATO_SPRITE);
+        ctx.drawImage(potato.canvas, x + 1, y - potato.h + 2);
+      }
       // The call: a blink at the lip while somebody stands at the shaft head,
       // so a body waiting reads as having rung for the cage rather than as
       // stuck against the wall.
@@ -2495,6 +2705,7 @@ export class InsideScene {
    * argument the strata needed for being one organ instead of four rooms.
    */
   private drawPulse(bands: Band[], t: number): void {
+    this.pulseY = null;
     if (this.owned("heart") <= 0) return;
     const heart = bands.find((b) => b.zone === 3);
     if (!heart) return;
@@ -2505,6 +2716,7 @@ export class InsideScene {
     const from = (heart.top + heart.bottom) / 2;
     const to = bands[0]!.bottom;
     const y = from + (to - from) * p;
+    this.pulseY = y;
     this.glow((BORE_X + this.boreRight()) / 2, y, 13, "#ff7a6a", 0.11 * (1 - p * 0.45));
     this.ctx.fillStyle = rgba("#ff7a6a", 0.05 * (1 - p));
     this.ctx.fillRect(0, Math.round(y), SCENE_W, 1);
