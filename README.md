@@ -6,9 +6,9 @@ simulation under different themes.
 - **Yield, Inc.** — grow potatoes. Play: [battle-clicker-web.vercel.app](https://battle-clicker-web.vercel.app)
 - **Puppy Mill** — breed chihuahuas. Play: [puppy-mill-web.vercel.app](https://puppy-mill-web.vercel.app)
 
-| Yield, Inc. | Puppy Mill |
-|---|---|
-| ![Yield, Inc.](shots/potatoes.png) | ![Puppy Mill](shots/puppies.png) |
+| Yield, Inc. | Puppy Mill | While you were out |
+|---|---|---|
+| ![Yield, Inc., late game](shots/potatoes.png) | ![Puppy Mill, late game](shots/puppies.png) | ![The offline report](shots/while-you-were-out.png) |
 
 ## The idea
 
