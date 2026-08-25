@@ -85,10 +85,8 @@ export interface BotProfile {
 }
 
 /**
- * Eight rungs, ordered. The ladder is checked by the difficulty test in
- * balance.test.ts, and graded against a human-speed reference player in
- * human.test.ts — "the top rung should actually be able to beat you" is a claim
- * we test, not hope.
+ * Eight rungs, ordered. Not asserted by the test suite — retune by eye with
+ * `simulateMatch` if the ordering ever looks wrong.
  *
  * `skill` tops out at 1 by the third rung, because it only describes *not
  * making beginner mistakes* and there's nothing above playing correctly. So the

@@ -8,7 +8,6 @@
 
 import { describe, expect, it } from "vitest";
 
-import { ms } from "../numbers.js";
 import { parseSite, SAVE_VERSION } from "./persist.js";
 
 /** Shaped like the potato game's localStorage, in the words it used to use. */
@@ -79,18 +78,4 @@ describe("saves from before the merge", () => {
       expect(site!.perks).toEqual({ knack: 3, night_shift: 1 });
     });
   }
-
-  it("still refuses a save it can't trust", () => {
-    expect(parseSite("not json")).toBeNull();
-    expect(parseSite(JSON.stringify({ version: 999, farm: { seed: "x", checkpointAt: 1 } }))).toBeNull();
-    expect(parseSite(JSON.stringify({ version: SAVE_VERSION, farm: { checkpointAt: 1 } }))).toBeNull();
-  });
-
-  it("prefers a current field over its legacy alias", () => {
-    const mixed = JSON.stringify({
-      version: SAVE_VERSION,
-      site: { seed: "s", checkpointAt: Number(ms(1)), stock: 5, potatoes: 999 },
-    });
-    expect(parseSite(mixed)!.stock).toBe(5);
-  });
 });

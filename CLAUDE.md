@@ -41,9 +41,8 @@ A theme that falls behind throws at startup — `named()` in `packages/sim/src/t
 refuses to render an id it has no words for, rather than showing a player
 `undefined`.
 
-The engine's own tests run against `packages/sim/src/reference-theme.ts`, which
-answers every id with its own name and so can never fall out of date. Each app's
-tests run against that game's real theme, which is what catches a stale pack.
+Tests are a small regression net, not tuning assertions — keep `npm test` under
+~3s and don't add balance-curve tests; a stale theme throws at startup anyway.
 
 ## The games are allowed to diverge
 
@@ -60,7 +59,7 @@ is "what you own", not "what it looks like".
 ```
 npm run dev            # the potato game, port 5173
 npm run dev:puppies    # the puppy game, port 5174 (both can run at once)
-npm test               # sim + both apps' tests
+npm test               # sim + both apps' tests (must stay under ~3s)
 npm run typecheck      # sim, online, both apps
 npm run build          # both apps
 npm run db:push        # rebuild the clickers schema

@@ -31,7 +31,7 @@ two sabotages landing at once can't corrupt anything. (Details in
 `docs/STACK.md` and `docs/multiplayer.md`.)
 
 - `packages/sim` — the whole simulation as pure TypeScript, zero I/O, shared
-  by both games and both sides of the wire. This is where the tests live.
+  by both games and both sides of the wire. A handful of regression tests live here.
 - `packages/online` — the Supabase command-log client.
 - `apps/potatoes`, `apps/puppies` — React + Vite skins over the same sim.
 
