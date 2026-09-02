@@ -1,64 +1,34 @@
-# STACK.md
+# Stack
 
-## The stack
+- **Frontend** — TypeScript + React, Vite SPA per game, static on Vercel.
+- **Backend** — Supabase: Postgres holds an append-only command log (see
+  `multiplayer.md`), Realtime `postgres_changes` fans it out, Auth is anonymous
+  sign-in with upgrade to a real account. No Edge Functions.
+- **`packages/sim`** — pure TypeScript, zero I/O. Every client folds the same
+  log with the same `applyCommand`, so there is no separate authority to drift
+  from. If the client ever can't be trusted, this is also the escape hatch: a
+  server can validate the same log with the same code.
 
-- **Frontend** — TypeScript + React, Vite SPA, deployed static to Vercel.
-- **Backend** — Supabase: Postgres as source of truth, Edge Functions
-  (Deno/TS) as the authority for mutations, Realtime Broadcast for opponent
-  updates.
-- **Auth** — Supabase Auth, anonymous sign-in with upgrade to a real account.
-- **Tests** — vitest against `packages/sim`.
+## No tick loop
 
-## The core idea: no tick loop
-
-Game state is a pure function of `(checkpoint, elapsed, rate, active
-effects)`. Store `{stock_at_t0, rate, t0}` plus a timestamped event log;
-client and server both integrate forward to "now" on demand. There is no
-server game loop — which is what makes a request/response backend like Edge
-Functions viable at all.
-
-Rates only change on discrete events, so:
-
-- **Opponent state doesn't stream.** Broadcast *rate changes* and let each
-  client extrapolate locally — a few messages per player per minute. Works
-  because you only ever see opponent count + production rate.
-- **Slow burn is free.** Offline progression is the same integration with a
-  bigger `elapsed`. No second system, so the sit-down-vs-slow-burn call
-  stays genuinely deferred.
-
-This relies on production rate staying independent of stockpile size. See
-"Parked ideas" in VISION.md — spoilage would break it.
+Game state is a pure function of `(checkpoint, elapsed, rate, active effects)`.
+Rates only change on discrete events, so both solo offline progression and
+opponent extrapolation are one closed-form integration with a bigger `elapsed`.
+This depends on rate being independent of stockpile size — see "Parked" in
+`design.md`.
 
 ## Decisions
 
-**Vite, not Next.js.** SPA behind auth, no SEO surface. SSR is overhead.
-
-**Supabase Auth, not Clerk.** RLS keys off Supabase JWTs, and anonymous
-sign-in matters for "send a friend a link and race me now." Clerk earns its
-keep on orgs and SSO; we have neither.
-
-**`packages/sim` is pure TS, zero I/O.** Imported by both the client
-(optimistic prediction) and the Edge Function (authority), so prediction and
-truth can't drift. Economy logic never leaks into plpgsql or React
-components.
-
-This is also the escape hatch: if the sim outgrows closed-form and needs a
-real tick, lift `packages/sim` onto a stateful server (Fly/Railway). Keep it
-portable and that migration stays cheap.
-
-**Mutations take a lock.** Every buy/attack does `SELECT ... FOR UPDATE` on
-the match row. Sabotage touches two players' state — read-modify-write
-without a lock will corrupt.
-
-**Server time only.** All timestamps from Postgres `now()`, plus a clock
-offset handshake so client extrapolation aligns with authority. Client clocks
-lie, and retrofitting this is miserable.
-
-**Wrap the resource in a `Yield` type.** f64 dies around 1e15 and idle
-numbers climb fast. Not building bignum now, just keeping the swap contained.
-
-**Clicks batch.** Accumulate client-side, flush a count every ~500ms with a
-server-side rate clamp. It's the only high-frequency write.
-
-**Randomness is seeded.** Any pests/weather rolls come from a PRNG keyed on
-`match_seed + event_index`, so state stays replayable instead of live-rolled.
+- **Vite, not Next.js.** SPA behind auth, no SEO surface.
+- **Supabase Auth, not Clerk.** RLS keys off Supabase JWTs and anonymous
+  sign-in matters for "send a friend a link and race me now".
+- **Server time only.** Sequence and timestamps are assigned by a Postgres
+  trigger; sim code never calls `Date.now()`. Client clocks lie and a log
+  carrying client times is unreplayable.
+- **The resource is a branded `Yield` type** (`numbers.ts`) so a bignum swap
+  touches one file. Not building bignum; the top rung is already past 2^53 and
+  nothing depends on exactness there.
+- **Clicks batch** client-side and flush as a count; the sim clamps the rate.
+  The only high-frequency write.
+- **Randomness is seeded** on `(seed, event index)` so state replays instead
+  of live-rolling.

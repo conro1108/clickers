@@ -1,8 +1,4 @@
-/**
- * Deterministic PRNG keyed on `matchSeed + eventIndex`, so any roll a match
- * makes can be recomputed from the event log rather than stored. Nothing in
- * the sim may call Math.random().
- */
+// Deterministic PRNG keyed on matchSeed + eventIndex. Nothing in the sim may call Math.random().
 
 function hash(seed: string): number {
   let h = 2166136261 >>> 0;
@@ -13,7 +9,6 @@ function hash(seed: string): number {
   return h >>> 0;
 }
 
-/** mulberry32 */
 function mulberry32(a: number): () => number {
   return () => {
     a = (a + 0x6d2b79f5) | 0;
@@ -24,9 +19,7 @@ function mulberry32(a: number): () => number {
 }
 
 export interface Rng {
-  /** Uniform in [0, 1). */
   next(): number;
-  /** Uniform in [lo, hi). */
   range(lo: number, hi: number): number;
 }
 

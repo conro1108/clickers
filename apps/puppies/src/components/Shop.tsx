@@ -28,14 +28,7 @@ import { Row } from "./Row.js";
 
 type BuyQty = 1 | 10 | "max";
 
-/**
- * The three shops of the head-to-head prototype, as sheet panels.
- *
- * They used to be three tabs inside a bordered column that sat beside the mill
- * all match. The homestead learned years ago that a phone has room for the mill
- * or for the catalogue and not both, and this is the same fix: the mill is the
- * screen, and each of these is a thing you open, spend in, and close.
- */
+// The three versus shops as sheet panels: the mill is the screen, each of these opens, spends, closes.
 export function GrowPanel({
   me,
   budget,
@@ -53,8 +46,7 @@ export function GrowPanel({
     const cost = producerCost(prod.id, owned, n);
     const each = prod.baseRate * producerMultiplier(me, prod.id);
     const broken = Math.min(me.broken[prod.id] ?? 0, owned);
-    // The ladder reveals itself a rung at a time — but the first rung
-    // is always there, or an empty shop greets you at zero puppies.
+    // First rung is always shown, or an empty shop greets you at zero.
     const prev = PRODUCERS[i - 1];
     const visible =
       i === 0 ||
@@ -65,9 +57,7 @@ export function GrowPanel({
     return [{ prod, owned, n, cost, each, broken }];
   });
 
-  // One dot, on whichever rung buys the most rate per puppy right now. Only
-  // among rows you can actually press — a badge on a price you can't meet is
-  // trivia, not a nudge — and only when there's more than one to choose from.
+  // Best-rate dot: only among affordable rows, only when there is more than one.
   const buyable = shelf.filter((r) => Y.gte(budget, r.cost) && r.each > 0);
   const best =
     buyable.length > 1

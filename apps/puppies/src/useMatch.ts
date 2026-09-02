@@ -20,10 +20,7 @@ import { nowMs } from "./clock.js";
 
 /** How often batched clicks are flushed into the sim (STACK.md). */
 const CLICK_FLUSH_MS = 500;
-/**
- * How often the bot loop wakes up. Each profile decides on its own cadence
- * (`decisionMs`); this just has to be fine enough to serve the fastest one.
- */
+// Bot loop cadence; only has to be fine enough to serve the fastest profile's `decisionMs`.
 const BOT_TICK_MS = 250;
 /** Display refresh. The sim isn't ticking — this only redraws extrapolated numbers. */
 const RENDER_MS = 100;
@@ -53,13 +50,7 @@ function buildMatch(setup: MatchSetup, startedAt: Millis): MatchState {
   });
 }
 
-/**
- * Who you're up against, in the words the lobby uses.
- *
- * The picker used to offer "chill", "scrappy" and "nasty" — the profile keys,
- * straight out of `BOT_PROFILES`. Naming them here means the lobby and the
- * match log call the same opponent the same thing.
- */
+// Opponent names, shared by the lobby and the match log.
 export const BOTS: Record<string, { name: string; blurb: string }> = {
   chill: { name: "Sleepy Pete", blurb: "Grows slowly, rarely swings. A warm-up." },
   scrappy: { name: "Marge", blurb: "Keeps pace, and will hit you back." },
@@ -75,11 +66,7 @@ function botName(profile: keyof typeof BOT_PROFILES): string {
   return BOTS[profile]?.name ?? "Bot";
 }
 
-/**
- * Drives a match entirely in the browser. Commands go through the same
- * `applyCommand` an Edge Function will call, so swapping the local dispatch
- * for a network round-trip later doesn't touch any game logic.
- */
+// Drives a match in the browser. Commands go through the same `applyCommand` a server would call.
 export function useMatch(setup: MatchSetup): MatchRuntime {
   const [state, setStateRaw] = useState<MatchState>(() => buildMatch(setup, nowMs()));
   const [now, setNow] = useState<Millis>(() => nowMs());
@@ -107,9 +94,7 @@ export function useMatch(setup: MatchSetup): MatchRuntime {
 
   const dispatch = useCallback(
     (cmd: Command) => {
-      // Bank the clicks you've already made before spending. Without this the
-      // pile you can see is up to a flush ahead of the pile you can spend, and
-      // the shop tells you that you can't afford something you're looking at.
+      // Bank pending clicks first, or the shop can refuse a price the visible pile already covers.
       flushClicks();
       const res = applyCommand(stateRef.current, cmd, nowMs());
       if (!res.ok) {

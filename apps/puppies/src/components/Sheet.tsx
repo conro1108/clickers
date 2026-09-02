@@ -1,19 +1,12 @@
 import type { ReactNode } from "react";
 
-/**
- * A bottom sheet. Everything that isn't the mill itself lives in one of these,
- * so the scene is never covered by chrome you didn't ask for.
- */
 export function Sheet({
   title,
   sub,
   onClose,
   children,
   foot,
-  /**
-   * The one sheet that isn't furniture. `grave` takes the cream out of it for
-   * the last purchase of the run — see `.sheet-grave` in styles.css.
-   */
+  /** `grave` styles the last purchase of the run — see `.sheet-grave` in styles.css. */
   tone,
 }: {
   title: string;

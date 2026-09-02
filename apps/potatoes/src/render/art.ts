@@ -1,15 +1,5 @@
-/**
- * Every piece of pixel art in the game, as char grids.
- *
- * Two families live here. `ICONS` are 12x12 UI glyphs that replace what used to
- * be plain text and emoji in the chrome. `PROPS` are the scene's furniture:
- * one silhouette per producer tier, the pieces the potato hoard is built out
- * of, and the scenery around both.
- *
- * The one hard rule is the shared outline ink (`K`) — it's what makes a barn, a
- * combine harvester and a UI button icon look like they came out of the same
- * box of crayons.
- */
+// Every piece of pixel art in the game, as char grids: `ICONS` (12x12 UI glyphs) and `PROPS` (scene furniture).
+// Hard rule: the shared outline ink `K` on everything.
 
 import type { Art } from "./pixel.js";
 
@@ -20,13 +10,10 @@ const POTATO = { p: "#c98b4b", l: "#e2b077", d: "#95602c" };
 const METAL = { m: "#a8b0b8", s: "#7f8891", g: "#bfe3ef" };
 const WOOD = { w: "#7a5237", v: "#5e3e29" };
 
-// ---------------------------------------------------------------------------
-// UI icons — 12x12
-// ---------------------------------------------------------------------------
+// --- UI icons — 12x12 ---
 
 export const ICONS = {
-  // Oblong and tilted, not a disc. The old one was a circle with shading on
-  // it, and a circle of that colour on a button is a biscuit.
+  // Oblong and tilted, not a disc: a shaded circle on a button is a biscuit.
   potato: {
     rows: [
       "............",
@@ -153,9 +140,7 @@ export const ICONS = {
     palette: { k: K, a: "#e0a03c" },
   },
 
-  // The upkeep tab. A spanner rather than a cloud, because the sheet is about
-  // what you do to the farm, not what the sky did to it — and past the fold
-  // there's no weather to draw anyway.
+  // The upkeep tab: a spanner, since past the fold there is no weather to draw.
   wrench: {
     rows: [
       "..kkk.kkk...",
@@ -195,9 +180,7 @@ export const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
-// ---------------------------------------------------------------------------
-// Scenery
-// ---------------------------------------------------------------------------
+// --- Scenery ---
 
 export const BARN: Art = {
   rows: [
@@ -264,16 +247,7 @@ export const FENCE: Art = {
   palette: WOOD,
 };
 
-/**
- * The yard light, on its post by the gate.
- *
- * It's here to answer a question the renderer used to just assume. The farm
- * goes dark after eight and the yard doesn't, which is the right call — the
- * hoard is the thing you came back at 2am to look at — but with nothing in the
- * picture throwing that light it read as the bottom of the screen not having
- * got the memo. So: a lamp, off by day, lit at dusk, and the pool it throws is
- * the shape of the half of the yard that *does* go dark.
- */
+/** The yard light by the gate: off by day, lit at dusk. The pool it throws is the half of the yard that goes dark. */
 const LAMP_ROWS = [
   "kkkkk",
   "kgggk",
@@ -334,11 +308,7 @@ export const PLANT: Art = {
 
 const WITHERED = new Map<Art, Art>();
 
-/**
- * The same crop, gone dry. Keyed off whichever mark of the plot is planted, so
- * a tired upgraded bed still reads as an upgraded bed — it's the colour that
- * goes, not the plant.
- */
+/** The same crop, gone dry. Keyed off the planted mark: it is the colour that goes, not the plant. */
 export function withered(art: Art): Art {
   const hit = WITHERED.get(art);
   if (hit) return hit;
@@ -353,20 +323,8 @@ export function withered(art: Art): Art {
 const SHRUNK = new Map<Art, Art>();
 
 /**
- * The same thing, half the size, for the ranks of the property that stand
- * further back than the near one.
- *
- * Resampled on the char grid rather than by scaling a sprite, because the
- * scene's one hard rule is that nothing gets a fractional transform: a half of
- * the art is a *different picture*, authored here once, and it lands on the
- * buffer's grid like everything else.
- *
- * Each 2x2 block votes, and the most common key in it wins with the top-left
- * breaking ties. Nearest-neighbour — taking every other column — was the first
- * go and it eats the 1px outline off whichever edge lands on an odd column, so
- * half the skyline came out with its right-hand wall missing. A vote keeps the
- * silhouette and lets the body colour through the middle, which is all a
- * building three fields away is: a shape in the right colour.
+ * Half-size version for the back ranks. Resampled on the char grid (no fractional transforms in the scene).
+ * Each 2x2 block votes, top-left breaks ties; nearest-neighbour ate the 1px outline on odd columns.
  */
 export function shrunk(art: Art): Art {
   const hit = SHRUNK.get(art);
@@ -404,15 +362,8 @@ export function shrunk(art: Art): Art {
 const CROP_STAGES = new Map<Art, Art[]>();
 
 /**
- * A bed part-grown: four stages from just-planted to ready to lift.
- *
- * Derived from whichever mark is planted rather than authored four times over,
- * so an upgraded bed still grows through the same cycle in its own silhouette
- * and adding a fourth plot mark doesn't mean drawing three more pictures.
- *
- * The early stages are the *bottom* slice of the full plant, which only reads
- * as growth if the caller bottom-aligns them — a crop that grows downward out
- * of the air is worse than no crop cycle at all.
+ * A bed part-grown: four stages derived from the planted mark.
+ * Early stages are the bottom slice of the full plant, so callers must bottom-align them.
  */
 export function cropStages(art: Art): readonly Art[] {
   const hit = CROP_STAGES.get(art);
@@ -422,8 +373,7 @@ export function cropStages(art: Art): readonly Art[] {
   const n = rows.length;
   const slice = (from: number): Art => ({ rows: rows.slice(from), palette: art.palette });
 
-  // Ripe: potatoes showing through the soil at the base. Every other filled
-  // pixel of the bottom row, so it reads as lumps rather than a stripe.
+  // Ripe: every other filled pixel of the bottom row, so it reads as lumps not a stripe.
   const base = rows[n - 1] ?? "";
   const lifted = [...base].map((c, i) => (c !== "." && i % 2 === 1 ? "o" : c)).join("");
   const ripe: Art = {
@@ -436,18 +386,9 @@ export function cropStages(art: Art): readonly Art[] {
   return stages;
 }
 
-// ---------------------------------------------------------------------------
-// The hoard — what a pile of potatoes turns into as it stops being a pile
-// ---------------------------------------------------------------------------
+// --- The hoard — what a pile of potatoes turns into ---
 
-/**
- * The potato itself, everywhere it appears loose: carried, dug, heaped, and
- * riding down the pipeline.
- *
- * Outlined, which is the whole point. Without one it was a soft blob, and a
- * queue of soft blobs in a pipe is a tan line with lumps in it — you can't see
- * how many are going past, which is the one thing the pipeline is for.
- */
+/** The loose potato: carried, dug, heaped, in the pipeline. Outlined, or a queue of them is a tan line. */
 export const POTATO_SPRITE: Art = {
   rows: [
     ".kkkk..",
@@ -497,11 +438,7 @@ export const CRATE: Art = {
   palette: { k: K, w: "#a97a52", v: "#7a5237", p: "#c98b4b" },
 };
 
-/**
- * Silo and hydroponic tower are the only two props tall enough that writing
- * their body out row by row would be more typo than art, so their repeating
- * middles are generated. The caps and bases stay hand-authored.
- */
+/** Silo and hydroponic tower are tall enough that their repeating middles are generated; caps and bases are hand-authored. */
 function stack(cap: string[], body: string[], reps: number, base: string[]): string[] {
   const rows = [...cap];
   for (let i = 0; i < reps; i++) rows.push(...body);
@@ -509,11 +446,7 @@ function stack(cap: string[], body: string[], reps: number, base: string[]): str
   return rows;
 }
 
-/**
- * The yard's silo is deliberately squat: it has to stand in a band about twenty
- * pixels deep next to crates and sacks, and a true-height grain silo would eat
- * the field above it.
- */
+/** Squat on purpose: it stands in a ~20px band next to crates, and a true-height silo would eat the field above. */
 export const SILO: Art = {
   rows: stack(
     [
@@ -530,10 +463,7 @@ export const SILO: Art = {
   palette: { k: K, ...METAL },
 };
 
-/**
- * A barrow of stock: the first thing in the yard that isn't just potatoes,
- * and the first hint that this is becoming an operation.
- */
+/** A barrow of stock: the first thing in the yard that is not just potatoes. */
 export const BARROW: Art = {
   rows: [
     "....pp.pp....",
@@ -573,11 +503,7 @@ export const SHED: Art = {
   palette: { k: K, ...METAL, ...WOOD },
 };
 
-/**
- * A grain elevator, and the tallest thing you will ever own. Deliberately
- * taller than the yard is deep — the last few rungs of the build-out have to
- * clear the fence line or there's nothing left to be impressed by.
- */
+/** A grain elevator, the tallest thing you own: taller than the yard is deep, so the last rungs clear the fence line. */
 export const ELEVATOR: Art = {
   rows: stack(
     [
@@ -598,9 +524,7 @@ export const ELEVATOR: Art = {
   palette: { k: K, ...METAL },
 };
 
-// ---------------------------------------------------------------------------
-// Producers — one silhouette per rung of the ladder
-// ---------------------------------------------------------------------------
+// --- Producers — one silhouette per rung of the ladder ---
 
 export const FARMHAND: Art = {
   rows: [
@@ -739,13 +663,7 @@ export const SEEDER: Art = {
   palette: { k: K, c: "#dfe7ee", m: "#a8b0b8", a: "#8ec9e6" },
 };
 
-/**
- * A cooling tower, and it should look like one from across the room: an open
- * mouth with the dark of the shaft showing in it, a waist, a lit core behind
- * the throat, a hazard band round the bottom and vents at the foot. The old one
- * was the same hourglass with a grey square in the middle, which at fourteen
- * pixels across read as a chess piece.
- */
+/** A cooling tower: open mouth with the shaft dark in it, a waist, lit core, hazard band, vents at the foot. */
 export const REACTOR: Art = {
   rows: [
     "..kkkkkkkkkk..",
@@ -767,18 +685,7 @@ export const REACTOR: Art = {
   palette: { k: K, m: "#cfd6dc", d: "#6b737c", e: "#8d959d", g: "#7fe8cc", h: "#e8b93f" },
 };
 
-/**
- * The Orbital Greenhouse: a pressurised growing module, not a satellite.
- *
- * The old one was a green square between two blue squares, and next to the
- * Cloud Seeder — a proper lens-shaped airship trailing weather — it read as
- * placeholder art on the rung *above* it. The tier is a greenhouse, so it's
- * drawn as one: glazing bars over a lit canopy up top, the crop showing through
- * it, a hull with lit ports under that, and solar wings out to either side. The
- * one thing it must not look like is a machine — everything else in the sky at
- * this point in the ladder is hardware, and this is a garden that happens to be
- * in orbit.
- */
+/** The Orbital Greenhouse: a growing module, not a satellite. Must not read as a machine — it is a garden in orbit. */
 export const GREENHOUSE: Art = {
   rows: [
     ".........kk.........",
@@ -816,28 +723,10 @@ export const SINGULARITY: Art = {
   palette: { p: "#8a6ad0", v: "#5b3fa0", n: "#1c1428" },
 };
 
-// ---------------------------------------------------------------------------
-// Above the fold — the four tiers that farm the potato you're inside
-// ---------------------------------------------------------------------------
-//
-// These are drawn against the ceiling's warm ochre rather than against sky and
-// grass, so they're cool and hard-edged where everything else on the farm is
-// warm: the flesh is the quiet half of the screen and a machine on it should be
-// the one thing up there that isn't soft.
+// --- Above the fold — the four tiers that farm the potato you're inside ---
+// Drawn against the ceiling's warm ochre, so these are cool and hard-edged where the farm is warm.
 
-/**
- * A press standing over a pad of flesh it has bruised.
- *
- * The shallowest rung, and the one that has to teach the whole inside farm's
- * verb in one sprite: you damage it on purpose, it swells to seal the damage,
- * you crop the swelling. So the machine is the plainest thing on the ladder — a
- * ram and a plate, no more — and the interesting half of the sprite is the two
- * rows under it, where the dark of the bruise is fringed by the pale of what
- * grew back. Read those two rows and you've read the tier.
- *
- * It used to be a plough hung upside down off the ceiling, which was the right
- * sprite for a scene that no longer exists.
- */
+/** A press over a pad of bruised flesh. The two rows under it (dark bruise, pale regrowth) are the tier. */
 export const BRUISE_BED: Art = {
   rows: [
     "..kkkkkkk..",
@@ -875,12 +764,7 @@ export const TAPROOT_WELL: Art = {
   palette: { k: K, m: "#8d959d", g: "#ffb454", h: "#5b3f2c" },
 };
 
-/**
- * One of the other yous. Deliberately the farmhand's exact silhouette in a
- * different finish — the joke doesn't survive being redrawn as something else,
- * and at eleven pixels tall a changed shape would just read as a new tier of
- * worker rather than as you.
- */
+/** One of the other yous: the farmhand's exact silhouette in a different finish, or the joke does not read. */
 export const CHORUS_FIGURE: Art = {
   rows: [
     "...a...",
@@ -907,11 +791,7 @@ export const CHORUS_FIGURE: Art = {
   },
 };
 
-/**
- * An eye, opened. The one thing on the inside farm that is unambiguously alive
- * and unambiguously the potato's rather than yours — every other rung down here
- * is kit you brought with you.
- */
+/** An eye, opened. The one rung down here that is the potato's rather than yours. */
 export const EYE: Art = {
   rows: [
     "...ss.s...",
@@ -930,19 +810,7 @@ export const EYE: Art = {
   palette: { k: K, h: "#a8703c", w: "#e8d3a0", i: "#6f4a8f", n: "#241830", s: "#7fc45a" },
 };
 
-/**
- * Two benches cut into a face of starch, with the undercut under them.
- *
- * It was a dome for a while and at eleven pixels a pale dome is a bread roll —
- * six of them along a ledge looked like a bakery counter, which is the "what is
- * that and what does it do" failure the whole inside ladder was rewritten to
- * fix. The fix is the *flat top and the step*: nothing in nature is terraced, so
- * a terrace is read as something somebody cut, and the dark undercut along the
- * bottom is what stops it floating.
- *
- * Wide and low, so it's the one thing down here that reads as ground rather
- * than as a structure standing on it.
- */
+/** Two benches cut into starch with an undercut. Flat top + step reads as cut, not grown; a dome read as a bread roll. */
 export const STARCH_FACE: Art = {
   rows: [
     "...kkkkkkkkk.",
@@ -958,11 +826,7 @@ export const STARCH_FACE: Art = {
   palette: { k: K, w: "#e6dcc0", s: "#f7f1dc", d: "#2c1d14" },
 };
 
-/**
- * A tapped vein. The clamp is the machine; everything else in the sprite is the
- * potato's own plumbing, which is why it's the only rung drawn in a colour that
- * isn't in any other sprite on the farm.
- */
+/** A tapped vein. The clamp is the machine; the rest is the potato's plumbing, hence the unique colour. */
 export const RING_MAIN: Art = {
   rows: [
     "..kvvk....",
@@ -982,16 +846,7 @@ export const RING_MAIN: Art = {
   palette: { k: K, v: "#8f5e8a", m: "#8d959d", s: "#5f6870", g: "#e0a8dc" },
 };
 
-/**
- * A cavity opened at the core, propped so it can't close again.
- *
- * The previous rung in this slot was a door — a neat outlined rectangle, and
- * five of them stood in a row across the wall like paintings hung in a gallery.
- * Nothing rectangular survives down here for that reason: the opening is ragged
- * on every edge, the only straight lines in the sprite are the two stull legs
- * holding it, and what's inside it is drawn as darkness rather than as more
- * ochre. A hollow heart is a hole. It should look like one.
- */
+/** A cavity propped open at the core. Ragged on every edge and dark inside: anything rectangular reads as a hung painting. */
 export const HOLLOW_HEART: Art = {
   rows: [
     "...kkkkkk...",
@@ -1029,19 +884,7 @@ export const SECOND_POTATO: Art = {
   palette: { k: K, p: "#c98b4b", l: "#e2b077", d: "#7a4a24" },
 };
 
-/**
- * One of the shaft crew.
- *
- * The outside farm has farmhands walking crop down to the yard, and losing them
- * is most of why the inside read as an abandoned place with machinery still
- * running in it. This is the farmhand's silhouette again — same build, same
- * eleven pixels — but kitted for underground: a hard hat instead of a straw one,
- * and a lamp on the front of it, which is the only reason they're visible at all
- * against a core stratum that's nearly black.
- *
- * The lamp is the whole sprite, really. At this size a figure in the dark is a
- * smudge; a figure with one bright pixel at head height is a person.
- */
+/** Shaft crew: the farmhand's silhouette with a hard hat and lamp. The lamp pixel is what makes it a person in the dark. */
 export const SHAFT_CREW: Art = {
   rows: [
     "..ttt..",
@@ -1077,10 +920,7 @@ export const SHAFT_CREW_UP: Art = {
   palette: { k: K, t: "#d8892c", l: "#fff4c0", f: "#e8bb8e", e: K, b: "#6a5c7a", v: "#4d4148" },
 };
 
-/**
- * The hoist cage, empty. Crew are blitted into it rather than being part of the
- * sprite, because how many are riding is the interesting part.
- */
+/** The hoist cage, empty. Crew are blitted into it so the count shows. */
 export const HOIST_CAGE: Art = {
   rows: [
     "....m....",
@@ -1098,26 +938,9 @@ export const HOIST_CAGE: Art = {
   palette: { k: "#b8c0c8", m: "#5b4f58", d: "#3a2a30" },
 };
 
-// ---------------------------------------------------------------------------
-// Marks — what a producer looks like once you've bought its upgrades
-// ---------------------------------------------------------------------------
-//
-// Every tier has three `producer_mult` upgrades (`<id>_x2a`, `<id>_x2b`,
-// `<id>_x2c`), so each one gets four marks: as bought, then one per upgrade.
-// Spending on a tier should change something out in the field, not just a number
-// in a panel.
-//
-// Where the silhouette can carry the change it does — an exhaust stack, an
-// unloading auger, a second sprinkler boom, a taller tower — because that reads
-// at a glance across the whole field. For the first two upgrades on the small or
-// distant tiers (the sky, the buildings on the back edge) the mark is a repaint,
-// which is all that survives at that size anyway.
-//
-// **The fourth mark is the exception, and it's the whole point of it.** It's
-// gated on owning a hundred, which is a day of deliberately aiming at one rung,
-// so every one of them is redrawn rather than repainted — even the ones two
-// fields away. A player who put a day into farmhands should be able to tell from
-// across the room that their farmhands are not your farmhands.
+// --- Marks — what a producer looks like once you've bought its upgrades ---
+// Three `producer_mult` upgrades per tier (`<id>_x2a/b/c`) give four marks. Small/distant tiers repaint
+// for the first two; the fourth (gated on owning a hundred) is always a redraw, even two fields away.
 
 /** The same grid in a different finish. */
 function repaint(art: Art, palette: Record<string, string>): Art {
@@ -1357,9 +1180,7 @@ const SEEDER_3: Art = {
   palette: { ...SEEDER.palette, c: "#8f9aa5", z: "#ffe066" },
 };
 
-// ---------------------------------------------------------------------------
-// The fourth marks — what a hundred of something turns into
-// ---------------------------------------------------------------------------
+// --- The fourth marks — what a hundred of something turns into ---
 
 /** Heirloom Strain: it flowers, it sprawls, and the crop breaks the surface. */
 const PLANT_4: Art = {
@@ -1396,11 +1217,7 @@ const FARMHAND_4: Art = {
   palette: { k: K, t: "#e0c04a", f: "#e8bb8e", e: K, b: "#2f5f7a", v: "#5e3e29", a: "#e0c04a" },
 };
 
-/**
- * Centre Pivot: the thing that actually waters a field this size. A boom on a
- * tower with drop tubes down its whole length, which is the one irrigation
- * silhouette that reads as *industrial* rather than as a garden sprinkler.
- */
+/** Centre Pivot: a boom on a tower with drop tubes — the one irrigation silhouette that reads industrial. */
 const SPRINKLER_4: Art = {
   rows: [
     ".........m.........",
@@ -1437,9 +1254,7 @@ const TRACTOR_4: Art = {
     "kwwwwwwwwwwwwwwk..",
     ".kkkkkkkkkkkkkk...",
   ],
-  // Dark green and not the near-black the first go used: at eighteen pixels a
-  // machine with no value range left in its body reads as a burnt-out hulk
-  // parked in the field, which is exactly what a broken one is drawn as.
+  // Dark green, not near-black: a body with no value range reads as the broken hulk.
   palette: { ...TRACTOR.palette, b: "#2f6b46", g: "#bfe3ef", y: "#e05a3c", w: "#3a3038" },
 };
 
@@ -1508,12 +1323,7 @@ const REFINERY_4: Art = {
   palette: { ...REFINERY.palette, m: "#c6cdd4", f: "#f0913c", b: "#ffe08a", g: "#8d959d" },
 };
 
-/**
- * Cloud Deck: taller than anything else on the property, with an observation
- * ring halfway up that overhangs the shaft — the one silhouette on the back edge
- * that isn't a box, and the reason you can pick a hundred-tower lot out of a
- * skyline at a glance.
- */
+/** Cloud Deck: taller than anything else, with an observation ring overhanging the shaft — the one back-edge silhouette that is not a box. */
 const TOWER_4: Art = {
   rows: [
     "......kk......",
@@ -1584,11 +1394,7 @@ const REACTOR_4: Art = {
   palette: { k: K, m: "#eef4f8", d: "#6b737c", g: "#fff0b8", h: "#e05a3c" },
 };
 
-/**
- * Lagrange Station: it stopped being one greenhouse and became the place the
- * greenhouses dock at — a second canopy, a spine between them, and wings big
- * enough to run both.
- */
+/** Lagrange Station: a second canopy, a spine between them, and wings big enough to run both. */
 const GREENHOUSE_4: Art = {
   rows: [
     ".........kk.........",
@@ -1805,13 +1611,7 @@ const SECOND_POTATO_4: Art = {
   },
 };
 
-/**
- * Four marks per tier, indexed by how many of its three upgrades you own.
- *
- * The first two marks of the small and distant tiers are repaints: at the size
- * they're drawn a changed silhouette would just read as a different building.
- * The fourth is always a redraw — see the note above.
- */
+/** Four marks per tier, indexed by how many of its three upgrades you own. See the marks note above. */
 export const PRODUCER_MARKS = {
   patch: [PLANT, PLANT_2, PLANT_3, PLANT_4],
   hand: [
@@ -1868,10 +1668,7 @@ export const PRODUCER_MARKS = {
     repaint(CHORUS_FIGURE, { b: "#c0a86a", t: "#d8c894", a: "#f4ecd0" }),
     CHORUS_FIGURE_4,
   ],
-  // The one tier drawn as a person, which is why its marks recolour the kit
-  // rather than changing the shape: a hand who gets a better lamp and a better
-  // jacket is still visibly the same hand, and at eleven pixels a redrawn
-  // silhouette just reads as a different rung of worker.
+  // The one tier drawn as a person: marks recolour the kit, since a redrawn silhouette reads as a new rung.
   deephand: [
     SHAFT_CREW,
     repaint(SHAFT_CREW, { t: "#4f8f7a", b: "#4a5c7a", l: "#b6f2fb" }),

@@ -1,23 +1,11 @@
-/**
- * The resource is wrapped in a branded type so that swapping f64 for a bignum
- * later touches this file and nothing else. Arithmetic must go through these
- * helpers — that's the whole point of the brand.
- *
- * The homestead's top rung costs 8e18, which is past 2^53, so prices up there
- * are no longer exact integers. Nothing depends on that: costs are compared and
- * subtracted, never counted. A fortnight-long run reaches about 5e24 produced,
- * where `format` still has eight suffixes of headroom and a single click is some
- * nine orders of magnitude larger than the representable step, so clicking still
- * registers. Worth knowing rather than worth fixing — but the brand is here if
- * that ever changes.
- */
+// Branded resource type so swapping f64 for a bignum touches only this file. All arithmetic goes through Y.
+// Top solo rung costs 8e18 (> 2^53); fine, since costs are compared and subtracted, never counted.
 
 export type Yield = number & { readonly __brand: "Yield" };
 
 /** Milliseconds since epoch, always server time. Never `Date.now()` in sim code. */
 export type Millis = number & { readonly __brand: "Millis" };
 
-/** Yield per second. */
 export type Rate = number & { readonly __brand: "Rate" };
 
 export const Y = {
@@ -29,7 +17,6 @@ export const Y = {
   gte: (a: Yield, b: Yield): boolean => a >= b,
   max: (a: Yield, b: Yield): Yield => (a > b ? a : b),
   min: (a: Yield, b: Yield): Yield => (a < b ? a : b),
-  /** Yield produced by running at `rate` for `ms` milliseconds. */
   overTime: (rate: Rate, ms: number): Yield => ((rate * ms) / 1000) as Yield,
 } as const;
 
@@ -45,7 +32,6 @@ export function format(n: number): string {
   const sign = n < 0 ? "-" : "";
   const abs = Math.abs(n);
   if (abs < 1000) {
-    // Small numbers read better with decimals only when they're fractional.
     return sign + (abs < 10 && abs % 1 !== 0 ? abs.toFixed(1) : Math.floor(abs).toString());
   }
   const tier = Math.min(Math.floor(Math.log10(abs) / 3), SUFFIXES.length - 1);

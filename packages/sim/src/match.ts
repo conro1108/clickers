@@ -34,44 +34,18 @@ import type {
 /** Server-side clamp on batched clicks (STACK.md: clicks batch, ~500ms flush). */
 export const MAX_CLICKS_PER_FLUSH = 25;
 
-/**
- * What a wrist is allowed to be worth.
- *
- * Whistling is the opening move and the only income you have for the first few
- * seconds, so how fast you tap shifts *when* you reach each tier — and in an
- * exponential economy, arriving somewhere earlier multiplies everything after
- * it. Measured, a player tapping 20/s finished a three-minute match 434 times
- * ahead of one tapping 1/s, all else equal. That isn't a skill curve, it's an
- * autoclicker tax, and it quietly penalises playing on a phone.
- *
- * So clicks come out of a bucket: `CLICK_RATE` a second, `CLICK_BURST` of
- * headroom to spend at once. Past that the stock simply aren't ready to come
- * and a click is worth `CLICK_OVERFLOW` of the usual — reduced rather than
- * refused, so mashing never feels broken and the "+N" over the button just gets
- * smaller. The rate is set where a person can comfortably sit without trying;
- * what it takes off the table is the difference between tapping fast and
- * holding down a macro.
- */
+// Click bucket: CLICK_RATE/s with CLICK_BURST headroom; clicks past that are worth CLICK_OVERFLOW.
+// Caps the autoclicker advantage (20/s vs 1/s measured 434x) without making mashing feel refused.
 export const CLICK_RATE = 5;
 export const CLICK_BURST = 15;
 export const CLICK_OVERFLOW = 0.15;
 
-/**
- * Clicks available at `t`, given the bucket's last state. Pure, so the UI can
- * ask the same question the sim answers without applying anything.
- */
 export function clicksReady(p: PlayerState, t: Millis): number {
   const refilled = p.clicks + ((t - p.clickAt) / 1000) * CLICK_RATE;
   return Math.max(0, Math.min(CLICK_BURST, refilled));
 }
 
-/**
- * What `count` clicks at `t` are actually worth. The HUD has to ask this
- * rather than multiplying by `clickYield`, or the pile it shows you runs ahead
- * of the pile you can spend and the shop starts refusing things you're looking
- * at — the same bug batching clicks caused before `dispatch` learned to bank
- * them first.
- */
+/** The HUD must use this, not `clickYield`, or the shown pile runs ahead of the spendable one. */
 export function clickGain(p: PlayerState, t: Millis, count: number): Yield {
   const paid = Math.min(count, clicksReady(p, t));
   return Y.mul(clickYield(p), paid + (count - paid) * CLICK_OVERFLOW);
@@ -123,14 +97,11 @@ export function isOver(state: MatchState, t: Millis): boolean {
   return t >= endsAt(state);
 }
 
-/** Nothing accrues or resolves after the clock hits zero. */
 export function clampToMatch(state: MatchState, t: Millis): Millis {
   return ms(Math.min(Math.max(t, state.startedAt), endsAt(state)));
 }
 
-// ---------------------------------------------------------------------------
-// Scoring
-// ---------------------------------------------------------------------------
+// --- Scoring ---
 
 export function scoreOf(p: PlayerState, t: Millis, scoring: ScoringRule): Yield {
   return scoring === "on_hand" ? stockAt(p, t) : producedAt(p, t);
@@ -154,11 +125,7 @@ export function standings(state: MatchState, now: Millis): Standing[] {
     .sort((a, b) => b.score - a.score);
 }
 
-/**
- * Everything one player is allowed to know about another (VISION.md: count and
- * production rate, nothing else). Funnelled through here so the UI can't leak
- * by accident.
- */
+/** Everything one player may know about another (docs/design.md). */
 export interface OpponentView {
   id: PlayerId;
   name: string;
@@ -177,9 +144,7 @@ export function opponentView(state: MatchState, id: PlayerId, now: Millis): Oppo
   };
 }
 
-// ---------------------------------------------------------------------------
-// Commands
-// ---------------------------------------------------------------------------
+// --- Commands ---
 
 function fail(reason: string): CommandResult {
   return { ok: false, reason };
@@ -196,11 +161,7 @@ function entry(
   return { index: state.eventIndex, at, actor, target, text, tone };
 }
 
-/**
- * The single authority for mutations. Pure: same (state, command, time) always
- * yields the same result, which is what lets the client predict optimistically
- * and the server replay for truth.
- */
+/** The single authority for mutations. Pure, so clients predict and the log replays identically. */
 export function applyCommand(state: MatchState, cmd: Command, now: Millis): CommandResult {
   if (isOver(state, now)) return fail("Match is over.");
   const t = clampToMatch(state, now);
@@ -224,7 +185,6 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
     case "click": {
       const count = Math.max(0, Math.min(MAX_CLICKS_PER_FLUSH, Math.floor(cmd.count)));
       if (count === 0) return fail("Nothing to flush.");
-      // Full price for what the bucket covers, `CLICK_OVERFLOW` for the rest.
       const ready = clicksReady(actor, t);
       const paid = Math.min(count, ready);
       const gained = clickGain(actor, t, count);
@@ -289,8 +249,7 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
       if (outcome.blocked) {
         text = `sent ${attack.name} at ${defender.name} — fully blocked.`;
       } else if (outcome.brokeTotal > 0) {
-        // Phrased so the target is an object, not a possessive — the local
-        // player is literally named "You", and "You's `patch`" is grim.
+        // target as object, not possessive: the local player is named "You"
         text = `hit ${defender.name} with ${attack.name} — ${describeBreak(outcome.broke)}.`;
       } else {
         text = `hit ${defender.name} with ${attack.name}.`;
@@ -348,7 +307,6 @@ export function applyCommand(state: MatchState, cmd: Command, now: Millis): Comm
   };
 }
 
-/** Convenience for tests and bots: apply a command, throw if it was rejected. */
 export function mustApply(state: MatchState, cmd: Command, now: Millis): MatchState {
   const res = applyCommand(state, cmd, now);
   if (!res.ok) throw new Error(`command rejected: ${res.reason}`);

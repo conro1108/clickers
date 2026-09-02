@@ -6,14 +6,7 @@ import { Row } from "./Row.js";
 
 type BuyQty = 1 | 10 | "max";
 
-/**
- * The buy size outlives the sheet.
- *
- * The shop is opened dozens of times a session and it was resetting to x1 on
- * every one of them, so a player buying in tens spent the whole run re-picking
- * ten. It's a preference, not a state of the mill — so it lives beside the save
- * rather than in it, and a mill handed down or abandoned keeps it.
- */
+// Buy size is a preference, not mill state: kept beside the save so it survives a hand-down.
 const QTY_KEY = "puppy-mill:buy-qty";
 
 function loadQty(): BuyQty {
@@ -31,18 +24,10 @@ function saveQty(qty: BuyQty): void {
   try {
     localStorage.setItem(QTY_KEY, String(qty));
   } catch {
-    // See `loadQty`.
   }
 }
 
-/**
- * How long the mill has to run before it can afford the thing, in words.
- *
- * Coarse on purpose, and never a ticking clock: this is a wait measured in
- * hours at the point it first appears, and a seconds-precise countdown on a
- * two-hour number is just a spinner. It rounds to the unit above so it's always
- * a little pessimistic — the wait shortening under you is the right surprise.
- */
+// Wait-until-affordable in words. Coarse and rounded up on purpose: a precise countdown on a two-hour number is a spinner.
 function waitText(msLeft: number): string {
   if (!Number.isFinite(msLeft)) return "nothing is growing";
   const mins = Math.ceil(msLeft / 60000);
@@ -53,20 +38,8 @@ function waitText(msLeft: number): string {
   return `about ${hours}h${rest ? ` ${rest}m` : ""} away`;
 }
 
-/**
- * The shop with one thing in it, which is not a shop.
- *
- * The rest of this file is a catalogue: a row, an icon, a price, next. That
- * form is the problem here — the last purchase of the run rendered as row
- * thirteen reads as another sidegrade, and the player who's been buying rows
- * for three days has no reason to look up. So the whole surface changes at
- * once. The cream goes out, the thing itself is out there in the dark at the
- * top of the sheet, the price stops being a tag and becomes a bar you are
- * visibly filling, and the button doesn't say Buy.
- *
- * Deliberately says nothing about what it does — see the blurb's note in
- * content.ts. What it costs and how far off it is, is the whole readout.
- */
+// The single-item end-of-run sheet: no cream, price as a fill bar, button does not say Buy.
+// Says nothing about what it does on purpose — see the blurb note in content.ts.
 function Convergence({
   mill,
   budget,
@@ -126,29 +99,16 @@ export function GrowPanel({
     setQtyRaw(next);
   };
 
-  // The last stretch. Once the tenth Chihuahua Singularity is standing, the shop
-  // stops being a shop: every other rung and every other upgrade comes off the
-  // board and the only thing left is the one that ends the climb.
-  //
-  // Nothing else in the game does this, and nothing else should. It's the one
-  // moment where "what do I spend this on" has a wrong answer — the tier was a
-  // countdown and the shop never said so, so a player at the threshold with the
-  // usual twelve rows in front of them buys another Singularity and pushes the
-  // Ur-Chihuahua another hour out. Emptying the board is the game finally saying
-  // out loud that there's only one thing left to save for.
+  // Once the tenth Singularity stands, everything else leaves the board: buying another would push the Ur-Chihuahua out.
   if (solo.convergencePending(mill)) {
     return <Convergence mill={mill} budget={budget} dispatch={dispatch} />;
   }
 
-  // One shop per world. The outside mill keeps its ladder and keeps earning
-  // while you're inside, but you can't buy a Down Well for a bare yard or a
-  // Grooming Rig for a room made of blanket — so the shop is the shop of the
-  // place you're standing in, and warping is how you change it.
+  // One shop per world; warping is how you change it.
   const ladder = solo.producersIn(mill.world);
   const upgrades = solo.SOLO_UPGRADES.filter((u) => {
     if (mill.upgrades.includes(u.id) || !solo.isUnlocked(mill, u)) return false;
-    // Tier upgrades belong to their rung's world. Everything else — the whistling
-    // tools and the globals — lifts both mills at once and so is sold in both.
+    // Tier upgrades belong to their rung's world; whistle tools and globals lift both and are sold in both.
     const effect = u.effect;
     if (effect.kind !== "producer_mult") return true;
     return solo.SOLO_PRODUCER_BY_ID[effect.producer].world === mill.world;
@@ -158,18 +118,11 @@ export function GrowPanel({
     const owned = mill.producers[prod.id] ?? 0;
     const n = qty === "max" ? Math.max(1, solo.affordableCount(mill, prod.id, budget)) : qty;
     const cost = solo.producerCost(mill, prod.id, n);
-    // What it would actually add to the mill as it stands, tired bedding and
-    // all — the Down Well's rate moves with the bedding, so a clean-rate
-    // quote would be advertising a machine you can't currently buy.
+    // Quote the rate as the mill stands, tired bedding and all, not the clean rate.
     const each = solo.producerRateEach(mill, prod.id);
     const broken = solo.brokenCount(mill, prod.id);
 
-    // The ladder reveals itself a rung at a time, but the first rung is
-    // always there or an empty shop greets you at zero puppies. Both
-    // ladders read the same way, which is why the bottom of the inside
-    // shop is priced to be affordable more or less on arrival: walking
-    // into the new world and finding one thing you can buy is the same
-    // welcome the first Puppy Pen gives you.
+    // First rung is always shown, or an empty shop greets you at zero.
     const prev = ladder[i - 1];
     const visible =
       solo.isProducerAvailable(mill, prod.id) &&
@@ -181,9 +134,7 @@ export function GrowPanel({
     return [{ prod, owned, n, cost, each, broken }];
   });
 
-  // One dot, on whichever rung buys the most rate per puppy right now. Only
-  // among rows you can actually press — a badge on a price you can't meet is
-  // trivia, not a nudge — and only when there's more than one to choose from.
+  // Best-rate dot: only among affordable rows, only when there is more than one.
   const buyable = shelf.filter((r) => Y.gte(budget, r.cost) && r.each > 0);
   const best =
     buyable.length > 1
@@ -245,9 +196,7 @@ export function LandPanel({
   dispatch: (cmd: solo.SiteCommand) => void;
 }) {
   const conditionBill = solo.conditionRestoreCost(mill);
-  // Damage on the mill you're standing on. What broke on the other one is
-  // waiting for you when you go back, which is the cost of keeping two places:
-  // nothing down here can be fixed from up there.
+  // Damage on this world only; the other mill's waits for you there.
   const damaged = solo
     .producersIn(mill.world)
     .filter((p) => solo.brokenCount(mill, p.id) > 0);
@@ -255,16 +204,11 @@ export function LandPanel({
     .producersIn(mill.world === "inside" ? "outside" : "inside")
     .reduce((n, p) => n + solo.brokenCount(mill, p.id), 0);
 
-  // Everything above, as one payment. Only offered when there's more than one
-  // thing to pay for — a "fix all" over a single row is the same button twice,
-  // and the row it duplicates is the one that says what it's actually mending.
+  // Fix-all only when there is more than one thing to pay for.
   const bill = solo.upkeepBill(mill);
   const jobs = damaged.length + (conditionBill > 0 ? 1 : 0);
   const brokenHere = damaged.reduce((n, p) => n + solo.brokenCount(mill, p.id), 0);
-  // Only what this button actually buys back: the kit on this mill, quoted the
-  // same way the individual repair rows quote it, plus the bedding if it's tired.
-  // `brokenRate` would be wrong here — it counts the other mill's damage too,
-  // and nothing you press from this world puts that right.
+  // Not `brokenRate` — it counts the other mill's damage too, which nothing here can fix.
   const backHere =
     damaged.reduce(
       (r, p) => r + solo.brokenCount(mill, p.id) * solo.producerRateEach(mill, p.id),
@@ -314,10 +258,7 @@ export function LandPanel({
             {damaged.map((prod) => {
               const broken = solo.brokenCount(mill, prod.id);
               const cost = solo.repairCost(mill, prod.id);
-              // What it gives back as things stand, tired bedding included — the
-              // same convention the Grow panel quotes. The *price* stays on the
-              // clean rate, which is deliberate: repairs are billed against the
-              // production restored at full health.
+              // Rate restored as things stand (tired bedding included); the price stays on the clean rate.
               const back = broken * solo.producerRateEach(mill, prod.id);
               return (
                 <Row
@@ -382,8 +323,7 @@ export function LegacyPanel({
   pendingWhistles: number;
   dispatch: (cmd: solo.SiteCommand) => void;
 }) {
-  // Which world the next generation gets. Defaults to the one you're standing
-  // in: coming back out is a thing you go and ask for.
+  // Defaults to the world you are standing in.
   const [outside, setOutside] = useState(false);
   const pending = solo.pendingHeirlooms(mill);
   const thisRun = solo.projectedProduced(mill, now);

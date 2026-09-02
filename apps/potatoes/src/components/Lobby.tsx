@@ -28,14 +28,7 @@ export const LENGTHS = [
   { label: "10 min", ms: seconds(600) },
 ];
 
-/**
- * Who you are, at the top of the lobby.
- *
- * Anonymous is the default and stays playable — the handle is already real (the
- * signup trigger hands out `player-1a2b3c4d`), it just isn't yours yet. What an
- * email buys is being *findable tomorrow*, which is the only thing a challenge
- * actually needs, so that's what the copy promises rather than "sign up".
- */
+// Anonymous stays playable; an email only buys being findable tomorrow, which is all a challenge needs.
 function Identity({ me, onMe, onError }: { me: Me; onMe: (me: Me) => void; onError: (e: string | null) => void }) {
   const [open, setOpen] = useState(false);
   const [handle, setHandleText] = useState(me.handle);
@@ -213,13 +206,7 @@ function Challenges({
 
 type Door = "bot" | "code" | "friend";
 
-/**
- * The versus lobby: the terms of the race, then the three ways into one.
- *
- * A bot needs nothing. A code needs nothing but somebody in earshot. A name
- * needs both of you to be real accounts, which is the one thing in this screen
- * that isn't free — so it's the door that explains itself.
- */
+// The versus lobby: the terms of the race, then the three ways into one.
 export function VersusLobby({
   lobby,
   bots,
@@ -238,10 +225,7 @@ export function VersusLobby({
 }) {
   const { me, challenges, names, error, setMe, setError, refresh } = lobby;
   const [door, setDoor] = useState<Door>("bot");
-  // The roster used to start a match on the tap that picked the opponent, which
-  // meant the blurb under it described whoever was first in the list and nobody
-  // ever read one. With eight rungs the blurb is the only thing telling you what
-  // you're walking into, so picking and starting are two presses.
+  // Picking and starting are two presses so the blurb under the pick gets read.
   const [bot, setBot] = useState(botProfile);
   const [durationMs, setDurationMs] = useState(seconds(300));
   const [scoring, setScoring] = useState<ScoringRule>("total_produced");

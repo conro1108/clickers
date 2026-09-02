@@ -1,21 +1,5 @@
-/**
- * The homestead, drawn.
- *
- * A low-res buffer (SCENE_W wide, height matched to the element's aspect so
- * nothing letterboxes) scaled up crisply by CSS `image-rendering: pixelated`,
- * with its own rAF loop. Same approach as cozy_sprites' habitat.
- *
- * The screen is three bands, and the split is the whole point of the rework:
- * the middle band is the **mill** — every producer you own has a silhouette out
- * there, and broken kit is visibly broken — and the front band is the **hoard**,
- * the puppies you're actually holding, piled in the yard. Spend and the yard
- * shrinks; leave the tab open and it grows. Two numbers that used to be text.
- *
- * RENDERING RULE (inherited, and it matters): every blit is integer-aligned and
- * unscaled. No ctx.scale/rotate on any sprite. At this buffer size a fractional
- * transform resamples the art off the pixel grid and 1px outlines double or
- * vanish. Animation is translation only.
- */
+/** The homestead, drawn: a low-res buffer scaled up by CSS `image-rendering: pixelated`, own rAF loop.
+ * RENDERING RULE: every blit is integer-aligned and unscaled — no ctx.scale/rotate; animation is translation only. */
 
 import type { solo } from "@clickers/sim";
 
@@ -53,90 +37,29 @@ const YARD_SHARE = 0.23; // the puppy field, front band — deep enough for a fe
 const FIELD_SHARE = 0.46; // the working field
 const MIN_SKY = 20;
 
-/** The shared outline ink, for the bits of the scene drawn as rects not art. */
 const INK = "#402e3a";
 
-/**
- * The flesh, at its two extremes.
- *
- * All that's left of it out here is the stain that creeps across the sky as the
- * Convergence gets close — the ceiling itself is somewhere else now, and this
- * has to be the exact colour of it or the omen is promising the wrong thing.
- * `insideScene.ts` keeps its own copy of both, because that's where the flesh
- * actually lives.
- */
+/** Must match the flesh colours in `insideScene.ts`, or the sky omen promises the wrong thing. */
 const FLESH_LIT = "#ecd9a6";
 const FLESH_DEEP = "#7d5330";
 
-/**
- * The ground, and the biggest single reason this stopped looking like a farm.
- *
- * It used to be grass over ploughed dirt, which is the right pair of colours
- * for somewhere that grows things and the wrong pair for somewhere that keeps
- * animals. A working kennel yard is hard standing: compacted gravel where the
- * runs are, because grass under sixty dogs lasts about a week, and a poured
- * concrete apron at the front where everything gets hosed down.
- *
- * Warm stone rather than the cold grey this started as, which lasted exactly
- * one screenshot: a grey yard under a grey fence beside grey plant is a car
- * park, and the dogs were the only thing in the picture with any warmth in it.
- * Warming the ground and lightening the apron keeps the contrast that made the
- * pack legible — they're still the darkest warm thing out here — and stops the
- * yard being somewhere you'd rather not be.
- *
- * The hills behind stay green on purpose. Neutral all the way to the horizon
- * reads as an institution; a compound sitting in green country reads as
- * something somebody put there, which is the joke.
- *
- * The front yard is the exception, and it goes the other way: it's grass, a
- * shade brighter and warmer than the hills so it sits in front of them, because
- * that band is nothing but puppies now and puppies belong on a field.
- */
 const GRAVEL = "#c6bda6";
 const GRAVEL_DARK = "#b0a68f";
 const CONCRETE = "#d8cfb8";
 const CONCRETE_DARK = "#b4ab95";
 const GRASS = "#8fcf6c";
 const GRASS_DARK = "#74b455";
-/** The same field with the bedding run down: parched rather than muddy. */
 const GRASS_DRY = "#c0bd6a";
 const GRASS_DRY_DARK = "#a1a055";
 
-/** What the scene needs to know. Everything else stays in the sim. */
 export interface MillView {
-  /** Working (unbroken) count per producer. */
   working: Partial<Record<solo.SoloProducerId, number>>;
-  /** Broken count per producer — drawn, greyed out, right where it stands. */
   broken: Partial<Record<solo.SoloProducerId, number>>;
-  /**
-   * How many of a producer's three upgrades you own, 0-3. Picks which mark of
-   * that tier gets drawn — spending on a tier changes something out in the
-   * field, not just a number in a panel. Mark 3 is the hundred-owned one, and
-   * the only one the scene draws extra effects for.
-   */
   marks: Partial<Record<solo.SoloProducerId, number>>;
-  /** 0..1. Drags the field's colour and wilts a share of the pup. */
   condition: number;
-  /** Yield on hand. Drives the whole yard. */
   hoard: number;
-  /** Stable across reloads, so the mill's layout is *your* mill's layout. */
   seed: string;
-  /**
-   * How close the horizon is to closing, 0..1. The flesh starts bleeding
-   * through the sky from the first Chihuahua Singularity, so the fold arrives
-   * rather than happening to you.
-   *
-   * Back to zero once it *has* closed. The Convergence used to replace this
-   * sky with a ceiling; it opens a second mill now, and this one goes back to
-   * being the mill with the weather on it — so the stain is a warning about
-   * something coming, and once it has come there's nothing left to warn about.
-   */
   looming: number;
-  /**
-   * How many mills you've handed down. The Chorus is the only thing on the
-   * canvas that knows about the meta-layer, and it's the reason the meta-layer
-   * is visible in the picture at all.
-   */
   generation: number;
 }
 
@@ -151,18 +74,9 @@ export const EMPTY_VIEW: MillView = {
   generation: 1,
 };
 
-// ---------------------------------------------------------------------------
-// Time of day. The mill runs on the wall clock, so the sky should too.
-// ---------------------------------------------------------------------------
-
 type Phase = "day" | "dusk" | "night";
 
-/**
- * Evening runs late on purpose. Sunset at six and full dark at eight is honest
- * for a November afternoon and wrong for the hours anyone actually plays in —
- * open the mill after dinner and the sky had already packed up. The light holds
- * through the evening now and only goes properly out at ten.
- */
+/** Evening holds until ten: sunset at six left the sky dark for the hours anyone actually plays. */
 function phaseNow(): Phase {
   const h = new Date().getHours();
   if (h >= 22 || h < 5) return "night";
@@ -170,70 +84,27 @@ function phaseNow(): Phase {
   return "day";
 }
 
-/**
- * Softer than it was, and the daytime row is the one that matters — it's what
- * the game looks like for seventeen hours out of twenty-four.
- *
- * The old blue and green were a shade under a proper saturated primary each,
- * which is right for a picture that wants to look like farmland and wrong for
- * one that wants to look like somewhere you'd keep a puppy. Lifting the value
- * and dropping the saturation on both puts the country in the background where
- * it belongs and leaves the strongest colour in the picture on the things that
- * matter: the dogs, the bunting and the bowls.
- */
 const SKY: Record<Phase, { top: string; bottom: string; hill: string; hillFar: string }> = {
   day: { top: "#a6ddf5", bottom: "#dcf1f7", hill: "#7cbc60", hillFar: "#9dd07e" },
   dusk: { top: "#5a5694", bottom: "#f6bb8e", hill: "#4d7a45", hillFar: "#628a55" },
   night: { top: "#232549", bottom: "#403a6c", hill: "#2b4632", hillFar: "#35503b" },
 };
 
-/** What the dark is made of, and what the lamp puts back. */
 const NIGHT = "#141630";
 const LAMP_LIGHT = "#ffdb8a";
 
-/**
- * How far down the light goes, per phase — over the field, and over the yard.
- *
- * The yard used to be exempt outright: the dimming pass stopped dead at the
- * fence line and the bottom fifth of a 2am mill was as bright as noon. That was
- * the right *instinct* — the hoard is the thing you came back to look at — and
- * the wrong execution, because nothing in the picture accounted for it. So the
- * yard goes dark too now, just less, and what makes up the difference is a lamp
- * you can see, throwing a pool you can see the edge of.
- */
 const DARKNESS: Record<Phase, { field: number; yard: number }> = {
   day: { field: 0, yard: 0 },
   dusk: { field: 0.22, yard: 0.13 },
   night: { field: 0.46, yard: 0.31 },
 };
 
-/**
- * Where the lamp post stands, how far its light carries, and how wide the cone
- * under it opens by the bottom of the screen.
- *
- * `LAMP_X` is picked to stand just clear of the drop, because the pack is the
- * thing the light is for — the hoard is what you came back to look at, and a
- * lamp at the far end of the yard from it would be a lamp lighting the grass.
- */
+/** LAMP_X stands just clear of the drop — the pack is what the light is for. */
 const LAMP_X = 46;
 const LAMP_REACH = 96;
 const LAMP_SPREAD = 52;
 
-/**
- * The ridges, farthest first: how far above the horizon each one crests, and
- * how much it rolls doing it.
- *
- * There used to be two, both low, and between them they took up the bottom
- * quarter of a sky that is otherwise the emptiest part of the picture. There
- * are three now, and they're up where you can see them, because they stopped
- * being decoration: the deep end of every lot stands on them. Land you can't
- * see is land nothing can be built on.
- *
- * The upper two share a period and a phase so they run parallel, eleven pixels
- * apart, which is what guarantees a building on the upper one clears the roof
- * of the building on the lower one. The near one is on its own phase, because a
- * third parallel copy reads as a printing error rather than as hills.
- */
+/** Upper two ridges share period/phase so upper buildings clear lower roofs; the near one differs. */
 interface Ridge {
   amp: number;
   base: number;
@@ -246,7 +117,7 @@ const RIDGES: Ridge[] = [
   { amp: 4, base: 19, phase: 7 },
 ];
 
-/** Sky the ridges need at full height. Less than this and they flatten out. */
+/** Sky the ridges need at full height. */
 const RIDGE_ROOM = 56;
 
 /** How far above the horizon a ridge stands at `x`, given the sky it's got. */
@@ -254,9 +125,7 @@ function ridgeAt(ridge: Ridge, x: number, scale: number): number {
   return Math.round(scale * (ridge.base + ridge.amp * Math.cos((2 * Math.PI * x) / 61 + ridge.phase)));
 }
 
-// ---------------------------------------------------------------------------
-// Deterministic jitter — a mill's layout shouldn't reshuffle on every render.
-// ---------------------------------------------------------------------------
+// --- Deterministic jitter — a mill's layout shouldn't reshuffle on every render ---
 
 export function hashSeed(s: string): number {
   let h = 2166136261;
@@ -271,17 +140,12 @@ export function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v;
 }
 
-/** The fractional part, always positive. Used for cheap per-index hashing. */
+/** The fractional part, always positive. */
 export function fract(x: number): number {
   return ((x % 1) + 1) % 1;
 }
 
-/**
- * Blend two `#rrggbb` colours, and return `#rrggbb` so the result can be fed
- * straight back in. It used to return `rgb(...)`, which parses as NaN on the way
- * back through and silently leaves the canvas on its previous fillStyle — the
- * ceiling spent an afternoon looking like smog because of it.
- */
+/** Blend two `#rrggbb` colours, and return `#rrggbb` so the result can be fed straight back in. */
 export function mix(a: string, b: string, k: number): string {
   const hex = (s: string, i: number) => parseInt(s.slice(1 + i * 2, 3 + i * 2), 16);
   const out = [0, 1, 2].map((i) => {
@@ -291,7 +155,6 @@ export function mix(a: string, b: string, k: number): string {
   return `#${out.join("")}`;
 }
 
-/** `#rrggbb` at an alpha, for the one place that needs a translucent stop. */
 export function rgba(hex: string, alpha: number): string {
   const c = [0, 1, 2].map((i) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16));
   return `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${alpha})`;
@@ -307,65 +170,17 @@ export function mulberry32(seed: number): () => number {
   };
 }
 
-// ---------------------------------------------------------------------------
-// The hoard
-// ---------------------------------------------------------------------------
+// --- The hoard ---
 
-/**
- * The pack: every puppy you're holding, out in the yard being a puppy.
- *
- * This replaced a heap — a literal pyramid of sprites, sixty-five of them,
- * stacked front-left and running off the corner. That shape is the right one
- * for a hoard of *objects* and the wrong one for a hoard of animals: what it
- * actually drew was a pile of bodies, and no amount of palette work was going
- * to fix that. The number the yard is about didn't change; what changed is that
- * it's now a count of things that are alive.
- *
- * The trade is real and worth naming. A heap is free — blits into cached slots,
- * no state — and a pack is dozens of agents that have to be stepped, bounded
- * and depth-sorted every frame. It buys the one thing the scene most needed:
- * the yard is no longer the only part of the picture that doesn't move.
- *
- * The cap came down from sixty-five when the sprite got chunkier. That's not a
- * performance number, it's a legibility one: a fixed band of yard holds a fixed
- * number of *readable* dogs, and past it they stop being a crowd and become a
- * texture. Sixty-five eleven-pixel puppies in a thirty-pixel band is a rug.
- *
- * It went back up a little when the storage came out of the yard: the floor the
- * pack has to itself is most of the band now rather than the gaps between a
- * dozen crates, so a few more of them still read as a few more dogs.
- */
+/** The cap is legibility, not perf: past it the pack stops being dogs and becomes a texture. */
 export const PACK_CAP = 34;
 
-/** How far in from each edge a puppy will wander before turning round. */
 export const PACK_LEFT = 2;
 export const PACK_RIGHT = SCENE_W - 12;
 
-/**
- * Where the slide and the pipeline set a puppy down.
- *
- * Off to the left, where both of the yard's deliveries already aimed, so
- * arrivals keep landing in the corner they always landed in — and then trot
- * out of it, which is the difference.
- */
 const DROP_X = 16;
 
-/**
- * The landing: the patch of grass under the slide's mouth that the pack keeps
- * off, as a right-hand edge and a share of the yard's depth from the back.
- *
- * A puppy comes off the chute the size of a bread roll and takes a second or so
- * to stand up into itself, and that second is the best thing in the picture. It
- * was also invisible: the drop is the busiest corner of the yard, so what you
- * actually watched was a full-grown dog's back with something small happening
- * behind it. Nothing settles here now — new arrivals grow up in it and walk
- * out, and anything that wanders in gets moved along.
- *
- * Sized off the walk rather than picked by eye: a new one trots at about twelve
- * pixels a second and grows for a bit over a second, so thirty-odd pixels of
- * clear ground is exactly the room it needs to finish growing before it's back
- * among everyone else.
- */
+/** Landing under the chute, kept clear; sized so a new one finishes growing before rejoining the crowd. */
 export const DROP_CLEAR_X = DROP_X + 18;
 export const DROP_CLEAR_D = 0.34;
 
@@ -374,19 +189,7 @@ export function onLanding(x: number, y: number, back: number, front: number): bo
   return x < DROP_CLEAR_X && y < back + (front - back) * DROP_CLEAR_D;
 }
 
-/**
- * The other patch nobody settles on: where the handler stands to throw.
- *
- * The handler is at the very front of the yard and sorts *behind* the pack on a
- * tie, which was fine when the front row was a couple of dogs deep and stopped
- * being fine the moment they were all lying down: a dog at rest is the widest
- * sprite out here, and two of them parked on the spot hid the handler, the ball
- * in their hand, and the whole of the wind-up. The throw was still happening —
- * it just happened behind a puppy.
- *
- * Small, and only at the front: it's a place to stand and swing an arm, not a
- * second clearing. The dogs go *round* rather than away.
- */
+/** The handler's spot, kept clear: resting dogs are the widest sprite and hid the whole throw. */
 const PITCH_W = 14;
 const PITCH_D = 9;
 
@@ -394,216 +197,84 @@ export function onPitch(x: number, y: number, front: number): boolean {
   return x > HAND_X - 6 && x < HAND_X + PITCH_W && y > front - PITCH_D;
 }
 
-/** How much of the yard's depth the pack spreads over, back to front. */
 const PACK_SPILL = 4;
 
-/**
- * Trot speed, buffer pixels a second.
- *
- * Slow, and slower than it looks like it should be on paper. The yard is a
- * hundred and seventy pixels across, so at this pace crossing it is most of
- * half a minute — which is the point. Nothing out here has anywhere to be, and
- * a yard where every dog gets somewhere quickly is a yard you've finished
- * watching.
- */
+/** Trot speed, px/s. Slow on purpose: crossing the yard takes most of half a minute. */
 export const PACK_WALK = [5, 11] as const;
 
-/** Bunting pitch along the fence. */
 const FLAG_STEP = 7;
 
-/**
- * Where the water bowls stand, as x and a fraction of the yard's depth.
- *
- * Hand-placed and permanent. A bowl isn't a thing you unlock — it's a thing
- * that has always been there, and now that the build-out is gone it and the
- * ball are the only things in the yard that aren't a dog.
- */
 const BOWLS: readonly { x: number; d: number }[] = [
   { x: 44, d: 0.28 },
   { x: 118, d: 0.62 },
   { x: 86, d: 0.9 },
 ];
 
-/**
- * Fetch: somebody throws the ball, a dog brings it back, repeat.
- *
- * The first version of this had no thrower. The ball sat in the yard, whichever
- * dog was nearest went after it, and on reaching it knocked it somewhere else —
- * which is a perfectly good simulation of a ball being nosed around a yard and
- * completely illegible as a *thing that is happening*. You couldn't tell the
- * chase from the ordinary wandering, because the only difference was the speed.
- *
- * A game needs the whole loop visible: a person winds up and throws, one dog
- * breaks off and runs it down, and the same dog carries it back to the same
- * person. Three beats, one actor each, and the ball in a different place in
- * every one of them. That's readable at a glance from across a room, which is
- * the bar for anything on this canvas.
- *
- * The handler is a fixture rather than one of the field's kennel hands. Those
- * are drawn behind the fence and belong to the tier that bought them; this one
- * stands on the apron and is always there, because the yard has to have a fetch
- * loop on the very first save, when you own nothing at all.
- */
 type FetchPhase = "wait" | "fly" | "chase" | "carry";
 
 interface Fetch {
   phase: FetchPhase;
-  /** Where the ball is, or where it's flying from. */
   x: number;
   y: number;
   tx: number;
   ty: number;
   from: number;
   to: number;
-  /** Whoever went after it. Null between throws. */
   dog: PackPup | null;
-  /** When the handler throws next, in the wait phase. */
   until: number;
 }
 
-/**
- * Where the handler stands: front left, in the clear.
- *
- * Front left, out of the corner the slide and the pipeline both drop into, so
- * a throw always has the open middle of the field to land in.
- */
 export const HAND_X = 40;
 
-/** How fast a dog moves when it has a job. Faster than an amble, short of a sprint. */
 const FETCH_SPEED = 30;
 
-/**
- * How long the handler stands there between throws.
- *
- * Shorter than it was by half. The loop reads perfectly and almost nobody ever
- * saw it: a throw is up for less than a second, the fetch itself is over in
- * three or four, and then the ball sat in a hand for the best part of ten. What
- * that adds up to is a yard where, most of the time you glance at it, the one
- * thing anybody in the picture is *doing* isn't happening. A pause long enough
- * to feel like a rest is two or three seconds, not ten.
- */
+/** Pause between throws. Ten seconds meant the fetch was usually not happening when you looked. */
 const FETCH_REST = [1.2, 3.5] as const;
 
 /** How much room the throw leaves around the handler, or it's a drop, not a throw. */
 const FETCH_CLEAR = 28;
 
-/**
- * Where the next throw lands.
- *
- * This used to pick anywhere in the yard and then shove the target clear of the
- * handler if it came out too close — and the shove had nothing bounding it, so
- * a throw aimed just left of the handler came out at a negative x. A ball
- * outside the pack's bounds is one no dog can ever reach: the chaser pins
- * against the fence, `drive` re-points it at the fence every frame, the chase
- * never closes and the fetch loop stops for the rest of the session. With the
- * handler at 40 that was about one throw in six.
- *
- * So it samples the two clear spans either side of the handler instead,
- * weighted by how much room each has, and never leaves the reachable band. The
- * roll is a parameter so this is testable across the whole range rather than
- * one throw at a time.
- */
+/** Samples the clear spans either side of the handler, so the ball never leaves the reachable band. */
 export function fetchTarget(handX: number, roll: number = Math.random()): number {
   const lo = PACK_LEFT + 8;
   const hi = PACK_RIGHT - 8;
   const left = Math.max(0, handX - FETCH_CLEAR - lo);
   const right = Math.max(0, hi - (handX + FETCH_CLEAR));
-  // A handler standing somewhere that leaves no clear span at all. Can't happen
-  // where this one stands, but the fallback has to be reachable, not tidy.
+  // A handler standing somewhere that leaves no clear span at all.
   if (left + right === 0) return clamp(handX + FETCH_CLEAR, lo, hi);
   const pick = roll * (left + right);
   return clamp(pick < left ? lo + pick : handX + FETCH_CLEAR + (pick - left), lo, hi);
 }
 
-/** Pixels of ground per animation frame. Ties the step to the walk, not the clock. */
+/** Pixels of ground per animation frame. */
 export const PACK_STRIDE = 4;
 
-/**
- * How long an arrival spends as the sprite it rode down on, and then as the
- * small one, before it's just another dog in the yard.
- *
- * Short. It's a beat of continuity, not a life cycle — the job is to stop the
- * chute and the pack looking like two unrelated systems that happen to share a
- * corner, and a puppy that takes five seconds to inflate is its own distraction.
- */
 const GROW_CARRIED = 0.3;
 const GROW_SMALL = 1.1;
 
-/**
- * How many dogs the yard is owed but hasn't been handed yet.
- *
- * The pack's size comes off the hoard, and the chute's deliveries come off the
- * trough draining — two completely unrelated clocks. Rather than pick one, the
- * yard runs a tab: when the count says it should have another dog it goes on
- * the tab, and the next thing to come off the slide settles it. So the puppy
- * you watch land is the puppy that joins the pack.
- *
- * The cap and the timeout are both for the case where nothing is coming: a mill
- * with no producers has a dry trough, and the yard still has to fill.
- */
+/** Dogs the yard is owed: pack size and chute deliveries are unrelated clocks, so the yard runs a tab. */
 const OWED_CAP = 8;
 const OWED_TIMEOUT = 2.5;
 
-/**
- * One puppy, doing one thing until it decides to do another.
- *
- * `walked` rather than a clock phase is what stops sixty dogs stepping in
- * unison: the frame comes off distance travelled, and they're all travelling at
- * different speeds.
- */
+/** `walked` drives the frame off distance travelled, which stops sixty dogs stepping in unison. */
 export interface PackPup {
   x: number;
-  /** Its feet, which is also its depth — the yard is drawn back to front on it. */
   y: number;
-  /**
-   * The bit of yard it considers its own, and the reason the yard fills evenly.
-   *
-   * Without it the pack is a pure random walk, and a random walk *remembers
-   * where it started*: everything arrives at the drop in the left corner, and
-   * diffusing out of a corner across a hundred and sixty pixels at eleven
-   * pixels a second takes longer than anyone looks at the screen. Two goes at
-   * fixing that by choosing better spawn positions both failed, because the
-   * spawn isn't the problem — the walk is.
-   *
-   * Handed out uniformly across the yard whatever the dog's spawn position is,
-   * and only ever a lean rather than a leash: a puppy heads roughly homeward
-   * most of the time and wanders off it the rest, so the yard stays evenly
-   * populated without anybody standing on a mark.
-   */
+  /** Home spot, dealt uniformly — a pure random walk remembers the corner it spawned in. A lean, not a leash. */
   home: number;
   vx: number;
   vy: number;
   doing: "trot" | "stand" | "sit" | "zoom" | "rest" | "sleep";
-  /** Scene clock, in seconds, at which it picks something else. */
   until: number;
   walked: number;
   coat: number;
-  /** On its way out of the gate because you spent it. Doesn't turn round. */
   leaving: boolean;
-  /**
-   * It has a job on. `pickAction` leaves it alone while this is set, which is
-   * the whole mechanism — a dog carrying a ball back to the handler that
-   * suddenly decides to sit down has broken the only story the yard tells.
-   */
+  /** Has a job on; `pickAction` leaves it alone while set. */
   fetching: boolean;
-  /** Scene clock when it landed, which is what the growth is drawn off. */
   born: number;
 }
 
-/**
- * What a puppy does next, and for how long.
- *
- * Weighted so most of the yard is standing still at any one moment, and the
- * durations are long — a flop can run half a minute. A yard where everything
- * is always trotting is a screensaver; one where two or three things are moving
- * reads as a place, and those two or three read as individuals because the rest
- * aren't.
- *
- * The timings were all roughly a third of this to begin with, which made the
- * pack look anxious. Nothing here is in a hurry and the animation shouldn't be
- * either: the whole point of the yard is that it is somewhere pleasant to leave
- * a tab open on.
- */
+/** Weighted so most of the yard stands still; two or three moving dogs read as individuals. */
 export function pickAction(dog: PackPup, t: number): void {
   if (dog.leaving) {
     dog.until = t + 60;
@@ -611,26 +282,13 @@ export function pickAction(dog: PackPup, t: number): void {
   }
   const roll = Math.random();
   if (roll < 0.018) {
-    // Zoomies. One dog in thirty decides, for no reason, to go flat out in a
-    // straight line for two seconds.
-    //
-    // It's a third of a percent of the yard at any moment and it is the single
-    // most-noticed thing on the screen, because everything else out here moves
-    // at a walk. A picture where nothing is ever in a hurry reads as a diorama;
-    // one thing sprinting through it every few seconds reads as alive.
+    // Zoomies: 1/30 dogs sprints for two seconds — the one thing on screen not at a walk.
     dog.doing = "zoom";
     dog.vx = (Math.random() < 0.5 ? -1 : 1) * 52;
     dog.vy = 0;
     dog.until = t + 0.8 + Math.random() * 1;
   } else if (roll < 0.40) {
     dog.doing = "trot";
-    // Homeward, and how insistently depends on how far off it is. A long way
-    // out it always heads back and at a fair clip, which is what disperses a
-    // delivery: everything the chute drops lands in the same corner, so without
-    // this a busy mill piles its whole yard into the bottom left and leaves the
-    // rest of the concrete empty. Near enough to home it's two times in three
-    // and ambling, because a pack that always walks straight at a mark settles
-    // into sixty stationary dots.
     const away = dog.home - dog.x;
     const far = Math.abs(away) > 24;
     const dir = far || (Math.random() < 0.68 && Math.abs(away) > 6)
@@ -640,30 +298,17 @@ export function pickAction(dog: PackPup, t: number): void {
         : 1;
     const pace = far ? 1.45 : 1;
     dog.vx = dir * pace * (PACK_WALK[0] + Math.random() * (PACK_WALK[1] - PACK_WALK[0]));
-    // A tenth of the sideways speed: the yard is about four dogs deep, and
-    // anything faster crosses it before you've registered which way it went.
+    // A tenth of the sideways speed: the yard is four dogs deep, faster crosses it before you register it.
     dog.vy = (Math.random() - 0.5) * 4;
     dog.until = t + 1.6 + Math.random() * 4.5;
   } else if (roll < 0.68) {
     dog.doing = "sit";
     dog.until = t + 4 + Math.random() * 9;
   } else if (roll < 0.815) {
-    // Down but awake, and for a good while. A puppy that lies down for one
-    // second is a puppy that changed its mind; the pose only reads as *settled*
-    // if it outlasts a couple of the walks going on around it.
     dog.doing = "rest";
     dog.until = t + 12 + Math.random() * 22;
   } else if (roll < 0.845) {
-    // Properly asleep, and for long enough that it's a fixture of the yard
-    // rather than a pose in the rotation: come back to the tab in a minute and
-    // the same dog is still asleep in the same place, which is what makes the
-    // yard somewhere that carries on without you rather than a loop.
-    //
-    // Rare *as a roll* and common *on the ground*, which is the thing to hold
-    // in mind here: at one in thirty and a minute a go it still ends up being
-    // a fifth of the yard at any moment, and every second of that is a second
-    // some dog isn't doing anything else. It's the longest pose in the rotation
-    // and the weight has to be read against that, not against the other rolls.
+    // Properly asleep, long enough to be a fixture rather than a pose.
     dog.doing = "sleep";
     dog.until = t + 30 + Math.random() * 50;
   } else {
@@ -672,35 +317,11 @@ export function pickAction(dog: PackPup, t: number): void {
   }
 }
 
-/**
- * The yard doesn't count your puppies. It shows them.
- *
- * Two earlier goes at this both counted, and counting is the problem. Place
- * value emptied the whole yard every time you crossed a power of ten. Rows of
- * units fixed that but replaced it with a bar chart: forty identical sprites
- * where the only difference between a millionaire and a billionaire was three
- * more crates in the same strip.
- *
- * The go after that was a build-out — a basket, then a crate, a kennel, a
- * sorting tower — and it worked, in that you could read your wealth off the
- * yard at a glance. It also filled the one part of the screen that was ever
- * cute with storage. Twenty stages in, the bottom of the picture was a
- * warehouse with dogs squeezed between the units.
- *
- * So the props are gone and the stages stay: a fixed ladder of thresholds,
- * roughly one per four-and-a-bit times richer, and all a stage does now is put
- * more dogs on the grass. What you built with your puppies is more puppies.
- */
+/** The yard doesn't count your puppies. */
 interface Stage {
-  /** Yield on hand at which this stage arrives. */
   at: number;
 }
 
-/**
- * The ladder, in order. It runs out at around a hundred quadrillion, which is
- * past the last thing on the price list — a yard at its fullest is a fine place
- * for it to stop.
- */
 export const YARD: Stage[] = [
   { at: 0 },
   { at: 5 },
@@ -735,9 +356,7 @@ export const YARD: Stage[] = [
 ];
 
 interface YardLayout {
-  /** Index into YARD. Everything up to and including it is standing. */
   stage: number;
-  /** Yield loose in the yard, 0..the stage's cap. */
   pack: number;
 }
 
@@ -747,73 +366,22 @@ const PACK_FLOOR = 5;
 /** One dog for the first puppy, so the first whistle puts something on the ground. */
 const PACK_START = 1;
 
-/**
- * The hoard at which the opening ends and the stage curve takes over.
- *
- * A million, which on a keen run is about an hour in. That sounds absurd for
- * something called the opening, and it's the point: at two hundred — where this
- * first landed — the yard was done growing ninety seconds after the first
- * whistle, and everything after that was props. An hour of a pack that is still
- * visibly arriving is an hour where the thing you look at keeps changing.
- */
+/** The hoard at which the opening ends and the stage curve takes over. */
 export const PACK_OPEN_AT = 1e6;
 
-/**
- * How hard the fill is weighted towards the end. Above 1 is slower early.
- */
+/** How hard the fill is weighted towards the end. */
 const PACK_CURVE = 1.45;
 
-/**
- * How the yard refills between one stage and the next. Well under 1, so most of
- * the pack is back within the first slice of the stage and the long tail is
- * spent topping it up — the yard should read as busy most of the time and only
- * be conspicuously thin right after something took half of them indoors.
- *
- * Up here with the rest of the pack's knobs rather than next to the layout that
- * reads it, because `PACK_OPEN_TOP` asks the stage curve a question at module
- * load and everything that answer depends on has to exist by then.
- */
+/** How the yard refills between one stage and the next. */
 const PACK_EASE = 0.5;
 
-/**
- * How many puppies are loose in the yard once the build-out reaches `stage`.
- *
- * This used to be a number on each stage and every stage past the fifth said
- * "the cap" — so the yard was full at a hundred and ten puppies, about ninety
- * seconds in, and stayed full for the remaining seventeen orders of magnitude.
- * Everything after the first minute was the props arriving, and the crowd was
- * a constant.
- *
- * It's a curve over the stage index instead, which spends the whole run: five
- * dogs at the start, eight or so by a thousand, into the teens around a hundred
- * thousand, and the field only actually fills at the top of the ladder. A slow
- * tide rather than a series of arrivals, which means "the yard is getting busy"
- * stays true as a thing to notice for days rather than for a minute and a half.
- */
+/** How many puppies are loose in the yard once the build-out reaches `stage`. */
 export function packAt(stage: number): number {
   const f = stage / (YARD.length - 1);
   return Math.round(PACK_FLOOR + (PACK_CAP - PACK_FLOOR) * Math.pow(f, PACK_CURVE));
 }
 
-/**
- * A ceiling on the pack for the opening, and no ceiling at all after it.
- *
- * The stage curve's floor is five and stage zero ends at five puppies, so the
- * yard used to fill to that floor one dog per whistle and then sit at five for
- * the rest of the opening — the first thing a new player watches was over in
- * about ten seconds, and then nothing on the ground changed for an hour.
- *
- * This stretches those first few dogs across the whole opening instead: one on
- * the first puppy, and the rest spread out behind it. Logarithmic, because the
- * hoard is — on a linear ramp the last dog would take longer to arrive than all
- * the others put together.
- *
- * Past `PACK_OPEN_AT` it returns the cap, which makes it a no-op rather than a
- * clamp the rest of the run has to fight. The ramp's top comes off the stage
- * curve at that same point rather than being a number of its own, so the
- * handover can't skip a dog however either side is retuned — aim the ramp one
- * short and the pack pops two at the boundary.
- */
+/** A ceiling on the pack for the opening, and no ceiling at all after it. */
 const PACK_OPEN_TOP = stageLayout(PACK_OPEN_AT).pack;
 
 export function packOpening(amount: number): number {
@@ -826,9 +394,7 @@ export function packOpening(amount: number): number {
 export function yardLayout(amount: number): YardLayout {
   const a = Math.max(0, amount);
   const base = stageLayout(a);
-  // The opening only ever binds downwards and only for the first stretch of the
-  // run, so it can't turn a stage that took dogs indoors into one that didn't —
-  // the pack still falls only where `add` says it should.
+  // The opening only binds downwards and only early, so it can't turn a shrinking stage into a growing one.
   return { stage: base.stage, pack: Math.min(base.pack, packOpening(a)) };
 }
 
@@ -842,8 +408,7 @@ function stageLayout(amount: number): YardLayout {
   const next = YARD[stage + 1];
   let frac = 1;
   if (next) {
-    // The first stage counts puppies; every stage after it counts magnitudes,
-    // because that's the only scale on which the later ones are the same size.
+    // The first stage counts puppies; every later one counts magnitudes.
     frac =
       stage === 0
         ? a / next.at
@@ -851,11 +416,7 @@ function stageLayout(amount: number): YardLayout {
   }
   frac = Math.max(0, Math.min(1, frac));
 
-  // Every stage picks up exactly where the last one left off, so the whole run
-  // is one unbroken climb. Stages used to take a cut of the pack indoors when
-  // they added a prop, which was the yard paying for what it built; with
-  // nothing left to build, a yard that got emptier as you got richer would just
-  // read as a bug.
+  // Every stage picks up exactly where the last one left off, so the whole run is one unbroken climb.
   const want = packAt(stage);
   const from = stage === 0 ? 0 : packAt(stage - 1);
   const grow = stage === 0 ? frac : Math.pow(frac, PACK_EASE);
@@ -867,18 +428,9 @@ function sameLayout(a: YardLayout, b: YardLayout): boolean {
   return a.stage === b.stage && a.pack === b.pack;
 }
 
-// ---------------------------------------------------------------------------
-// Producer placement
-// ---------------------------------------------------------------------------
+// --- Producer placement ---
 
-/**
- * The tiers this scene draws, which is the outside mill and only that.
- *
- * Everything inside the nest has its own picture — see `insideScene.ts`. So
- * does the ceiling that used to come down over this one: the Convergence opens
- * a second place rather than repainting this one, and a mill you can walk back
- * out to is a mill with its sky still in it.
- */
+/** The tiers this scene draws, which is the outside mill and only that. */
 type OutsideId = Extract<
   solo.SoloProducerId,
   | "patch"
@@ -895,7 +447,6 @@ type OutsideId = Extract<
   | "singularity"
 >;
 
-/** A producer flying, driving or standing somewhere specific. */
 type Band = "sky" | "back" | "field" | "walk";
 
 interface Placement {
@@ -904,23 +455,15 @@ interface Placement {
   cap: number;
   /** Drives across the field rather than standing in it. */
   speed?: number;
-  /**
-   * How fast the drawn count climbs with the owned count. A long run buys a
-   * hundred and forty kennel hands and only fifty orbital kennels, so the tiers you
-   * stack deepest need the shallowest curve to keep looking different at
-   * twenty, fifty and a hundred.
-   */
+  /** How fast the drawn count climbs with the owned count. */
   spread?: number;
 }
 
 const PLACEMENT: Record<OutsideId, Placement> = {
-  // The pup doesn't use the log curve — the field draws a bed per pen until
-  // the land is full — so its cap is only the ceiling on broken ones.
+  // The pup doesn't use the log curve — the field draws a bed per pen until the land is full — so its cap is only the ceiling on broken ones.
   patch: { band: "field", cap: 108 },
   hand: { band: "walk", cap: 16, spread: 3 },
   rig: { band: "field", cap: 12, spread: 2.6 },
-  // Slow. A van that crosses the screen in fifteen seconds is a van
-  // working a field; one that does it in five is a toy being pushed along.
   hauler: { band: "field", cap: 6, spread: 1.4, speed: 6 },
   machine: { band: "field", cap: 5, spread: 1.2, speed: 4.5 },
   lab: { band: "back", cap: 5 },
@@ -932,20 +475,7 @@ const PLACEMENT: Record<OutsideId, Placement> = {
   singularity: { band: "sky", cap: 3, spread: 1.2 },
 };
 
-/**
- * What a hundred-owned tier throws light in.
- *
- * The fourth mark is the only upgrade in the game that does anything to the
- * scene beyond its own silhouette, and this is it: **primed kit is lit**. One
- * rule, applied in every band, because that's what makes it read — a mill three
- * tiers deep into hundred-marks is glowing in six places at once, and after dark
- * it's the only thing keeping the field visible.
- *
- * Colours are per-tier and near enough to what the sprite is already made of
- * that the light looks like it came off the thing: the kibble burns orange,
- * the reactor and the towers run cold, the singularity's is the gold its fourth
- * mark's jet is drawn in.
- */
+/** What a hundred-owned tier throws light in. */
 const PRIME_GLOW: Record<OutsideId, string> = {
   patch: "#a8f07a",
   hand: "#ffd782",
@@ -976,58 +506,19 @@ const ORDER: OutsideId[] = [
   "singularity",
 ];
 
-// ---------------------------------------------------------------------------
-// The back edge, in depth
-// ---------------------------------------------------------------------------
+// --- The back edge, in depth ---
 
-/**
- * The property doesn't stop at the skyline: it runs back from it.
- *
- * The back edge used to be one row of the last few things you'd bought, and
- * when the row filled up the *lowest* tiers were shifted off the left and gone
- * — so the reward for buying a fusion reactor was your nest labs being
- * demolished, and every mill past the middle of the ladder looked like the same
- * four buildings.
- *
- * It's a *plan* now. Each of the four back tiers owns a lot, in tier order,
- * from the first frame — so a tier arrives where it was always going to stand
- * and nothing already up there moves. One of it stands at the front of its lot
- * at full size, forever, which is what you watch change as you buy that tier's
- * upgrades. Everything else you own of it is built up the lot behind: two at a
- * time, half size, stepping back and up the hillside, and at the counts you
- * only reach on a long run, out onto the ridges themselves.
- *
- * So the lot's *depth* is the count, and it's read the way the yard is read —
- * recognised, not counted. Ten of something, fifty and a hundred are three
- * visibly different lots, and none of them is ever nothing.
- */
+/** The property doesn't stop at the skyline: it runs back from it. */
 interface LotRow {
-  /** Where in the lot each one stands, as fractions of the lot's width. */
   at: number[];
   /** The ridge it stands on — where the counts you only reach late go. */
   ridge?: number;
-  /**
-   * Which pass draws it. Higher is nearer: the deep rows are interleaved with
-   * the ridges so each ridge buries the feet of whatever's on the one behind,
-   * and the top layer is the building out front.
-   */
   layer: number;
   /** Half size, and how much of the distance is drawn over it. */
   far: boolean;
   haze: number;
 }
 
-/**
- * The lot, front row first. Two at a time behind the one out front, so a lot
- * grows evenly either side of it rather than lopsidedly.
- *
- * The files zigzag rather than running straight back. Two clean columns is what
- * the first go did, and with a tall tier — the Vertical Mill is forty pixels of
- * building, twenty when it's halved — each column overlapped itself into a
- * single unbroken shaft, so a lot of ten towers read as three very tall ones.
- * Off-setting every row sideways keeps them reading as separate buildings on a
- * hillside however tall they are.
- */
 const LOT_ROWS: LotRow[] = [
   { at: [0.5], layer: 5, far: false, haze: 0 },
   { at: [0.2, 0.8], layer: 4, far: true, haze: 0.14 },
@@ -1037,28 +528,19 @@ const LOT_ROWS: LotRow[] = [
   { at: [0.38, 0.62], ridge: 0, layer: 0, far: true, haze: 0.5 },
 ];
 
-/** The rows flattened into the order they're filled in. */
 const LOT = LOT_ROWS.flatMap((row, r) => row.at.map((at) => ({ ...row, at, row: r })));
 
-/**
- * How much ground a row is set back from the one in front, as a share of the
- * building's own height. Held to a floor so a squat tier still steps back.
- */
+/** How much ground a row is set back from the one in front, as a share of the building's own height. */
 const LOT_STEP = 0.55;
 const LOT_STEP_MIN = 6;
 
-/** The tiers with a lot, left to right. Fixed, so a lot is a lot forever. */
 const BACK_TIERS = ORDER.filter((id) => PLACEMENT[id].band === "back");
 
-/** A tier's lot, as laid out this frame. */
 interface Lot {
   id: OutsideId;
-  /** Whichever mark of it you're running. */
   art: Art;
-  /** Left edge and width, in buffer pixels. */
   x: number;
   w: number;
-  /** How many of `LOT`'s slots are filled, and how many of those are dead. */
   depth: number;
   dead: number;
   /** Empty, but staked out: the next tier's ground, waiting for it. */
@@ -1067,46 +549,21 @@ interface Lot {
   ground: number[];
 }
 
-/**
- * How far back a lot is built, given how many of the tier you own.
- *
- * Log, like everything else that has to survive counts running into the
- * hundreds: the first one is the building out front, and after that it takes a
- * bit over half a doubling to add another. Ten, fifty and a hundred come out at
- * five, nine and ten — three lots you can tell apart across the room, which is
- * the only test this has to pass.
- */
+/** How far back a lot is built, given how many of the tier you own. */
 export function lotDepth(owned: number): number {
   if (owned <= 0) return 0;
   return Math.min(LOT.length, 1 + Math.floor(Math.log2(owned) * 1.45));
 }
 
-/**
- * How many of a tier to actually draw. Counts run to hundreds and the field
- * holds a couple of dozen things before it's soup, so the mapping is
- * logarithmic: the first few are one-for-one and after that it takes a
- * doubling to add another silhouette.
- */
+/** How many of a tier to actually draw. */
 function shownCount(owned: number, cap: number, spread = 2.4): number {
   if (owned <= 0) return 0;
   if (owned <= 4) return Math.min(owned, cap);
   return Math.min(cap, 4 + Math.floor(Math.log2(owned / 4) * spread));
 }
 
-// ---------------------------------------------------------------------------
+// --- How a puppy gets from where it was made to where it's kept ---
 
-/**
- * How a puppy gets from where it was made to where it's kept.
- *
- * There used to be one answer to this and it was ballistics: everything on the
- * mill threw its puppies at the yard on a parabola, and a busy mill looked
- * like a hailstorm. Nothing on a mill moves like that. So every tier now has
- * plumbing instead — the machines auger into a trough, the kennels pipe it down,
- * the hands carry it — and the only thing that leaves the ground unassisted is
- * the one you whistled up yourself.
- */
-
-/** A puppy on a chute or an auger: straight line, constant speed, no arc. */
 interface Haul {
   x0: number;
   y0: number;
@@ -1114,33 +571,22 @@ interface Haul {
   y1: number;
   born: number;
   dur: number;
-  /**
-   * On a slide rather than in a pipe: picks up speed on the way down and
-   * kicks up dirt where it lands. A puppy on an auger is being pushed at a
-   * constant rate; a puppy on a chute is falling.
-   */
+  /** On a slide rather than in a pipe: picks up speed on the way down and kicks up dirt where it lands. */
   slide?: boolean;
 }
 
-/** A puppy inside the pipeline, measured as distance travelled along it. */
 interface Lump {
-  /** Where on the horizontal run it was fed in. */
   from: number;
   d: number;
 }
 
-/** A puppy you turned up yourself: out of the bedding, and gone into the basket. */
 interface Whistled {
   x: number;
   y: number;
   born: number;
 }
 
-/**
- * Dust, steam and water: the small stuff that says a machine is running rather
- * than parked. One pixel each, no sprite, no transform — cheap enough that
- * every tier can have some without the frame budget noticing.
- */
+/** Dust, steam and water: the small stuff that says a machine is running rather than parked. */
 interface Puff {
   x: number;
   y: number;
@@ -1154,11 +600,6 @@ interface Puff {
 
 const MAX_PUFFS = 40;
 
-/**
- * A billow of steam off a cooling tower. Fatter, slower and longer-lived than a
- * puff, and it grows as it climbs — a reactor's plume is the biggest thing on
- * the property and it should be drawn like weather, not like exhaust.
- */
 interface Plume {
   x: number;
   y: number;
@@ -1174,35 +615,16 @@ const MAX_PLUMES = 80;
 /** How long a whistled puppy sits in the open before it's counted and gone. */
 const WHISTLED_MS = 850;
 
-/**
- * How much the trough holds before the machines are just tipping it over.
- * Small on purpose: the level is drawn in six pixels, so a cap much past this
- * means the first few puppies in there round away to nothing showing.
- */
+/** How much the trough holds before the machines are just tipping it over. */
 const TROUGH_CAP = 12;
 
-/**
- * Seconds between puppies going down the trough's spout, when the trough is
- * empty. A full one empties four times faster, which is what stops the level
- * from either pinning at the brim or never showing anything in there at all —
- * it settles wherever the machines above it are actually keeping it.
- */
+/** Seconds between puppies going down the trough's spout, when the trough is empty. */
 const TROUGH_DRAIN = 0.8;
 
-/** Buffer pixels a second, for a puppy in the pipeline. */
 const PIPE_SPEED = 40;
 
-/**
- * How long the pipeline takes to build, in seconds.
- *
- * Second only to the fold, and deliberately so. This is the moment the mill
- * stops being a field with people in it and becomes an industrial concern —
- * the single biggest change to the picture that isn't the horizon closing — and
- * it used to arrive between two frames, fully welded, because a number went up.
- */
 const PIPE_BUILD_S = 3.4;
 
-/** How long one building takes to go up on its lot, in seconds. */
 const RAISE_S = 1.5;
 
 /** Scaffolding, which is the one thing on the mill that is meant to look cheap. */
@@ -1214,7 +636,6 @@ const MAX_HAULS = 24;
 const MACHINE_LOAD = 5;
 /** What one of those baskets is worth when a hand tips it into the trough. */
 const BASKET_WORTH = 3;
-/** Baskets that can be waiting at once. Past this the machines hold their load. */
 const MAX_BASKETS = 9;
 const MAX_LUMPS = 64;
 
@@ -1222,87 +643,55 @@ const MAX_LUMPS = 64;
 const CHUTE_LEN = 14;
 const CHUTE_SLOPE = 0.7;
 
-/** How long a building takes to come out of the ground, or to go back into it. */
 const BUILD_MS = 520;
 
-/**
- * How much of an arriving building is still underground, in pixels, `age`
- * milliseconds in. Rising eases out so it lands rather than stops; sinking is
- * linear, because something you can no longer afford shouldn't linger.
- */
+/** How much of an arriving building is still underground, in pixels, `age` milliseconds in. */
 export function buildHidden(age: number, up: boolean, height: number): number {
   const t = Math.max(0, Math.min(1, age / BUILD_MS));
   const shown = up ? 1 - (1 - t) * (1 - t) : 1 - t;
   return Math.round((1 - shown) * height);
 }
 
-// ---------------------------------------------------------------------------
-// The pup cycle, and the people who work it
-// ---------------------------------------------------------------------------
-//
-// The mill is scenery, not a readout. None of what follows is derived from your
-// production rate and none of it feeds back into it — the field grows on its
-// own clock and the hands walk at their own pace whether you're making twelve
-// puppies a second or twelve trillion. What it's for is having somewhere to
-// look: a mill that idles is still a mill doing something.
+// --- The pup cycle, and the people who work it ---
+// The mill is scenery, not a readout.
 
-/** How long a bed takes to come up. Long, on purpose — this is a place, not a slot machine. */
+/** How long a bed takes to come up. */
 const GROW_SECONDS = 46;
 
 /** How long a ready bed stands before the mill gets to it without you watching. */
 const RIPE_SECONDS = 14;
 
-/** Buffer pixels a second. A kennel hand crosses the field in about five. */
 const HAND_SPEED = 19;
 const PICK_SECONDS = 1.8;
 const REST_SECONDS = 2.4;
 
-/**
- * One kennel hand, working. They pick the bed that's been ready longest, carry it
- * down to the yard, drop it on the pile and walk back for another.
- */
 interface Hand {
   x: number;
   y: number;
-  /** Where in the yard this one unloads. Spread out, so they don't queue. */
   home: number;
   /** The depth it stands at when it's home — ranks, so a big crew isn't a line. */
   homeY: number;
-  /** Where it's ambling to while it has nothing to do. */
   loiter: { x: number; y: number };
   /** The row it works by preference, so the crew covers the field. */
   rowPref: number;
   state: "resting" | "out" | "picking" | "back" | "fetch" | "hauling";
-  /** Index into the drawn beds. -1 while resting. */
   target: number;
   /** Id of the basket it's been sent for, or -1. */
   basket: number;
-  /** Wall time at which a timed state ends. */
   until: number;
   carrying: "none" | "puppy" | "basket";
 }
 
-/**
- * A machine's load, tipped out at the end of the row for somebody to deal with.
- *
- * The machines used to auger straight into the trough from wherever they stood,
- * which meant the puppy left the grooming rig as a thrown object and crossed forty
- * pixels of open air. This is the same journey with the work put back in: the
- * grooming rig fills, tips a basket at the headland, and a hand walks out for it.
- */
 interface Basket {
   id: number;
   x: number;
   y: number;
-  /** Wall clock at the drop, so it can land rather than appear. */
   born: number;
 }
 
-/** One pup in a row, as drawn this frame. Ground point, not top-left. */
 interface Bed {
   x: number;
   y: number;
-  /** Which pup row it stands in. */
   row: number;
   /** Wilted pups are skipped: nothing there is worth walking out for. */
   dry: boolean;
@@ -1318,139 +707,64 @@ interface Row {
 /** How deep the field can get stocked before it stops adding rows. */
 const FIELD_ROWS = 6;
 
-/** How long a van's wheel track stays fresh behind it. */
 const TRACK_MS = 4500;
 
-/** A pup air-dropped from a zeppelin, on its way down to a specific pen. */
 interface Drop {
   x: number;
   y: number;
   vy: number;
-  /** Index into `beds`. The drop is aimed, so it visibly does something. */
   pup: number;
 }
 
-/**
- * A cloud zeppelin, working the sky the way the hands work the ground.
- *
- * These used to drift left to right at a fixed pace on a fixed lane, dropping
- * on whatever happened to be under them, and a rank of them was a screensaver.
- * A zeppelin has a *job*: pick a patch that needs bringing on, dart over it from
- * wherever it is, stop dead, and dump on it. So it holds a position and a
- * destination and moves between them, and it goes up and left as readily as
- * down and right.
- */
 interface Flyer {
   x: number;
   y: number;
-  /** Where the current dash started, and where it ends. */
   x0: number;
   y0: number;
   tx: number;
   ty: number;
-  /** Seconds into the dash, and how long the dash takes. */
   t: number;
   dur: number;
-  /** Seconds left standing over the patch. Zero while it's travelling. */
   hold: number;
-  /** Metronome for the drops while it's holding. */
   drip: number;
 }
 
-/**
- * Buffer pixels a second at full tilt, and how long one stands over a patch
- * once it gets there.
- *
- * The first go at this had them crossing the screen in three seconds and moving
- * on after one, which is a swarm rather than a crew: five of them at once and
- * the sky never held still. They work a patch properly now, and take their time
- * getting to the next one.
- */
+/** Buffer pixels a second at full tilt, and how long one stands over a patch once it gets there. */
 const FLY_SPEED = 27;
 const FLY_HOLD = 3.6;
 
-/**
- * A Chihuahua Singularity, as the rest of the sky experiences it.
- *
- * It hangs in its column most of the time, and every half a minute or so it
- * comes down over the mill and goes back up — which is the only way a thing that
- * doesn't travel gets to be watched. On the way it drags: clouds, orbital kennels,
- * zeppelins and the pups they're dropping all bend toward it as it passes and
- * spring back once it's gone, because a hole in the sky that nothing reacts to
- * is a sticker of a hole in the sky.
- *
- * The drag is a displacement rather than a force. Nothing up here has to know it
- * happened — they fly the routes they were flying and get drawn somewhere else —
- * so a machine can't be left stranded in orbit by a badly timed dive.
- *
- * The exception is the loose pup, which it doesn't lean on but actually takes:
- * see `Caught`.
- */
 interface Well {
-  /** Top-left of the sprite, and the middle of it, which is what pulls. */
   x: number;
   y: number;
   cx: number;
   cy: number;
-  /** How far the pull reaches, and how hard it is at the centre. */
   r: number;
   pull: number;
-  /** 0 holding station, 1 at the bottom of a dive. */
   dive: number;
 }
 
-/**
- * Something loose that a singularity has got hold of.
- *
- * The drag on the sky is a displacement and everything caught in it springs
- * back once the hole has gone by. This is the other half of the thing, and the
- * half you can point at: a basket waiting at the headland, a puppy riding the
- * pipeline, what's sitting in the trough. It comes off the mill, goes round the
- * hole on a shrinking orbit, and doesn't come back.
- *
- * Held in polar around the well's centre rather than in scene coordinates, so
- * whatever it's got stays with it — including on the climb back up, if the
- * thing is still outside the hole by the time the dive is over.
- */
 interface Caught {
-  /** Which well has it. It lets go if that one stops being drawn. */
   well: number;
   art: Art;
-  /** Angle round the hole, and how far out. */
   a: number;
   r: number;
 }
 
-/** Pixels a second a caught thing closes on the hole. */
 const CATCH_FALL = 14;
-/**
- * How fast it goes round, as `CATCH_SWIRL / r` radians a second — angular
- * momentum, near enough: the tighter the orbit the faster the lap, which is
- * what makes the last one whip. Capped at the core radius, because past that
- * it's a couple of pixels wide and any faster is a strobe.
- */
+/** Angular speed is `CATCH_SWIRL / r` — angular momentum, near enough — so the last lap whips. */
 const CATCH_SWIRL = 60;
 const CATCH_CORE = 5;
-/**
- * How flat the orbit lies once it's close in, and how far out it's still round.
- *
- * A flat orbit all the way out means a thing grabbed from directly above the
- * hole has to start half as far above it as it really is, which is a jump. So
- * the wide end of the spiral is a circle — it can enter it exactly where it was
- * standing — and it lies down into the drain as it closes.
- */
+/** How flat the orbit lies once it's close in, and how far out it's still round. */
 const CATCH_TILT = 0.5;
 const CATCH_FLAT = 30;
 const MAX_CAUGHT = 18;
 /** Things a hole picks up a second, at the bottom of a dive. */
 const GRAB_RATE = 22;
 
-/** One frame of an orbit: where it's got to, and how far round it went. */
 export function catchOrbit(r: number, dt: number): { r: number; turn: number } {
   return { r: r - CATCH_FALL * dt, turn: (CATCH_SWIRL / Math.max(CATCH_CORE, r)) * dt };
 }
 
-/** How much of its height an orbit keeps, that far out from the hole. */
 function catchTilt(r: number): number {
   return CATCH_TILT + (1 - CATCH_TILT) * Math.min(1, r / CATCH_FLAT);
 }
@@ -1459,18 +773,12 @@ function catchTilt(r: number): number {
 const DIVE_PERIOD = 34;
 const DIVE_SHARE = 0.32;
 
-/** The one hash every sky tier is placed off. Stable per tier and index. */
+/** The one hash every sky tier is placed off. */
 function skyHash(i: number, id: string): number {
   return fract(Math.sin((i + 1) * 47.3 + id.length * 13.1) * 4375.85);
 }
 
-/**
- * How far into a dive something is, 0..1, given the clock and its own phase.
- *
- * Eases down, hangs at the bottom, eases back — one sine, which is exactly the
- * shape of a thing that has weight and is deciding rather than a thing on a
- * lift. The rest of the cycle it's flat zero and the sky is left alone.
- */
+/** How far into a dive something is, 0..1, given the clock and its own phase. */
 function diveAt(t: number, period: number, phase: number): number {
   const c = fract(t / period + phase);
   if (c > DIVE_SHARE) return 0;
@@ -1483,78 +791,44 @@ export class MillScene {
   private ro?: ResizeObserver;
   private raf = 0;
   private sh = 200;
-  /**
-   * Scene time, in seconds, accumulated a capped frame at a time rather than
-   * read off the wall clock.
-   *
-   * A backgrounded tab stops getting frames, and a scene clock derived from a
-   * fixed epoch comes back minutes ahead: every bed in the field is suddenly
-   * long overdue, every one of them lifts on the same frame, and switching back
-   * to the game greeted you with the entire output going off at once. The mill
-   * pauses with the tab now and picks up where it left off.
-   */
+  /** Scene time, in seconds, accumulated a capped frame at a time rather than read off the wall clock. */
   private clock = 0;
   private view: MillView = EMPTY_VIEW;
   private rngSeed = 1;
-  /** Whether a view has ever been pushed. The first one never animates. */
   private sawView = false;
-  /**
-   * How deep each lot was last frame, and which of its slots are mid-build.
-   *
-   * Same argument the fold makes about `sawView`: the first frame a scene draws
-   * is a *restore*, so it fills the depths and raises nothing. Otherwise every
-   * reload would put eleven kibble pups up in front of you at once.
-   */
   private lotSeen = new Map<string, number>();
   private raising = new Map<string, number>();
   private sawLots = false;
-  /** What time of day it is, worked out once a frame and read by everything. */
   private phase: Phase = "day";
-  /** When the pipeline started being built, on the scene clock. */
   private pipeBuiltAt: number | null = null;
   /** Whether a frame has ever been drawn with nothing feeding the pipeline. */
   private sawNoPipe = false;
   private hauls: Haul[] = [];
   private lumps: Lump[] = [];
-  /** Baskets tipped out by the machines, waiting for a hand. */
   private baskets: Basket[] = [];
   private basketId = 0;
-  /** How full each drawn machine is, keyed by tier and index. */
   private machineLoad = new Map<string, number>();
   private whistled: Whistled[] = [];
   private puffs: Puff[] = [];
   /** Cooling-tower steam, on its own budget so it can't starve the dust. */
   private plumes: Plume[] = [];
-  /** The pups as laid out this frame. Deterministic, so an index is a place. */
   private beds: Bed[] = [];
-  /** This frame's pup rows. Rigs stand beside these; machines drive along them. */
   private rows: Row[] = [];
-  /** Fresh wheel track behind a van, fading. */
   private tracks: { x: number; y: number; born: number }[] = [];
   private drops: Drop[] = [];
-  /** The zeppelins aloft, one entry each, kept between frames. */
   private flyers: Flyer[] = [];
-  /** This frame's singularities. Placed before the sky, so the sky can feel them. */
   private wells: Well[] = [];
-  /** What they've taken off the mill, still going round. */
   private caught: Caught[] = [];
-  /** When each bed was last cleared. Indexed the same as `beds`. */
+  /** Indexed the same as `beds`. */
   private stocked: number[] = [];
   private hands: Hand[] = [];
-  /** What's sitting in the trough, 0..TROUGH_CAP, and the spout's metronome. */
   private troughFill = 0;
   private troughClock = 0;
-  /** This frame's trough, as `[x, w, ground]`. Null when nothing works the field. */
   private troughBox: { x: number; w: number; y: number } | null = null;
-  /** How far right the pipeline reaches this frame. 0 when nothing feeds it. */
   private pipeEnd = 0;
   private dt = 0;
   private lastFrame = performance.now();
-  /**
-   * The hoard the yard is currently showing, which chases the real one rather
-   * than snapping to it. This is what makes spending *look* like spending:
-   * buy a van and you watch the field empty out.
-   */
+  /** The hoard the yard is currently showing, which chases the real one rather than snapping to it. */
   private shown = -1;
   private shownLayout = yardLayout(0);
   private pack: PackPup[] = [];
@@ -1601,20 +875,7 @@ export class MillScene {
     if (wiped) this.clearOut();
   }
 
-  /**
-   * A different mill entirely: handed down, or ploughed under. Take everything
-   * the last one left standing off the canvas.
-   *
-   * The yard chases the hoard rather than snapping to it, which is what makes
-   * spending look like spending — but a chase is the wrong verb for a wipe.
-   * Coming down from a late-run hoard it's an exponential decay through
-   * twenty-odd orders of magnitude, so a mill you no longer own kept its pack,
-   * its pipeline and a heap up the side of the screen for twenty seconds after
-   * the generation that built them was cleared.
-   *
-   * A generation bump or a new seed is the whole tell: prestige does the first,
-   * ploughing it all under does the second, and nothing else does either.
-   */
+  /** A different mill entirely: handed down, or ploughed under. */
   private clearOut(): void {
     this.shown = Math.max(0, this.view.hoard);
     this.shownLayout = yardLayout(this.shown);
@@ -1632,34 +893,22 @@ export class MillScene {
     this.whistled = [];
     this.caught = [];
     this.troughFill = 0;
-    // The pipeline is built once, by the mill that first needed one. The next
-    // generation builds its own.
+    // The pipeline is built once, by the mill that first needed one.
     this.pipeBuiltAt = null;
     this.sawNoPipe = false;
-    // Lot depths are seeded rather than raised on a restore, and a wipe is a
-    // restore: the next mill shouldn't put its first pen up in a cloud of
-    // dust it didn't earn, and it definitely shouldn't demolish eleven
-    // kibble pups on the way out.
+    // Lot depths are seeded, not raised, on a restore — and a wipe is a restore.
     this.lotSeen.clear();
     this.raising.clear();
     this.sawLots = false;
   }
 
-  /** Which mark of a tier to draw, given the upgrades bought on it. */
   private mark(id: solo.SoloProducerId): Art {
     const marks = PRODUCER_MARKS[id];
     const level = Math.max(0, Math.min(marks.length - 1, this.view.marks[id] ?? 0));
     return marks[level] ?? marks[0];
   }
 
-  /**
-   * A whistle: a puppy comes up out of the ground where you put your finger, sits
-   * in the open for a moment in a cloud of its own dirt, and is gone.
-   *
-   * It doesn't travel. Whistling is the one thing on this mill you do with your
-   * hands, and the whole reward is seeing the thing come out of the bedding at the
-   * spot you picked — carting it anywhere afterwards is the machines' job.
-   */
+  /** A whistle: a puppy comes up out of the ground under your finger, sits a moment, and is gone. */
   whistle(at?: { x: number; y: number }): void {
     if (this.whistled.length > 14) return;
     const top = this.fieldTop() + 8;
@@ -1671,52 +920,29 @@ export class MillScene {
     this.puff(x + 3, y, "dust", 10);
   }
 
-  /** How ready a bed is, 0..1, where 1 is ready to lift. */
   private readiness(i: number, t: number): number {
     const stocked = this.stocked[i];
     if (stocked === undefined) return 0;
     return Math.min(1, (t - stocked) / GROW_SECONDS);
   }
 
-  /**
-   * Clear a bed and start it again. Nothing is drawn coming off it: whatever
-   * lifted the bed is the thing that carries it, and a bed that went over and
-   * got tidied up off-screen shouldn't produce a puppy out of thin air.
-   */
   private lift(i: number, t: number): void {
-    // Replanted part-grown, not from bare bedding. A mill running eleven machines
-    // sweeps every row every few seconds, and a bed that goes back to a two
-    // pixel sprout each time means the field you spent the whole game buying
-    // is permanently brown.
+    // Replanted part-grown, not from bare bedding.
     this.stocked[i] = t - GROW_SECONDS * 0.35;
   }
 
-  /**
-   * The kennel hands, going about it.
-   *
-   * Each one walks out to whichever bed has been ready longest, spends a moment
-   * pulling it, carries the puppy down to the yard, drops it on the pile and
-   * walks back. Nothing here is fast and nothing here is synchronised — the
-   * point is that there's always somebody halfway across the field.
-   */
   private stepHands(t: number, dt: number, count: number, yardY: number): void {
     const unload = yardY + Math.round((this.sh - yardY) * 0.42);
 
     while (this.hands.length > count) this.hands.pop();
     while (this.hands.length < count) {
       const i = this.hands.length;
-      // Sixteen of them have to stand somewhere: six to a rank, ranks stepped
-      // back into the yard and offset half a place so the crew reads as a crew
-      // and not a police line.
+      // Six to a rank, ranks stepped back and offset half a place, so the crew isn't a police line.
       const rank = Math.floor(i / 6);
       const inRank = i % 6;
       const home = 12 + inRank * 26 + (rank % 2) * 13;
       const homeY = unload + rank * 7;
-      // Staggered so they don't set off on the same frame like a chorus, but
-      // barely — two seconds of jitter off a hash rather than two seconds per
-      // hand in a queue. Sixteen hands standing in the yard counting to thirty
-      // is the crew you just bought doing nothing, which is the opposite of
-      // what buying them was for.
+      // Two seconds of hashed jitter so they don't set off in chorus.
       const jitter = fract(Math.sin((i + 1) * 91.7) * 4375.85);
       this.hands.push({
         x: home,
@@ -1736,10 +962,6 @@ export class MillScene {
     for (const hand of this.hands) {
       switch (hand.state) {
         case "resting": {
-          // Idle hands amble. They pick a spot a few paces off, wander to it at
-          // half pace, and pick another — so a crew with nothing ready to lift
-          // reads as people standing about a mill rather than a rank of clones
-          // waiting for a whistle.
           if (this.walk(hand, hand.loiter.x, hand.loiter.y, dt, 0.35)) {
             hand.loiter = {
               x: clamp(hand.home + (Math.random() - 0.5) * 26, 4, SCENE_W - 10),
@@ -1747,8 +969,7 @@ export class MillScene {
             };
           }
           if (t < hand.until) break;
-          // A basket sitting at the headland is worth more than another bed:
-          // it's already picked, and it's in the way.
+          // A basket sitting at the headland is worth more than another bed: it's already picked, and it's in the way.
           const basket = this.claimBasket(hand);
           if (basket >= 0) {
             hand.basket = basket;
@@ -1757,7 +978,6 @@ export class MillScene {
           }
           const target = this.claimBed(t, hand);
           if (target < 0) {
-            // Nothing ready and nothing growing: try again shortly.
             hand.until = t + 0.6 + Math.random();
             break;
           }
@@ -1802,8 +1022,7 @@ export class MillScene {
           break;
         }
         case "hauling": {
-          // To the trough if there is one — that's where the machines' load
-          // goes — and to the yard if there isn't.
+          // To the trough if there is one — that's where the machines' load goes — and to the yard if there isn't.
           const box = this.troughBox;
           const tx = box ? clamp(hand.x, box.x + 4, box.x + box.w - 6) : hand.home;
           const ty = box ? box.y + 3 : hand.homeY;
@@ -1819,16 +1038,12 @@ export class MillScene {
           break;
         }
         case "back": {
-          // To the trough, same as the baskets. One deposit point for the whole
-          // mill: what a hand pulls out of a bed goes where a grooming rig's load
-          // goes, and the trough empties towards the drop.
           const bin = this.troughBox;
           const bx = bin ? clamp(hand.x, bin.x + 4, bin.x + bin.w - 6) : hand.home;
           const by = bin ? bin.y + 3 : hand.homeY;
           if (this.walk(hand, bx, by, dt)) {
             hand.carrying = "none";
             if (bin) this.troughFill = Math.min(TROUGH_CAP, this.troughFill + 1);
-            // Set down, not thrown. The dirt it kicks up is the whole event.
             this.puff(bx + 2, by - 1, "dust");
             hand.state = "resting";
             hand.target = -1;
@@ -1841,11 +1056,6 @@ export class MillScene {
     }
   }
 
-  /**
-   * The bed that's been ready longest and isn't already somebody's job. Wilted
-   * beds are passed over — there's nothing under them worth the walk, which is
-   * the bedding bar showing up as behaviour rather than a number.
-   */
   private claimBed(t: number, hand: Hand): number {
     let best = -1;
     let bestScore = 0;
@@ -1855,11 +1065,7 @@ export class MillScene {
       if (this.hands.some((h) => h.target === i)) continue;
       const ready = this.readiness(i, t);
       if (ready <= 0.55) continue;
-      // Ripest first, then weighted against the walk, then against the row
-      // this one tends to work. Purely by readiness they all set off for the
-      // same corner, because beds come on in patches; purely by distance they
-      // all crowd the near row. Each hand leaning towards a row of its own is
-      // what spreads the crew over the whole field.
+      // Ripest first, then weighted against the walk, then against the row this one tends to work.
       const score =
         ready * 40 -
         Math.hypot(bed.x - hand.x, bed.y - hand.y) * 0.35 -
@@ -1872,7 +1078,6 @@ export class MillScene {
     return best;
   }
 
-  /** Step a hand toward a point. True once it's there. */
   private walk(hand: Hand, tx: number, ty: number, dt: number, pace = 1): boolean {
     const dx = tx - hand.x;
     const dy = ty - hand.y;
@@ -1895,22 +1100,14 @@ export class MillScene {
     const basket = artCanvas(BASKET);
     for (const [i, hand] of this.hands.entries()) {
       const moving = hand.state !== "resting" && hand.state !== "picking";
-      // A 1px bob while walking, and a deeper stoop while pulling a bed.
       const bob = moving ? Math.floor(t * 4) % 2 : hand.state === "picking" ? 2 : 0;
-      // Lifted off the ground if one of them comes down in the row they're
-      // working. They keep walking the route they were walking — see `warp` —
-      // so what it looks like is a kennel hand being picked up and put back down,
-      // which is the correct response to a hole in the world arriving overhead.
       const at = this.warp(hand.x + sprite.w / 2, hand.y - sprite.h / 2 + bob);
       const x = Math.round(at.x - sprite.w / 2);
       const y = Math.round(at.y - sprite.h / 2);
-      // A hand who owns a piece of the place carries a lamp. Sixteen of them
-      // walking a dark field is the single best thing the fourth marks do.
       this.primeGlow("hand", x, y, sprite.w, sprite.h, t, i, 0.8);
       ctx.drawImage(sprite.canvas, x, y);
       if (hand.carrying === "puppy") ctx.drawImage(pup.canvas, x + 1, y - 4);
-      // Baskets ride on the shoulder, which is also why a hand carrying one
-      // walks at eighty-five per cent pace.
+      // Baskets ride on the shoulder, which is also why a hand carrying one walks at eighty-five per cent pace.
       if (hand.carrying === "basket") ctx.drawImage(basket.canvas, x - 2, y - basket.h + 3);
     }
   }
@@ -1954,11 +1151,7 @@ export class MillScene {
 
   // --- Geometry ------------------------------------------------------------
 
-  /**
-   * The three bands, as fractions rather than fixed pixel depths. Fixed depths
-   * looked right at one aspect ratio and left two thirds of a tall phone as
-   * empty sky — the mill should get the screen, not the weather.
-   */
+  /** The three bands, as fractions rather than fixed pixel depths. */
   private yardTop(): number {
     return this.sh - Math.max(34, Math.round(this.sh * YARD_SHARE));
   }
@@ -1967,22 +1160,6 @@ export class MillScene {
     return Math.max(MIN_SKY, this.yardTop() - Math.max(40, Math.round(this.sh * FIELD_SHARE)));
   }
 
-  /**
-   * How much sky the machines have, and where the hanging tier's deck ends.
-   *
-   * `deck` is the top of the frame down to where the far ridge crests, which is
-   * as low as anything up here should sit before it's flying in front of the
-   * hills instead of above them. Floored, because a squat landscape sky has no
-   * room at all and everything in it has always just flown a bit low in that
-   * case.
-   *
-   * Three tiers used to draw their altitude from one range, which is three tiers
-   * taking turns being in front of each other. They're stacked by how long an
-   * overlap would last instead: the singularities hang and never travel, so they
-   * get the top and everything passes underneath them; the orbital kennels cross, so
-   * they get the middle; the zeppelins dash, hold and drip, so they get the
-   * bottom, nearest the rows they're stocking.
-   */
   private decks(horizon: number): { deck: number; hang: number } {
     const ridge = RIDGES[0]!;
     const deck = Math.max(
@@ -1992,31 +1169,14 @@ export class MillScene {
     return { deck, hang: Math.round(deck * 0.44) };
   }
 
-  /**
-   * Where the singularities are this frame, and how hard each is pulling.
-   *
-   * Placed before anything is drawn, because half the point of them is what the
-   * rest of the sky does about them — the clouds go up before the machines do,
-   * and both have to be able to ask where the holes are.
-   *
-   * A singularity can't be placed by hash the way the travelling tiers are: a
-   * orbital kennel that overlaps another one has passed it by the time you look up,
-   * and two of these dealt the same corner are still in that corner ten minutes
-   * later. So each one owns a column — `cap` even lots across the width — and
-   * everything else it does happens inside that column.
-   */
+  /** Where the singularities are this frame, and how hard each is pulling. */
   private stepWells(t: number, horizon: number): void {
     const place = PLACEMENT.singularity;
     const n = shownCount(this.view.working.singularity ?? 0, place.cap, place.spread ?? 1);
     const sprite = artCanvas(this.mark("singularity"));
     const { hang } = this.decks(horizon);
     const lot = SCENE_W / place.cap;
-    // As low as a dive gets: down through the traffic, past the hills and into
-    // the middle of the field itself.
-    //
-    // Stopping it at the skyline made it a weather event happening to the sky.
-    // Down here it's happening to the mill — it comes down among the rows and
-    // the crew, and what it drags is the work.
+    // As low as a dive gets: down through the traffic, past the hills and into the middle of the field itself.
     const floor = Math.max(hang, Math.round(horizon + (this.yardTop() - horizon) * 0.5 - sprite.h / 2));
 
     this.wells.length = 0;
@@ -2024,17 +1184,10 @@ export class MillScene {
       const h = skyHash(i, "singularity");
       const h2 = fract(h * 137.7);
       const h3 = fract(h2 * 91.3);
-      // Hanging: high in its column, and never quite still — a slow lissajous a
-      // few pixels wide, on its own phase, so two of them don't breathe
-      // together. Staggered vertically by what room the deck leaves, so three of
-      // them aren't a row of portals at one exact altitude.
+      // Hanging: a slow lissajous a few pixels wide on its own phase, so two don't breathe together.
       const home = (i / place.cap) * SCENE_W + (lot - sprite.w) / 2;
       const room = Math.max(0, hang - sprite.h - 2);
       const rest = 1 + Math.round(h2 * room) + Math.round(Math.sin(t * 0.43 + h3 * 6) * 2);
-      // And every half a minute or so, it comes down. Off the clock rather than
-      // out of a bag, so it's a thing the mill does on a rhythm you can learn
-      // rather than a jump scare — and on its own phase, because three of them
-      // descending in step is a formation flight, not weather.
       const dive = diveAt(t, DIVE_PERIOD * (0.8 + 0.5 * h), h2);
       const x = Math.round(home + Math.sin(t * 0.31 + h2 * 6) * 5);
       const y = Math.round(rest + (floor - rest) * dive);
@@ -2043,52 +1196,28 @@ export class MillScene {
         y,
         cx: x + sprite.w / 2,
         cy: y + sprite.h / 2,
-        // It reaches further and pulls harder the lower it gets. Resting, it's
-        // barely more than a lens the clouds bend through; at the bottom of a
-        // dive it's worth about half a cloud's width of displacement, which at
-        // this resolution is the difference between a drift and a grab.
         r: 18 + dive * 44,
         pull: 0.16 + dive * 0.64,
         dive,
       });
-      // What it makes goes into the same pipeline as everything else the
-      // industrial half of the mill produces — it just doesn't need a kennel to
-      // do it from. Booked here rather than where it's drawn, because the pipe
-      // is laid out long before the last thing on top of it is painted.
+      // Feeds the same pipeline as the rest of the industrial half; it just needs no kennel to do it from.
       this.pipeEnd = Math.max(this.pipeEnd, x + Math.floor(sprite.w / 2));
       if (this.chance(1.4)) this.feedPipe(x + Math.floor(sprite.w / 2));
-      // And what it takes on the way down.
       this.grab(i, t, horizon);
     }
   }
 
-  /**
-   * What a diving singularity picks up.
-   *
-   * The displacement is the sky *leaning*; this is the hole actually taking
-   * something, which is the part you can watch happen to a thing you recognise.
-   * Same rule as the warp about what's fair game — anything loose, nothing
-   * rooted — so it robs the headland, the pipeline and the trough, and leaves
-   * the pup, the rigs and the kennels alone.
-   *
-   * The nearest thing in reach, one at a time, several a second: a hole that
-   * swallowed everything on the same frame would read as a delete rather than
-   * as a pull.
-   */
   private grab(i: number, t: number, horizon: number): void {
     const well = this.wells[i]!;
     if (well.dive < 0.25 || this.caught.length >= MAX_CAUGHT) return;
-    // Dirt off the ground under it the whole time it's down, whether or not
-    // there's anything to take: it's the wind of the thing, and it's what says
-    // the field is being pulled at rather than just passed over.
+    // Dirt off the ground the whole time it's down, whether or not there's anything to take.
     if (this.chance(6 * well.dive)) {
       const off = (Math.random() - 0.5) * 40;
       this.puff(well.cx + off, well.cy + 16, "dust", -off * 0.7);
     }
     if (!this.chance(GRAB_RATE * well.dive)) return;
 
-    // Inside the reach the warp already has, less a margin — something it can
-    // barely lean on shouldn't be something it can lift.
+    // Inside the reach the warp already has, less a margin — something it can barely lean on shouldn't be something it can lift.
     const reach = well.r * 0.8;
     let best: { d: number; art: Art; x: number; y: number; take: () => void } | null = null;
     const offer = (x: number, y: number, art: Art, take: () => void) => {
@@ -2097,14 +1226,11 @@ export class MillScene {
       best = { d, art, x, y, take };
     };
 
-    // A basket at the headland: the biggest loose thing on the mill, and the one
-    // whose going is worth the most work.
     for (const basket of this.baskets) {
       offer(basket.x + 3, basket.y - 4, BASKET, () => {
         this.baskets = this.baskets.filter((s) => s !== basket);
       });
     }
-    // Yield on the pipeline's horizontal run, lifted straight out of it.
     const pipeY = this.pipeY(horizon) + 3;
     for (const lump of this.lumps) {
       const px = lump.from - lump.d;
@@ -2113,24 +1239,16 @@ export class MillScene {
         this.lumps = this.lumps.filter((l) => l !== lump);
       });
     }
-    // What the crew has just turned up and hasn't carried off yet.
     for (const whistled of this.whistled) {
       offer(whistled.x + 3, whistled.y - 6, PUPPY_SPRITE, () => {
         this.whistled = this.whistled.filter((d) => d !== whistled);
       });
     }
-    // The ready pup out of the beds under it. The pup stays in the ground —
-    // it's the puppy that goes, the same one a hand would have walked out for,
-    // and the bed goes back to part-grown exactly as if one had. This is what
-    // makes a dive over open field worth watching on a mill that hasn't got a
-    // pipeline yet: everything else out here is somebody's load, and there's
-    // never more than one of those in reach.
     for (let b = 0; b < this.beds.length; b++) {
       const bed = this.beds[b]!;
       if (bed.dry || this.readiness(b, t) < 0.8) continue;
       offer(bed.x + 3, bed.y - 5, PUPPY_SPRITE, () => this.lift(b, t));
     }
-    // And off the top of the trough, at the point on it nearest the hole.
     const box = this.troughBox;
     if (box && this.troughFill > 0) {
       const tx = clamp(well.cx, box.x + 4, box.x + box.w - 5);
@@ -2142,9 +1260,6 @@ export class MillScene {
     if (!best) return;
     const got: { d: number; art: Art; x: number; y: number; take: () => void } = best;
     got.take();
-    // Entered on the orbit that passes through where it was standing, so it
-    // leaves the ground from where you last saw it rather than snapping onto a
-    // seam — which is what the wide end of the spiral being round is for.
     this.caught.push({
       well: i,
       art: got.art,
@@ -2153,21 +1268,7 @@ export class MillScene {
     });
   }
 
-  /**
-   * Where a point in the sky ends up once the holes have had a go at it.
-   *
-   * Displacement, not force: the thing being warped is drawn somewhere else and
-   * never told, so it stays on whatever route it was flying and springs back as
-   * the well leaves. Falls off with the square of the distance, so the edge of
-   * the field is a lean and the middle of it is a swallow.
-   *
-   * One rule about what gets to move: anything loose does — clouds, machines,
-   * the crew, dust, drops in the air. Anything rooted doesn't. The pup stays in
-   * the ground, the rigs stay on their stands and the kennels stay on the hill,
-   * because a mill that comes apart every thirty seconds isn't a mill, and the
-   * point of the thing coming down is what it does to the work going on around
-   * it rather than to the place itself.
-   */
+  /** Where a point in the sky ends up once the holes have had a go at it. */
   private warp(x: number, y: number): { x: number; y: number } {
     let ox = x;
     let oy = y;
@@ -2197,8 +1298,7 @@ export class MillScene {
 
     this.stepHoard(dt);
     this.pipeEnd = 0;
-    // Before anything is drawn: the sky has to know where the holes in it are
-    // before it draws the things that fall toward them.
+    // Before anything is drawn: the sky has to know where the holes in it are before it draws the things that fall toward them.
     this.stepWells(t, horizon);
 
     const lots = this.lots(horizon);
@@ -2214,23 +1314,19 @@ export class MillScene {
     this.drawFence(yardY);
     this.drawLamp(yardY, phase);
     this.drawHoard();
-    // The spout hangs over the yard on its way to the drop at the front of it,
-    // so it's drawn after the yard rather than with the trough it comes off.
+    // The spout hangs over the yard on its way to the drop at the front of it, so it's drawn after the yard rather than with the trough it comes off.
     if (this.troughBox) this.drawSpout(this.troughBox);
     this.stepFetch(this.clock);
     this.stepPack(this.dt, this.clock);
 
-    // After the hoard: the pipeline runs down the near side of the yard, so it
-    // passes in front of the pack rather than being swallowed by it.
+    // After the hoard: the pipeline runs down the near side of the yard, so it passes in front of the pack rather than being swallowed by it.
     this.drawPipeline(horizon, yardY, dt, t);
-    // The hands walk between the two bands, so they're drawn after both — and
-    // after the field has said where this frame's beds are.
+    // The hands walk between the two bands, so they're drawn after both — and after the field has said where this frame's beds are.
     this.stepHands(t, dt, shownCount(this.view.working.hand ?? 0, PLACEMENT.hand.cap, PLACEMENT.hand.spread), yardY);
     this.drawHands(t);
     this.drawHauls(now);
     this.drawWhistled(now);
-    // In front of the whole mill, because one of them may be hanging in the
-    // middle of it.
+    // In front of the whole mill, because one of them may be hanging in the middle of it.
     this.drawWells(t);
 
     this.drawDark(phase, yardY, t);
@@ -2243,29 +1339,13 @@ export class MillScene {
     return { x: LAMP_X + Math.floor(art.w / 2), y: top + 2, top };
   }
 
-  /**
-   * The lamp post on the yard gate. Drawn with the fence, because that's where
-   * it stands — in front of the field, behind everything in the yard.
-   */
   private drawLamp(yardY: number, phase: Phase): void {
     const on = phase !== "day";
     const sprite = artCanvas(on ? LAMP_ON : LAMP);
     this.ctx.drawImage(sprite.canvas, LAMP_X, this.lampHead(yardY).top);
   }
 
-  /**
-   * Nightfall, over the whole picture and not just the top four fifths of it.
-   *
-   * Three passes, in this order, and the order is the entire trick:
-   *  1. the field goes dark flat, because nothing out there is lit;
-   *  2. the yard goes dark too, less, because it's the yard;
-   *  3. the lamp puts its own light back — a warm pool over a cold wash, which
-   *     is what lamplight actually looks like and what stops the yard from
-   *     reading as a band the renderer forgot about.
-   *
-   * The lamp's head is re-blitted last so the one thing in the picture that is
-   * emitting light isn't also being dimmed by the pass that made it necessary.
-   */
+  /** Nightfall, over the whole picture and not just the top four fifths of it. */
   private drawDark(phase: Phase, yardY: number, t: number): void {
     const dark = DARKNESS[phase];
     if (dark.field <= 0 && dark.yard <= 0) return;
@@ -2276,15 +1356,10 @@ export class MillScene {
     ctx.fillStyle = rgba(NIGHT, dark.yard);
     ctx.fillRect(0, yardY, SCENE_W, this.sh - yardY);
 
-    // A slow flicker, a couple of per cent deep. A lamp that holds perfectly
-    // steady is a rectangle of colour; one that breathes is a light.
     const head = this.lampHead(yardY);
     const flicker = 0.94 + 0.06 * Math.sin(t * 2.3) + 0.02 * Math.sin(t * 11.7);
     const lit = (phase === "night" ? 1 : 0.55) * flicker;
 
-    // The cone. This is the difference between "the yard came out lighter" and
-    // "that lamp is lighting the yard", and it's the whole reason the post was
-    // worth drawing: you can see where the light comes from and where it stops.
     const cone = ctx.createLinearGradient(0, head.y, 0, this.sh);
     cone.addColorStop(0, rgba(LAMP_LIGHT, 0.24 * lit));
     cone.addColorStop(0.55, rgba(LAMP_LIGHT, 0.12 * lit));
@@ -2298,8 +1373,7 @@ export class MillScene {
     ctx.closePath();
     ctx.fill();
 
-    // The pool it lands in, aimed down into the yard rather than centred on the
-    // bulb — the light is up on a post and what it lights is the ground.
+    // The pool is aimed down into the yard, not centred on the bulb.
     this.glow(head.x, yardY + (this.sh - yardY) * 0.4, LAMP_REACH, LAMP_LIGHT, 0.26 * lit);
     this.glow(head.x, head.y, 13, LAMP_LIGHT, 0.5 * lit);
 
@@ -2308,21 +1382,13 @@ export class MillScene {
   }
 
   // --- Things going up -----------------------------------------------------
-  //
-  // Nothing on this mill should simply appear. The yard already had this: a
-  // crate arrives because somebody bagged the pile and carried it in. The back
-  // edge did not — a fusion reactor turned up between two frames because a
-  // number went up, which is the one place the picture stopped being a place
-  // where work happens and went back to being a readout.
 
   /** Spot anything that arrived since last frame, and put it up. */
   private noteArrivals(lots: Lot[], t: number): void {
     const arrive = (key: string, n: number) => {
       const before = this.lotSeen.get(key) ?? 0;
       this.lotSeen.set(key, n);
-      // Counts fall on a prestige, and everything gets built again on the way
-      // back up — which is the right answer. Handing the mill down and watching
-      // it go back up is the point of handing it down.
+      // Counts fall on a prestige, and everything gets built again on the way back up — which is the right answer.
       if (this.sawLots) {
         for (let i = before; i < n; i++) this.raising.set(`${key}:${i}`, t);
       }
@@ -2343,17 +1409,6 @@ export class MillScene {
     return clamp((t - born) / RAISE_S, 0, 1);
   }
 
-  /**
-   * One building going up: scaffolding, then the thing rising into it, then
-   * the scaffolding coming off.
-   *
-   * A second and a half, which is a tenth of what the fold gets — this fires
-   * five times in a row when a lot goes from four deep to nine, and anything
-   * statelier would have the back edge permanently under construction. Returns
-   * how much of the sprite has cleared the ground, so the caller can blit that
-   * much of it: the building comes *up out of the pad*, which is both cheaper
-   * and a better read than fading one in.
-   */
   private drawRaise(p: number, x: number, foot: number, w: number, h: number): number {
     const ctx = this.ctx;
     // Up fast, off at the end, and never quite opaque — it's scaffolding.
@@ -2372,8 +1427,6 @@ export class MillScene {
       ctx.globalAlpha = 1;
     }
 
-    // Dirt coming off the pad the whole way up, and one last shove of it as the
-    // thing lands.
     if (p < 0.75 && this.chance(9)) {
       this.puff(x + Math.random() * w, foot - 1, "dust", (Math.random() - 0.5) * 16);
     }
@@ -2401,7 +1454,6 @@ export class MillScene {
         const y = Math.floor(rng() * Math.max(1, horizon - 8));
         if (rng() > 0.35 + 0.3 * Math.sin(t * 0.7 + i)) ctx.fillRect(x, y, 1, 1);
       }
-      // Moon
       ctx.fillStyle = "#f7f0d0";
       ctx.beginPath();
       ctx.arc(SCENE_W - 30, 20, 8, 0, Math.PI * 2);
@@ -2417,12 +1469,6 @@ export class MillScene {
       ctx.fill();
     }
 
-    // Drifting clouds. Day only — at night they'd just be grey smears.
-    //
-    // Warped by whatever's hanging in the sky with them: a cloud that sails
-    // straight past a hole in the world is the cheapest way to say the hole
-    // isn't real. They're the loosest thing up here, so they're the first thing
-    // to lean.
     if (phase !== "night") {
       const cloud = artCanvas(CLOUD);
       for (let i = 0; i < 3; i++) {
@@ -2438,32 +1484,12 @@ export class MillScene {
     this.drawBleed(horizon, t);
   }
 
-  /**
-   * The flesh, showing through early.
-   *
-   * From the first Chihuahua Singularity the top of the sky starts taking on the
-   * colour of the thing on the other side of it, deepening with every one you
-   * buy until the Ur-Chihuahua is affordable and it's unmistakable. It's over the
-   * clouds and the sun rather than under them, because it isn't weather — it's
-   * the far side of something, and the things in front of it should be stained
-   * by it too.
-   *
-   * This is the only build-up the fold gets. Without it you buy a rung, nothing
-   * acknowledges it, and nine purchases later the world folds with no warning
-   * that it was ever going to. It clears the moment the fold lands: what's
-   * bleeding through arrives, and this sky goes back to being a sky.
-   */
   private drawBleed(horizon: number, t: number): void {
     const looming = clamp(this.view.looming, 0, 1);
     if (looming <= 0) return;
     const ctx = this.ctx;
-    // A slow breath on top of the level, so it reads as something alive on the
-    // other side rather than as a filter someone left on.
     const pulse = 0.88 + 0.12 * Math.sin(t * 0.42);
-    // Front-loaded rather than linear, let alone squared. The whole point is
-    // that the *first* Chihuahua Singularity changes something you can see — on a
-    // curve that only gets going in the back half, one of them is a tenth of
-    // the way to a wash nobody would notice, which is the same as nothing.
+    // Front-loaded rather than linear, let alone squared.
     const strength = Math.pow(looming, 0.55) * pulse;
 
     const grad = ctx.createLinearGradient(0, 0, 0, horizon);
@@ -2473,8 +1499,6 @@ export class MillScene {
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, SCENE_W, horizon);
 
-    // And once it's close, the first hint of the vascular seam — the one piece
-    // of structure the ceiling has, arriving before the ceiling does.
     if (looming > 0.55) {
       ctx.globalAlpha = 0.16 * (looming - 0.55) / 0.45;
       ctx.fillStyle = FLESH_DEEP;
@@ -2486,34 +1510,23 @@ export class MillScene {
     }
   }
 
-  /**
-   * The far half of the property: three ridges and the deep end of every lot
-   * standing on them, drawn back to front so each ridge buries the feet of
-   * what's on the one behind it.
-   *
-   * Interleaving them is the whole reason the depth reads as distance rather
-   * than as a second row of buildings floating over the first. A building whose
-   * base is cut off by a hill is over that hill.
-   */
+  /** Three ridges and the deep end of every lot, back to front so each ridge buries the feet of the row behind. */
   private drawDistance(lots: Lot[], phase: Phase, horizon: number, t: number): void {
     const ctx = this.ctx;
     const sky = SKY[phase];
     const scale = Math.min(1, horizon / RIDGE_ROOM);
-    // The far ones wash out toward the sky they're seen against, which is the
-    // only thing that tells three ridges of the same green apart at night.
+    // Far ridges wash out toward the sky: the only thing telling three same-green ridges apart at night.
     const colors = [mix(sky.hillFar, sky.bottom, 0.4), sky.hillFar, sky.hill];
 
     for (let i = 0; i < RIDGES.length; i++) {
-      // Drawn as 1px columns so the ridge sits on the buffer's grid instead of
-      // being antialiased into a smear by a path fill.
+      // Drawn as 1px columns so the ridge sits on the buffer's grid instead of being antialiased into a smear by a path fill.
       const ridge = RIDGES[i]!;
       for (let x = 0; x < SCENE_W; x++) {
         const h = ridgeAt(ridge, x, scale);
         ctx.fillStyle = colors[i]!;
         ctx.fillRect(x, horizon - h, 1, h);
       }
-      // Layer i is the row standing on ridge i, so each ridge goes up under its
-      // own row and in front of the row above it.
+      // Layer i is the row standing on ridge i, so each ridge goes up under its own row and in front of the row above it.
       this.drawLotLayer(lots, i, phase, t);
     }
   }
@@ -2521,37 +1534,21 @@ export class MillScene {
   private drawGround(horizon: number, yardY: number): void {
     const ctx = this.ctx;
     const bedding = this.view.condition;
-    // Tired bedding isn't a number on this screen — the ground goes the colour
-    // of ground nobody has raked in a while. Churned and going to mud, rather
-    // than the parched yellow a field went: hard standing doesn't wither, it
-    // gets walked into a mess.
     const dry = 1 - Math.max(0, Math.min(1, bedding));
 
     ctx.fillStyle = mix(GRAVEL, "#8a7f66", dry);
     ctx.fillRect(0, horizon, SCENE_W, yardY - horizon);
 
-    // Tracks: shallow bands that give the yard a direction to be worked in.
     ctx.fillStyle = mix(GRAVEL_DARK, "#776d57", dry);
     for (let y = horizon + 6; y < yardY; y += 9) ctx.fillRect(0, y, SCENE_W, 2);
 
-    // The front yard: grass. It was poured concrete and compacted gravel for a
-    // long while, on the argument that a working kennel yard is hard standing
-    // and grass under sixty dogs lasts a week. True, and it made the one part
-    // of the screen that's meant to be lovely look like a car park. This is the
-    // puppy field: the dogs are on it, and it's the only ground out here that
-    // isn't being worked.
     ctx.fillStyle = mix(GRASS, GRASS_DRY, dry);
     ctx.fillRect(0, yardY, SCENE_W, this.sh - yardY);
-    // Shade along the back of it, under the fence. One flat green from the
-    // fence to the bottom of the screen gave the yard no floor at all —
-    // everything in it looked stuck to a wall.
     ctx.fillStyle = mix(GRASS_DARK, GRASS_DRY_DARK, dry);
     ctx.fillRect(0, yardY, SCENE_W, 3);
     ctx.globalAlpha = 0.5;
     ctx.fillRect(0, yardY + 3, SCENE_W, 3);
     ctx.globalAlpha = 1;
-    // Texture: a scatter of darker blades, so the field isn't a flat slab of
-    // colour under the pack.
     ctx.globalAlpha = 0.5;
     const rng = mulberry32(this.rngSeed ^ 0x9e37);
     for (let i = 0; i < 40; i++) {
@@ -2564,9 +1561,6 @@ export class MillScene {
     }
     ctx.globalAlpha = 1;
 
-    // The worn track along the gate end, where the dogs come off the slide and
-    // everybody walks all day. Grass doesn't survive the traffic there, and the
-    // bare strip is what stops the field reading as a lawn nobody uses.
     const back = this.packBack();
     ctx.globalAlpha = 0.3;
     ctx.fillStyle = mix("#a89b72", "#8a7f66", dry);
@@ -2578,47 +1572,22 @@ export class MillScene {
     ctx.globalAlpha = 1;
   }
 
-  /**
-   * The back edge as lots: one per tier, in tier order, each with the art it's
-   * standing and how far back it's built.
-   *
-   * Worked out once a frame and handed to every pass, because a lot is drawn in
-   * six slices either side of the ridges, the ceiling and the ground, and they
-   * all have to agree about what's where.
-   */
   private lots(horizon: number): Lot[] {
-    // The lots divide the back edge between them and keep their share whether
-    // the tier is bought or not — a kibble arrives in the space that was
-    // always the kibble's, and nothing already standing shuffles along.
     const span = SCENE_W - artCanvas(TREE).w - 6;
     const width = Math.floor(span / BACK_TIERS.length);
     const scale = Math.min(1, horizon / RIDGE_ROOM);
-    // The lot after the last one you've built on gets staked out. Empty ground
-    // isn't dead space — it's the thing you're filling in, the same argument
-    // the field makes by ploughing a line across the rows you haven't bought.
-    // Only the one, though: four surveyed pads on a mill with no kennels on it
-    // reads as a building site rather than as a mill with room to grow.
+    // The lot after the last one you've built on gets staked out.
     const next = BACK_TIERS.findIndex((id) => ((this.view.working[id] ?? 0) + (this.view.broken[id] ?? 0)) <= 0);
 
     return BACK_TIERS.map((id, i) => {
       const working = this.view.working[id] ?? 0;
       const broken = this.view.broken[id] ?? 0;
-      // Dead kit stands at the *back* of the lot, and the one out front only
-      // goes grey when there's nothing left working — the building you watch
-      // for the upgrade art shouldn't be the one the weather took.
+      // Dead kit stands at the back; the one out front only greys when nothing is left working.
       const depth = lotDepth(working + broken);
       const dead = working <= 0 ? depth : Math.min(depth - 1, Math.round((depth * broken) / (working + broken)));
       const art = this.mark(id);
       const x = 2 + i * width;
 
-      // Where each row stands. Sampled at the lot's middle rather than under
-      // each building, so a row comes out as a terrace cut into the hill and
-      // not as three kennels following a contour.
-      //
-      // Every row's feet are strictly higher on the screen than the row in
-      // front of it, whatever the ridge under it is doing. Without that rule a
-      // tall tier steps back further than the next ridge stands up, and its
-      // fourth row comes out standing *in front of* its third.
       const tall = artCanvas(shrunk(art)).h;
       const step = Math.max(LOT_STEP_MIN, Math.round(tall * LOT_STEP));
       const ground: number[] = [];
@@ -2628,15 +1597,13 @@ export class MillScene {
         if (row.ridge !== undefined) {
           y = Math.min(y, horizon - ridgeAt(RIDGES[row.ridge]!, x + width / 2, scale));
         }
-        // Clamped, so a squat landscape sky crowds the lot together rather than
-        // posting its far end off the top of the buffer.
+        // Clamped, so a squat sky crowds the lot together rather than posting its far end off the buffer.
         ground.push(Math.max(tall + 1, y));
       }
       return { id, art, x, w: width, depth, dead, ground, pad: depth === 0 && i === next };
     });
   }
 
-  /** The tree, the steam, and the near end of every lot. */
   private drawBack(
     lots: Lot[],
     t: number,
@@ -2644,31 +1611,21 @@ export class MillScene {
     horizon: number,
     phase: Phase,
   ): void {
-    // Steam first, so it comes out from behind the towers rather than over
-    // the front of them.
+    // Steam first, so it comes out from behind the towers rather than over the front of them.
     this.drawPlumes(now);
 
     this.drawLotLayer(lots, 3, phase, t);
     this.drawLotLayer(lots, 4, phase, t);
 
-    // No groomer. It stood here for a long time as a bookend and it never meant
-    // anything — nothing you buy touched it, and it was taking a third of the
-    // back edge away from the tiers that do.
     const tree = artCanvas(TREE);
     this.ctx.drawImage(tree.canvas, SCENE_W - tree.w - 3, horizon + 10 - tree.h);
 
     this.drawLotLayer(lots, 5, phase, t);
   }
 
-  /**
-   * One depth of every lot at once, so the whole back edge is drawn in order of
-   * distance rather than lot by lot — otherwise a lot's hillside would be drawn
-   * over its neighbour's foreground.
-   *
-   */
+  /** One depth of every lot at once, or a lot's hillside gets drawn over its neighbour's foreground. */
   private drawLotLayer(lots: Lot[], layer: number, phase: Phase, t: number): void {
     const ctx = this.ctx;
-    // What the distance is seen through: the air over the hills.
     const haze = SKY[phase].hillFar;
 
     for (const lot of lots) {
@@ -2677,8 +1634,7 @@ export class MillScene {
         const slot = LOT[s]!;
         if (slot.layer !== layer) continue;
         const art = slot.far ? shrunk(lot.art) : lot.art;
-        // Dead and distant at once still has to come out as one blit, so the
-        // two washes are folded into a single tint rather than stacked.
+        // Dead and distant at once still has to come out as one blit, so the two washes are folded into a single tint rather than stacked.
         const dead = s >= lot.depth - lot.dead;
         const tint = dead ? mix(haze, "#6b6b74", 0.6) : haze;
         const alpha = dead ? Math.max(0.6, slot.haze) : slot.haze;
@@ -2686,22 +1642,16 @@ export class MillScene {
 
         const x = lot.x + Math.round(lot.w * slot.at - sprite.w / 2);
         const ground = lot.ground[slot.row]!;
-        // A pixel of shadow under the ones up the hill. Without it a hillside
-        // is a flat wash of one colour and the buildings on it read as stuck to
-        // the sky rather than standing on anything.
         if (slot.far) {
           ctx.fillStyle = `rgba(24, 20, 30, ${0.3 - slot.haze * 0.25})`;
           ctx.fillRect(x, ground - 1, sprite.w, 1);
         }
-        // Primed lots light the hillside they stand on, and the ones up the
-        // back light it less — a lot of a hundred labs should read as a valley
-        // with the lights on, in depth, not as one bright building out front.
+        // Primed lots light the hillside, the ones up the back less — a valley with the lights on, in depth.
         if (!dead) {
           this.primeGlow(lot.id, x, ground - sprite.h, sprite.w, sprite.h, t, s, 1 - slot.haze);
         }
 
-        // Still going up: blit only what's cleared the pad. A source rect, so
-        // it's still a 1:1 integer blit — the sprite is cropped, never scaled.
+        // Still going up: blit only what's cleared the pad.
         const raise = this.raiseOf(`${lot.id}:${s}`, t);
         if (raise !== null && raise < 1) {
           const shown = this.drawRaise(raise, x, ground, sprite.w, sprite.h);
@@ -2716,27 +1666,18 @@ export class MillScene {
             sprite.w,
             shown,
           );
-          // It isn't working yet, so it doesn't light its windows and it
-          // certainly doesn't tip anything into the pipeline.
+          // It isn't working yet, so it doesn't light its windows and it certainly doesn't tip anything into the pipeline.
           continue;
         }
 
         ctx.drawImage(sprite.canvas, x, ground - sprite.h);
         if (dead) continue;
 
-        // Up close you get the industry — lit windows, a flare, a reactor
-        // breathing. Further back you get a lamp on and the odd wisp off the
-        // roof, because the detail those routines draw is measured in single
-        // pixels off the top left corner and half of one is a smudge.
         if (slot.far) this.farLife(x, ground - sprite.h, sprite.w, sprite.h, t, s);
         else this.buildingLife(lot.id, x, ground - sprite.h, sprite.w, sprite.h, t, s);
-        // Everything along the back edge stands on the pipeline, and every so
-        // often drops something into it. A trickle, not a conveyor: the far
-        // side of the property should read as a place that's busy.
+        // Everything along the back edge stands on the pipeline, and every so often drops something into it.
         this.pipeEnd = Math.max(this.pipeEnd, x + Math.floor(sprite.w / 2));
-        // The building out front tips in about once a second and the ones up
-        // the hill less often, or a mill with four full lots feeds the trunk
-        // forty times a second and the pipeline reads as solid puppy.
+        // Front building tips about once a second, the ones up the hill less, or the pipeline reads as solid puppy.
         if (this.chance(1.1 * (1 - slot.haze))) this.feedPipe(x + Math.floor(sprite.w / 2));
       }
     }
@@ -2759,10 +1700,7 @@ export class MillScene {
     ctx.fillRect(x + w - 1, y - 6, 1, 4);
   }
 
-  /**
-   * What a building two fields away does: a light on, and now and then
-   * something off the roof. That's all you'd see of one.
-   */
+  /** What a building two fields away does: a light on, and now and then something off the roof. */
   private farLife(x: number, top: number, w: number, h: number, t: number, idx: number): void {
     const beat = Math.sin(t * 1.3 + idx * 2.7);
     if (beat > 0.2) {
@@ -2772,7 +1710,6 @@ export class MillScene {
     if (this.chance(0.3)) this.puff(x + (w >> 1), top - 1, "steam", 2);
   }
 
-  /** Which mark of a tier is standing, 0..3. */
   private markLevel(id: solo.SoloProducerId): number {
     return Math.max(0, Math.min(3, this.view.marks[id] ?? 0));
   }
@@ -2782,14 +1719,6 @@ export class MillScene {
     return this.markLevel(id) >= 3;
   }
 
-  /**
-   * Light, as a radial fill rather than a sprite.
-   *
-   * The scene's one hard rule is that every *blit* is integer-aligned and
-   * unscaled, because art resampled off the pixel grid loses its outline. A
-   * gradient isn't art — the sky and the fold are both painted this way — and
-   * light is the one thing on this canvas that has no business having edges.
-   */
   private glow(cx: number, cy: number, r: number, color: string, alpha: number): void {
     if (alpha <= 0.02 || r <= 0) return;
     const ctx = this.ctx;
@@ -2801,15 +1730,6 @@ export class MillScene {
     ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
   }
 
-  /**
-   * The halo a primed unit stands in. Drawn *before* its sprite, so the sprite
-   * lands crisp on top and what you see is a seam of light around the thing
-   * rather than a wash over it.
-   *
-   * It breathes, on a phase taken from the unit's index — a whole field of them
-   * pulsing in lockstep reads as a shader, and the mill is meant to read as a
-   * lot of separate machines that happen to all be expensive now.
-   */
   private primeGlow(
     id: OutsideId,
     x: number,
@@ -2831,27 +1751,10 @@ export class MillScene {
     );
   }
 
-  /**
-   * How much a light is worth right now.
-   *
-   * Full after dark and a third of that at noon, because a glow painted at full
-   * strength over a lit field isn't light — it's fog. Held well above zero in
-   * daylight anyway: the hundred-owned mark has to be visible at every hour, and
-   * in daylight what's left of it reads as heat haze off something expensive.
-   */
   private lightGain(): number {
     return { day: 0.34, dusk: 0.7, night: 1 }[this.phase];
   }
 
-  /**
-   * What a building on the back edge does while it stands there.
-   *
-   * Every one of them used to get the same two blinking pixels and the same
-   * wisp of steam off the top left corner, which at a glance made the whole
-   * skyline one building repeated. They're different industries: the lab is lit
-   * and bubbling, the kibble is on fire, the tower is a rack of grow lights
-   * cycling, and the reactor is a reactor.
-   */
   private buildingLife(
     id: solo.SoloProducerId,
     x: number,
@@ -2864,7 +1767,6 @@ export class MillScene {
     const ctx = this.ctx;
     switch (id) {
       case "lab": {
-        // Three lit windows on their own phases, and whatever's in the dome.
         for (const [k, c] of [2, 7, 12].entries()) {
           const beat = Math.sin(t * 1.7 + idx * 2.1 + k * 1.9);
           if (beat <= -0.2) continue;
@@ -2881,10 +1783,6 @@ export class MillScene {
         break;
       }
       case "refinery": {
-        // The flare stack, which is the one thing on the skyline that's alight.
-        // Later marks draw a flame into the art, so the live one is anchored to
-        // where the stack actually tops out rather than to the top of the
-        // sprite — otherwise the upgrade lights a second fire above the first.
         const stack = top + [0, 2, 3, 3][this.markLevel("refinery")]!;
         const flick = fract(Math.sin(t * 11.3 + idx * 4.1) * 4375.85);
         const tall = 2 + Math.round(flick * 2);
@@ -2893,15 +1791,13 @@ export class MillScene {
         ctx.fillStyle = "#ffe08a";
         ctx.fillRect(x + 12, stack - tall + 1, 1, Math.max(1, tall - 1));
         if (this.chance(0.9)) this.puff(x + 12, stack - tall - 1, "steam", 7);
-        // Vessel lights down the near tank, running in sequence.
         const lamp = Math.floor(t * 2.2 + idx) % 3;
         ctx.fillStyle = "#ffd782";
         ctx.fillRect(x + 2, top + h - 3 - lamp * 2, 1, 1);
         break;
       }
       case "tower": {
-        // A rack of grow lights, cycling floor by floor: the light walks up the
-        // tower and starts again, so a row of them ripples.
+        // A rack of grow lights, cycling floor by floor: the light walks up the tower and starts again, so a row of them ripples.
         const floors = Math.max(1, Math.round((h - 7) / 3));
         const lit = Math.floor(t * 2.6 + idx * 1.7) % floors;
         for (const c of [2, 6]) {
@@ -2916,14 +1812,11 @@ export class MillScene {
         break;
       }
       case "reactor": {
-        // Steam off the tower, continuously. This is the only thing on the mill
-        // that draws its own weather.
         if (this.plumes.length < MAX_PLUMES && this.chance(11)) {
           this.plumes.push({
             x: x + w / 2 - 2 + (Math.random() - 0.5) * 6,
             y: top + 1 - Math.random() * 2,
-            // Barely any sideways push to start with: it leaves the mouth as a
-            // column and only finds the wind once it's clear of the tower.
+            // Barely any sideways push to start with: it leaves the mouth as a column and only finds the wind once it's clear of the tower.
             vx: (Math.random() - 0.5) * 3,
             vy: -15 - Math.random() * 6,
             born: performance.now(),
@@ -2931,9 +1824,6 @@ export class MillScene {
             size: 3,
           });
         }
-        // The core, seen through the throat of the tower, and its bloom.
-        // A slow breath with a fast flicker on top of it — a steady glow reads
-        // as a light left on, and this is supposed to be a reaction.
         const pulse =
           (0.5 + 0.5 * Math.sin(t * 2.7 + idx * 1.3)) * (0.8 + 0.2 * fract(Math.sin(t * 37 + idx) * 4375.85));
         ctx.fillStyle = "#9dfbe0";
@@ -2943,8 +1833,6 @@ export class MillScene {
         ctx.fillRect(x + 4, top + 4, w - 8, 4);
         ctx.globalAlpha = 0.5 + 0.5 * pulse;
         ctx.fillRect(x + 5, top + 5, 4, 2);
-        // Hazard strobes on the rim, and the light the whole thing throws on
-        // the ground it stands on.
         ctx.globalAlpha = 0.08 + 0.07 * pulse;
         ctx.fillRect(x - 1, top + h - 2, w + 2, 2);
         ctx.globalAlpha = 1;
@@ -2956,8 +1844,7 @@ export class MillScene {
         break;
       }
       default: {
-        // Anything else that ends up back here keeps the old night shift: a
-        // lit window and a wisp off the roof.
+        // Anything else that ends up back here keeps the old night shift: a lit window and a wisp off the roof.
         if (this.chance(0.45)) this.puff(x + 2, top - 1, "steam");
         const beat = Math.sin(t * 1.4 + idx * 2.3);
         if (beat > 0.1) {
@@ -2968,7 +1855,6 @@ export class MillScene {
     }
   }
 
-  /** Cooling-tower steam: rises, spreads, thins out and is gone. */
   private drawPlumes(now: number): void {
     const ctx = this.ctx;
     ctx.fillStyle = "#eef3f7";
@@ -2978,7 +1864,6 @@ export class MillScene {
       const f = age / p.dur;
       p.x += p.vx * this.dt;
       p.y += p.vy * this.dt;
-      // It slows as it climbs and leans off downwind, like the real thing.
       p.vy *= 1 - this.dt * 0.35;
       p.vx += this.dt * 2.5;
       const size = p.size + Math.round(f * 4);
@@ -2990,13 +1875,6 @@ export class MillScene {
   }
 
   // --- The pipeline --------------------------------------------------------
-  //
-  // Everything on the back edge is a building, and a building doesn't carry
-  // things. What it does is pipe them: one run along the foot of the kennels,
-  // one riser down the west side of the field, and a spout over the yard. You
-  // can see the puppies moving inside it, which is the entire point — the
-  // industrial half of the ladder used to prove it was working by lobbing
-  // produce over the fence.
 
   /** Height of the pipe's run above the field, measured off the back baseline. */
   private pipeY(horizon: number): number {
@@ -3008,19 +1886,10 @@ export class MillScene {
     this.lumps.push({ from: Math.max(8, Math.round(from)), d: 0 });
   }
 
-  /**
-   * How far through building the pipeline we are, 0..1.
-   *
-   * Latched the first time anything feeds it, and only if the scene has already
-   * drawn a frame without one — the same restore-versus-event rule the fold
-   * plays by. Coming back to a mill that already has a pipeline shouldn't put on
-   * a three-second show about it.
-   */
+  /** How far through building the pipeline we are, 0..1. */
   private pipeBuild(t: number, reach: number): number {
     if (reach <= 0) {
-      // Nothing feeds it. Remember that we saw the mill without one — and drop
-      // the latch, so handing the mill down and climbing back to the industrial
-      // tiers puts the pipeline in again rather than restoring it.
+      // Nothing feeds it.
       this.sawNoPipe = true;
       this.pipeBuiltAt = null;
       return 0;
@@ -3033,56 +1902,34 @@ export class MillScene {
     return clamp((t - this.pipeBuiltAt) / PIPE_BUILD_S, 0, 1);
   }
 
-  /**
-   * The pipeline, and the three and a half seconds of it being built.
-   *
-   * Erected in the order a real one would be, because that's what makes it read
-   * as construction rather than as a wipe: the riser goes up out of the yard
-   * first — it's the piece standing nearest to you — the outfall bolts onto the
-   * bottom of it, then the trunk runs out section by section toward the kennels
-   * with the trestles going in a beat ahead of it, and last the hopper drops
-   * onto the far end. Only then does anything go down it.
-   */
   private drawPipeline(horizon: number, yardY: number, dt: number, t: number): void {
     const ctx = this.ctx;
     const y = this.pipeY(horizon);
-    // The riser runs right down the west side of the yard to just above the
-    // mound, because that's what it's filling. Stopping at the top of the yard
-    // meant a chute pointed at forty pixels of empty dirt.
+    // The riser runs right down the west side of the yard to just above the mound, because that's what it's filling.
     const foot = Math.max(yardY + 12, this.yardFloor() - 30);
     const reach = this.lumps.reduce((m, l) => Math.max(m, l.from), this.pipeEnd);
     const build = this.pipeBuild(t, reach);
     if (reach <= 0) return;
-    // Nothing rides a pipe that isn't finished. The kennels carry on tipping into
-    // it while it's going up, so this is a bin rather than a gate.
+    // Nothing rides a pipe that isn't finished.
     if (build < 1) this.lumps.length = 0;
 
-    // The four beats, each overlapping the next so the sequence flows rather
-    // than clicking from stage to stage.
+    // The four beats, each overlapping the next so the sequence flows rather than clicking from stage to stage.
     const ease = (v: number) => 1 - Math.pow(1 - clamp(v, 0, 1), 2);
     const riser = ease(build / 0.26);
     const chute = ease((build - 0.2) / 0.22);
     const run = ease((build - 0.34) / 0.46);
     const hopper = ease((build - 0.78) / 0.16);
 
-    // Everything the industrial half of the mill makes comes down this thing,
-    // and for a long time it was a five pixel drainpipe. It's now built like it
-    // carries the load: a nine-pixel trunk on trestles, a hopper where the
-    // kennels tip into it, collars down the riser and a proper outfall over the
-    // yard with the pup visibly falling out of it.
     const body = "#a8b0b8";
     const edge = "#7f8891";
     const dark = "#68707a";
     const W = 9; // outside width of the trunk
     const runTo = 2; // left edge of the riser
     const midY = y + 3; // where the puppies ride inside the run
-    // How far out from the riser the trunk has got. The trestle under a section
-    // goes in before the section does, which is the whole reason the run reads
-    // as being built rather than extruded.
+    // How far out from the riser the trunk has got.
     const runLen = Math.max(1, Math.round(reach * run));
     const posts = Math.round(reach * clamp(run * 1.18, 0, 1));
 
-    // Trestles under the horizontal run, so it's carried rather than floating.
     ctx.fillStyle = dark;
     for (let px = 22; px < reach - 6; px += 26) {
       if (px > posts) break;
@@ -3091,8 +1938,6 @@ export class MillScene {
       ctx.fillRect(px - 1, y + W + 5, 7, 1);
     }
 
-    // The run: dark rims top and bottom, lit body, and a highlight line along
-    // the top so it reads as a tube and not a rectangle.
     if (run > 0) {
       ctx.fillStyle = edge;
       ctx.fillRect(1, y, runLen, W);
@@ -3100,11 +1945,8 @@ export class MillScene {
       ctx.fillRect(1, y + 1, runLen, W - 3);
       ctx.fillStyle = "#c3cad1";
       ctx.fillRect(1, y + 1, runLen, 1);
-      // Seams, every so often along the run.
       ctx.fillStyle = dark;
       for (let px = 14; px < runLen - 2; px += 18) ctx.fillRect(px, y, 1, W);
-      // The welder working the leading edge, and the dust it throws down onto
-      // the field. Only while it's actually running out.
       if (run < 1) {
         ctx.fillStyle = fract(t * 13) > 0.4 ? "#fff0b8" : "#ffb454";
         ctx.fillRect(runLen, y + 2, 2, 3);
@@ -3112,9 +1954,6 @@ export class MillScene {
       }
     }
 
-    // The hopper at the far end, where the kennels tip in: a funnel wider than
-    // the pipe, so the run has somewhere to have come from. It comes down onto
-    // the trunk once the trunk has got there.
     if (hopper > 0) {
       const hx = Math.min(SCENE_W - 3, reach);
       const drop = Math.round((1 - hopper) * 12);
@@ -3124,8 +1963,6 @@ export class MillScene {
       for (let i = 0; i < 5; i++) ctx.fillRect(hx - 9 + i, y - 5 - drop + i, 11 - i * 2, 1);
     }
 
-    // The riser, with collars. Erected from the yard upward, because that's the
-    // way you put a standpipe in and it's the beat that starts the sequence.
     const top = Math.round(foot - (foot - y) * riser);
     ctx.fillStyle = edge;
     ctx.fillRect(runTo - 1, top, W, foot - top);
@@ -3142,9 +1979,6 @@ export class MillScene {
       this.puff(runTo + 4, foot - 2, "dust", (Math.random() - 0.5) * 18);
     }
 
-    // The outfall: a chute, angled the way the puppies actually leave. It was
-    // drawn as a right-angled box with a lip, and the pup came out of it on a
-    // diagonal — the pipe was telling you one thing and the puppies another.
     const chuteLen = Math.round(CHUTE_LEN * chute);
     for (let i = 0; i < chuteLen; i++) {
       const cx = runTo + i;
@@ -3156,13 +1990,11 @@ export class MillScene {
       ctx.fillRect(cx, cy + 1, 1, 7);
       ctx.fillStyle = "#c3cad1";
       ctx.fillRect(cx, cy + 1, 1, 1);
-      // A couple of bands across it, like the riser's collars.
       if (i === 5 || i === 10) {
         ctx.fillStyle = dark;
         ctx.fillRect(cx, cy, 1, 9);
       }
     }
-    // The open end, squared off so it reads as a mouth and not a broken pipe.
     const endX = runTo + chuteLen;
     const endY = Math.round(foot - 4 + chuteLen * CHUTE_SLOPE);
     ctx.fillStyle = dark;
@@ -3170,9 +2002,7 @@ export class MillScene {
 
     if (build < 1) return;
 
-    // Commissioning: one flash down the whole length of it as the last bolt
-    // goes in. It's the only thing that says *finished*, and without it the
-    // build just stops.
+    // Commissioning: one flash down the whole length of it as the last bolt goes in.
     const done = (t - (this.pipeBuiltAt ?? 0) - PIPE_BUILD_S) / 0.45;
     if (done >= 0 && done < 1) {
       ctx.fillStyle = rgba("#fff0b8", 0.5 * (1 - done));
@@ -3180,15 +2010,12 @@ export class MillScene {
       ctx.fillRect(runTo - 2, y, W + 2, foot - y);
     }
 
-    // Whole puppies in the pipe, not tan squares: outlined, so a hundred of
-    // them nose to tail still reads as a hundred puppies rather than a stripe.
+    // Outlined, so a hundred nose to tail still read as puppies rather than a stripe.
     const pup = artCanvas(PUPPY_SPRITE);
     this.lumps = this.lumps.filter((lump) => {
       lump.d += PIPE_SPEED * dt;
       const across = lump.from - runTo;
       if (lump.d < across) {
-        // Along the run, riding with a one pixel jog so the contents rattle
-        // rather than slide.
         const px = Math.round(lump.from - lump.d);
         ctx.drawImage(pup.canvas, px, midY - 2 + (px % 5 === 0 ? 0 : 1));
         return true;
@@ -3198,8 +2025,6 @@ export class MillScene {
         ctx.drawImage(pup.canvas, runTo, Math.round(down));
         return true;
       }
-      // Down the chute and off the end onto the pile. It's already in the
-      // yard's count — this is just the last thing you see it do.
       const out = down - (foot - 3);
       if (out > CHUTE_LEN + 6) {
         this.puff(runTo + CHUTE_LEN, endY + 8, "dust");
@@ -3223,40 +2048,22 @@ export class MillScene {
     /** Ground-level y for a lane given as a fraction of the field's depth. */
     const lane = (f: number) => top + Math.round(depth * f);
 
-    // The field.
-    //
-    // The land is all there from the first frame: five worked rows, full width,
-    // waiting. Buying a Puppy Pen pups one bed in it. Before, the rows were
-    // sized to the pup and the pup was a log curve on the owned count, which
-    // meant the field's shape was a readout — and a readout that spent most of
-    // the game with the front half of the ground left as lawn. Empty runs
-    // are not dead space, they're the thing you're filling in, and one pen
-    // buying one visible pup is a straighter line between the button and the
-    // mill than any curve was.
     const stages = growthStages(this.mark("patch"));
     const pup = artCanvas(this.mark("patch"));
     const wiltShare = 1 - this.view.condition;
     const step = pup.w + 1;
-    // Wide, but leaving a rig's width of headland at each end: the heatlamp
-    // stands off the ends of the rows it waters, and a row that runs to the
-    // screen edge has nowhere to put it.
+    // A rig's width of headland at each end: the heatlamp stands off the ends of the rows.
     const marginX = 16;
     const usable = SCENE_W - marginX * 2;
     const perRow = Math.max(3, Math.floor(usable / step));
     const slots = perRow * FIELD_ROWS;
-    // One pen, one bed, until the land runs out — which it does at ninety
-    // pens, deep into a run and well past the point where the field stopped
-    // being the thing you're watching.
     const pups = Math.min(slots, this.view.working.patch ?? 0);
     const rowWidth = perRow * step - 1;
     const rowLeft = marginX + Math.round((usable - rowWidth) / 2);
 
-    // Evenly through the band, the last row stopping short of the fence to
-    // leave the headland the machines turn on.
+    // Evenly through the band, the last row stopping short of the fence to leave the headland the machines turn on.
     const rowGround = (r: number) => lane(0.08 + (r * 0.78) / (FIELD_ROWS - 1));
 
-    // A little ambient green around the edges of the worked ground: weeds are
-    // what ground nobody is working does.
     const tuft = artCanvas(TUFT);
     const flowers = artCanvas(FLOWERS);
     for (let i = 0; i < 14; i++) {
@@ -3270,12 +2077,7 @@ export class MillScene {
     this.rows.length = 0;
     this.drawTills(now);
 
-    // The trough gets sited before anything is drawn into it, because the
-    // machines above need to know where they're aiming.
-    // Everything the field produces goes in the trough — the machines tip
-    // baskets for the crew to carry over, and the crew's own pickings go in the
-    // same place. So it's there as soon as anybody's working, not just when
-    // there's a machine.
+    // The trough gets sited before anything is drawn into it, because the machines above need to know where they're aiming.
     const works =
       (this.view.working.hauler ?? 0) +
         (this.view.working.machine ?? 0) +
@@ -3289,28 +2091,15 @@ export class MillScene {
       const ground = rowGround(r);
       this.rows.push({ y: ground, left, right: left + rowWidth });
 
-      // Worked bedding under the beds you own, and the rest of the row left as
-      // grass with the run line still marked out across it. Working the
-      // whole row regardless made a new mill look like six enormous empty
-      // planters; a marked-out line reads as the land being there and waiting,
-      // which is what it is.
       const worked = count > 0 ? count * step + 1 : 0;
-      // The run each pen stands on: a poured pad, not a bed of soil. Which is
-      // what a row of pens actually is, and it keeps the last of the brown off
-      // the part of the picture the dogs are standing on.
       ctx.fillStyle = this.view.condition < 0.7 ? "#8e8878" : "#bab5a6";
       ctx.fillRect(left - 2, ground - 2, worked, 3);
       ctx.fillStyle = "#8a8476";
       ctx.fillRect(left - 2, ground + 1, worked, 1);
-      // The staked-out rest of the row: the marker telling you the beds you
-      // haven't bought yet are still there.
       ctx.fillStyle = GRAVEL_DARK;
       for (let c = count; c < perRow; c++) ctx.fillRect(left + c * step, ground, step - 2, 1);
 
-      // A hundred pens is a pup that glows in the dark. One band the length
-      // of the row rather than a halo per pup: at ninety beds the haloes
-      // would merge into a single wash anyway, and cost ninety gradients a
-      // frame to arrive at it.
+      // A hundred pens is a pup that glows in the dark.
       if (count > 0 && this.primed("patch")) {
         const lit = (0.7 + 0.3 * Math.sin(t * 1.2 + r)) * this.lightGain();
         const band = ctx.createLinearGradient(0, ground - pup.h - 3, 0, ground + 2);
@@ -3324,25 +2113,19 @@ export class MillScene {
       for (let c = 0; c < count; c++) {
         const i = r * perRow + c;
         const x = left + c * step;
-        // Deterministic per pup rather than drawn from the layout's rng
-        // stream, so wilt doesn't reshuffle when the field changes size.
+        // Deterministic per pup rather than drawn from the layout's rng stream, so wilt doesn't reshuffle when the field changes size.
         const dry = fract(Math.sin(i * 12.9898) * 43758.5453) < wiltShare;
         this.beds.push({ x, y: ground, row: r, dry });
 
-        // Neighbours come on together: the stagger is a smooth function of where
-        // the pup stands, so the field comes on in patches like a real one
-        // instead of flickering at random.
+        // Stagger is a smooth function of position, so the field comes on in patches rather than flickering.
         this.stocked[i] ??= t - GROW_SECONDS * (0.5 + 0.5 * Math.sin(c * 0.7 + r * 2.1));
 
         const age = t - this.stocked[i]!;
         const stage =
           age >= GROW_SECONDS ? 3 : age >= GROW_SECONDS * 0.6 ? 2 : age >= GROW_SECONDS * 0.25 ? 1 : 0;
-        // Wilt keeps the mark's silhouette and loses its colour, so an upgraded
-        // bed still reads as an upgraded bed while it's struggling.
+        // Wilt keeps the mark's silhouette and loses its colour, so an upgraded bed still reads as an upgraded bed while it's struggling.
         const art = stages[stage]!;
         const sprite = artCanvas(dry ? scruffy(art) : art);
-        // A 1px sway on a slow sine, offset along the row — the whole field
-        // leans together in a wave, which is cheap and reads as wind.
         const sway = Math.sin(t * 1.1 + c * 0.4 + r) > 0.6 ? 1 : 0;
         ctx.drawImage(sprite.canvas, x + sway, ground - sprite.h);
 
@@ -3350,8 +2133,6 @@ export class MillScene {
       }
     }
 
-    // A lamp stands at the end of the rows it warms, alternating sides, and
-    // throws across them. A lamp in the middle of nowhere was just a pole.
     const lamps = shownCount(this.view.working.rig ?? 0, PLACEMENT.rig.cap, PLACEMENT.rig.spread);
     const lamp = artCanvas(this.mark("rig"));
     for (let i = 0; i < lamps; i++) {
@@ -3365,16 +2146,13 @@ export class MillScene {
       const ground = row ? row.y : lane(0.2);
       this.primeGlow("rig", x, ground - lamp.h, lamp.w, lamp.h, t, i);
       ctx.drawImage(lamp.canvas, x, ground - lamp.h);
-      // The warm spills out over the pens on a slow sine, so it reads as
-      // one lamp swinging rather than a static glow.
       if (this.chance(5)) {
         const reach = 10 + (0.5 + 0.5 * Math.sin(t * 0.8 + i)) * 22;
         this.puff(x + lamp.w / 2, ground - lamp.h + 2, "water", -side * reach);
       }
     }
 
-    // Machines work the rows: they drive the headland just in front of a row,
-    // reach back over it, and something happens to the pup as they pass.
+    // Machines work the rows: they drive the headland just in front of a row, reach back over it, and something happens to the pup as they pass.
     for (const [id, fallback] of [
       ["hauler", 0.5],
       ["machine", 0.78],
@@ -3384,24 +2162,15 @@ export class MillScene {
       const sprite = artCanvas(this.mark(id));
       const span = SCENE_W + sprite.w;
       for (let i = 0; i < n; i++) {
-        // The grooming rig takes the rows from the front, the van from the back,
-        // so on a mill with two rows they aren't nose to tail on the same one.
-        // With nothing stocked they fall back to their own lanes on open grass.
+        // Rig takes rows from the front, van from the back, so on two rows they aren't nose to tail.
         const pick =
           id === "machine" ? this.rows.length - 1 - (i % Math.max(1, this.rows.length)) : i % Math.max(1, this.rows.length);
         const row = this.rows.length > (id === "machine" && this.rows.length < 2 ? 1 : 0) ? this.rows[pick] : undefined;
         const ground = row ? row.y + 5 : lane(fallback);
         // Phase and pace are hashed per machine rather than dealt out evenly.
-        // Evenly spaced starts at one shared speed drew two perfect diagonals
-        // — the vans going one way down the rows and the grooming rigs the
-        // other — and a mill that renders a clean X across itself all day is
-        // clearly a formula and not a place where work is happening.
         const h = fract(Math.sin((i + 1) * (id === "machine" ? 63.7 : 21.3)) * 4375.85);
         const pace = place.speed! * (0.78 + 0.44 * fract(h * 7.13));
         const x = Math.floor((((t * pace + h * span) % span) + span) % span) - sprite.w;
-        // Where it's drawn, once anything hanging over the field has had its
-        // say. The work it does is off `x` and `ground` regardless: a van
-        // being lifted out of the row still ploughs the row.
         const at = this.warp(x + sprite.w / 2, ground - sprite.h / 2);
         const mx = Math.round(at.x - sprite.w / 2);
         const my = Math.round(at.y - sprite.h / 2);
@@ -3410,16 +2179,12 @@ export class MillScene {
         if (this.chance(2.5)) this.puff(x + 1, ground - 2, "dust");
 
         if (id === "hauler") {
-          // A van does a round. The track it leaves is the whole reason to
-          // watch one cross a field.
           if (this.tracks.length < 90 && this.chance(14)) {
             this.tracks.push({ x: x + 1, y: ground - 1, born: now });
           }
         }
 
-        // Both of them lift what's ready under the header as they pass, and
-        // both of them unload the same way a real one does: an auger swung out
-        // over the trough, with the pup visibly going down it.
+        // Both lift what's ready as they pass and unload via an auger over the trough, pup visibly going down it.
         const reach = id === "machine" ? 6 : 2;
         const key = `${id}${i}`;
         for (let b = 0; b < this.beds.length; b++) {
@@ -3431,18 +2196,14 @@ export class MillScene {
           this.machineLoad.set(key, (this.machineLoad.get(key) ?? 0) + 1);
         }
         // Full up: tip it out at the end of the row it's working and carry on.
-        // A basket on the headland is a job for somebody, which is the point —
-        // the machines and the crew are the same operation now.
         if ((this.machineLoad.get(key) ?? 0) >= MACHINE_LOAD && this.baskets.length < MAX_BASKETS) {
           this.machineLoad.set(key, 0);
-          // Nobody to fetch it: a mill with machines and no crew tips straight
-          // into the trough rather than leaving baskets out in the rain forever.
+          // No crew: tips straight into the trough rather than leaving baskets out forever.
           if (this.hands.length === 0) {
             this.troughFill = Math.min(TROUGH_CAP, this.troughFill + BASKET_WORTH);
             continue;
           }
-          // Just inside the end of the row, not past it: a basket half off the
-          // side of the screen is a basket nobody sees get fetched.
+          // Just inside the end of the row: a basket half off-screen is one nobody sees fetched.
           const at = row
             ? clamp(row.right - 8, 4, SCENE_W - 14)
             : clamp(x + sprite.w, 4, SCENE_W - 14);
@@ -3457,9 +2218,7 @@ export class MillScene {
       }
     }
 
-    // Everything broken is parked in one row along the fence, greyed out. One
-    // strip of dead machinery is a thing you notice from across the room; the
-    // same units scattered among the working ones is not.
+    // Everything broken is parked in one row along the fence, greyed out.
     let deadX = 6;
     for (const id of ORDER) {
       const place = PLACEMENT[id];
@@ -3473,8 +2232,6 @@ export class MillScene {
       }
     }
 
-    // The sky tiers, above everything on the ground — and each of them doing
-    // its own job to the field below rather than sliding past it.
     const { deck, hang } = this.decks(horizon);
 
     this.stepFlyers(
@@ -3484,13 +2241,6 @@ export class MillScene {
       deck,
     );
 
-    // The orbital kennels, crossing. Everything up here gets its own pace, its own
-    // altitude and its own slow wander off a hash, so it doesn't fly in
-    // formation — but *only* off a hash meant nothing kept two of them apart,
-    // and a hash that deals two of them the same corner and near enough the same
-    // speed parks them on top of each other for a minute at a time. So the hash
-    // is the variation now and the spacing is dealt: each index owns a share of
-    // the sky, and the hash moves it around inside its share.
     const place = PLACEMENT.orbital;
     const n = shownCount(this.view.working.orbital ?? 0, place.cap, place.spread ?? 1);
     const sprite = artCanvas(this.mark("orbital"));
@@ -3498,25 +2248,15 @@ export class MillScene {
       const h = skyHash(i, "orbital");
       const h2 = fract(h * 137.7);
       const h3 = fract(h2 * 91.3);
-      // Off `cap` rather than `n`, so buying the fourth orbital kennel doesn't
-      // shuffle the three already up there.
+      // Off `cap` rather than `n`, so buying the fourth orbital kennel doesn't shuffle the three already up there.
       const span = SCENE_W + sprite.w;
-      // A tenth either side of the tier's speed. Wide enough that they pull
-      // apart and drift back together over a couple of minutes, narrow enough
-      // that a lap doesn't close the quarter-screen gap they start with — the
-      // old spread was two to one, which caught the one in front up inside a
-      // single crossing.
       const pace = (place.speed ?? 1) * (0.9 + 0.2 * h);
       const start = (i / place.cap + h2 * 0.12) * span;
       const gx = Math.floor((((t * pace + start) % span) + span) % span) - sprite.w;
-      // Its own lane in the middle deck, plus a slow rise and fall across it —
-      // they drift through each other's altitude rather than flying in a stack,
-      // without ever climbing into what's hanging above them.
+      // Own lane in the middle deck plus a slow rise and fall, never climbing into what hangs above.
       const room = Math.max(0, deck - sprite.h - 3 - hang);
       const lane = hang + Math.round(h3 * room);
       const gy = lane + Math.round(Math.sin(t * (0.25 + h2 * 0.4) + h * 9) * 3);
-      // And then whatever the sky is doing to it. A orbital kennel that passes
-      // under a diving singularity gets leaned on and let go.
       const at = this.warp(gx + sprite.w / 2, gy + sprite.h / 2);
       const x = Math.round(at.x - sprite.w / 2);
       const y = Math.round(at.y - sprite.h / 2);
@@ -3532,19 +2272,9 @@ export class MillScene {
     this.stepTrough(now);
   }
 
-  /**
-   * The singularities, wherever this frame's dive has left them.
-   *
-   * Drawn last of anything in the world, because a dive takes one down through
-   * the pipeline, the fence and the crew, and every one of those passing in
-   * front of it made it a sticker on the back of the picture. It isn't standing
-   * in the mill — it's a hole between you and the mill, and it should occlude
-   * whatever it comes down over.
-   */
   private drawWells(t: number): void {
     const hole = artCanvas(this.mark("singularity"));
-    // Before the holes, so what's going round one passes behind it and is gone
-    // rather than sitting on top of the thing eating it.
+    // Before the holes, so what's going round one passes behind it and is gone rather than sitting on top of the thing eating it.
     this.stepCaught();
     for (const [i, well] of this.wells.entries()) {
       this.drawPulse(well.cx, well.cy, t + i, 1 + well.dive * 1.6);
@@ -3553,7 +2283,6 @@ export class MillScene {
     }
   }
 
-  /** What the holes are holding, going round and going in. */
   private stepCaught(): void {
     const ctx = this.ctx;
     this.caught = this.caught.filter((c) => {
@@ -3566,8 +2295,6 @@ export class MillScene {
       const tilt = catchTilt(c.r);
       const x = well.cx + Math.cos(c.a) * c.r;
       const y = well.cy + Math.sin(c.a) * c.r * tilt;
-      // The last couple of pixels are the thing going in: one lit pixel where
-      // it went, and then nothing.
       if (c.r <= 3) {
         ctx.fillStyle = "#f0e0ff";
         ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
@@ -3575,9 +2302,6 @@ export class MillScene {
       }
       const sprite = artCanvas(c.art);
       const fade = Math.min(1, (c.r - 3) / 5);
-      // A pixel of the pull streaming off behind it, back along the orbit it
-      // just came round. Without it a basket on a wide first lap reads as a basket
-      // that happens to be hanging in the air.
       ctx.fillStyle = rgba("#c9a4f0", 0.45 * fade);
       for (const back of [0.4, 0.8]) {
         const bx = well.cx + Math.cos(c.a - back) * (c.r + 2);
@@ -3591,7 +2315,6 @@ export class MillScene {
     });
   }
 
-  /** Furrow behind a hauler: fresh dark bedding that grasses back over. */
   private drawTills(now: number): void {
     const ctx = this.ctx;
     this.tracks = this.tracks.filter((track) => {
@@ -3605,14 +2328,6 @@ export class MillScene {
     });
   }
 
-  /**
-   * The zeppelins, flying. Each one dashes to a patch that needs bringing on,
-   * stops over it, empties its hopper into it, and picks somewhere else.
-   *
-   * The dash eases in and out, which is what makes it read as a machine going
-   * somewhere on purpose rather than a cloud being blown about: it leans on,
-   * runs, and settles.
-   */
   private stepFlyers(
     n: number,
     sprite: { w: number; h: number; canvas: CanvasImageSource },
@@ -3620,16 +2335,13 @@ export class MillScene {
     deck: number,
   ): void {
     const ctx = this.ctx;
-    // The bottom of the sky, and the bottom of what a zeppelin is allowed to
-    // climb to: they work the rows, so they belong under the traffic.
+    // The bottom of the sky, and the bottom of what a zeppelin is allowed to climb to: they work the rows, so they belong under the traffic.
     const band = { top: Math.round(deck * 0.5), bottom: Math.max(2, deck - sprite.h) };
     while (this.flyers.length < n) this.flyers.push(this.newFlyer(sprite.w, band));
     if (this.flyers.length > n) this.flyers.length = Math.max(0, n);
 
     for (const [i, f] of this.flyers.entries()) {
       if (f.hold > 0) {
-        // Parked. It bobs on the spot and drips, and the drops are aimed at
-        // whatever's underneath rather than halfway across the field.
         f.hold -= this.dt;
         f.drip -= this.dt;
         if (f.drip <= 0) {
@@ -3640,7 +2352,6 @@ export class MillScene {
       } else {
         f.t += this.dt;
         const p = Math.min(1, f.t / f.dur);
-        // Ease in and out of the dash.
         const e = p < 0.5 ? 2 * p * p : 1 - 2 * (1 - p) * (1 - p);
         f.x = f.x0 + (f.tx - f.x0) * e;
         f.y = f.y0 + (f.ty - f.y0) * e;
@@ -3650,9 +2361,6 @@ export class MillScene {
         }
       }
       const bob = f.hold > 0 ? Math.round(Math.sin(t * 3.1 + f.x) * 1) : 0;
-      // Warped where it's drawn rather than where it's flying: a zeppelin caught
-      // by a passing singularity gets dragged off its patch and lands back on it
-      // afterwards, instead of losing the run it was in the middle of.
       const at = this.warp(f.x + sprite.w / 2, f.y + bob + sprite.h / 2);
       const fx = Math.round(at.x - sprite.w / 2);
       const fy = Math.round(at.y - sprite.h / 2);
@@ -3669,16 +2377,7 @@ export class MillScene {
     return f;
   }
 
-  /**
-   * Send a zeppelin somewhere worth going: over the patch that needs it most, and
-   * not over one another zeppelin is already working.
-   *
-   * The neediest bed is the neediest bed for all five of them at once, so aiming
-   * on need alone sent the whole fleet to the same corner and left them hovering
-   * there in a heap. Picking the neediest of a handful of *candidates that
-   * nothing else is sitting on* keeps them working the field they're supposed to
-   * be working, spread across it.
-   */
+  /** Send a zeppelin somewhere worth going: over the patch that needs it most, and not over one another zeppelin is already working. */
   private aimFlyer(f: Flyer, w: number, band: { top: number; bottom: number }): void {
     let tx = Math.random() * (SCENE_W - w);
     if (this.beds.length > 0) {
@@ -3699,22 +2398,13 @@ export class MillScene {
     f.x0 = f.x;
     f.y0 = f.y;
     f.tx = tx;
-    // It changes height as it goes, and by enough to see — a leg should be able
-    // to be a climb or a dive. Taken off where it already is rather than off
-    // the whole band, so the move is relative to the machine that's making it
-    // instead of a fresh draw from the whole sky every time.
     f.ty = clamp(f.y + (Math.random() - 0.5) * 34, band.top, band.bottom);
     f.t = 0;
     f.hold = 0;
     f.dur = Math.max(1, Math.hypot(f.tx - f.x, f.ty - f.y) / FLY_SPEED);
   }
 
-  /**
-   * Aim a drop at a pen that could use one, near where it was let go: a
-   * zeppelin that stopped somewhere on purpose drops on what it's standing over.
-   * A hovering machine whose drops all sail off to the far side of the yard is
-   * a machine that didn't need to stop.
-   */
+  /** A hovering machine whose drops all sail off to the far side of the yard is a machine that didn't need to stop. */
   private dropPupNear(x: number, y: number): void {
     if (this.beds.length === 0) return;
     let pick = -1;
@@ -3734,7 +2424,6 @@ export class MillScene {
     this.drops.push({ x, y, vy: 30 + Math.random() * 12, pup: pick });
   }
 
-  /** Drops falling, and what they do when they land. */
   private stepDrops(t: number): void {
     const ctx = this.ctx;
     ctx.fillStyle = "#e6d78a";
@@ -3743,36 +2432,29 @@ export class MillScene {
       const bed = this.beds[drop.pup];
       if (!bed || drop.y >= bed.y) {
         if (bed) {
-          // Brought on by a quarter of its cycle, and a puff where it landed.
           this.stocked[drop.pup] = Math.min(t, (this.stocked[drop.pup] ?? t) - GROW_SECONDS * 0.25);
           this.puff(bed.x + 3, bed.y - 2, "water");
         }
         return false;
       }
-      // Drift toward the pen it's aimed at, so the drop reads as deliberate.
       drop.x += (bed.x + 3 - drop.x) * Math.min(1, this.dt * 1.6);
-      // Unless something with more of an opinion is in the way. It still lands
-      // where it was aimed — the drop falls the whole time, it just takes a
-      // detour around whatever came down over the yard.
+      // Unless something with more of an opinion is in the way.
       const at = this.warp(drop.x, drop.y);
       ctx.fillRect(Math.round(at.x), Math.round(at.y), 1, 2);
       return true;
     });
   }
 
-  /** A floodlight sweeping down from an orbital kennel onto the rows. */
   private drawBeam(x: number, y: number, t: number, progress: number): void {
     const ctx = this.ctx;
     const row = this.rows[this.rows.length - 1];
     const floor = row ? row.y : this.yardTop() - 6;
     if (floor <= y) return;
-    // Fades in and out over the sweep rather than snapping on.
     ctx.globalAlpha = 0.16 * Math.sin(progress * Math.PI);
     ctx.fillStyle = "#d8f5b0";
     const half = 3;
     ctx.fillRect(Math.round(x) - half, Math.round(y), half * 2, Math.round(floor - y));
     ctx.globalAlpha = 1;
-    // Anything under it comes on a little, which is the point of the thing.
     if (this.chance(3)) {
       for (let b = 0; b < this.beds.length; b++) {
         const bed = this.beds[b]!;
@@ -3782,7 +2464,6 @@ export class MillScene {
     }
   }
 
-  /** The singularity, breathing. Four points on the grid, no rotation. */
   private drawPulse(cx: number, cy: number, t: number, scale = 1): void {
     const ctx = this.ctx;
     const phase = (t * 0.55) % 1;
@@ -3800,7 +2481,6 @@ export class MillScene {
     ctx.globalAlpha = 1;
   }
 
-  /** Dust, steam and water, drawn between the field and the fence. */
   private drawPuffs(now: number, dt: number): void {
     const ctx = this.ctx;
     this.puffs = this.puffs.filter((p) => {
@@ -3826,12 +2506,6 @@ export class MillScene {
       ctx.drawImage(fence.canvas, x, top);
     }
 
-    // Bunting. Somebody climbed up and tied this on, which is a fact about the
-    // people running the place and the cheapest one the scene can state.
-    //
-    // Drawn rather than blitted per flag: it's a string with a sag in it, and
-    // the sag is the whole difference between bunting and a row of triangles.
-    // Two cosines an octave apart keep the dip from repeating on the tile.
     const flag = artCanvas(FLAG);
     ctx.fillStyle = rgba(INK, 0.55);
     for (let x = 0; x < SCENE_W; x++) {
@@ -3850,31 +2524,17 @@ export class MillScene {
     }
   }
 
-  /** How far the bunting dips at `x`. Small: it's a string, not a washing line. */
+  /** How far the bunting dips at `x`. */
   private sag(x: number): number {
     return Math.round(1.5 + 1.5 * Math.cos((x / SCENE_W) * Math.PI * 5.6));
   }
 
   // --- The hoard -----------------------------------------------------------
 
-  /**
-   * Move the shown hoard toward the real one and fire off whatever that
-   * transition should look like. Exponential chase, so a small whistle is a nudge
-   * and a big purchase is a visible drain rather than a jump cut.
-   */
   private stepHoard(dt: number): void {
     const target = Math.max(0, this.view.hoard);
     if (this.shown < 0) {
-      // Adopt the hoard rather than animating up from zero, or every reload
-      // replays your whole mill's history at you.
-      //
-      // Gated on `sawView` and not just on the first frame, which is the bug
-      // this comment is really about. The scene mounts against `EMPTY_VIEW` and
-      // gets the real one a frame or two later, so "first frame" adopted a
-      // hoard of nothing and then eased up to the true figure — invisible for
-      // the number, and very visible for the pack, because a yard that *grows*
-      // into sixty dogs brings them in through the drop one at a time and ends
-      // up with all of them stood in the left-hand corner.
+      // Adopt the hoard rather than animating up from zero, or every reload replays your whole mill's history at you.
       if (!this.sawView) return;
       this.shown = target;
       this.shownLayout = yardLayout(target);
@@ -3896,40 +2556,19 @@ export class MillScene {
     return this.sh - 4;
   }
 
-  /**
-   * The back of the yard the pack roams: right up under the fence.
-   *
-   * Depth is the only room this yard has to spare — it can't get any wider —
-   * and every pixel of it is one more row of dogs that isn't standing on the
-   * row in front.
-   */
+  /** The back of the yard the pack roams: right up under the fence. */
   private packBack(): number {
     return this.yardTop() + 5;
   }
 
-  /**
-   * The front of it, which runs past the bottom edge on purpose.
-   *
-   * A puppy whose feet land on the last visible row is a puppy standing at a
-   * wall. Letting the band spill off the bottom means some of them are always
-   * half out of frame, which is what makes the yard read as continuing past the
-   * screen rather than as a shelf with dogs on it.
-   */
+  /** The front of it, which runs past the bottom edge on purpose. */
   private packFront(): number {
     return this.yardFloor() + PACK_SPILL;
   }
 
-  /**
-   * The yard: the pack, the few things that live out there with them, and
-   * everything sorted back to front.
-   */
   private drawHoard(): void {
-    // Feet are the only depth cue there is — nothing here is drawn scaled — so
-    // `y` is the key for a dog, a bowl and a tuft of grass alike, and a puppy
-    // behind the water bowl is behind the water bowl.
+    // Feet are the only depth cue — nothing is drawn scaled — so `y` sorts dogs, bowls and tufts alike.
     const queue: { y: number; go: () => void }[] = [];
-    // The bowls stand in the yard forever, so they go in the same depth sort as
-    // everything else and dogs walk in front of and behind them.
     const back = this.packBack();
     const front = this.packFront();
     for (const [i, at] of BOWLS.entries()) {
@@ -3944,10 +2583,6 @@ export class MillScene {
         },
       });
     }
-    // Weeds and daisies through the grass, in the same sort, so a dog walks
-    // through them rather than over a decal. Seeded off the mill, so they're in
-    // the same places every time you open it — the field should be somewhere
-    // you recognise, not a fresh scatter each reload.
     const rng = mulberry32(this.rngSeed ^ 0x51d2);
     const tuft = artCanvas(TUFT);
     const flowers = artCanvas(FLOWERS);
@@ -3955,15 +2590,12 @@ export class MillScene {
       const sprite = rng() < 0.35 ? flowers : tuft;
       const x = Math.floor(rng() * (SCENE_W - sprite.w));
       const y = Math.round(back + (front - back) * rng());
-      // The landing stays bare, weeds included — a tuft of grass in front of a
-      // half-grown puppy hides as much of it as a dog would.
+      // The landing stays bare, weeds included — a tuft of grass in front of a half-grown puppy hides as much of it as a dog would.
       if (this.onTheLanding(x + sprite.w, y) || onPitch(x + sprite.w, y, front)) continue;
       queue.push({ y, go: () => this.ctx.drawImage(sprite.canvas, x, y - sprite.h) });
     }
     for (const dog of this.pack) queue.push({ y: dog.y, go: () => this.drawPup(dog) });
-    // The ball's depth is whatever it's currently attached to, plus a hair, so
-    // it draws just in front of it. In the air it's on its own and sorts on
-    // where it's going to land.
+    // The ball's depth is whatever it's currently attached to, plus a hair, so it draws just in front of it.
     const hand = this.handAt();
     queue.push({ y: hand.y, go: () => this.drawHandler() });
     const ballY =
@@ -3977,54 +2609,30 @@ export class MillScene {
     for (const item of queue) item.go();
   }
 
-  /**
-   * Reconcile the pack against what you're holding, then let every dog in it
-   * get on with whatever it's doing.
-   *
-   * Arrivals and departures are rationed to a few a frame rather than snapped
-   * to the number, so buying a tier empties the yard as a walk-out and a good
-   * minute fills it as a trickle. Both are the same code: the count moves, and
-   * the yard takes a moment to agree.
-   */
+  /** Reconcile the pack against what you're holding, then let every dog in it get on with whatever it's doing. */
   private stepPack(dt: number, t: number): void {
     const want = Math.min(PACK_CAP, Math.max(0, Math.round(this.shownLayout.pack)));
     let here = this.owed;
     for (const dog of this.pack) if (!dog.leaving) here++;
 
     if (here < want) {
-      // How far behind decides *where* they come in, and the rule is about what
-      // the gap means rather than about the clock. Up to a frame's worth
-      // missing is production: they arrive at the drop and trot out of the
-      // corner. More than that is the scene catching up with a save that was
-      // already full — nobody delivered those, they've been in the yard for
-      // hours — so they scatter across the whole width.
-      //
-      // Keying this off an empty pack instead was the obvious version and it
-      // was wrong twice. The hoard eases in over the first second, so the frame
-      // where the pack is empty is a frame that only wants one dog, and the
-      // other sixty-four then queued through the corner one at a time.
+      // How far behind decides *where* they come in, and the rule is about what the gap means rather than about the clock.
       const missing = want - here;
       if (missing > 3) {
         for (let i = 0; i < missing; i++) this.pack.push(this.newPup(t, true));
       } else {
-        // On the tab. `drawHauls` settles it the next time something reaches
-        // the bottom of the slide.
         if (this.owed === 0) this.owedSince = t;
         this.owed = Math.min(OWED_CAP, this.owed + missing);
       }
     } else if (here > want) {
       let over = here - want;
-      // Cancel the tab before turning anyone out: a dog that hasn't arrived is
-      // a cheaper thing to un-promise than one already standing in the yard.
+      // Cancel the tab before turning anyone out: an unarrived dog is cheaper to un-promise.
       const unpromise = Math.min(over, this.owed);
       this.owed -= unpromise;
       over -= unpromise;
       for (const dog of this.pack) {
         if (over <= 0) break;
         if (dog.leaving) continue;
-        // Out of the gate under its own steam, rather than blinking out. The
-        // yard emptying is the most legible thing a purchase does, and it's
-        // worth the second and a half it takes to watch.
         dog.leaving = true;
         dog.doing = "trot";
         dog.vx = 20 + Math.random() * 8;
@@ -4066,8 +2674,7 @@ export class MillScene {
     }
     this.pack = kept;
 
-    // Nothing is coming down the slide — a mill with no producers, or a trough
-    // that has run dry — so the yard stops waiting and lets them in at the gate.
+    // Nothing coming down the slide (no producers, or a dry trough): let them in at the gate.
     if (this.owed > 0 && t - this.owedSince > OWED_TIMEOUT) {
       this.owedSince = t;
       this.owed--;
@@ -4079,21 +2686,7 @@ export class MillScene {
     return onLanding(x, y, this.packBack(), this.packFront());
   }
 
-  /**
-   * Move a dog off the two patches of grass the yard keeps clear: the landing
-   * under the chute, so there's always somewhere for the next one to grow up,
-   * and the handler's few feet at the front, so the throw is something you can
-   * see happen.
-   *
-   * It's a shove rather than a fence: whoever's standing there is sent trotting
-   * out — down the field off the landing, back up it off the handler's spot,
-   * both of which head into open yard from where they start. That reads as a
-   * dog wandering off rather than as a dog that can't go somewhere.
-   *
-   * The ones exempt are the ones the clearing is *for* — anything still growing
-   * — plus a dog on its way out of the gate and a dog chasing the ball, neither
-   * of which is going to linger anyway.
-   */
+  /** Move a dog off the landing under the chute and off the handler's spot at the front. */
   private clearTheLanding(dog: PackPup, t: number): void {
     if (dog.leaving || dog.fetching) return;
     if (this.clock - dog.born < GROW_SMALL) return;
@@ -4105,18 +2698,10 @@ export class MillScene {
     dog.vx = PACK_WALK[0] + Math.random() * (PACK_WALK[1] - PACK_WALK[0]);
     dog.vy = away * (3 + Math.random() * 5);
     dog.until = t + 1.5 + Math.random() * 1.5;
-    // Somewhere out on the open field, so it doesn't turn round and come
-    // straight back the moment it stops.
     dog.home = DROP_CLEAR_X + 8 + Math.random() * (PACK_RIGHT - DROP_CLEAR_X - 8);
   }
 
-  /**
-   * Settle one off the tab, at the point on the ground where it landed.
-   *
-   * Called from the slide, so the coordinates are wherever the chute happens to
-   * spit — clamped into the band, because the chute's mouth sits a little above
-   * the yard and a dog standing there would be behind the fence.
-   */
+  /** Settle one off the tab, at the point on the ground where it landed. */
   private deliver(x: number, y: number): void {
     if (this.owed <= 0) return;
     this.owed--;
@@ -4126,16 +2711,7 @@ export class MillScene {
     this.pack.push(dog);
   }
 
-  /**
-   * A new one: in at the drop where everything else in the yard arrives, or
-   * anywhere at all if the yard is being filled from cold.
-   *
-   * Either way it gets a home anywhere in the yard, which is what actually
-   * disperses a delivery — see `PackPup.home`. A dropped one also starts off
-   * walking rather than picking an action at random, because the corner is
-   * where the last one landed and the one before that, and a third of them
-   * choosing to sit down on the spot is how a delivery becomes a scrum.
-   */
+  /** A new one: in at the drop where everything else in the yard arrives, or anywhere at all if the yard is being filled from cold. */
   private newPup(t: number, scatter: boolean): PackPup {
     const back = this.packBack();
     const front = this.packFront();
@@ -4156,9 +2732,6 @@ export class MillScene {
     if (scatter) {
       pickAction(dog, t);
     } else {
-      // Straight off toward wherever it's going to live, rather than a random
-      // first action. The drop is one corner of a wide yard and the walk out of
-      // it is the whole dispersal.
       dog.doing = "trot";
       dog.vx = 1.45 * (PACK_WALK[0] + Math.random() * (PACK_WALK[1] - PACK_WALK[0]));
       dog.vy = (Math.random() - 0.5) * 4;
@@ -4167,39 +2740,17 @@ export class MillScene {
     return dog;
   }
 
-  /**
-   * Where the handler stands, in full.
-   *
-   * Level with the very front of the pack's band, which is the deepest anything
-   * in the yard gets — and pushed onto the depth queue after the dogs, so on a
-   * tie they draw behind. Anywhere shallower and the four pixels of apron in
-   * front of them fill up with puppies and the one figure the fetch loop needs
-   * you to see spends half its time behind a sleeping dog.
-   */
   private handAt(): { x: number; y: number } {
     return { x: HAND_X, y: this.packFront() };
   }
 
-  /**
-   * One turn of the fetch loop.
-   *
-   * Runs before `stepPack`, which matters: it sets the fetching dog's velocity
-   * and `stepPack` is what integrates it, so doing this after would leave the
-   * chase a frame behind and — worse — let `pickAction` retask the dog on the
-   * frame its timer happened to run out.
-   *
-   * Every phase can fail safely back to `wait`, because the dog it's holding
-   * can be spent at any moment: you buy a tier, the yard empties, and whoever
-   * was mid-chase walks out of the gate with the ball still on the floor. That
-   * has to end with the handler picking it up again rather than with a null.
-   */
   private stepFetch(t: number): void {
     const hand = this.handAt();
     const back = this.packBack();
     const front = this.packFront();
     const f = this.fetch;
 
-    // The dog is only ever borrowed. If it's gone or on its way out, drop it.
+    // The dog is only ever borrowed.
     if (f.dog && (!this.pack.includes(f.dog) || f.dog.leaving)) {
       f.dog.fetching = false;
       f.dog = null;
@@ -4210,8 +2761,6 @@ export class MillScene {
       f.x = hand.x + 8;
       f.y = hand.y - 2;
       if (t < f.until) return;
-      // Wind up and let go. The target is anywhere in the yard bar the strip
-      // right in front of the handler, or the throw is a drop.
       f.from = t;
       f.to = t + 0.85;
       f.tx = fetchTarget(hand.x);
@@ -4225,10 +2774,6 @@ export class MillScene {
       f.x = f.tx;
       f.y = f.ty;
       f.phase = "chase";
-      // A scuff of grass where it comes down. The ball is four pixels and the
-      // arc puts it well away from the handler, so without something at the
-      // landing the eye loses it in the air and picks it up again in a dog's
-      // mouth — which is the wrong half of the throw to be able to see.
       this.puff(f.tx, f.ty, "dust", -10);
       this.puff(f.tx + 2, f.ty, "dust", 10);
       return;
@@ -4236,8 +2781,7 @@ export class MillScene {
 
     if (f.phase === "chase") {
       if (!f.dog) {
-        // Whoever's nearest and free. Depth counts double, because a dog four
-        // pixels upfield is much further away than one four pixels along it.
+        // Whoever's nearest and free.
         let best: PackPup | null = null;
         let near = Infinity;
         for (const dog of this.pack) {
@@ -4249,8 +2793,6 @@ export class MillScene {
           }
         }
         if (!best) {
-          // An empty yard. The handler goes and gets it themselves, off screen,
-          // which is to say the ball is simply back in their hand next beat.
           f.phase = "wait";
           f.until = t + FETCH_REST[0];
           return;
@@ -4264,8 +2806,6 @@ export class MillScene {
       return;
     }
 
-    // Carrying it home. The ball rides at the dog's head — see `drawFetch` —
-    // so all this has to do is walk the dog back.
     const dog = f.dog;
     if (!dog) {
       f.phase = "wait";
@@ -4275,8 +2815,6 @@ export class MillScene {
     this.drive(dog, hand.x + 4, hand.y, t);
     if (Math.abs(dog.x - hand.x - 4) < 6 && Math.abs(dog.y - hand.y) < 5) {
       dog.fetching = false;
-      // Released mid-stride, so it wanders off from wherever it delivered
-      // rather than standing to attention at the handler's feet.
       dog.until = t;
       f.dog = null;
       f.phase = "wait";
@@ -4284,13 +2822,10 @@ export class MillScene {
     }
   }
 
-  /** Point a dog at somewhere and keep it pointed until it gets there. */
   private drive(dog: PackPup, x: number, y: number, t: number): void {
     const dx = x - dog.x;
     const dy = y - dog.y;
     dog.doing = "trot";
-    // Refreshed every frame, so `pickAction` can never get a look in even if
-    // the fetching flag were somehow missed.
     dog.until = t + 1;
     dog.vx = Math.abs(dx) < 2 ? 0 : Math.sign(dx) * FETCH_SPEED;
     dog.vy = Math.abs(dy) < 2 ? 0 : Math.sign(dy) * FETCH_SPEED * 0.35;
@@ -4298,12 +2833,6 @@ export class MillScene {
     if (dog.vx === 0) dog.vx = Math.sign(x - dog.x) * 0.001 || 1;
   }
 
-  /**
-   * The handler, and the ball wherever it currently is.
-   *
-   * Drawn as one thing because they're one thing to look at: the whole loop
-   * only reads if you can see the ball leave a hand and come back to it.
-   */
   private drawHandler(): void {
     const ctx = this.ctx;
     const hand = this.handAt();
@@ -4325,11 +2854,8 @@ export class MillScene {
       const p = (t - f.from) / (f.to - f.from);
       x = f.x + (f.tx - f.x) * p;
       y = f.y + (f.ty - f.y) * p;
-      // A real arc, not a hop. It's the only thing in the scene that leaves the
-      // ground properly and it's what makes the throw read as a throw.
       lift = Math.round(Math.sin(p * Math.PI) * 16);
     } else if (f.phase === "carry" && f.dog) {
-      // In its mouth: at head height, on the leading edge.
       x = f.dog.x + (f.dog.vx < 0 ? -1 : 7);
       y = f.dog.y - 8;
     } else if (f.phase === "wait") {
@@ -4338,8 +2864,7 @@ export class MillScene {
       y = hand.y - 2;
     }
 
-    // A shadow on the ground it's over, which during the throw is the only cue
-    // for where it's going to come down.
+    // A shadow on the ground it's over, which during the throw is the only cue for where it's going to come down.
     if (f.phase !== "carry") {
       ctx.globalAlpha = 0.16;
       ctx.fillStyle = INK;
@@ -4349,27 +2874,16 @@ export class MillScene {
     ctx.drawImage(sprite.canvas, Math.round(x), Math.round(y) - sprite.h - lift);
   }
 
-  /**
-   * One puppy, and the shadow that stops it floating.
-   *
-   * The frame comes off `walked` rather than the clock, so a dog that's stopped
-   * holds the pose it stopped in instead of running on the spot, and the bob is
-   * on the same phase — a pixel of lift on the off frame, which at this size is
-   * the entire difference between walking and sliding.
-   */
   private drawPup(dog: PackPup): void {
     const ctx = this.ctx;
     const step = Math.floor(dog.walked / PACK_STRIDE) % 2;
     const age = this.clock - dog.born;
-    // Growing overrides whatever it thinks it's doing. It only lasts a second
-    // and a dog that sits down halfway through inflating looks like a glitch.
+    // Growing overrides whatever it thinks it's doing.
     const pose =
       age < GROW_SMALL
         ? POSE.newborn
         : dog.doing === "sit"
           ? // Sitting alternates the tail on the clock rather than on distance,
-            // for the obvious reason that a sitting dog isn't covering any. `x`
-            // stands in for a per-dog phase: constant while sat, and free.
             POSE.sit + (Math.floor(this.clock * 1.5 + dog.x) % 2)
           : dog.doing === "rest"
             ? POSE.loaf
@@ -4387,11 +2901,7 @@ export class MillScene {
     ctx.fillStyle = INK;
     ctx.fillRect(x + 1, y - 1, sprite.w - 2, 1);
     ctx.globalAlpha = 1;
-    // A pixel of lift on the off step at a walk, and a proper bounce at a
-    // sprint — a zooming dog that stays pinned to the floor just looks fast.
-    // A sleeping one breathes instead: a pixel, once every few seconds, which
-    // is the slowest animation in the scene and the only one that's meant to be
-    // noticed after you've stopped looking for it.
+    // A pixel of lift on the off step at a walk, and a proper bounce at a sprint — a zooming dog that stays pinned to the floor just looks fast.
     const bob =
       dog.doing === "zoom"
         ? Math.round(Math.abs(Math.sin(dog.walked / 7)) * 3)
@@ -4404,20 +2914,11 @@ export class MillScene {
     if (dog.doing === "sleep") this.drawSleep(dog, x, y - sprite.h);
   }
 
-  /**
-   * The `Z` coming off a sleeping one: up and away over about three seconds,
-   * fading as it goes, and only one at a time.
-   *
-   * Phased on the dog's own x, so a row of sleepers isn't a row of Zs rising in
-   * lockstep — the yard has no other sprite that would give that away as
-   * quickly as this one would.
-   */
   private drawSleep(dog: PackPup, x: number, top: number): void {
     const ctx = this.ctx;
     const sprite = artCanvas(ZZZ);
     const p = fract(this.clock / 3.2 + dog.x * 0.11);
-    // Nothing for the first stretch of the cycle, so they come one at a time
-    // rather than as a stream.
+    // Nothing for the first stretch of the cycle, so they come one at a time rather than as a stream.
     if (p > 0.75) return;
     const rise = p / 0.75;
     ctx.globalAlpha = 0.85 * (1 - rise * rise);
@@ -4425,11 +2926,6 @@ export class MillScene {
     ctx.globalAlpha = 1;
   }
 
-  /**
-   * A pool of shade under something's feet. Two pixels of it, tucked in at the
-   * ends — with a dozen things standing on the same flat brown, this is the
-   * only thing telling you which of them are near and which are far.
-   */
   private propShadow(x: number, foot: number, w: number): void {
     const ctx = this.ctx;
     ctx.globalAlpha = 0.35;
@@ -4440,22 +2936,8 @@ export class MillScene {
   }
 
   // --- The trough ----------------------------------------------------------
-  //
-  // The field machines' answer to "where does it go". A van and a grooming rig
-  // are the two things out there big enough to be carrying a load, and the
-  // load has to end up somewhere you can see: a trough across the headland,
-  // filled by auger from whatever's working the rows above it, emptying down a
-  // spout through the fence into the yard.
 
-  /**
-   * Where a hand goes after it's tipped its load in: back up the headland,
-   * towards the work.
-   *
-   * Not on down into the yard. The yard is where the puppies are kept, not
-   * where the people are, and a crew that carries every load down past the
-   * trough and then wanders about among the crates spends most of the day
-   * walking away from the field it's supposed to be picking.
-   */
+  /** Where a hand goes after it's tipped its load in: back up the headland, towards the work. */
   private turnAround(hand: Hand, yardY: number): { x: number; y: number } {
     return {
       x: clamp(hand.x + (Math.random() - 0.5) * 22, 4, SCENE_W - 10),
@@ -4478,7 +2960,6 @@ export class MillScene {
     return best;
   }
 
-  /** The baskets waiting at the headland, dropping the last inch as they land. */
   private drawBaskets(now: number): void {
     const sprite = artCanvas(BASKET);
     for (const basket of this.baskets) {
@@ -4504,7 +2985,6 @@ export class MillScene {
       }
       this.troughFill--;
       if (this.hauls.length >= MAX_HAULS) continue;
-      // Down the middle of the slide, and off the end into the pile.
       const run = this.spout(box);
       const mid = (MillScene.SPOUT_W - 7) / 2;
       this.hauls.push({
@@ -4524,8 +3004,6 @@ export class MillScene {
     const { x, w, y } = box;
     const top = y - 9;
 
-    // Open-topped, so what's in it is the readable part. Walls and floor in
-    // the outline ink, planking inside, and two stubby legs under it.
     ctx.fillStyle = "#5e3e29";
     ctx.fillRect(x + 4, y - 2, 3, 3);
     ctx.fillRect(x + w - 7, y - 2, 3, 3);
@@ -4533,8 +3011,6 @@ export class MillScene {
     ctx.fillRect(x, top, 2, 9);
     ctx.fillRect(x + w - 2, top, 2, 9);
     ctx.fillRect(x, y - 2, w, 2);
-    // Lit planking with dark staves. A trough in the yard's own dark wood
-    // disappeared into the fence behind it and read as a bench.
     ctx.fillStyle = "#a97a52";
     ctx.fillRect(x + 2, top, w - 4, 7);
     ctx.fillStyle = "#7a5237";
@@ -4552,12 +3028,7 @@ export class MillScene {
 
   }
 
-  /**
-   * Where the trough's outfall runs: a gate in the floor a little along from
-   * the low end, then down over the fence to a mouth that hangs above the
-   * mound. Both ends in one place, because the puppies on it have to agree
-   * with the woodwork under them.
-   */
+  /** The outfall: a gate in the trough floor near the low end, down over the fence to a mouth above the mound. */
   private spout(box: { x: number; w: number; y: number }): {
     x0: number;
     y0: number;
@@ -4566,10 +3037,7 @@ export class MillScene {
   } {
     const x0 = box.x + 22;
     const y0 = box.y - 2;
-    // Ends over the drop, low enough that what comes off it is setting down on
-    // the ground rather than being thrown at it. It leans back the other way
-    // from the pipeline's outfall, so the yard's two arrivals aren't the same
-    // line drawn twice.
+    // Ends over the drop, low enough that what comes off it is setting down on the ground rather than being thrown at it.
     return {
       x0,
       y0,
@@ -4578,41 +3046,24 @@ export class MillScene {
     };
   }
 
-  /** How wide the boards are, and what a puppy rides down the middle of. */
   private static SPOUT_W = 9;
 
-  /**
-   * The slide, drawn as a channel: a side board down each edge with the run
-   * between them, lit on the high side and shaded on the low one, and an open
-   * mouth over the pile.
-   *
-   * It used to be a line of two-pixel dots from the trough to the mound, which
-   * is a perfectly good way to describe a path and a terrible way to draw a
-   * chute — the pup came out of the trough and went down a piece of string.
-   * The first go at fixing it put battens across the run and made a ladder, so
-   * everything here reads *along* the fall: rails, a highlight and a floor.
-   */
   private drawSpout(box: { x: number; w: number; y: number }): void {
     const ctx = this.ctx;
     const { x0, y0, x1, y1 } = this.spout(box);
     const W = MillScene.SPOUT_W;
     const fall = y1 - y0;
 
-    // The throat: a collar under the trough floor, so the slide is fed by the
-    // trough rather than just touching it.
     ctx.fillStyle = "#5e3e29";
     ctx.fillRect(x0, y0 - 3, W, 3);
 
     for (let i = 0; i <= fall; i++) {
       const sx = Math.round(x0 + ((x1 - x0) * i) / fall);
       const sy = y0 + i;
-      // Low side: a side board standing proud of the floor, so the channel has
-      // a visible near edge holding the pup in.
       ctx.fillStyle = INK;
       ctx.fillRect(sx, sy, 1, 1);
       ctx.fillStyle = "#5e3e29";
       ctx.fillRect(sx + 1, sy, 1, 1);
-      // The floor, in trough wood, and the far rail catching the light.
       ctx.fillStyle = "#8a5c3c";
       ctx.fillRect(sx + 2, sy, W - 4, 1);
       ctx.fillStyle = "#a97a52";
@@ -4621,15 +3072,12 @@ export class MillScene {
       ctx.fillRect(sx + W - 1, sy, 1, 1);
     }
 
-    // The mouth: open, with the floor's shadow under the lip. This is the last
-    // thing the puppy is inside before it's on the pile.
     ctx.fillStyle = "#c39466";
     ctx.fillRect(x1, y1, W, 1);
     ctx.fillStyle = INK;
     ctx.fillRect(x1 - 1, y1 + 1, W + 2, 2);
   }
 
-  /** Yield on an auger or a spout: straight line, constant speed, no arc. */
   private drawHauls(now: number): void {
     const ctx = this.ctx;
     const sprite = artCanvas(PUPPY_SPRITE);
@@ -4638,15 +3086,13 @@ export class MillScene {
       if (p > 1) {
         if (h.slide) {
           this.puff(h.x1 + 3, h.y1 + 4, "dust", (Math.random() - 0.5) * 20);
-          // The one that just landed is the one that joins the pack, if the
-          // yard is short. Otherwise it's another puppy onto the pile you own.
+          // The one that just landed is the one that joins the pack, if the yard is short.
           this.deliver(h.x1 + 3, h.y1 + 4);
         }
         return false;
       }
       if (p < 0) return true;
-      // A slide accelerates, and the last stretch is the puppy leaving the
-      // mouth — so it rides the boards, then drops the last few pixels.
+      // A slide accelerates, and the last stretch is the puppy leaving the mouth — so it rides the boards, then drops the last few pixels.
       const f = h.slide ? p * p * 0.7 + p * 0.3 : p;
       ctx.drawImage(
         sprite.canvas,
@@ -4657,14 +3103,6 @@ export class MillScene {
     });
   }
 
-  /**
-   * What your own whistling turns up: a puppy, held a beat, and a heart.
-   *
-   * The heart is the only part of this scene that isn't a thing in the world —
-   * there is no heart-shaped object on a mill — and it earns the exception by
-   * being the only feedback the click has. Everything else you do here shows up
-   * as a number moving; whistling a dog over should feel like something.
-   */
   private drawWhistled(now: number): void {
     const ctx = this.ctx;
     const sprite = artCanvas(PUPPY_SPRITE);
@@ -4676,9 +3114,6 @@ export class MillScene {
       const lift = Math.round(5 * Math.min(1, p * 6));
       ctx.globalAlpha = p > 0.6 ? Math.max(0, 1 - (p - 0.6) / 0.4) : 1;
       ctx.drawImage(sprite.canvas, d.x, d.y - sprite.h - lift);
-      // Rises faster than the puppy and drifts, so the two don't read as one
-      // object. Held back a beat as well: the dog arrives, and *then* it's
-      // pleased about it.
       if (p > 0.15) {
         ctx.globalAlpha *= 0.9;
         ctx.drawImage(

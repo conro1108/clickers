@@ -1,12 +1,4 @@
-/**
- * The theme the engine uses when there is no game attached — `npm test` and
- * `tsc -p packages/sim`.
- *
- * It answers every id with its own name, so it can never fall behind the
- * content tables and no test ever has to be updated because a producer got
- * renamed in one of the games. Tests that care about wording are the apps'
- * business; tests in here care about numbers.
- */
+// Theme used when no game is attached (tests, tsc -p packages/sim): every id names itself.
 
 import type { Named, ProducerNamed, ThemeStrings } from "./theme.js";
 

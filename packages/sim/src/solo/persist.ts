@@ -1,10 +1,4 @@
-/**
- * Saving the site, and picking it back up.
- *
- * A save is just the `SiteState` plus a version tag — there's no derived data to
- * rebuild, because the state already is a checkpoint. Coming back after an
- * absence is the same `advance` a live tick uses, handed a bigger interval.
- */
+// Save/load. A save is the SiteState plus a version tag; resuming is `advance` with a big interval.
 
 import { Y, ms, type Millis, type Yield } from "../numbers.js";
 import { MAX_CONDITION, type World } from "./content.js";
@@ -24,10 +18,7 @@ export function serializeSite(site: SiteState, savedAt: Millis): string {
   return JSON.stringify({ version: SAVE_VERSION, savedAt, site } satisfies SaveFile);
 }
 
-/**
- * Parse a save. Returns null for anything we can't trust rather than throwing —
- * a corrupt save should cost you a site, not the ability to open the page.
- */
+/** Returns null rather than throwing: a corrupt save costs a site, not the page. */
 export function parseSite(raw: string): SiteState | null {
   let parsed: unknown;
   try {
@@ -38,8 +29,7 @@ export function parseSite(raw: string): SiteState | null {
   if (typeof parsed !== "object" || parsed === null) return null;
   const save = parsed as Partial<SaveFile> & { farm?: unknown; mill?: unknown };
   if (save.version !== SAVE_VERSION) return null;
-  // Saves from before the two games shared an engine wrote the site under the
-  // name that game called it, with that game's word for every field.
+  // pre-merge saves used each game's own vocabulary
   const body = save.site ?? save.farm ?? save.mill;
   if (typeof body !== "object" || body === null) return null;
   const f = renamed(body as Record<string, unknown>);
@@ -47,16 +37,11 @@ export function parseSite(raw: string): SiteState | null {
 
   const upgrades = Array.isArray(f.upgrades) ? (f.upgrades as string[]).map(migrateId) : [];
 
-  // Saves written before the flag existed still know whether the world folded:
-  // they're holding the upgrade that did it. Without this backfill a site that
-  // had already converged would open with its sky back.
+  // backfill for saves predating the flag
   const converged = f.converged ?? upgrades.includes(CONVERGENCE_UPGRADE);
-  // And one written before there were two worlds was standing in whichever one
-  // it had reached, which for a folded site is inside the core.
   const world: World = converged && f.world !== "outside" ? "inside" : "outside";
 
-  // Fill anything a hand-edited or partial save is missing, so one absent field
-  // doesn't produce NaN stock forever.
+  // fill missing fields so a partial save can't produce NaN forever
   return {
     seed: f.seed,
     startedAt: ms(f.startedAt ?? f.checkpointAt),
@@ -81,13 +66,7 @@ export function parseSite(raw: string): SiteState | null {
   };
 }
 
-/**
- * The old themed field names, mapped onto the neutral ones.
- *
- * Both games kept their save in localStorage under their own vocabulary, and
- * the engine merging cost them nothing else — so it shouldn't cost them their
- * site either. Absent keys are simply not there, which the caller already fills.
- */
+// Old themed field names mapped onto the neutral ones.
 const OLD_NAMES: Record<string, string> = {
   potatoes: "stock",
   puppies: "stock",
@@ -101,13 +80,7 @@ const OLD_NAMES: Record<string, string> = {
   papers: "heirlooms",
 };
 
-/**
- * Every content id the two games used before they shared an engine.
- *
- * The potato game's ids and the puppy game's ids never collide — where both
- * had a rung they agreed on a name for, they agreed on the same name — so one
- * table migrates either save without needing to know which game wrote it.
- */
+// Pre-merge content ids from both games; they never collide, so one table migrates either save.
 const OLD_IDS: Record<string, string> = {
   backhoe: "tool_5",
   bedding_rot: "rot",
@@ -210,14 +183,13 @@ const OLD_IDS: Record<string, string> = {
   zeppelin: "airship",
 };
 
-/** Migrate the keys of an id-keyed record, e.g. `{ tractor: 3 }` -> `{ hauler: 3 }`. */
 function remapKeys<T>(rec: Record<string, T> | undefined): Record<string, T> {
   const out: Record<string, T> = {};
   for (const [id, value] of Object.entries(rec ?? {})) out[migrateId(id)] = value;
   return out;
 }
 
-/** Ids of the per-rung upgrades are the producer id plus a suffix. */
+// per-rung upgrade ids are the producer id plus a suffix
 function migrateId(id: string): string {
   const tier = /^(.+)(_x2[abc])$/.exec(id);
   if (tier) return `${OLD_IDS[tier[1]!] ?? tier[1]}${tier[2]}`;
@@ -226,8 +198,7 @@ function migrateId(id: string): string {
 
 function renamed(body: Record<string, unknown>): Partial<SiteState> {
   const out: Record<string, unknown> = {};
-  // Aliases first and current names second, so a save already written in the
-  // new vocabulary always wins over a stray legacy key sitting beside it.
+  // current names win over a stray legacy key beside them
   for (const [key, value] of Object.entries(body)) {
     const to = OLD_NAMES[key];
     if (to) out[to] = value;
@@ -244,24 +215,15 @@ function finite(n: unknown): Yield {
 
 export interface OfflineReport {
   awayMs: number;
-  /** Yield produced while away, before anything the weather handed back. */
   earned: Yield;
   events: WeatherEvent[];
   brokeTotal: number;
   conditionLost: number;
-  /** Boons and insurance payouts collected in your absence. */
+  /** boons and insurance payouts */
   gained: Yield;
 }
 
-/**
- * Resolve everything that happened between the save and now.
- *
- * A clock that moved backwards (an NTP correction, a fiddled system clock, the
- * back room's skew lever being put back) is no time passing rather than an
- * error: the site rebases onto the earlier clock and carries on. It used to keep
- * the later checkpoint, which is the same thing as freezing the game until the
- * wall clock caught up — see `rebase`.
- */
+/** A clock that moved backwards is no time passing, not an error — see `rebase`. */
 export function resumeSite(saved: SiteState, now: Millis): { site: SiteState; report: OfflineReport | null } {
   if (now <= saved.checkpointAt) return { site: rebase(saved, now), report: null };
 
@@ -281,7 +243,6 @@ export function resumeSite(saved: SiteState, now: Millis): { site: SiteState; re
   return { site, report };
 }
 
-/** Below this, an absence isn't worth interrupting anyone with a report. */
 export const REPORT_THRESHOLD_MS = 60_000;
 
 export function worthReporting(report: OfflineReport | null): boolean {

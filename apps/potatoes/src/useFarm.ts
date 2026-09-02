@@ -6,10 +6,7 @@ import { nowMs } from "./clock.js";
 const SAVE_KEY = "potatoes-inc:farm";
 /** How often batched digs are folded into the sim. */
 const DIG_FLUSH_MS = 500;
-/**
- * How often the sim is actually advanced. Only has to be fine enough that a
- * weather event lands promptly — everything between ticks is extrapolated.
- */
+// Sim tick; only has to be fine enough that weather lands promptly, the rest is extrapolated.
 const TICK_MS = 250;
 /** Display refresh. Doesn't touch the sim. */
 const RENDER_MS = 100;
@@ -27,7 +24,6 @@ export interface FarmRuntime {
   error: string | null;
   dig(): void;
   dispatch(cmd: solo.SiteCommand): void;
-  /** Burn the save and start over. Not prestige — this keeps nothing. */
   abandon(): void;
 }
 
@@ -50,7 +46,6 @@ function loadFarm(): { farm: solo.SiteState; report: solo.OfflineReport | null }
   if (!saved) {
     return { farm: solo.createSite({ seed: newSeed(), startedAt: nowMs() }), report: null };
   }
-  // The engine calls it a site; in here it's a farm.
   const resumed = solo.resumeSite(saved, nowMs());
   return { farm: resumed.site, report: resumed.report };
 }
@@ -59,11 +54,7 @@ function newSeed(): string {
   return `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
 }
 
-/**
- * Drives the homestead in the browser. Every mutation goes through the same
- * `applySiteCommand` a server would call, so moving this behind a network
- * round-trip later doesn't touch any game logic.
- */
+// Drives the homestead in the browser. Every mutation goes through the same `applySiteCommand` a server would call.
 export function useFarm(): FarmRuntime {
   const initial = useRef<{ farm: solo.SiteState; report: solo.OfflineReport | null }>();
   initial.current ??= loadFarm();
@@ -103,8 +94,7 @@ export function useFarm(): FarmRuntime {
 
   const dispatch = useCallback(
     (cmd: solo.SiteCommand) => {
-      // Bank what you've already dug before spending, or the pile you can see
-      // is a flush ahead of the pile you can spend.
+      // Bank pending clicks first, or the visible pile is a flush ahead of the spendable one.
       flushDigs();
       const res = solo.applySiteCommand(farmRef.current, cmd, nowMs());
       if (!res.ok) {
@@ -147,8 +137,7 @@ export function useFarm(): FarmRuntime {
     return () => clearInterval(id);
   }, [save]);
 
-  // Closing the tab is the single most likely moment to lose progress, and on
-  // mobile `beforeunload` often never fires — `hidden` is the one that does.
+  // On mobile `beforeunload` often never fires; `hidden` is the one that does.
   useEffect(() => {
     const onHide = () => {
       flushDigs();

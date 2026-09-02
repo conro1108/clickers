@@ -1,12 +1,4 @@
-/**
- * A headless rival, for tuning.
- *
- * Same job `balance.ts` does for versus: play a whole run with nobody watching
- * so a cost curve can be changed and the consequences read off, instead of
- * guessed at. This player is competent, not optimal — it buys the best value it
- * can see and keeps the place standing, which is roughly what an engaged player
- * does without a spreadsheet.
- */
+// A headless rival for tuning solo, as balance.ts is for versus. Competent, not optimal.
 
 import { Y, ms, seconds, type Millis, type Yield, type Rate } from "../numbers.js";
 import { LANDS, SOLO_PRODUCERS, SOLO_UPGRADES, type SoloProducerId } from "./content.js";
@@ -28,22 +20,16 @@ import { advance, applySiteCommand, createSite } from "./site.js";
 import type { SiteCommand, SiteState } from "./state.js";
 
 export interface RivalStyle {
-  /** Clicks per second while playing. */
   clicksPerSecond: number;
-  /** How often the rival looks at the shop. */
   decisionMs: number;
-  /** Share of the pile it will put into repairs in one go. */
+  /** the *Budget fields are shares of the pile spent in one go */
   repairBudget: number;
-  /** Share of the pile it will put into condition restoration in one go. */
   conditionBudget: number;
-  /** Share of the pile it will put into mitigation buildings in one go. */
   landBudget: number;
-  /** Below this condition health, restoring becomes a priority. */
   conditionFloor: number;
 }
 
 export const RIVAL_STYLES: Record<string, RivalStyle> = {
-  /** Buys growth, patches damage, ignores the land until it bites. */
   keen: {
     clicksPerSecond: 2,
     decisionMs: 2_000,
@@ -52,7 +38,7 @@ export const RIVAL_STYLES: Record<string, RivalStyle> = {
     landBudget: 0.15,
     conditionFloor: 0.9,
   },
-  /** Never builds mitigation. A control group for anything land-related. */
+  // control group for anything land-related
   reckless: {
     clicksPerSecond: 2,
     decisionMs: 2_000,
@@ -61,12 +47,7 @@ export const RIVAL_STYLES: Record<string, RivalStyle> = {
     landBudget: 0,
     conditionFloor: 0.9,
   },
-  /**
-   * Barely clicks, checks in rarely. The idle-player shape, and the control
-   * group for "how much faster is clicking?". Not zero clicks: a site with no
-   * producers and no clicks earns nothing forever, so a truly idle bot measures
-   * nothing at all.
-   */
+  // idle-player shape; not zero clicks, or a site with no producers earns nothing forever
   absent: {
     clicksPerSecond: 0.05,
     decisionMs: 60_000,
@@ -77,22 +58,15 @@ export const RIVAL_STYLES: Record<string, RivalStyle> = {
   },
 };
 
-/**
- * Production per unit spent — the only ranking that matters when buying.
- * Measured as what the unit would actually add to the site's rate as it stands,
- * not its clean rate, so the `well` gets discounted for tired condition the way
- * a buyer looking at the shop would discount it.
- */
+// live rate, not clean rate, so the `well` is discounted for tired condition
 function valueOf(f: SiteState, id: SoloProducerId): number {
   return producerRateEach(f, id) / producerCost(f, id, 1);
 }
 
-/** What the rival would do right now, in priority order. */
 export function rivalTurn(f: SiteState, style: RivalStyle): SiteCommand[] {
   const cmds: SiteCommand[] = [];
   const pile = f.stock;
 
-  // Broken kit first: it's the only spend that pays back instantly and in full.
   let best: { id: SoloProducerId; value: number } | null = null;
   for (const prod of SOLO_PRODUCERS) {
     const broken = brokenCount(f, prod.id);
@@ -110,8 +84,6 @@ export function rivalTurn(f: SiteState, style: RivalStyle): SiteCommand[] {
     return [{ type: "restore_condition" }];
   }
 
-  // Upgrades are flat-priced doublings — always the best buy on the board when
-  // they're affordable at all.
   for (const u of SOLO_UPGRADES) {
     if (f.upgrades.includes(u.id) || !isUnlocked(f, u)) continue;
     if (Y.gte(pile, u.cost)) return [{ type: "buy_upgrade", upgrade: u.id }];
@@ -121,8 +93,7 @@ export function rivalTurn(f: SiteState, style: RivalStyle): SiteCommand[] {
     for (const land of LANDS) {
       if (!isLandAvailable(f, land.id)) continue;
       const cost = landCost(f, land.id);
-      // Keeps the buildings roughly in step rather than pouring everything into
-      // whichever one happens to be cheapest.
+      // keeps the buildings roughly in step
       if (landLevel(f, land.id) > 8) continue;
       if (cost <= pile * style.landBudget) return [{ type: "buy_land", land: land.id }];
     }
@@ -156,12 +127,7 @@ export interface SiteRunResult {
   conditionLost: number;
 }
 
-/**
- * Play a site for `durationMs`.
- *
- * `weather: false` suppresses the schedule entirely, which is how the tests get
- * a control group to measure the weather's cost against.
- */
+/** `weather: false` suppresses the schedule, as a control group. */
 export function simulateSite(opts: {
   seed: string;
   durationMs: number;
@@ -206,8 +172,7 @@ export function simulateSite(opts: {
       for (const cmd of rivalTurn(site, style)) apply(cmd, t);
     }
 
-    // Nothing bought this step still has to move time forward, or the weather
-    // never lands on an idle site.
+    // time must advance even with nothing bought, or weather never lands on an idle site
     const stepped = advance(site, ms(t + step));
     site = stepped.site;
     weatherEvents += stepped.events.length;
@@ -233,31 +198,13 @@ export function simulateSite(opts: {
   return { site, samples, weatherEvents, brokeTotal, conditionLost };
 }
 
-// ---------------------------------------------------------------------------
-// Playing the way people play
-// ---------------------------------------------------------------------------
-
-/**
- * `simulateSite` never closes the tab. That's the right control group for the
- * economy but the wrong model of a person, and the difference matters here
- * specifically: nobody repairs anything in the gaps. A site that gets checked on
- * three times a day spends most of the week accumulating damage nobody is there
- * to undo, which is the only thing separating a real playthrough from the
- * always-on bot.
- *
- * So: play a session, jump the clock to the next one, play again. Only the
- * sessions are stepped — the gaps are single `advance` calls, which is both
- * exact (solo has no timed effects) and cheap enough that a fortnight of this
- * runs in a test.
- */
+// --- Playing the way people play ---
+// Sessions are stepped; the gaps between them are single `advance` calls, so nobody repairs in them.
 export interface CheckInCadence {
-  /** Sessions a day, spread evenly through it. */
   sessionsPerDay: number;
-  /** How long one lasts. */
   sessionMs: number;
 }
 
-/** The three cadences the endgame's pacing is quoted against. */
 export const CHECK_INS: Record<"heavy" | "normal" | "light", CheckInCadence> = {
   heavy: { sessionsPerDay: 4, sessionMs: seconds(1_800) },
   normal: { sessionsPerDay: 3, sessionMs: seconds(900) },
@@ -266,15 +213,11 @@ export const CHECK_INS: Record<"heavy" | "normal" | "light", CheckInCadence> = {
 
 export interface CadenceResult {
   site: SiteState;
-  /** Elapsed ms at which each producer was first owned. */
   firstOwned: Partial<Record<SoloProducerId, number>>;
-  /** Elapsed ms at which the horizon closed, or null if it never did. */
   convergedAt: number | null;
-  /** What the site was making the moment it folded. Prices the `ur_form`. */
+  /** Rate at the moment of the fold; prices the `ur_form`. */
   convergedRate: Rate | null;
-  /** Wall clock covered, including everything spent away. */
   elapsedMs: number;
-  /** How much of that was actually spent playing. */
   playedMs: number;
 }
 
@@ -321,7 +264,6 @@ export function simulateCadence(opts: {
   for (let d = 0; d < opts.days; d++) {
     for (let s = 0; s < cadence.sessionsPerDay; s++) {
       const start = Math.round(d * DAY_MS + s * gap);
-      // Everything between check-ins happens to a site with nobody in it.
       site = advance(site, ms(start), true).site;
       let clickCarry = 0;
       let nextDecision = start;

@@ -1,17 +1,4 @@
-/**
- * Char-grid pixel art, the same technique cozy_sprites uses: art is authored as
- * rows of single-character keys plus a tiny palette, rendered once into an
- * offscreen canvas and cached.
- *
- * Two consumers, two shapes:
- *  - the scene blits `artCanvas` straight onto its low-res buffer, so the art
- *    stays on the buffer's pixel grid and never resamples;
- *  - the DOM uses `artUrl` in an `<img class="pxicon">`, upscaled by CSS with
- *    `image-rendering: pixelated`.
- *
- * Rows don't have to be the same length — the grid is padded to the longest —
- * which keeps hand-authored art editable without counting dots.
- */
+/** Char-grid pixel art, the same technique cozy_sprites uses: art is authored as rows of single-character keys plus a tiny palette, rendered once into an offscreen canvas and cached. */
 
 export interface Art {
   rows: readonly string[];
@@ -59,11 +46,7 @@ export function artCanvas(art: Art): Sprite {
   return sprite;
 }
 
-/**
- * Data URL for DOM use. Rendered at 4x rather than 1x because Safari resamples
- * very small images on its own before `image-rendering: pixelated` gets a say,
- * and a 12px icon blown up to 24 comes out soft.
- */
+/** Data URL for DOM use. */
 export function artUrl(art: Art): string {
   let url = urlCache.get(art);
   if (!url) {
@@ -78,11 +61,7 @@ export function artSize(art: Art): { w: number; h: number } {
   return { w: s.w, h: s.h };
 }
 
-/**
- * Recolour a sprite in place-ish: returns a tinted copy, cached per (art, tint).
- * Used for broken kit, which reads as the same machine gone grey and dead
- * rather than a second set of art to keep in sync.
- */
+/** Recolour a sprite in place-ish: returns a tinted copy, cached per (art, tint). */
 const tintCache = new Map<string, Sprite>();
 let tintKey = 0;
 const tintIds = new WeakMap<Art, number>();

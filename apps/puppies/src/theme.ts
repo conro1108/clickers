@@ -1,16 +1,5 @@
-/**
- * Every word the puppy game puts in front of a player that the shared engine
- * needs to know about.
- *
- * The engine in packages/sim owns the ids, the numbers and the shape of the
- * ladder; this file owns what any of it is called. Both games are the same
- * table underneath, so a balance change happens once, in the engine, and lands
- * here as nothing at all.
- *
- * Reached through the "@clickers/theme" alias in vite.config.ts and
- * tsconfig.json. That alias is the only thing that makes this build the puppy
- * game rather than the potato one.
- */
+// Every player-facing word the shared engine needs, keyed by engine id.
+// Reached through the "@clickers/theme" alias in vite.config.ts / tsconfig.json — that alias is what picks the game.
 import type { ThemeStrings } from "@clickers/sim";
 
 export const STRINGS: ThemeStrings = {

@@ -14,9 +14,7 @@ export interface AttackOutcome {
   /** 0 = landed clean, 1 = absorbed entirely. */
   mitigation: number;
   blocked: boolean;
-  /** Shield power consumed soaking this. */
   absorbed: number;
-  /** Units knocked offline, by producer. Stays broken until repaired. */
   broke: Partial<Record<ProducerId, number>>;
   brokeTotal: number;
   applied?: ActiveEffect;
@@ -32,7 +30,7 @@ export function shieldPool(p: PlayerState, t: Millis): number {
   return activeShields(p, t).reduce((sum, s) => sum + s.power, 0);
 }
 
-/** Drain `amount` of absorb pool, oldest shield first. */
+// oldest shield first
 function drainShields(p: PlayerState, t: Millis, amount: number): PlayerState {
   let left = amount;
   const effects = p.effects.map((e) => {
@@ -44,7 +42,6 @@ function drainShields(p: PlayerState, t: Millis, amount: number): PlayerState {
   return { ...p, effects: effects.filter((e) => e.kind !== "shield" || e.power > 0) };
 }
 
-/** Producer types a breakage attack can actually hit, worst-first by scope. */
 function targetsFor(p: PlayerState, scope: "best" | "cheapest" | "all"): ProducerId[] {
   const live = PRODUCERS.filter((prod) => workingCount(p, prod.id) > 0);
   if (live.length === 0) return [];
@@ -54,16 +51,10 @@ function targetsFor(p: PlayerState, scope: "best" | "cheapest" | "all"): Produce
   return [best.id];
 }
 
-/**
- * Attack power vs. remaining shield pool. A defense with at least as much
- * power left as the attack absorbs it outright; anything less scales the
- * effect down rather than negating it (VISION.md: defense is a range, not a
- * yes/no). Either way the shield spends what it soaked.
- */
+/** A partial shield scales the effect down rather than negating it (docs/design.md). */
 export function resolveAttack(args: {
   attack: Attack;
   attackerId: string;
-  /** Must already be checkpointed to `at`. */
   defender: PlayerState;
   at: Millis;
   rng: Rng;
@@ -101,8 +92,7 @@ export function resolveAttack(args: {
     return { defender, outcome };
   }
 
-  // Breakage. Mitigation scales how many units go down; a partial shield means
-  // fewer things to fix, not a shorter outage — nothing here times out.
+  // Breakage: mitigation scales how many units go down; nothing here times out.
   const share = attack.effect.share * potency;
   const broken = { ...defender.broken };
   for (const id of targetsFor(defender, attack.effect.scope)) {
@@ -111,12 +101,8 @@ export function resolveAttack(args: {
     const working = owned - already;
     if (working <= 0) continue;
 
-    // A little jitter so identical attacks aren't perfectly predictable, and
-    // so the seeded PRNG stays the only source of randomness in the sim.
     const rolled = share * rng.range(0.85, 1.15);
-    // At least one unit, or cheap attacks quietly do nothing to a small site.
     const want = Math.max(1, Math.round(working * rolled));
-    // No knockouts: capped share of what they own, per type.
     const cap = Math.max(0, Math.floor(owned * MAX_BROKEN_SHARE) - already);
     const hit = Math.min(want, working, cap);
     if (hit <= 0) continue;
@@ -130,11 +116,8 @@ export function resolveAttack(args: {
   return { defender, outcome };
 }
 
-/** Human-readable summary of what an attack knocked out. */
 export function describeBreak(broke: Partial<Record<ProducerId, number>>): string {
   const parts = PRODUCERS.filter((prod) => (broke[prod.id] ?? 0) > 0).map(
-    // Each producer says what being hurt looks like for it — a hauler breaks,
-    // a hand is maimed — so one verb doesn't have to cover both.
     (prod) => `${broke[prod.id]}x ${prod.name} ${prod.hurt}`,
   );
   return parts.join(", ");

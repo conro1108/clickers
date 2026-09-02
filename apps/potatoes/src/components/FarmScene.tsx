@@ -18,11 +18,7 @@ export interface FarmSceneHandle {
   dig(at?: { x: number; y: number }): void;
 }
 
-/**
- * Both renderers, to the extent React cares about either. They're separate
- * classes with separate pictures — see `insideScene.ts` — but they take the same
- * view and answer the same two verbs, which is all this needs to know.
- */
+/** What React needs from either renderer (farmScene.ts / insideScene.ts). */
 interface SceneLike {
   update(view: FarmView): void;
   start(): void;
@@ -33,18 +29,13 @@ interface SceneLike {
 /** The canvas and its rAF loop. React only ever hands it a view. */
 const SceneCanvas = forwardRef<FarmSceneHandle, {
   view: FarmView;
-  /**
-   * Which world's picture to run. Changing it tears the canvas down and builds
-   * the other one, which is exactly right: warping is meant to be a different
-   * place, not a repaint.
-   */
+  /** Changing world rebuilds the scene — warping is a different place, not a repaint. */
   world?: solo.World;
   onPointerDown?: PointerEventHandler<HTMLCanvasElement>;
 }>(function SceneCanvas({ view, world = "outside", onPointerDown }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<SceneLike | null>(null);
-  // Held in a ref so the mount effect can seed the new scene without taking a
-  // dependency on a view that changes every tick.
+  // Ref so the mount effect can seed the scene without depending on a per-tick view.
   const latest = useRef(view);
   latest.current = view;
 
@@ -59,9 +50,7 @@ const SceneCanvas = forwardRef<FarmSceneHandle, {
       scene.stop();
       sceneRef.current = null;
     };
-    // Only on a change of world: the view is pushed by the effect below, and
-    // re-creating the scene on every tick would restart its clock and reset
-    // every animation on it.
+    // Only on world change; re-creating per tick would reset every animation.
   }, [world]);
 
   useEffect(() => {
@@ -73,28 +62,13 @@ const SceneCanvas = forwardRef<FarmSceneHandle, {
   return <canvas ref={canvasRef} className="scene" onPointerDown={onPointerDown} />;
 });
 
-/**
- * The farm, on a canvas.
- *
- * The whole surface digs. That's deliberate — the thing you're looking at and
- * the thing you're tapping should be the same thing — and the dig bar below it
- * is the discoverable version of the same verb.
- */
+/** The farm, on a canvas. The whole surface digs. */
 export const FarmScene = forwardRef<FarmSceneHandle, {
   farm: solo.SiteState;
   hoard: Yield;
   /** Given where on the buffer you tapped, when the dig came from the scene. */
   onDig: (at?: { x: number; y: number }) => void;
-  /**
-   * Which farm to draw, when that isn't the one the sim says you're standing on.
-   *
-   * Exactly one caller and exactly one reason: the Convergence moves you inside
-   * the instant it's bought, and the trip that takes you there is nine seconds
-   * long. Without this the canvas is already inside the potato while the cut is
-   * still fading up over the sky — the arrival, before the journey. So the
-   * screen keeps the farm you're standing on until the dark has the screen, and
-   * the swap happens where nobody can see it.
-   */
+  /** Override of the sim's world: the Convergence cut holds the old farm until the fade is black. */
   world?: solo.World;
   /** Anything that belongs over the farm rather than beside it. */
   children?: ReactNode;
@@ -103,10 +77,7 @@ export const FarmScene = forwardRef<FarmSceneHandle, {
     const working: FarmView["working"] = {};
     const broken: FarmView["broken"] = {};
     const marks: FarmView["marks"] = {};
-    // Only the world you're standing in. The other farm is still producing —
-    // that's the whole arrangement after the fold — but it's producing somewhere
-    // you can't see from here, and drawing an Bruise Bed over a wheat
-    // field would say the opposite.
+    // Only the world you're standing in; the other farm produces out of sight.
     for (const prod of solo.producersIn(world)) {
       const owned = farm.producers[prod.id] ?? 0;
       const dead = solo.brokenCount(farm, prod.id);
@@ -123,10 +94,7 @@ export const FarmScene = forwardRef<FarmSceneHandle, {
       condition: farm.condition,
       hoard,
       seed: farm.seed,
-      // Zero once it's happened: `convergenceProgress` pins at 1 forever, and
-      // the stain is a warning rather than a state. Under this sky the fold is
-      // still ahead of you or already behind you, and either way the weather
-      // came back.
+      // Zero once converged: `convergenceProgress` pins at 1 forever and the stain is a warning.
       looming: farm.converged ? 0 : solo.convergenceProgress(farm),
       generation: farm.generation,
     };
@@ -140,8 +108,7 @@ export const FarmScene = forwardRef<FarmSceneHandle, {
         world={world}
         onPointerDown={(e) => {
           e.preventDefault();
-          // Into buffer pixels, so the potato comes up under your finger
-          // rather than somewhere else on the farm.
+          // Into buffer pixels, so the potato comes up under your finger.
           const rect = e.currentTarget.getBoundingClientRect();
           if (rect.width <= 0 || rect.height <= 0) return onDig();
           onDig({

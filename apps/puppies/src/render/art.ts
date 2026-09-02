@@ -1,45 +1,17 @@
-/**
- * Every piece of pixel art in the game, as char grids.
- *
- * Two families live here. `ICONS` are 12x12 UI glyphs (bar the puppy, which is
- * 14) that replace what used to be plain text and emoji in the chrome. `PROPS`
- * are the scene's furniture:
- * one silhouette per producer tier, the pieces the puppy hoard is built out
- * of, and the scenery around both.
- *
- * The one hard rule is the shared outline ink (`K`) — it's what makes a barn, a
- * grooming rig and a UI button icon look like they came out of the same box of
- * crayons.
- *
- * Every chihuahua in here is fawn, because fawn survives being four pixels
- * across. A black-and-tan reads as a hole in the picture at this size, and a
- * merle reads as noise.
- */
+/** Every piece of pixel art in the game, as char grids. */
 
 import type { Art } from "./pixel.js";
 
 const K = "#402e3a"; // shared outline ink
 
 // Palettes are per-art and deliberately tiny; these are the recurring members.
-// Fawn: the body, the pale of the chest and muzzle, and the shadow under the
-// ears.
 const PUPPY = { p: "#c98b4b", l: "#e2b077", d: "#95602c" };
 const METAL = { m: "#a8b0b8", s: "#7f8891", g: "#bfe3ef" };
 
-// ---------------------------------------------------------------------------
-// UI icons — 12x12
-// ---------------------------------------------------------------------------
+// --- UI icons — 12x12 ---
 
 export const ICONS = {
-  // Head-on, and it is all ears. A chihuahua in silhouette is two triangles and
-  // an apple, in that order of importance — draw the body instead and at twelve
-  // pixels you have a generic small mammal.
-  //
-  // The odd one out at 14x14, because it's also the app icon and that had to be
-  // legible at 60px on a home screen, which the old squarer head wasn't. The
-  // same head is drawn again in `tools/make-icons.mjs` — that one is build-time
-  // node with a background and a drop shadow behind it, so it can't share this
-  // grid, and the two are meant to be kept in step by eye.
+  // Head-on, and it is all ears.
   puppy: {
     rows: [
       "..kk......kk..",
@@ -169,9 +141,7 @@ export const ICONS = {
     palette: { k: K, a: "#e0a03c" },
   },
 
-  // The upkeep tab. A spanner rather than a cloud, because the sheet is about
-  // what you do to the mill, not what the sky did to it — and past the fold
-  // there's no weather to draw anyway.
+  // The upkeep tab.
   wrench: {
     rows: [
       "..kkk.kkk...",
@@ -211,9 +181,7 @@ export const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
-// ---------------------------------------------------------------------------
-// Scenery
-// ---------------------------------------------------------------------------
+// --- Scenery ---
 
 export const BARN: Art = {
   rows: [
@@ -236,15 +204,7 @@ export const BARN: Art = {
   palette: { k: K, r: "#b5503c", w: "#f2e3c8" },
 };
 
-/**
- * The one tree, and it is a lollipop on purpose.
- *
- * A realistic canopy at sixteen pixels is a green smudge with a stick under it.
- * Three overlapping rounds with blossom on them is legible, cheerful and about
- * as far from a windbreak as a tree gets — which is the point, because the last
- * thing this side of the picture needs is another reminder that the place is a
- * working yard.
- */
+/** The one tree, and it is a lollipop on purpose. */
 export const TREE: Art = {
   rows: [
     "....kkkkkk......",
@@ -276,20 +236,7 @@ export const CLOUD: Art = {
   palette: { w: "#ffffff" },
 };
 
-/**
- * One tileable panel of chain-link. The scene repeats it along the yard.
- *
- * This was post-and-rail for as long as the mill was a farm, and swapping it is
- * most of what stops the picture reading as one. Nothing else in the scene is
- * asked to say "these animals are being *kept*" — the pens say kept-in-a-row,
- * the vans say moved, but the fence is the only prop whose whole job is the
- * boundary. Timber says paddock. Galvanised wire says compound.
- *
- * The mesh is a checkerboard, which is the only thing that reads as chain-link
- * at this scale: an actual diamond needs three pixels a cell and comes out as
- * noise. Alternating single pixels on a two-pixel pitch gives the eye a weave
- * to resolve and costs nothing.
- */
+/** One tileable panel of chain-link. */
 export const FENCE: Art = {
   rows: [
     "pkkkkkkk",
@@ -304,16 +251,7 @@ export const FENCE: Art = {
   palette: { k: K, p: "#6e7780", m: "#b4bcc2", n: "#ccd4da" },
 };
 
-/**
- * The yard light, on its post by the gate.
- *
- * It's here to answer a question the renderer used to just assume. The mill
- * goes dark after eight and the yard doesn't, which is the right call — the
- * hoard is the thing you came back at 2am to look at — but with nothing in the
- * picture throwing that light it read as the bottom of the screen not having
- * got the memo. So: a lamp, off by day, lit at dusk, and the pool it throws is
- * the shape of the half of the yard that *does* go dark.
- */
+/** The yard light, on its post by the gate. */
 const LAMP_ROWS = [
   "kkkkk",
   "kgggk",
@@ -359,26 +297,7 @@ export const FLOWERS: Art = {
   palette: { g: "#548f3e", r: "#e06a7c", w: "#f6f1dc", p: "#c98add" },
 };
 
-/**
- * One chihuahua sitting in its straw. The pen tier is drawn as rows of these.
- *
- * Head-on and drawn to the same rules as the pack, for the same reason: at this
- * size the ears are the animal. Seven pixels across is barely enough for two of
- * them and a pair of eyes, and it is exactly enough — a row of forty faces
- * looking out of their pens is unmistakable, where a row of forty profiles was
- * a tray of pastries.
- *
- * It pays off twice, because `growthStages` slices these from the bottom up. So
- * a pen you've just bought is a muzzle and two eyes in the straw, then a whole
- * head, and the ears are the last thing to arrive — which is both a legible
- * progression and roughly the order it happens in.
- *
- * Note what the letters mean, because `growthStages` and `scruffy` both key off
- * them: `g` is the fawn of the coat, `l` the muzzle, `s` the eyes and `d` the
- * straw. Anything that recolours a pen recolours those and nothing else, which
- * is why an upgraded pen still grows through the same cycle in its own
- * silhouette.
- */
+/** One chihuahua sitting in its straw. */
 export const PEN_PUP: Art = {
   rows: [
     "g.....g",
@@ -393,16 +312,7 @@ export const PEN_PUP: Art = {
 
 const SCRUFFY = new Map<Art, Art>();
 
-/**
- * The same pen, gone to seed. Keyed off whichever mark of the pen is stocked,
- * so a neglected upgraded pen still reads as an upgraded pen — it's the colour
- * that goes, not the silhouette.
- *
- * Grey and dusty rather than a different animal. A chihuahua on a mill whose
- * bedding has been let go doesn't change breed, it stops looking looked-after,
- * and the cheapest way to draw "nobody has been down here in a while" is to
- * take the warmth out of the fur and the straw both.
- */
+/** The same pen, gone to seed. */
 export function scruffy(art: Art): Art {
   const hit = SCRUFFY.get(art);
   if (hit) return hit;
@@ -416,22 +326,7 @@ export function scruffy(art: Art): Art {
 
 const SHRUNK = new Map<Art, Art>();
 
-/**
- * The same thing, half the size, for the ranks of the property that stand
- * further back than the near one.
- *
- * Resampled on the char grid rather than by scaling a sprite, because the
- * scene's one hard rule is that nothing gets a fractional transform: a half of
- * the art is a *different picture*, authored here once, and it lands on the
- * buffer's grid like everything else.
- *
- * Each 2x2 block votes, and the most common key in it wins with the top-left
- * breaking ties. Nearest-neighbour — taking every other column — was the first
- * go and it eats the 1px outline off whichever edge lands on an odd column, so
- * half the skyline came out with its right-hand wall missing. A vote keeps the
- * silhouette and lets the body colour through the middle, which is all a
- * building three fields away is: a shape in the right colour.
- */
+/** The same thing, half the size, for the ranks of the property that stand further back than the near one. */
 export function shrunk(art: Art): Art {
   const hit = SHRUNK.get(art);
   if (hit) return hit;
@@ -467,19 +362,7 @@ export function shrunk(art: Art): Art {
 
 const GROWTH_STAGES = new Map<Art, Art[]>();
 
-/**
- * A bed part-grown: four stages from just-planted to ready to lift.
- *
- * Derived from whichever mark is planted rather than authored four times over,
- * so an upgraded bed still grows through the same cycle in its own silhouette
- * and adding a fourth pen mark doesn't mean drawing three more pictures.
- *
- * The early stages are the *bottom* slice of the full sprite, which only reads
- * as growth if the caller bottom-aligns them — a puppy that grows downward out
- * of the air is worse than none at all. It works because a chihuahua is drawn
- * feet-up: the straw comes first, then the legs, then the body, and the ears
- * are the last thing to arrive, which is roughly the order it happens in.
- */
+/** A bed part-grown: four stages from just-planted to ready to lift. */
 export function growthStages(art: Art): readonly Art[] {
   const hit = GROWTH_STAGES.get(art);
   if (hit) return hit;
@@ -488,9 +371,7 @@ export function growthStages(art: Art): readonly Art[] {
   const n = rows.length;
   const slice = (from: number): Art => ({ rows: rows.slice(from), palette: art.palette });
 
-  // Ready: more of them, showing pale through the straw at the base. Every
-  // other filled pixel of the bottom row, so it reads as a litter rather than
-  // as a stripe.
+  // Ready: more of them, showing pale through the straw at the base.
   const base = rows[n - 1] ?? "";
   const lifted = [...base].map((c, i) => (c !== "." && i % 2 === 1 ? "o" : c)).join("");
   const ripe: Art = {
@@ -503,26 +384,9 @@ export function growthStages(art: Art): readonly Art[] {
   return stages;
 }
 
-// ---------------------------------------------------------------------------
-// The hoard — what a pile of puppies turns into as it stops being a pile
-// ---------------------------------------------------------------------------
+// --- The hoard — what a pile of puppies turns into as it stops being a pile ---
 
-/**
- * The puppy itself, everywhere it appears loose: carried, whistled, heaped, and
- * riding down the pipeline.
- *
- * Outlined, which is the whole point. Without one it was a soft blob, and a
- * queue of soft blobs in a pipe is a tan line with lumps in it — you can't see
- * how many are going past, which is the one thing the pipeline is for.
- *
- * Seven by five, and it has to stay seven by five: the heap steps five pixels a
- * slot, so the two-pixel overlap is what makes a mound of these touch itself
- * instead of reading as a row of items on a shelf.
- *
- * Two spikes and an eye is the entire budget. The spikes are the ears, and they
- * are the only reason this isn't a bread roll — a curled chihuahua is round,
- * and round is what everything else in a pile already is.
- */
+/** The puppy itself, everywhere it appears loose: carried, whistled, heaped, and riding down the pipeline. */
 export const PUPPY_SPRITE: Art = {
   rows: [
     "k.k....",
@@ -534,34 +398,7 @@ export const PUPPY_SPRITE: Art = {
   palette: { k: K, ...PUPPY, e: K },
 };
 
-/**
- * The pack — one puppy, four poses, seen head-on.
- *
- * This is the sprite the yard is made of, and it went through a side view first
- * because side views are what you draw when you want something to walk. It was
- * a mistake, and the failure is worth writing down because it's specific: a
- * side-on dog at this size has one ear on top of its head, a muzzle pointing
- * out of the front, and two visible legs. Those are a comb, a beak and a pair
- * of scaly feet. Sixty of them in a yard is a poultry farm.
- *
- * Head-on fixes it because it puts the one feature nothing else has where you
- * can see it: **both ears, enormous, out to the sides.** A chihuahua is ears
- * first and a dog second, and the silhouette of two triangles flaring off a
- * round skull isn't any other animal. The muzzle stops being a profile and
- * becomes a pale blunt patch with a nose in it, which is the other half of it —
- * nothing with a beak has a muzzle you can see the front of.
- *
- * The cost is that facing no longer reads from the body, so the tail carries
- * it: out to one side, and `flip` swaps which. That's a weak cue and it's the
- * right trade. Nobody watching a yard of puppies is tracking which way any one
- * of them is pointing; they're looking at whether the place is full of dogs.
- *
- * Proportions are deliberately wrong throughout. The head is over half the
- * animal, the ears are half the head, the eyes are two by two with a glint, and
- * the legs are two pixels of stub. Every one of those is the same trick — take
- * what a puppy has more of than an adult and push it past accuracy — and it's
- * the whole reason the yard is worth looking at.
- */
+/** The pack — one puppy, four poses, seen head-on. */
 const PUP_HEAD = [
   ".k.......k.",
   "klk.....klk",
@@ -581,16 +418,7 @@ const PUP_TROT_ROWS = [
   [...PUP_HEAD, "k.kpppppk..", "kkkpppppppk", ".klllllllk.", ".kkkkkkkkk.", ".dd.....dd."],
 ];
 
-/**
- * The same head with the ears pinned back, for the one thing out here that ever
- * hurries.
- *
- * The ears are the whole sprite — see above — so a running dog can't just move
- * its legs faster: what says *flat out* on an animal whose silhouette is two
- * triangles is that the two triangles have gone. They lie down into the skull
- * line here, which takes three pixels off the top of the shape and is easily
- * the loudest thing about the pose at a glance.
- */
+/** The same head with the ears pinned back, for the one thing out here that ever hurries. */
 const PUP_RUN_HEAD = [
   "...........",
   ".k.......k.",
@@ -599,50 +427,19 @@ const PUP_RUN_HEAD = [
   ...PUP_HEAD.slice(4),
 ];
 
-/**
- * Flat out: paws thrown wide, then gathered under it, with the tongue out.
- *
- * Two frames and a hard alternation rather than anything smoother, because it's
- * only ever on screen for two seconds at fifty pixels a second — a subtle run
- * cycle at that speed is a blur of subtlety. Wide-then-under is the shape of a
- * bound, which is what a small dog going flat out actually does, and it reads
- * even when you only catch a couple of frames of it.
- *
- * The tongue is one pink pixel under the chin. It does more for the pose than
- * the legs do.
- */
+/** Flat out: paws thrown wide, then gathered under it, with the tongue out. */
 const PUP_RUN_ROWS = [
   [...PUP_RUN_HEAD, "k.kptpppk..", "kkkpppppppk", ".klllllllk.", ".kkkkkkkkk.", "d.........d"],
   [...PUP_RUN_HEAD, "k.kptpppk..", "kkkpppppppk", ".klllllllk.", ".kkkkkkkkk.", "...dd.dd..."],
 ];
 
-/**
- * Sat down, with the tail down and up.
- *
- * A slow alternation between the two is a wag, and a wag is most of what makes
- * a yard of sitting dogs read as pleased to be there rather than as a yard of
- * ornaments. It's also the only animation a stationary sprite can have that
- * doesn't look like it's fidgeting.
- */
+/** Sat down, with the tail down and up. */
 const PUP_SIT_ROWS = [
   [...PUP_HEAD, "k.kpppppk..", "kkkpppppppk", ".kpllllllpk", "..kkkkkkk.."],
   [...PUP_HEAD, "kk.kpppppk.", "k.kpppppppk", ".kpllllllpk", "..kkkkkkk.."],
 ];
 
-/**
- * Down but awake: the loaf.
- *
- * A puppy lying with its head still up and its paws out front, which is the
- * pose it spends most of a warm afternoon in and by some distance the cutest
- * thing it does. Head-on, so it keeps the ears and the face — the whole point
- * of this one is that it's *looking at you* while lying down.
- *
- * Wider than the standing sprite and shorter than the sat one: the body spills
- * a pixel past the head on each side, which is the entire trick. A dog that has
- * gone slightly wider than it should be reads as settled and heavy in a way
- * nothing about its outline can, and it's the difference between a lying dog
- * and a standing dog drawn short.
- */
+/** Down but awake: the loaf. */
 const PUP_LOAF_ROWS = [
   ...PUP_HEAD,
   ".kppppppppk",
@@ -650,32 +447,7 @@ const PUP_LOAF_ROWS = [
   ".kkddkddkk.",
 ];
 
-/**
- * Asleep: on its side, curled, eyes shut.
- *
- * The one pose that goes back to a side view, and the reason is the same reason
- * the others don't. Head-on is right for an upright dog because it puts both
- * ears up where they identify the animal; it's useless for a sleeping one,
- * because a front-facing sprite with a shorter body doesn't read as *down*, it
- * reads as a dog that has sunk into the ground.
- *
- * Side-on is safe here where it wasn't standing up, because the two things that
- * made the standing side view a chicken are both gone: the ear is laid back
- * along the skull instead of standing on top of it, and there are no upright
- * legs, just paws tucked in. What's left is a long low shape with a face on one
- * end, which is a sleeping animal and nothing else.
- *
- * Two pixels of shut eye do the rest. The loaf has an open face and this one
- * doesn't, and that's the whole distinction between resting and asleep — a
- * sprite this size can't afford a subtler one. The tail curls up over the back
- * so the low end still has something to look at, and the scene floats a `Z` off
- * the head, which is the only thing on the canvas that spells anything.
- *
- * Eight rows against fifteen, so at a glance it's a different *shape* rather
- * than a different picture. A yard where a third of them are down has a
- * silhouette that varies; a yard of nothing but upright dogs reads as a display
- * cabinet however good the sprite is.
- */
+/** Asleep: on its side, curled, eyes shut. */
 const PUP_SLEEP_ROWS = [
   "....kkkkkkk..",
   "..kkpppkllkk.",
@@ -687,29 +459,13 @@ const PUP_SLEEP_ROWS = [
   "..dd..dd.....",
 ];
 
-/**
- * The `Z` over a sleeping one. Four by four, which is the smallest a `Z` can be
- * drawn and still have the diagonal that stops it being an `I`.
- */
+/** The `Z` over a sleeping one. */
 export const ZZZ: Art = {
   rows: ["zzzz", "..z.", ".z..", "zzzz"],
   palette: { z: "#f6f2e6" },
 };
 
-/**
- * Just off the slide, and not full size yet.
- *
- * The yard is fed by a chute that visibly drops puppies into the corner, and
- * for a long time what came down it simply puffed out of existence while a
- * fully grown dog faded in somewhere nearby. Two things happening in the same
- * corner that obviously weren't the same thing.
- *
- * So an arrival is now drawn small and grows: the transit sprite it rode down
- * on, then this, then the full pose. Same head-on construction at nine pixels
- * instead of eleven, and the body is barely there — which is the right way to
- * shrink a puppy, because what makes a young one young is that the head hasn't
- * changed size yet and everything else hasn't caught up.
- */
+/** Just off the slide, and not full size yet. */
 const PUP_NEW_ROWS = [
   ".k.....k.",
   "klk...klk",
@@ -724,15 +480,7 @@ const PUP_NEW_ROWS = [
   "..d...d..",
 ];
 
-/**
- * Three coats, so a yard full of dogs isn't full of copies of one dog.
- *
- * All three are warm and none is dark enough to become a hole in the picture at
- * eleven pixels — the ground behind them is pale stone, and a chocolate
- * chihuahua on it is a smudge unless its belly stays light. Which is why `l`
- * barely moves between the three: the pale underside is what keeps the
- * silhouette legible, and the coat colour is allowed to do the varying.
- */
+/** Three coats, so a yard full of dogs isn't full of copies of one dog. */
 const COATS: readonly Record<string, string>[] = [
   { p: "#c98b4b", l: "#e2b077", d: "#95602c" },
   { p: "#ddb987", l: "#f2e0c0", d: "#a88a5e" },
@@ -749,17 +497,12 @@ function flip(rows: readonly string[]): string[] {
 function pup(rows: readonly string[], coat: number, left: boolean): Art {
   return {
     rows: left ? flip(rows) : [...rows],
-    // `m` is the muzzle, `w` the glint in the eye and `t` the tongue: all three
-    // stay put across the coats, because the pale of a face is what carries the
-    // expression and a dark dog with a dark muzzle has none.
+    // Muzzle `m`, eye glint `w` and tongue `t` stay put across coats: the pale of a face carries the expression.
     palette: { k: K, w: "#fdf6ea", m: "#f4e6cc", t: "#f2718c", ...COATS[coat] },
   };
 }
 
-/**
- * Which picture goes with what a dog is doing. Named, because the yard reaches
- * for these by hand and `poses[4]` is how a sleeping dog ends up sitting.
- */
+/** Which picture goes with what a dog is doing. */
 export const POSE = {
   trot: 0,
   trotB: 1,
@@ -772,16 +515,7 @@ export const POSE = {
   runB: 8,
 } as const;
 
-/**
- * Every pose the yard can draw, built once at module load.
- *
- * Fifty-odd `Art` objects rather than a factory call per frame, because
- * `artCanvas` caches on object identity — building them per frame would paint
- * a fresh canvas per dog per frame and the yard would cost more than the rest
- * of the scene put together.
- *
- * Indexed `[coat][facing][pose]`, facing 0 being right. See `POSE`.
- */
+/** Every pose the yard can draw, built once at module load. */
 export const PACK_POSES: readonly (readonly (readonly Art[])[])[] = COATS.map((_, coat) =>
   [false, true].map((left) => [
     pup(PUP_TROT_ROWS[0]!, coat, left),
@@ -796,20 +530,7 @@ export const PACK_POSES: readonly (readonly (readonly Art[])[])[] = COATS.map((_
   ]),
 );
 
-/**
- * The yard's small mercies.
- *
- * Everything else out here is either an animal or a piece of plant, and a
- * compound made only of those two things is a compound. These are the props
- * that say somebody is *fond* of the dogs: bowls that get filled, a ball that
- * gets thrown, bunting that somebody had to climb up and tie on.
- *
- * They're also where the colour lives. The ground went warm stone and the
- * apron went cream so the fawn of the pack would separate from it, which left
- * a picture with no saturated anything in it. Four small props in primary-ish
- * colours fix that far better than tinting the ground would, because they're
- * scattered — the eye reads them as accents rather than as a palette.
- */
+/** The yard's small mercies. */
 export const BOWL: Art = {
   rows: [
     ".kkkkkk.",
@@ -838,10 +559,7 @@ export const BALL: Art = {
   palette: { k: K, b: "#e0b23c", w: "#fff0b8" },
 };
 
-/**
- * One bunting flag. The scene repeats it along the fence in rotating colours,
- * which is why the palette key for the flag body is set by the caller.
- */
+/** One bunting flag. */
 export const FLAG: Art = {
   rows: ["ffff", ".fff", ".ff.", "..f."],
   palette: { f: "#ffffff" },
@@ -850,12 +568,7 @@ export const FLAG: Art = {
 /** Four flags' worth of colour, cycled along the run. */
 export const BUNTING = ["#e8697d", "#f2c14e", "#5fb0d8", "#7fc96a"] as const;
 
-/**
- * A heart, for when you whistle one up.
- *
- * Five by four and no outline, because at this size an outlined heart is a
- * dark blob with a pink rim. The shape only survives as solid colour.
- */
+/** A heart, for when you whistle one up. */
 export const HEART: Art = {
   rows: [".h.h.", "hhhhh", ".hhh.", "..h.."],
   palette: { h: "#f2718c" },
@@ -880,11 +593,7 @@ export const BASKET: Art = {
   palette: { k: K, b: "#b98a52", l: "#d6ab73", p: "#c98b4b" },
 };
 
-/**
- * The hydroponic tower is tall enough that writing its body out row by row
- * would be more typo than art, so its repeating middle is generated. The cap
- * and base stay hand-authored.
- */
+/** Repeating middle is generated; writing the tower row by row would be more typo than art. */
 function stack(cap: string[], body: string[], reps: number, base: string[]): string[] {
   const rows = [...cap];
   for (let i = 0; i < reps; i++) rows.push(...body);
@@ -892,9 +601,7 @@ function stack(cap: string[], body: string[], reps: number, base: string[]): str
   return rows;
 }
 
-// ---------------------------------------------------------------------------
-// Producers — one silhouette per rung of the ladder
-// ---------------------------------------------------------------------------
+// --- Producers — one silhouette per rung of the ladder ---
 
 export const KENNEL_HAND: Art = {
   rows: [
@@ -913,14 +620,7 @@ export const KENNEL_HAND: Art = {
   palette: { k: K, t: "#c9a24a", f: "#e8bb8e", e: K, b: "#4a7fa5", v: "#5e3e29" },
 };
 
-/**
- * A lamp on a post, throwing down rather than a heat lamp throwing up.
- *
- * The shade is the top two rows and the heat is the four under it, and that
- * order is the whole sprite: light falls. Drawn the other way round — glow
- * above the fitting — it read as a bonfire, which is the one thing a kennel
- * yard must not appear to contain.
- */
+/** A lamp on a post, throwing down rather than a heat lamp throwing up. */
 export const HEAT_LAMP: Art = {
   rows: [
     "..kkmmmkk....",
@@ -937,18 +637,7 @@ export const HEAT_LAMP: Art = {
   palette: { k: K, m: "#a8b0b8", a: "#ffb347" },
 };
 
-/**
- * A transport van, and pointedly not a tractor.
- *
- * The first pass kept the old farm silhouette — cab up front, long open bed, one
- * big wheel and one small one — which is the single most agricultural shape
- * there is. Two wheels the same size and a closed box body is most of the fix;
- * the vents along the flank are the rest, because a solid-sided box is a
- * delivery van and a vented one is carrying something that has to breathe.
- *
- * Cab on the right, because the yard drives its machines left-to-right and a van
- * with the windscreen at the back is a van reversing across the field all day.
- */
+/** A transport van, and pointedly not a tractor. */
 export const VAN: Art = {
   rows: [
     "..kkkkkkkkkkkk....",
@@ -967,23 +656,7 @@ export const VAN: Art = {
   palette: { k: K, b: "#4f8f3a", g: "#bfe3ef", w: "#4d4148", v: "#2f5f26" },
 };
 
-/**
- * The Grooming Rig: a machine, not a vehicle.
- *
- * This inherited a combine harvester's outline and it took three goes to shake
- * off, which is worth writing down because each go was wrong in the same way.
- * Losing the cab wasn't enough: a red box on wheels beside a green box on
- * wheels just made the yard's two machines one object in two colours. Losing
- * the wheels wasn't enough either — a wide red box with windows along it is a
- * bus.
- *
- * What finally did it was the *aspect*. Vehicles are wider than they are tall,
- * because they have to get through gates; plant is taller than it is wide,
- * because it only has to stand still. So this is a cabinet: a hopper funnel on
- * top, two drum bays behind glass, a chute out at the bottom right, and stub
- * feet. Nothing about it suggests it could go anywhere, which is the entire
- * job.
- */
+/** The Grooming Rig: a machine, not a vehicle. */
 export const GROOMER: Art = {
   rows: [
     "..kkkkkkk....",
@@ -1071,13 +744,7 @@ export const ZEPPELIN: Art = {
   palette: { k: K, c: "#dfe7ee", m: "#a8b0b8", a: "#8ec9e6" },
 };
 
-/**
- * A cooling tower, and it should look like one from across the room: an open
- * mouth with the dark of the shaft showing in it, a waist, a lit core behind
- * the throat, a hazard band round the bottom and vents at the foot. The old one
- * was the same hourglass with a grey square in the middle, which at fourteen
- * pixels across read as a chess piece.
- */
+/** A cooling tower: open mouth with the shaft dark in it, a waist, a lit core, a hazard band round the bottom. */
 export const REACTOR: Art = {
   rows: [
     "..kkkkkkkkkk..",
@@ -1099,15 +766,7 @@ export const REACTOR: Art = {
   palette: { k: K, m: "#cfd6dc", d: "#6b737c", e: "#8d959d", g: "#7fe8cc", h: "#e8b93f" },
 };
 
-/**
- * The Orbital Kennel: a pressurised habitat module, not a satellite.
- *
- * Glazing bars over a lit canopy up top with the fawn of the dogs showing
- * through it, a hull with lit ports under that, and solar wings out to either
- * side. The one thing it must not look like is a machine — everything else in
- * the sky at this point in the ladder is hardware, and this is somewhere they
- * live that happens to be in orbit.
- */
+/** The Orbital Kennel: a pressurised habitat module, not a satellite. */
 export const ORBITAL_KENNEL: Art = {
   rows: [
     ".........kk.........",
@@ -1145,26 +804,10 @@ export const SINGULARITY: Art = {
   palette: { p: "#8a6ad0", v: "#5b3fa0", n: "#1c1428" },
 };
 
-// ---------------------------------------------------------------------------
-// Above the fold — the tiers that work the nest you're inside
-// ---------------------------------------------------------------------------
-//
-// These are drawn against the nest's creams and tans rather than against sky
-// and grass, so they're cool and hard-edged where everything else in here is
-// soft: blanket is the quiet half of the screen, and a machine standing on it
-// should be the one thing down there with a straight line in it.
+// --- Above the fold — the tiers that work the nest you're inside ---
+// Drawn against the nest's creams and tans, so cool and hard-edged where everything else in here is soft.
 
-/**
- * A press standing over the fold of hem it has worked open.
- *
- * The shallowest rung, and the one that has to teach the whole inside mill's
- * verb in one sprite: you push into it, it packs down around the push, and the
- * loose down comes out ahead of you. So the machine is the plainest thing on
- * the ladder — a ram and a plate, no more — and the interesting half of the
- * sprite is the two rows under it, where the dark of the packed hem is fringed
- * by the pale of what it pushed out. Read those two rows and you've read the
- * tier.
- */
+/** A press standing over the fold of hem it has worked open. */
 export const HEM_HOLLOW: Art = {
   rows: [
     "..kkkkkkk..",
@@ -1202,12 +845,7 @@ export const DOWN_WELL: Art = {
   palette: { k: K, m: "#8d959d", g: "#ffb454", h: "#5b3f2c" },
 };
 
-/**
- * One of the other yous. Deliberately the kennel hand's exact silhouette in a
- * different finish — the joke doesn't survive being redrawn as something else,
- * and at eleven pixels tall a changed shape would just read as a new tier of
- * worker rather than as you.
- */
+/** One of the other yous. */
 export const CHORUS_FIGURE: Art = {
   rows: [
     "...a...",
@@ -1234,11 +872,7 @@ export const CHORUS_FIGURE: Art = {
   },
 };
 
-/**
- * An eye, opened. The one thing down here that is unambiguously alive and
- * unambiguously the sleeper's rather than yours — every other rung in the nest
- * is kit you carried in.
- */
+/** An eye, opened. */
 export const EYE: Art = {
   rows: [
     "...ss.s...",
@@ -1257,16 +891,7 @@ export const EYE: Art = {
   palette: { k: K, h: "#a8703c", w: "#e8d3a0", i: "#6f4a8f", n: "#241830", s: "#7fc45a" },
 };
 
-/**
- * Two benches cut into a face of packed fleece, with the undercut under them.
- *
- * The whole sprite is the *flat top and the step*: nothing settles into a
- * terrace on its own, so a terrace reads as something somebody cut, and the
- * dark undercut along the bottom is what stops it floating.
- *
- * Wide and low, so it's the one thing down here that reads as ground rather
- * than as a structure standing on it.
- */
+/** Two benches cut into a face of packed fleece, with the undercut under them. */
 export const FLEECE_FACE: Art = {
   rows: [
     "...kkkkkkkkk.",
@@ -1282,11 +907,7 @@ export const FLEECE_FACE: Art = {
   palette: { k: K, w: "#e6dcc0", s: "#f7f1dc", d: "#2c1d14" },
 };
 
-/**
- * A tapped seam. The clamp is the machine; everything else in the sprite is the
- * nest's own stitching, which is why it's the only rung drawn in a colour that
- * isn't in any other sprite on the mill.
- */
+/** A tapped seam. */
 export const SEAM_MAIN: Art = {
   rows: [
     "..kvvk....",
@@ -1306,15 +927,7 @@ export const SEAM_MAIN: Art = {
   palette: { k: K, v: "#8f5e8a", m: "#8d959d", s: "#5f6870", g: "#e0a8dc" },
 };
 
-/**
- * The warm spot, opened at the core and propped so it can't close again.
- *
- * Nothing rectangular survives down here: the opening is ragged on every edge,
- * the only straight lines in the sprite are the two props holding it, and
- * what's inside it is drawn as darkness rather than as more blanket. A hollow
- * at the middle of a nest is a hole. It should look like one, right up until
- * the last upgrade lights it.
- */
+/** The warm spot, opened at the core and propped so it can't close again. */
 export const WARM_HEART: Art = {
   rows: [
     "...kkkkkk...",
@@ -1332,14 +945,7 @@ export const WARM_HEART: Art = {
   palette: { k: K, f: "#8a4a52", l: "#c98b6a", n: "#2a1520", s: "#e8c39c" },
 };
 
-/**
- * The last rung, curled where the sun used to be.
- *
- * Asleep, and drawn asleep: the eyes are two dark pixels rather than anything
- * that looks back at you. Whatever is at the middle of the nest is the only
- * thing down here bigger than the mill, and the whole effect depends on it not
- * having noticed the mill yet.
- */
+/** The last rung, curled where the sun used to be. */
 export const SECOND_CHIHUAHUA: Art = {
   rows: [
     "...k.....k......",
@@ -1359,19 +965,7 @@ export const SECOND_CHIHUAHUA: Art = {
   palette: { k: K, ...PUPPY, w: "#f2e3c8" },
 };
 
-/**
- * One of the shaft crew.
- *
- * The outside mill has kennel hands walking pup down to the yard, and losing them
- * is most of why the inside read as an abandoned place with machinery still
- * running in it. This is the kennel hand's silhouette again — same build, same
- * eleven pixels — but kitted for underground: a hard hat instead of a straw one,
- * and a lamp on the front of it, which is the only reason they're visible at all
- * against a core stratum that's nearly black.
- *
- * The lamp is the whole sprite, really. At this size a figure in the dark is a
- * smudge; a figure with one bright pixel at head height is a person.
- */
+/** One of the shaft crew. */
 export const SHAFT_CREW: Art = {
   rows: [
     "..ttt..",
@@ -1407,10 +1001,7 @@ export const SHAFT_CREW_UP: Art = {
   palette: { k: K, t: "#d8892c", l: "#fff4c0", f: "#e8bb8e", e: K, b: "#6a5c7a", v: "#4d4148" },
 };
 
-/**
- * The hoist cage, empty. Crew are blitted into it rather than being part of the
- * sprite, because how many are riding is the interesting part.
- */
+/** The hoist cage, empty. */
 export const HOIST_CAGE: Art = {
   rows: [
     "....m....",
@@ -1428,26 +1019,8 @@ export const HOIST_CAGE: Art = {
   palette: { k: "#b8c0c8", m: "#5b4f58", d: "#3a2a30" },
 };
 
-// ---------------------------------------------------------------------------
-// Marks — what a producer looks like once you've bought its upgrades
-// ---------------------------------------------------------------------------
-//
-// Every tier has three `producer_mult` upgrades (`<id>_x2a`, `<id>_x2b`,
-// `<id>_x2c`), so each one gets four marks: as bought, then one per upgrade.
-// Spending on a tier should change something out in the field, not just a number
-// in a panel.
-//
-// Where the silhouette can carry the change it does — an exhaust stack, an
-// unloading chute, a second lamp shade, a taller tower — because that reads
-// at a glance across the whole field. For the first two upgrades on the small or
-// distant tiers (the sky, the buildings on the back edge) the mark is a repaint,
-// which is all that survives at that size anyway.
-//
-// **The fourth mark is the exception, and it's the whole point of it.** It's
-// gated on owning a hundred, which is a day of deliberately aiming at one rung,
-// so every one of them is redrawn rather than repainted — even the ones two
-// fields away. A player who put a day into kennel hands should be able to tell from
-// across the room that their kennel hands are not your kennel hands.
+// --- Marks — what a producer looks like once you've bought its upgrades ---
+// Every tier has three `producer_mult` upgrades (`<id>_x2a`, `<id>_x2b`, `<id>_x2c`), so each one gets four marks: as bought, then one per upgrade.
 
 /** The same grid in a different finish. */
 function repaint(art: Art, palette: Record<string, string>): Art {
@@ -1690,18 +1263,10 @@ const ZEPPELIN_3: Art = {
   palette: { ...ZEPPELIN.palette, c: "#8f9aa5", z: "#ffe066" },
 };
 
-// ---------------------------------------------------------------------------
-// The fourth marks — what a hundred of something turns into
-// ---------------------------------------------------------------------------
+// --- The fourth marks — what a hundred of something turns into ---
 
-/**
- * Show Lineage: it is twice the dog, it is sitting on twice the straw, and it
- * is wearing the rosette. The only fourth mark in the game that is a brag.
- */
-/**
- * Show Lineage: twice the dog, twice the straw, and it is wearing the rosette.
- * The only fourth mark in the game that is a brag.
- */
+/** Show Lineage: it is twice the dog, it is sitting on twice the straw, and it is wearing the rosette. */
+/** Show Lineage: twice the dog, twice the straw, and it is wearing the rosette. */
 const PEN_PUP_4: Art = {
   rows: [
     "g........g",
@@ -1735,11 +1300,7 @@ const KENNEL_HAND_4: Art = {
   palette: { k: K, t: "#e0c04a", f: "#e8bb8e", e: K, b: "#2f5f7a", v: "#5e3e29", a: "#e0c04a" },
 };
 
-/**
- * Whole-Yard Radiant: the thing that actually heats a yard this size. A gantry
- * with emitters hung down its whole length, which is the one heat-lamp
- * silhouette that reads as *plant* rather than as something over a hutch.
- */
+/** Whole-Yard Radiant: the thing that actually heats a yard this size. */
 const HEAT_LAMP_4: Art = {
   rows: [
     ".........m.........",
@@ -1775,9 +1336,7 @@ const VAN_4: Art = {
     "..kwwwwk....kwwwwk",
     "...kkkk......kkkk.",
   ],
-  // Dark green and not the near-black the first go used: at eighteen pixels a
-  // machine with no value range left in its body reads as a burnt-out hulk
-  // parked in the yard, which is exactly what a broken one is drawn as.
+  // Dark green, not near-black: at eighteen pixels a body with no value range reads as a burnt-out hulk.
   palette: { ...VAN.palette, b: "#2f6b46", v: "#1c4a2c", g: "#bfe3ef", y: "#e05a3c", w: "#3a3038" },
 };
 
@@ -1845,12 +1404,7 @@ const KIBBLE_4: Art = {
   palette: { ...KIBBLE.palette, m: "#c6cdd4", f: "#f0913c", b: "#ffe08a", g: "#8d959d" },
 };
 
-/**
- * Sky Lobby: taller than anything else on the property, with an observation
- * seam halfway up that overhangs the shaft — the one silhouette on the back edge
- * that isn't a box, and the reason you can pick a hundred-tower lot out of a
- * skyline at a glance.
- */
+/** Sky Lobby: tallest on the property, with an observation seam halfway up that overhangs the shaft. */
 const TOWER_4: Art = {
   rows: [
     "......kk......",
@@ -1921,11 +1475,7 @@ const REACTOR_4: Art = {
   palette: { k: K, m: "#eef4f8", d: "#6b737c", g: "#fff0b8", h: "#e05a3c" },
 };
 
-/**
- * Lagrange Station: it stopped being one kennel and became the place the
- * kennels dock at — a second canopy, a spine between them, and wings big enough
- * to run both.
- */
+/** Lagrange Station: the place the kennels dock at — a second canopy, a spine between them, and wings. */
 const ORBITAL_KENNEL_4: Art = {
   rows: [
     ".........kk.........",
@@ -2142,13 +1692,7 @@ const SECOND_CHIHUAHUA_4: Art = {
   },
 };
 
-/**
- * Four marks per tier, indexed by how many of its three upgrades you own.
- *
- * The first two marks of the small and distant tiers are repaints: at the size
- * they're drawn a changed silhouette would just read as a different building.
- * The fourth is always a redraw — see the note above.
- */
+/** Four marks per tier, indexed by how many of its three upgrades you own. */
 export const PRODUCER_MARKS = {
   patch: [PEN_PUP, PEN_PUP_2, PEN_PUP_3, PEN_PUP_4],
   hand: [
@@ -2205,10 +1749,7 @@ export const PRODUCER_MARKS = {
     repaint(CHORUS_FIGURE, { b: "#c0a86a", t: "#d8c894", a: "#f4ecd0" }),
     CHORUS_FIGURE_4,
   ],
-  // The one tier drawn as a person, which is why its marks recolour the kit
-  // rather than changing the shape: a hand who gets a better lamp and a better
-  // jacket is still visibly the same hand, and at eleven pixels a redrawn
-  // silhouette just reads as a different rung of worker.
+  // The one tier drawn as a person, so its marks recolour the kit rather than changing the shape.
   deephand: [
     SHAFT_CREW,
     repaint(SHAFT_CREW, { t: "#4f8f7a", b: "#4a5c7a", l: "#b6f2fb" }),

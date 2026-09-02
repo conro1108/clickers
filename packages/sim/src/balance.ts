@@ -15,17 +15,12 @@ export interface BalanceResult {
   state: MatchState;
   samples: BalanceSample[];
   finalScores: Record<string, number>;
-  /** Sabotage events that actually landed, by attacker. */
   attacksLanded: number;
   attacksBlocked: number;
   defensesBought: number;
 }
 
-/**
- * Runs a whole match headlessly with bots on every seat. This is the tuning
- * loop for the economy: change a cost curve, run this, see whether matches
- * still go the distance instead of being decided in the first thirty seconds.
- */
+/** Headless match: the tuning loop for the economy. */
 export function simulateMatch(opts: {
   seed: string;
   durationMs: number;
@@ -33,11 +28,9 @@ export function simulateMatch(opts: {
   players: {
     id: string;
     name: string;
-    /** A bot seat. Mutually exclusive with `human`. */
     profile?: keyof typeof BOT_PROFILES;
-    /** A reference-human seat, for grading the difficulty ladder. */
+    /** Mutually exclusive with `profile`. */
     human?: keyof typeof HUMAN_STYLES;
-    /** Overrides on top of the named profile, for probing one knob at a time. */
     tweak?: Partial<BotProfile>;
     /** Seconds [from, to) during which this seat is willing to attack at all. */
     attackWindow?: [number, number];
@@ -93,8 +86,6 @@ export function simulateMatch(opts: {
       clickCarry.set(p.id, carry - clicks);
       if (clicks > 0) state = apply(state, { type: "click", player: p.id, count: clicks }, t);
 
-      // Each seat acts on its own cadence, so these runs measure the same
-      // opponent the app actually puts in front of a player.
       if (t < nextDecision.get(p.id)!) continue;
       nextDecision.set(p.id, t + (style?.decisionMs ?? profile!.decisionMs));
 

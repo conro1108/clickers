@@ -14,15 +14,9 @@ import { EMPTY_VIEW, MillScene as Scene, type MillView } from "../render/millSce
 import { InsideScene } from "../render/insideScene.js";
 
 export interface MillSceneHandle {
-  /** Whistle a puppy up. Somewhere in the yard if unplaced. */
   whistle(at?: { x: number; y: number }): void;
 }
 
-/**
- * Both renderers, to the extent React cares about either. They're separate
- * classes with separate pictures — see `insideScene.ts` — but they take the same
- * view and answer the same two verbs, which is all this needs to know.
- */
 interface SceneLike {
   update(view: MillView): void;
   start(): void;
@@ -33,18 +27,12 @@ interface SceneLike {
 /** The canvas and its rAF loop. React only ever hands it a view. */
 const SceneCanvas = forwardRef<MillSceneHandle, {
   view: MillView;
-  /**
-   * Which world's picture to run. Changing it tears the canvas down and builds
-   * the other one, which is exactly right: warping is meant to be a different
-   * place, not a repaint.
-   */
   world?: solo.World;
   onPointerDown?: PointerEventHandler<HTMLCanvasElement>;
 }>(function SceneCanvas({ view, world = "outside", onPointerDown }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<SceneLike | null>(null);
-  // Held in a ref so the mount effect can seed the new scene without taking a
-  // dependency on a view that changes every tick.
+  // A ref, so the mount effect can seed the scene without depending on a view that changes every tick.
   const latest = useRef(view);
   latest.current = view;
 
@@ -59,9 +47,7 @@ const SceneCanvas = forwardRef<MillSceneHandle, {
       scene.stop();
       sceneRef.current = null;
     };
-    // Only on a change of world: the view is pushed by the effect below, and
-    // re-creating the scene on every tick would restart its clock and reset
-    // every animation on it.
+    // Only on a change of world; re-creating the scene every tick would reset its clock and animations.
   }, [world]);
 
   useEffect(() => {
@@ -73,10 +59,7 @@ const SceneCanvas = forwardRef<MillSceneHandle, {
   return <canvas ref={canvasRef} className="scene" onPointerDown={onPointerDown} />;
 });
 
-/**
- * A tap on the canvas, in buffer pixels, so the puppy comes up under your
- * finger rather than somewhere else on the mill.
- */
+/** A tap on the canvas, in buffer pixels. */
 function whistleAt(
   e: { currentTarget: HTMLCanvasElement; clientX: number; clientY: number; preventDefault(): void },
   onWhistle: (at?: { x: number; y: number }) => void,
@@ -90,40 +73,17 @@ function whistleAt(
   });
 }
 
-/**
- * The mill, on a canvas.
- *
- * The whole surface whistles. That's deliberate — the thing you're looking at and
- * the thing you're tapping should be the same thing — and the whistle bar below it
- * is the discoverable version of the same verb.
- */
 export const MillScene = forwardRef<MillSceneHandle, {
   mill: solo.SiteState;
   hoard: Yield;
-  /** Given where on the buffer you tapped, when the whistle came from the scene. */
   onWhistle: (at?: { x: number; y: number }) => void;
-  /**
-   * Which mill to draw, when that isn't the one the sim says you're standing on.
-   *
-   * Exactly one caller and exactly one reason: the Convergence moves you inside
-   * the instant it's bought, and the trip that takes you there is nine seconds
-   * long. Without this the canvas is already inside the puppy while the cut is
-   * still fading up over the sky — the arrival, before the journey. So the
-   * screen keeps the mill you're standing on until the dark has the screen, and
-   * the swap happens where nobody can see it.
-   */
   world?: solo.World;
-  /** Anything that belongs over the mill rather than beside it. */
   children?: ReactNode;
 }>(function MillScene({ mill, hoard, onWhistle, world = mill.world, children }, ref) {
   const view = useMemo<MillView>(() => {
     const working: MillView["working"] = {};
     const broken: MillView["broken"] = {};
     const marks: MillView["marks"] = {};
-    // Only the world you're standing in. The other mill is still producing —
-    // that's the whole arrangement after the fold — but it's producing somewhere
-    // you can't see from here, and drawing a Hem Hollow over an open
-    // yard would say the opposite.
     for (const prod of solo.producersIn(world)) {
       const owned = mill.producers[prod.id] ?? 0;
       const dead = solo.brokenCount(mill, prod.id);
@@ -140,10 +100,7 @@ export const MillScene = forwardRef<MillSceneHandle, {
       condition: mill.condition,
       hoard,
       seed: mill.seed,
-      // Zero once it's happened: `convergenceProgress` pins at 1 forever, and
-      // the stain is a warning rather than a state. Under this sky the fold is
-      // still ahead of you or already behind you, and either way the weather
-      // came back.
+      // Zero once it's happened: `convergenceProgress` pins at 1 forever, and the stain is a warning rather than a state.
       looming: mill.converged ? 0 : solo.convergenceProgress(mill),
       generation: mill.generation,
     };
@@ -162,19 +119,9 @@ export const MillScene = forwardRef<MillSceneHandle, {
   );
 });
 
-/**
- * The same picture, for the head-to-head prototype.
- *
- * Versus used to be three panels of text sat where the mill should be, which is
- * how the parked mode ended up looking like a different game to the one it's a
- * mode of. Its six producers are the bottom six of the solo ladder under the
- * same ids, so the yard, the pack and the broken kit all draw themselves — what
- * it doesn't have is bedding (always clean), a horizon (nothing looming) or a
- * lineage (one generation, always).
- */
+/** The same picture, for the head-to-head prototype. */
 export const MatchScene = forwardRef<MillSceneHandle, {
   me: PlayerState;
-  /** Yield on hand, including the clicks that haven't flushed yet. */
   hoard: Yield;
   onWhistle: (at?: { x: number; y: number }) => void;
   children?: ReactNode;
@@ -191,8 +138,7 @@ export const MatchScene = forwardRef<MillSceneHandle, {
       const level = matchMark(me.upgrades, prod.id);
       if (level > 0) marks[prod.id] = level;
     }
-    // Seeded off the player rather than the match, so a rematch is the same
-    // yard laid out the same way — it's your mill both times.
+    // Seeded off the player rather than the match, so a rematch is the same yard laid out the same way — it's your mill both times.
     return { ...EMPTY_VIEW, working, broken, marks, hoard, seed: me.id };
   }, [me, hoard]);
 

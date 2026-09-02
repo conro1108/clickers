@@ -1,10 +1,4 @@
-// Generates the PWA icon set from the pixel-art grid below.
-//
-// The art is kept as source (a character grid) rather than a binary blob so it
-// stays editable — tweak SPRITE, re-run `npm run icons`, done. Every output is
-// an integer-scaled nearest-neighbour blit of the grid onto a flat background,
-// so pixels stay crisp at any target size; leftover pixels become background
-// padding, which is invisible because the background is flat.
+// Generates the PWA icon set from the SPRITE grid: integer-scaled nearest-neighbour blit on a flat background.
 
 import { deflateSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -22,16 +16,7 @@ const PALETTE = {
   n: "#ffffff", // the glint, and the whole reason it looks alive
 };
 
-// 18x18, which is coarse on purpose: a home-screen icon is read at a glance and
-// at thumbnail size, so the win is a big silhouette in four colours, not detail
-// that turns to mush. The head is drawn inside the grid rather than out to its
-// edges, because the margin is most of what makes those chunky icons look
-// composed instead of cropped.
-//
-// Still a head rather than a whole dog — the ears are the only part of a
-// chihuahua that survives being twelve pixels tall.
-//
-// Outer ring must stay background so the padding trick is invisible.
+// 18x18 — coarse on purpose for glance-size icons. Outer ring must stay background so the padding trick is invisible.
 const SPRITE = [
     "..................",
     "..................",
@@ -102,9 +87,7 @@ function encodePng(size, pixels) {
   ]);
 }
 
-// `coverage` is how much of the canvas the sprite is allowed to fill. Maskable
-// icons get a smaller value so nothing important survives outside Android's
-// 80% safe zone.
+// `coverage`: how much of the canvas the sprite may fill. Maskable icons stay inside Android's 80% safe zone.
 function render(size, coverage = 1) {
   const scale = Math.max(1, Math.floor((size * coverage) / GRID));
   const drawn = scale * GRID;
@@ -130,9 +113,7 @@ function render(size, coverage = 1) {
   const solid = (gx, gy) =>
     gy >= 0 && gy < GRID && gx >= 0 && gx < GRID && SPRITE[gy][gx] !== ".";
 
-  // One cell of drop shadow, down and to the right, derived from the silhouette
-  // rather than drawn by hand — it's the thing that lifts the head off the
-  // background instead of leaving it pasted flat on it.
+  // One cell of drop shadow, derived from the silhouette.
   for (let gy = 0; gy < GRID; gy++) {
     for (let gx = 0; gx < GRID; gx++) {
       if (!solid(gx, gy) && solid(gx - 1, gy - 1)) cell(gx, gy, ",");

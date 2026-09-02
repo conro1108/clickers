@@ -6,10 +6,7 @@ import { nowMs } from "./clock.js";
 const SAVE_KEY = "puppy-mill:mill";
 /** How often batched whistles are folded into the sim. */
 const WHISTLE_FLUSH_MS = 500;
-/**
- * How often the sim is actually advanced. Only has to be fine enough that a
- * weather event lands promptly — everything between ticks is extrapolated.
- */
+// Sim tick; only has to be fine enough that weather lands promptly, the rest is extrapolated.
 const TICK_MS = 250;
 /** Display refresh. Doesn't touch the sim. */
 const RENDER_MS = 100;
@@ -27,7 +24,6 @@ export interface MillRuntime {
   error: string | null;
   whistle(): void;
   dispatch(cmd: solo.SiteCommand): void;
-  /** Burn the save and start over. Not prestige — this keeps nothing. */
   abandon(): void;
 }
 
@@ -50,7 +46,6 @@ function loadMill(): { mill: solo.SiteState; report: solo.OfflineReport | null }
   if (!saved) {
     return { mill: solo.createSite({ seed: newSeed(), startedAt: nowMs() }), report: null };
   }
-  // The engine calls it a site; in here it's a mill.
   const resumed = solo.resumeSite(saved, nowMs());
   return { mill: resumed.site, report: resumed.report };
 }
@@ -59,11 +54,7 @@ function newSeed(): string {
   return `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
 }
 
-/**
- * Drives the homestead in the browser. Every mutation goes through the same
- * `applySiteCommand` a server would call, so moving this behind a network
- * round-trip later doesn't touch any game logic.
- */
+// Drives the homestead in the browser. Every mutation goes through the same `applySiteCommand` a server would call.
 export function useMill(): MillRuntime {
   const initial = useRef<{ mill: solo.SiteState; report: solo.OfflineReport | null }>();
   initial.current ??= loadMill();
@@ -103,8 +94,7 @@ export function useMill(): MillRuntime {
 
   const dispatch = useCallback(
     (cmd: solo.SiteCommand) => {
-      // Bank what you've already whistled before spending, or the pile you can see
-      // is a flush ahead of the pile you can spend.
+      // Bank pending clicks first, or the visible pile is a flush ahead of the spendable one.
       flushWhistles();
       const res = solo.applySiteCommand(millRef.current, cmd, nowMs());
       if (!res.ok) {
@@ -147,8 +137,7 @@ export function useMill(): MillRuntime {
     return () => clearInterval(id);
   }, [save]);
 
-  // Closing the tab is the single most likely moment to lose progress, and on
-  // mobile `beforeunload` often never fires — `hidden` is the one that does.
+  // On mobile `beforeunload` often never fires; `hidden` is the one that does.
   useEffect(() => {
     const onHide = () => {
       flushWhistles();

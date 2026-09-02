@@ -13,27 +13,15 @@ export interface Producer {
   id: ProducerId;
   name: string;
   blurb: string;
-  /**
-   * What a damaged one of these is, and what putting it right is called. Kept
-   * per-producer because a hauler breaks and a hand doesn't. Reads as
-   * "2 worn out" and "Talk round Hand".
-   */
+  /** Reads as "2 worn out" / "Talk round Hand". */
   hurt: string;
   mend: string;
-  /** Yield per second, per unit owned, before multipliers. */
   baseRate: number;
   baseCost: Yield;
-  /** Cost of the Nth unit is baseCost * growth^N. */
   growth: number;
 }
 
-/**
- * Tuned for a match measured in minutes, not the weeks a solo idle game gets.
- * Each tier pays for itself in roughly 12-28 seconds (rising with tier, so the
- * cheap rungs stay worth buying), which is what lets a match climb through the
- * whole tree before the clock runs out. `packages/sim/src/balance.test.ts` is
- * the check on this — retune here, run that.
- */
+// Tuned for a match in minutes: each tier pays for itself in ~12-28s, rising with tier.
 const PRODUCER_SHAPES: readonly Shape<Producer>[] = [
   {
     id: "patch",
@@ -79,9 +67,7 @@ export const PRODUCER_BY_ID: Record<ProducerId, Producer> = Object.fromEntries(
   PRODUCERS.map((p) => [p.id, p]),
 ) as Record<ProducerId, Producer>;
 
-// ---------------------------------------------------------------------------
-// Production upgrades — one-time buys, the classic ladder.
-// ---------------------------------------------------------------------------
+// --- Production upgrades ---
 
 export type UpgradeId =
   | "tool_1"
@@ -106,7 +92,6 @@ export interface Upgrade {
   blurb: string;
   cost: Yield;
   effect: UpgradeEffect;
-  /** Hidden until the player owns this many of the producer. */
   requires?: { producer: ProducerId; count: number };
 }
 
@@ -178,29 +163,15 @@ export const UPGRADE_BY_ID: Record<UpgradeId, Upgrade> = Object.fromEntries(
   UPGRADES.map((u) => [u.id, u]),
 ) as Record<UpgradeId, Upgrade>;
 
-// ---------------------------------------------------------------------------
-// Sabotage. `power` is what gets weighed against a defender's shield pool —
-// a defense with at least this much left absorbs the attack outright.
-// ---------------------------------------------------------------------------
+// --- Sabotage --- `power` is weighed against the defender's shield pool
 
 export type AttackId = "vermin" | "disease" | "swelter" | "rot" | "sweep";
 
-/**
- * Which producers a breakage attack goes for.
- * - `best`: their biggest earner, where it hurts most.
- * - `cheapest`: their entry-tier stuff — early harassment.
- * - `all`: a slice off every type they own.
- */
 export type BreakScope = "best" | "cheapest" | "all";
 
 export type AttackEffect =
-  /**
-   * Breaks producer units. Broken units stay broken and produce nothing until
-   * the owner spends on repairs — the damage compounds instead of timing out,
-   * which is the whole reason to attack before the last minute of a match.
-   */
-  | { kind: "break"; /** Fraction of the targeted units, floored at 1. */ share: number; scope: BreakScope }
-  /** Cuts total output by `cut` (0..1) for a while. Weather passes; pests don't. */
+  /** Broken units stay broken until repaired; `share` of targeted units, floored at 1. */
+  | { kind: "break"; share: number; scope: BreakScope }
   | { kind: "slow"; cut: number; durationMs: number };
 
 export interface Attack {
@@ -208,17 +179,9 @@ export interface Attack {
   name: string;
   blurb: string;
   power: number;
-  /** Floor price, and what you pay while the target is still small. */
   baseCost: Yield;
-  /**
-   * Yield charged per point of the target's production rate. Sabotage that
-   * costs a flat price does damage proportional to how big the target is, which
-   * makes hitting a leader wildly better value than growing — the one outcome
-   * that collapses the spend-on-yourself-vs-spend-on-them choice. Pricing the
-   * swing against the site you're swinging at is what keeps it a real trade.
-   */
+  /** Per point of target rate — flat-priced sabotage makes hitting the leader strictly better than growing. */
   costPerRate: number;
-  /** Repeat use gets pricier on top of that. */
   growth: number;
   effect: AttackEffect;
 }
@@ -272,10 +235,7 @@ export const ATTACK_BY_ID: Record<AttackId, Attack> = Object.fromEntries(
   ATTACKS.map((a) => [a.id, a]),
 ) as Record<AttackId, Attack>;
 
-// ---------------------------------------------------------------------------
-// Defense. `power` is an absorb pool, not a flag: it soaks incoming attack
-// power until it runs dry or the window closes.
-// ---------------------------------------------------------------------------
+// --- Defense --- `power` is an absorb pool, not a flag
 
 export type DefenseId = "ward" | "fence" | "shelter" | "insurance";
 
@@ -326,26 +286,14 @@ export const DEFENSE_BY_ID: Record<DefenseId, Defense> = Object.fromEntries(
   DEFENSES.map((d) => [d.id, d]),
 ) as Record<DefenseId, Defense>;
 
-// ---------------------------------------------------------------------------
+// --- Constants ---
 
-/** Base stock per click, before click multipliers. */
 export const BASE_CLICK = Y.of(1);
 
-/**
- * No knockouts (VISION.md): stacked sabotage can never take a site below this
- * fraction of its clean rate.
- */
+// No knockouts (see docs/design.md): floor on stacked slows, cap on breakage per producer type.
 export const MIN_RATE_MULTIPLIER = 0.15;
 
-/**
- * And breakage can never take more than this share of a producer type you own,
- * so no single hit can flatten a site however far ahead the attacker is.
- */
 export const MAX_BROKEN_SHARE = 0.6;
 
-/**
- * Repairing costs this share of what those units would cost to buy fresh at
- * your current count. Cheaper than rebuilding, so damage is a tax on your
- * momentum rather than a wipe — but it's still stock that didn't compound.
- */
+// Share of the fresh-buy price at current count.
 export const REPAIR_COST_FRACTION = 0.75;

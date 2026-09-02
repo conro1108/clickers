@@ -1,10 +1,6 @@
 import { format, opponentView, type MatchState, type Millis, type PlayerId } from "@clickers/sim";
 
-/**
- * Everything shown here comes from `opponentView`, which is the only thing the
- * fog rule permits: their count and their production rate. No upgrade tree, no
- * defenses — you're guessing about their shield when you swing.
- */
+// Only what `opponentView` permits: count and rate. No upgrade tree, no defenses.
 export function Opponents({
   state,
   now,

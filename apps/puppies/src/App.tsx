@@ -50,10 +50,7 @@ import { DefendPanel, GrowPanel, SabotagePanel } from "./components/Shop.js";
 import { hasSavedMill, useMill } from "./useMill.js";
 import { BOTS, useMatch, type MatchRuntime, type MatchSetup } from "./useMatch.js";
 
-/**
- * The opponents the lobby offers. `greedy` is missing on purpose — it exists as
- * a control group for the balance harness, not as somebody to play.
- */
+// `greedy` is left out: it is a control group for the balance harness, not an opponent.
 const BOT_ROSTER = ([
   "chill",
   "scrappy",
@@ -71,10 +68,7 @@ const BOT_ROSTER = ([
 
 type Screen = { kind: "home" } | { kind: "puppies" } | { kind: "versus" };
 
-/**
- * Space always whistles, so the shop stays a mouse-only surface. Without the blur,
- * space would re-fire whichever shop button you last clicked.
- */
+// Space always whistles; without the blur it would re-fire the last-clicked shop button.
 function useSpaceToWhistle(whistle: () => void, enabled = true) {
   useEffect(() => {
     if (!enabled) return;
@@ -94,20 +88,8 @@ function useSpaceToWhistle(whistle: () => void, enabled = true) {
 /** How long a press has to be held before it's asking for the back room. */
 const HOLD_MS = 700;
 
-/**
- * Press-and-hold, as the way into something that isn't advertised.
- *
- * Returns props to spread onto whatever you're holding. Deliberately not a
- * `<button>` — the back room is reached by holding the puppy on the HUD, and a
- * focusable control there would be a thing to tab into and press by accident,
- * announcing itself to exactly the players it's hidden from.
- *
- * Pointer events rather than touch or mouse ones, so this is the same code path
- * on a phone and a trackpad, and `setPointerCapture` so sliding a thumb off the
- * icon mid-hold doesn't silently cancel it. The timer is cleared on release,
- * leave and cancel — the last of which is what fires when the browser decides
- * the gesture was a scroll.
- */
+// Press-and-hold into the back room. Not a `<button>` so it cannot be tabbed into by the players it is hidden from.
+// Pointer events + `setPointerCapture` so a thumb sliding off mid-hold does not cancel; `pointercancel` fires on scroll.
 function useHold(onHold: () => void) {
   const timer = useRef<ReturnType<typeof setTimeout>>();
   const stop = useCallback(() => {
@@ -127,15 +109,9 @@ function useHold(onHold: () => void) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Home
-// ---------------------------------------------------------------------------
+// --- Home ---
 
-/**
- * The splash, and nothing else. You see this once — the moment you have a mill,
- * the app opens straight onto it, because a homestead game whose front door is
- * a menu makes you ask for your mill every time instead of just being there.
- */
+// The splash; seen once. Once you have a mill the app opens straight onto it.
 function Home({ onGo }: { onGo: (screen: Screen) => void }) {
   const returning = hasSavedMill();
   return (
@@ -161,28 +137,11 @@ function Home({ onGo }: { onGo: (screen: Screen) => void }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// The homestead
-// ---------------------------------------------------------------------------
+// --- The homestead ---
 
-/**
- * The things you can open, named after what's inside them.
- *
- * The old set was Grow / Land / Legacy / Report / Mill / House — six tabs, and
- * the first three were interchangeable-sounding words that didn't say which one
- * sold you a van and which one fixed it. These are the nouns the game
- * already uses on the panels themselves.
- *
- * "Books" used to be a fourth. It held a ledger of eight numbers, six of which
- * were already on the HUD or the whistle bar or the Pedigree sheet, plus a door to the
- * back room — so it was spending a quarter of the bottom bar to repeat itself.
- * What was actually only in there went to the sheet it belonged to: the damage
- * to Upkeep, next to the bill for it; the run's output to Pedigree, next to the
- * thing it buys. `back` is what's left, and it isn't on the bar at all.
- */
+// Sheets, named for what is inside them. `back` is not on the bar.
 type MillSheet = "shop" | "upkeep" | "papers" | "back";
 
-/** The one-sentence hint, which is worth showing once, ever. */
 const TAUGHT_KEY = "puppy-mill:taught-tap";
 
 /** A blocked localStorage reports everything as already seen. Harmless. */
@@ -202,86 +161,20 @@ function markSeen(key: string): void {
   }
 }
 
-/**
- * How long the omen owns the screen, start of the blackout to the last frame of
- * the mill coming back. Kept in step with the `omen-veil` keyframes.
- *
- * It used to be fourteen seconds of text breathing over the sky, which is a long
- * time to hold a player still for one sentence — and because it was a label on
- * the scene rather than an event, buying the Singularity from an open shop meant
- * the whole thing played out behind the sheet.
- *
- * It's a cut now, and it's allowed to take its time, because it happens once a
- * run and it's the moment the run stops being a ladder: the lights go down, the
- * dark sits there long enough to be uncomfortable, the sentence arrives, and
- * only then the instruction. The mill comes back slowest of all.
- */
+// Omen length, blackout to last frame of the mill returning. Kept in step with the `omen-veil` keyframes.
 const OMEN_MS = 7600;
 
-/**
- * And the same thing for every Singularity after the first of a run.
- *
- * Ten of them stand between the first one and the Ur-Chihuahua, and ten of the long
- * one would turn the best stretch of the ladder into a cutscene you tap through.
- * So the repeats keep the cut and lose the ceremony: one dark pull across the
- * screen and back, over whatever you were doing, with a single line in it that
- * says how much further there is to go.
- */
+// Short omen for every Singularity after the first of a run: one dark pull with a single line in it.
 const OMEN_FLASH_MS = 1900;
 
-/**
- * And the Convergence, which is the one the other two were only ever warning
- * about: the whole screen, from out under the sky to under the blanket.
- *
- * Ten seconds is longer than anything else in the game by a factor of three, and
- * it's the right length for exactly one thing. Everything else here is a run
- * that lasts days, and this fires once in it — the single moment the game has
- * been building toward since the first Chihuahua Singularity stained the sky. The
- * Singularity omen is seven seconds of the lights going out to say *something is
- * coming*; if the thing that arrives is the same blackout with different words,
- * the promise wasn't kept.
- *
- * So this one isn't a veil over the mill. It's the trip: the dark, then the
- * Ur-Chihuahua itself out there in it, then the thing turning over and settling
- * — and the whole world going with it, down under the hem and into the warm.
- * `FOLD_SWAP_MS` is what keeps the canvas from spending that arrival while this
- * is over the top of it.
- *
- * Timings live in the `converge-*` keyframes, all of them on this duration with
- * percentage offsets, so the beats can't drift out of step with each other.
- */
+// The Convergence: sky to blanket. Timings live in the `converge-*` keyframes as percentage offsets of this.
+// `FOLD_SWAP_MS` keeps the canvas from spending the arrival while this is over the top of it.
 const CONVERGE_MS = 9600;
 
-/**
- * When, during the trip, the canvas underneath swaps to the inside mill.
- *
- * The purchase moves you inside on the frame it lands, and the trip that earns
- * that takes nine seconds — so for the first of them the screen was showing the
- * place the cut hadn't taken you to yet, right through the fade-up. The arrival
- * before the journey, and the one reveal in the game that can only happen once.
- *
- * So the canvas holds the mill you're standing on, and swaps here. `converge-veil`
- * is fully opaque from 8% of the duration to 92%, and this sits comfortably
- * inside that: the sky is the last thing you see going into the dark, the hem
- * is the first thing you see coming out of it, and the cut in between is the
- * only account of how you got from one to the other.
- */
+// When the canvas swaps to the inside mill. `converge-veil` is opaque from 8% to 92%; this sits inside that.
 const FOLD_SWAP_MS = Math.round(CONVERGE_MS * 0.3);
 
-/**
- * What the short one says, which is the same thing the long one said and then
- * increasingly less patiently.
- *
- * The whole tier is a countdown to the Ur-Chihuahua and nothing in the shop says
- * so — the price tag goes up, the rate goes up, and the one purchase that's
- * actually a threshold looks exactly like the nine before it. This is the
- * readout: the same encouragement, worded closer each time, so a player who's
- * bought eight of them can feel that it's nearly something without being told
- * what.
- *
- * Only ever asked before the fold — see the effect that reads it. Past the fold
- * there is nothing left to hint at.
- */
+// The short omen's line: same encouragement, worded closer each time. Only asked before the fold.
 function omenNudge(mill: solo.SiteState): string {
   const p = solo.convergenceProgress(mill);
   if (p >= 1) return "It's in reach";
@@ -292,10 +185,7 @@ function omenNudge(mill: solo.SiteState): string {
 
 const HOUR_MS = 3_600_000;
 
-/**
- * The sim's `formatDuration` is m:ss, which is right for a weather countdown and
- * useless for a skew that's routinely a week. Days and hours, no seconds.
- */
+// The sim's `formatDuration` is m:ss; a skew is routinely a week. Days and hours, no seconds.
 function formatSkew(msAhead: number): string {
   const hours = Math.round(msAhead / HOUR_MS);
   const d = Math.floor(hours / 24);
@@ -303,19 +193,8 @@ function formatSkew(msAhead: number): string {
   return [d ? `${d}d` : "", h || !d ? `${h}h` : ""].filter(Boolean).join(" ");
 }
 
-/**
- * Everything that isn't the mill: the parked head-to-head prototype, and the
- * levers that exist for looking at the game rather than playing it.
- *
- * Reached by holding the puppy on the HUD and by nothing else. It used to be
- * the back half of a tab on the bottom bar, which meant a quarter of the most
- * valuable strip of the screen was pointing at three cheat buttons.
- *
- * What's in here is chosen by one rule: a lever earns its place if it reaches a
- * state you can't otherwise get to in under a minute. Everything the game shows
- * you is a function of time, money, damage, papers, or which side of the fold
- * you're on — so those are the five knobs, and there isn't a sixth.
- */
+// The back room: the parked versus prototype plus dev levers. Reached only by holding the HUD puppy.
+// A lever earns a place only if it reaches a state you cannot otherwise get to in under a minute.
 function BackRoom({
   mill,
   onVersus,
@@ -329,17 +208,12 @@ function BackRoom({
   onAbandon: () => void;
   dispatch: (cmd: solo.SiteCommand) => void;
 }) {
-  // Read once per open rather than watched. Nothing else in the app can change
-  // it, and a skew that re-rendered every tick would be a clock, which invites
-  // reading it as one.
+  // Read once per open, not watched: a skew that re-rendered every tick reads as a clock.
   const [skew, setSkew] = useState(() => clockSkew());
   const jump = (byMs: number) => {
     setClockSkew(clockSkew() + byMs);
     setSkew(clockSkew());
-    // Nothing has to be dispatched: the tick loop calls `nowMs` and `advance`
-    // resolves the whole gap exactly, weather and all, the same way it resolves
-    // a closed tab. That's the entire reason the lever is a clock skew and not
-    // a sim command.
+    // No dispatch needed: the tick loop calls `nowMs` and `advance` resolves the gap like a closed tab.
   };
 
   return (
@@ -478,15 +352,7 @@ function BackRoom({
   );
 }
 
-/**
- * The homestead screen: a HUD you can read at a glance, the mill itself filling
- * everything between, and one verb at the bottom. Everything else is a sheet.
- *
- * The old layout put the mill's whole state in three columns of text and the
- * mill itself nowhere. Now the two numbers you actually play against — what
- * you've built and what you're holding — are the picture, and the panels are
- * where you go to change them.
- */
+// The homestead screen: HUD, the mill filling everything between, one verb at the bottom. Everything else is a sheet.
 function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const { mill, now, report, dismissReport, budget, pendingWhistles, error, whistle, dispatch, abandon } =
     useMill();
@@ -495,77 +361,46 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const [pops, setPops] = useState<{ id: number; text: string }[]>([]);
   const popId = useRef(0);
   const [taught, setTaught] = useState(() => wasSeen(TAUGHT_KEY));
-  // The only nudge in the game. The first Chihuahua Singularity is where the run
-  // stops being "buy the next rung" and starts being a climb toward something,
-  // and nothing on the screen said so — the ceiling has begun bleeding through
-  // the sky by now, but a player who hasn't seen the fold before has no reason
-  // to read that as a promise rather than as a sunset.
-  //
-  // Hung off the count going up rather than off a threshold or a once-ever flag,
-  // so it's an answer to a purchase: the first of a run gets the whole cut, and
-  // every one after it gets the short version. `n` restarts the animation when
-  // two land close together — same element, so without it the second is silent.
+  // Hung off the count going up, not a threshold: first of a run gets the whole cut, the rest the short one.
+  // `n` restarts the animation when two land close together.
   const [omen, setOmen] = useState<{ kind: "full" | "flash"; n: number; text: string } | null>(
     null,
   );
   const omenId = useRef(0);
   const singularities = mill.producers.singularity ?? 0;
-  // Held in a ref rather than in the effect's deps: the line depends on a mill
-  // that changes every tick, and the effect should run when a Singularity is
-  // bought, not when a puppy is grown.
+  // Ref, not effect dep: the line depends on a mill that changes every tick.
   const nudge = useRef("");
   nudge.current = omenNudge(mill);
-  // Same, and for the same reason: whether the horizon has closed is a fact
-  // about the mill, not a reason to re-run this.
+  // Same reason.
   const folded = useRef(mill.converged);
   folded.current = mill.converged;
-  // Seeded from the first render, so opening a save that already has a sky full
-  // of them is not eleven purchases' worth of news.
+  // Seeded from the first render so a loaded save is not eleven purchases' worth of news.
   const hadSingularities = useRef(singularities);
   useEffect(() => {
     const had = hadSingularities.current;
     hadSingularities.current = singularities;
-    // Prestige takes them all away again, and that isn't an omen.
+    // Prestige takes them all away; not an omen.
     if (singularities <= had) return;
-    // And past the fold it isn't an omen either. The whole point of the cut is
-    // that something is coming — it's a warning, worded a little closer each
-    // time, about a horizon you haven't reached yet. Once you've been inside the
-    // puppy it has already arrived, and a Singularity bought from the mill
-    // upstairs is just the next rung on the ladder: darkening the screen to
-    // promise it again is the game teasing you with something you own.
+    // Past the fold it is not an omen either: the horizon has already arrived.
     if (folded.current) return;
     const full = had === 0;
     setOmen({ kind: full ? "full" : "flash", n: omenId.current++, text: nudge.current });
-    // The purchase happens in the shop, and the point of the omen is the sky.
-    // Every one of them puts you back on the mill for it, short version
-    // included — a cut that plays out behind the sheet you bought it from is a
-    // cut nobody watched, and the sky answering a Singularity is the only thing
-    // that says the tier is going anywhere. Reopening the shop is a tap; ten of
-    // these arriving unseen is the whole tier saying nothing.
+    // Close the shop so the sky is seen; a cut behind a sheet is a cut nobody watched.
     setSheet(null);
     const id = setTimeout(() => setOmen(null), full ? OMEN_MS : OMEN_FLASH_MS);
     return () => clearTimeout(id);
   }, [singularities]);
 
-  // The Convergence. Same shape as the omen and for the same reason: it's an
-  // answer to a purchase, not a state the mill is in. Seeded from the first
-  // render so a folded save reopens as a folded mill rather than as the best
-  // ten seconds of the run, spent on a page load.
+  // The Convergence, same shape: an answer to a purchase, seeded from first render so a folded save reopens folded.
   const [converging, setConverging] = useState(false);
-  // Which mill the canvas is drawing, while the trip is holding it back. Null
-  // once the swap has happened, and null forever after — from then on the world
-  // you're standing in is the world you can see.
+  // Which mill the canvas draws while the trip holds it back. Null once swapped, and forever after.
   const [heldWorld, setHeldWorld] = useState<solo.World | null>(null);
   const wasConverged = useRef(mill.converged);
-  // A layout effect rather than an ordinary one: the purchase and the world it
-  // moves you to land in the same render, so anything that waits until after the
-  // paint has already let a frame of the inside mill through.
+  // Layout effect: the purchase and the world it moves you to land in the same render, so a plain effect lets a frame through.
   useLayoutEffect(() => {
     const was = wasConverged.current;
     wasConverged.current = mill.converged;
     if (!mill.converged || was) return;
-    // It's bought from the shop, and the shop is the last thing that should be
-    // on screen for it.
     setSheet(null);
     setConverging(true);
     // Stay out under the sky until the dark has taken the screen.
@@ -578,74 +413,36 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     };
   }, [mill.converged]);
 
-  // And the small version of the same rule, for every purchase that puts
-  // something in the picture that wasn't there before.
-  //
-  // The first of a kind is the only purchase that *reveals* rather than adds:
-  // outside, a new lot opens at the back of the land and the kit goes up in
-  // scaffolding; inside, a first machine on a new stratum breaks the floor open
-  // and drops the shaft another band. Both of those animate for a second or two
-  // and both of them are bought from a sheet that covers the entire mill, so
-  // until now the answer to the most interesting purchases in the game was a
-  // number changing on the row you tapped.
-  //
-  // Deliberately *only* the first of a kind. Every subsequent one raises a
-  // building too, and a shop that threw you out on each of the fifty pens you
-  // buy in a run would make the shop unusable to save a second and a half of
-  // scaffolding you've seen already.
+  // Close the shop on the first of a kind: those are the purchases that reveal (new lot, new stratum) rather than add.
+  // Only the first — throwing you out on every pen would make the shop unusable.
   const kinds = solo.SOLO_PRODUCERS.filter((p) => (mill.producers[p.id] ?? 0) > 0)
     .map((p) => p.id)
     .join(",");
-  // Seeded from the first render, so opening a save doesn't read its whole mill
-  // as having just arrived.
+  // Seeded from the first render so a loaded save does not read as just arrived.
   const hadKinds = useRef(kinds);
   useEffect(() => {
     const had = new Set(hadKinds.current.split(",").filter(Boolean));
     const arrived = kinds.split(",").filter((id) => id && !had.has(id));
     hadKinds.current = kinds;
-    // A hand-down takes them all away, and that isn't a reveal — but everything
-    // bought on the way back up is, which is the point of handing it down.
+    // A hand-down takes them all away; everything bought on the way back up is a reveal again.
     if (arrived.length === 0) return;
     setSheet(null);
   }, [kinds]);
 
   const perWhistle = solo.clickYield(mill);
   const rate = solo.currentRate(mill);
-  // Only what you can actually do something about from here. The dot is a call
-  // to action, and repairs are per-world — a badge lit by kit broken on the
-  // other mill sends you to a panel with nothing in it to press. What's broken
-  // over there is still worth knowing, and the panel says so once you're in it.
-  // Bedding is one number for both mills, so it counts wherever you're standing.
+  // Repairs are per-world, so only this world's broken kit lights the dot. Bedding is one number for both mills.
   const needsAttention =
     mill.condition < 1 ||
     solo.producersIn(mill.world).some((p) => solo.brokenCount(mill, p.id) > 0);
-  // Shown the moment a hand-down would pay anything, and then never taken away.
-  //
-  // This was held until the Convergence, on the reasoning that the first paper
-  // landed a day or two short of the fold and a player who took that hint would
-  // reset just before the payoff. But holding a whole mechanic behind the
-  // endgame means a first save can't find out prestige exists, and the fold is
-  // days of play to reach — that's a long time to be told nothing. The fix
-  // belonged in `papersFor`, and it's there now: the first paper lands around the
-  // fold rather than well before it, so an early reset costs a paper or two and
-  // the trap this gate was guarding against mostly isn't one.
-  //
-  // Anyone who already has papers or has already handed a mill down keeps the tab
-  // regardless of what this run has earned, which also covers a save that
-  // converged and prestiged before `converged` existed as a flag.
+  // Shown the moment a hand-down would pay anything, and then never taken away (also covers saves that predate `converged`).
   const showPapers =
     mill.converged || mill.heirlooms > 0 || mill.generation > 1 || solo.pendingHeirlooms(mill) > 0;
 
-  // Right to left in order of how often you reach for it. The far left of a
-  // bottom bar is the corner a thumb has to travel for, and Shop is where you
-  // go every time you can afford anything — so it gets the near end, and Pedigree
-  // slots in at the far end where appearing later doesn't shuffle the rest.
+  // Right to left by how often you reach for it: Shop nearest the thumb, Pedigree at the far end so appearing later shuffles nothing.
   const nav: { id: MillSheet; label: string; icon: Parameters<typeof PxIcon>[0]["name"] }[] = [
     ...(showPapers ? ([{ id: "papers", label: "Pedigree", icon: "paw" }] as const) : []),
-    // Named for what you do in it rather than for what put you there. "Weather"
-    // was the cause, and it stopped being true the moment the horizon closed —
-    // nothing sends weather at a folded mill, and the tab still said so. Repairs,
-    // the bedding and the buildings that blunt the next one are all the same job.
+    // Named for what you do in it: nothing sends weather at a folded mill, so "Weather" stopped being true.
     { id: "upkeep", label: "Upkeep", icon: "wrench" },
     { id: "shop", label: "Shop", icon: "basket" },
   ];
@@ -669,10 +466,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const hold = useHold(useCallback(() => setSheet("back"), []));
   const kitOnTheLand = solo.SOLO_PRODUCERS.reduce((n, p) => n + (mill.producers[p.id] ?? 0), 0);
 
-  // The shop has emptied itself for the Ur-Chihuahua. Worth knowing out here as
-  // well as inside the sheet: the bottom bar is the only part of the game a
-  // player sees without opening anything, so it's where the change announces
-  // itself.
+  // The shop has emptied itself for the Ur-Chihuahua; the bottom bar is where that announces itself.
   const lastPurchase = solo.convergencePending(mill);
 
   return (
@@ -824,14 +618,10 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
                 <button
                   key={to}
                   className={mill.world === to ? "on" : ""}
-                  // Disabled where you already are, rather than dispatching a
-                  // warp the sim will refuse — a refusal is an error banner, and
-                  // one that says "You're already there." over a button drawn as
-                  // already-there is the game telling you off for agreeing.
+                  // Disabled where you already are, rather than dispatching a warp the sim will refuse with an error banner.
                   disabled={mill.world === to}
                   onClick={() => {
                     dispatch({ type: "warp", to });
-                    // The point of stepping across is to be standing there.
                     setSheet(null);
                   }}
                 >
@@ -934,22 +724,12 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Versus (the older prototype)
-// ---------------------------------------------------------------------------
+// --- Versus (the older prototype) ---
 
 /** The sheets of a match, in the order they sit on the bar. */
 type MatchSheet = "match" | "defend" | "sabotage" | "shop";
 
-/**
- * A match, on the homestead's shell.
- *
- * Three bordered panels of text used to share the screen — your mill as a
- * column of numbers, the shop beside it, opponents and the log beside that —
- * which read as a spreadsheet of the game rather than the game. It's the same
- * sim; what changed is that the mill is the picture, the clock and the bank are
- * the only things pinned over it, and everything else is a sheet you open.
- */
+// A match on the homestead's shell: the mill is the picture, clock and bank pinned over it, everything else a sheet.
 function Match({
   runtime,
   onExit,
@@ -969,32 +749,21 @@ function Match({
   const table = standings(state, now);
   const opponentIds = state.order.filter((id) => id !== me.id);
   const opponents = opponentIds.map((id) => state.players[id]!);
-  // Clicks you've made but that haven't been flushed into the sim yet still
-  // count — `dispatch` banks them before it spends, so this is honest. Priced
-  // through `clickGain` rather than `clickYield` for the same reason: while
-  // the whistle bucket is drained a tap is worth less than a whole tap, and a
-  // budget that doesn't know that shows you a pile the shop then refuses.
+  // Unflushed clicks count (`dispatch` banks them first). `clickGain`, not `clickYield`: a drained bucket makes a tap worth less.
   const budget = useMemo(
     () => Y.add(me.stock, clickGain(me, now, pendingClicks)),
     [me, now, pendingClicks],
   );
   const yourScore = table.find((s) => s.player.id === me.id)?.score ?? 0;
-  // The one you're actually racing. Their figures go on the HUD rather than
-  // only in the match sheet: a delta tells you you're behind but not whether
-  // they're pulling away, and "are they out-producing me" is the question every
-  // spending decision in the shop turns on. It's the same `opponentView` the
-  // sheet uses, so the fog rule still decides what's shown.
+  // The rival's figures go on the HUD: every spend turns on "are they out-producing me". Same `opponentView`, same fog rule.
   const rival = useMemo(() => {
     const views = opponentIds.map((id) => opponentView(state, id, now));
     return views.sort((a, b) => b.count - a.count)[0];
   }, [state, now, opponentIds]);
   const bestRival = rival?.count ?? 0;
   const timeLeft = state.startedAt + state.config.durationMs - now;
-  // What the *next* whistle is worth, which is not always a whole one.
   const perClick = clickGain(me, now, pendingClicks + 1) - clickGain(me, now, pendingClicks);
-  // Whistling faster than the puppies can come. Worth saying out loud — the
-  // yield quietly dropping is the kind of thing a player reads as the game
-  // being broken rather than as a rule they've hit.
+  // Whistling faster than puppies can come; said out loud so the dropping yield does not read as a bug.
   const winded = clicksReady(me, now) - pendingClicks < 1;
   const rate = rateAt(me, now);
   const slow = slowMultiplier(me, now);
@@ -1013,8 +782,7 @@ function Match({
   );
   useSpaceToWhistle(onWhistle, !over && sheet === null);
 
-  // Where you stand, as a bar rather than a number: your share of the two
-  // scores, so a match you're losing is visibly a bar under half.
+  // Your share of the two scores as a bar, so losing is visibly under half.
   const share = yourScore + bestRival > 0 ? yourScore / (yourScore + bestRival) : 0.5;
 
   return (
@@ -1204,13 +972,7 @@ function BotMatch({ setup, onExit }: { setup: MatchSetup; onExit: () => void }) 
   return <Match runtime={runtime} onExit={onExit} onRematch={runtime.restart} />;
 }
 
-/**
- * A match against a person, folded out of the command log.
- *
- * The screen is the same one the bot plays on — that's the whole point of the
- * runtime being an interface. What's different is that there's a moment before
- * the log has been read, and a way for the match to end that isn't the clock.
- */
+// A match against a person, folded out of the command log. Same screen as the bot, plus a pre-log wait and a non-clock ending.
 function OnlineMatch({
   row,
   meId,
@@ -1241,41 +1003,28 @@ function OnlineMatch({
   return <Match runtime={runtime} onExit={() => onExit(row)} />;
 }
 
-/**
- * The versus mode, and the only place the app talks to the network.
- *
- * Sign-in lives in here rather than in `App` on purpose: it's anonymous and
- * silent, but it still creates a user, and somebody who only ever plays their
- * own mill should never have one made for them.
- */
+// The versus mode, and the only place the app talks to the network. Sign-in lives here so solo players never get a user made.
 function Versus({ onLeave, invite }: { onLeave: () => void; invite?: string | null }) {
   const lobby = useLobby();
   const [inMatch, setInMatch] = useState<
     { kind: "bot"; setup: MatchSetup } | { kind: "online"; row: MatchRow } | null
   >(null);
 
-  // An invite link walks itself in. Whoever opened it may never have seen this
-  // game before, so nothing is asked of them: the anonymous sign-in has already
-  // happened by the time `me` exists, and the code is spent on arrival.
+  // An invite link walks itself in: anonymous sign-in has happened by the time `me` exists, and the code is spent on arrival.
   const walkedIn = useRef(false);
   useEffect(() => {
     if (walkedIn.current || !invite || !lobby.me) return;
     walkedIn.current = true;
-    // Taken out of the address bar the moment it's used. A join code is good
-    // once, so a refresh would only ever produce "No open match with that code"
-    // over a race that's already running.
+    // A join code is good once; scrub it from the address bar so a refresh does not error.
     window.history.replaceState(null, "", window.location.pathname);
     void joinByCode(invite).then(
       (row) => setInMatch({ kind: "online", row }),
-      // A dead link lands in the lobby holding the reason, rather than on a
-      // blank screen — the code has usually just been used by somebody else.
+      // A dead link lands in the lobby holding the reason.
       (e) => lobby.setError(errorText(e)),
     );
   }, [invite, lobby.me, lobby.setError]);
 
-  // A challenge accepted at the other end starts a match you never pressed a
-  // button for — without this the challenger sits in the lobby watching a race
-  // they're already losing.
+  // A challenge accepted at the other end starts a match you never pressed a button for.
   useEffect(() => {
     if (!inMatch && lobby.live?.status === "active") {
       setInMatch({ kind: "online", row: lobby.live });
@@ -1298,8 +1047,7 @@ function Versus({ onLeave, invite }: { onLeave: () => void; invite?: string | nu
         row={inMatch.row}
         meId={lobby.me.id}
         onExit={(row) => {
-          // Leaving a live match is forfeiting it, and saying so in the row is
-          // what stops the lobby walking you straight back into it.
+          // Leaving a live match is forfeiting it; saying so stops the lobby walking you back in.
           void abandon(row.id);
           setInMatch(null);
           lobby.refresh();
@@ -1330,13 +1078,7 @@ function Versus({ onLeave, invite }: { onLeave: () => void; invite?: string | nu
   );
 }
 
-/**
- * The invite link, read once at boot.
- *
- * A query parameter rather than a path, because the app has no router — every
- * screen is a value in one `useState`, and `/play/ABCD` would need a rewrite
- * rule on the host to avoid a 404 on a cold load. This needs nothing.
- */
+// The invite link, read once at boot. Query param, not a path: no router, and `/play/ABCD` would 404 cold.
 function inviteCode(): string | null {
   const code = new URLSearchParams(window.location.search).get("join");
   return code ? code.trim().toUpperCase() : null;
@@ -1344,11 +1086,7 @@ function inviteCode(): string | null {
 
 export function App() {
   const [invite] = useState(inviteCode);
-  // A mill you already own is the app, and the splash is for the one session
-  // where you don't have one yet — but an invite outranks both. Somebody who
-  // followed a link came here to play a specific person, and showing them a
-  // title screen first is asking them to find their way to a race they were
-  // already sent to.
+  // An invite outranks both the mill and the splash: they came to play a specific person.
   const [screen, setScreen] = useState<Screen>(() =>
     invite ? { kind: "versus" } : hasSavedMill() ? { kind: "puppies" } : { kind: "home" },
   );

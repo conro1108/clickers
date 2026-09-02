@@ -1,102 +1,9 @@
 /**
- * The inside of the potato, drawn as a descent.
- *
- * A second scene, not a variant of the first. `farmScene.ts` is a homestead:
- * sky, hills, a field of crop, a fence, a yard. None of that survives the
- * Convergence except the yard, and reskinning a field of potato plants in ochre
- * would have said "the same farm, at sunset" — which is the one thing the fold
- * must not read as.
- *
- * The two scenes share the buffer conventions and nothing else. Same width,
- * same rule: every blit is integer-aligned and unscaled, animation is
- * translation only. At this size a fractional transform resamples the art off
- * the pixel grid and 1px outlines double or vanish.
- *
- * ---
- *
- * ## What went wrong the first time, because it will be tempting again
- *
- * The first inside was a room: a ceiling band being ploughed upside down, a far
- * wall with doors cut in it, a starch plain underfoot, the yard at the front.
- * Five horizontal bands with hard rules between them. It was wrong in five ways
- * and they were all the same way — **it had no depth model.**
- *
- *  1. **Five stripes is a cross-section diagram, not a place.** The outside farm
- *     is sky → hills → field → fence → yard, which is a perspective the eye
- *     already knows, so the bands read as *distance* without being told. Roof /
- *     hollow / wall / floor / yard is a list of surfaces, and the only thing
- *     separating them was a 1px line.
- *  2. **Every colour in the file was the same hue.** Ochre at 30-40° top to
- *     bottom. Outside, blue → green → brown separates the bands before any line
- *     has to; inside, nothing did, which is exactly why it read as strata. On an
- *     empty farm the floor and the yard were the same colour with a rule between
- *     them and you could not tell where the room stopped.
- *  3. **The vessel network was a wiring diagram.** Every tier got its own branch,
- *     routed with right-angle bends, in a pale pink with no shadow and no ground
- *     contact, crossing everything else in the picture. The outside keeps the
- *     same promise — you can watch a potato reach the pile — with *one* machine
- *     on *one* edge.
- *  4. **Nothing was a familiar noun.** Starch Seam, Phloem Vein, Periderm Gate.
- *     When art has to draw an abstraction it draws an abstract shape, which is
- *     how five Periderm Gates ended up as five identical white rectangles in a
- *     row, like paintings hung in a gallery.
- *  5. **Progression was a taxonomy.** Each tier pinned to a band height, so
- *     buying more meant denser overlap at the same scale rather than the place
- *     growing.
- *
- * The founding instinct — "a second scene, not a variant" — was right about the
- * *nouns* and wrong about the *grammar*. This keeps every noun new and takes the
- * grammar back: a spatial model your eye already has, colour doing the depth
- * work, one transport spine, and progression that builds the place out.
- *
- * ## The shaft
- *
- * You are cutting down through a potato, and the picture is the cutaway. Top of
- * the buffer is the lid you came in through; bottom is the sump you have to
- * stand in. Between them are the strata you've opened, in order, **shallow at
- * the top and deep at the bottom** — which is the one arrangement where "further
- * down the shop" and "further down the screen" are the same direction.
- *
- * Four zones of two rungs each (`ZONES`), and a zone only exists once you own
- * something that works it. So a farm one purchase into the inside is a lid, one
- * thin stratum, and a sump; a finished one is four strata deep, each with its own
- * material and its own light. Buying into a new zone breaks the floor open —
- * three more reveals across an endgame that previously had none after the fold.
- *
- * **Colour is the depth model.** Pale gold at the lid, ochre through the cortex,
- * then the picture leaves the potato palette entirely: the vascular ring is
- * magenta-shadowed and the core is nearly black-red. That vertical run is doing
- * the job aerial perspective does outside, and it's the single biggest reason
- * this reads as somewhere rather than as a stack of bands.
- *
- * **The bore is the spine.** One open channel down the left, where the outside
- * farm's elevator runs, widening as you own more. Everything you cut rolls along
- * its own ledge to the lip, tips in, falls the whole height of the picture, and
- * slides into the mound. That's the entire logistics layer: no vessels, no
- * porters, no branch per tier. Gravity is the conveyor, one continuous motion
- * carries the eye from the deepest thing you own to the pile you're spending, and
- * the crop is the only thing crossing the strata — which is what makes the strata
- * legible instead of crowded.
- *
- * The mound stays in the bottom-left corner it occupies outside, because it is
- * the same potatoes and the fold doesn't take your money off you.
- *
- * ---
- *
- * Three later additions, all in service of one complaint — the strata read as
- * sealed floors with a lift lobby between them, not as levels of one working:
- *
- * - **The pit-head.** The shaft runs up through the lid and off the top of the
- *   frame, with daylight in it, and the farm overhead tips its harvest down it
- *   from the first second after the fold — the income the HUD never stopped
- *   showing finally has a visible source. The winding gear hangs under the lid,
- *   and a sheave turns exactly as fast as its rope pays out.
- * - **The manway.** A fixed ladder beside the rope. Crew climb to the next
- *   bench and ride only for the long hauls, so the cage is a working hoist
- *   rather than the only door in the building.
- * - **The pulse.** Once the Hollow Heart is open, a beat of warm light climbs
- *   the bore from the core to the lid — the deepest thing you own touching
- *   everything above it, against the traffic.
+ * The inside of the potato, drawn as a descent: a cutaway shaft, shallow strata at the top, deep at
+ * the bottom, one bore down the left that all crop falls down into the mound. Shares only the buffer
+ * conventions with `farmScene.ts`: integer-aligned unscaled blits, translation-only animation.
+ * Colour is the depth model (gold lid -> ochre cortex -> magenta ring -> near-black core); keeping
+ * all four zones in one hue family puts back the "stack of bands" bug this replaced.
  */
 
 import type { solo } from "@clickers/sim";
@@ -122,9 +29,7 @@ import { artCanvas, artTinted, type Art } from "./pixel.js";
 
 export { SCENE_W };
 
-// ---------------------------------------------------------------------------
-// The ladder, and how deep each rung is
-// ---------------------------------------------------------------------------
+// --- The ladder, and how deep each rung is ---
 
 type InsideId = Extract<
   solo.SoloProducerId,
@@ -155,24 +60,11 @@ export interface Zone {
   deep: string;
   /** The one colour in the stratum that isn't the material — sprouts, sap, embers. */
   accent: string;
-  /**
-   * Share of the shaft's height, before normalising over however many zones are
-   * open. Deeper zones get slightly more, so the working face you just bought
-   * into has room and the ones you've cut past compress — which is what a worked
-   * seam does anyway.
-   */
+  /** Share of the shaft's height before normalising. Deeper zones get slightly more room. */
   weight: number;
 }
 
-/**
- * Four strata, and the colour run that is the whole point.
- *
- * `hollow` and `cortex` are potato colours. `ring` and `core` deliberately are
- * not: the moment the picture stops being ochre is the moment it stops reading
- * as a stack of bands, and it should happen at the depth where the fiction says
- * you've reached something that is more organ than food. Anything that keeps all
- * four zones inside one hue family puts the original bug straight back.
- */
+/** Four strata. `hollow`/`cortex` are potato colours; `ring`/`core` deliberately leave the ochre family. */
 export const ZONES: readonly Zone[] = [
   {
     id: "hollow",
@@ -204,9 +96,7 @@ export const ZONES: readonly Zone[] = [
   {
     id: "core",
     tiers: ["heart", "second"],
-    // Nearly black, and a long way below the ring's darkest value. Drawn any
-    // closer and the bottom two strata merge into one maroon mass — which is the
-    // same "everything is one hue" bug the old scene had, just relocated.
+    // Nearly black, well below the ring's darkest value, or the bottom two strata merge.
     lit: "#4a1f31",
     flesh: "#301324",
     deep: "#180a14",
@@ -225,14 +115,7 @@ export function zoneOf(id: InsideId): number {
   return ZONE_OF[id];
 }
 
-/**
- * How many strata are open, which is the deepest rung you own plus one.
- *
- * A prefix rather than a set: you cannot own a Hollow Heart without having cut
- * through the cortex to reach it, so a farm that skipped a rung still gets the
- * band it must have passed through. Zero only for a farm that owns nothing
- * inside at all, which is what the first moment after the fold looks like.
- */
+/** How many strata are open: deepest owned rung + 1. A prefix, since you cut through to get there. */
 export function openZones(working: Partial<Record<string, number>>): number {
   let deepest = -1;
   for (const id of ORDER) {
@@ -253,9 +136,7 @@ const PRIME_GLOW: Record<InsideId, string> = {
   second: "#ffd166",
 };
 
-// ---------------------------------------------------------------------------
-// The place
-// ---------------------------------------------------------------------------
+// --- The place ---
 
 /** The lid: the underside of what closed over you, still the brightest thing. */
 const LID_LIT = "#f2e0b4";
@@ -271,22 +152,10 @@ const VOID = "#160c12";
 
 const INK = "#402e3a";
 
-/**
- * How dark it is down here before anything of yours is lit.
- *
- * There's no time of day inside a potato — the wall clock has nothing to say
- * about a place with no sky — so this is a constant rather than a phase table.
- * It sits where dusk sat outside: enough that a lit machine reads as the only
- * light source in the picture, not so much that an unlit farm is a black
- * rectangle.
- */
+/** Gloom before anything of yours is lit. Constant: no time of day inside a potato. Sits where dusk sat outside. */
 const GLOOM = 0.26;
 
-/**
- * The heartbeat's period, once the Hollow Heart is open. Slow for a heart
- * because it's a big one, and off any round number of seconds so it can't
- * fall into step with the sheaves or the accents.
- */
+/** Heartbeat period. Off any round number so it can't fall into step with the sheaves or accents. */
 const HEART_PULSE_S = 2.7;
 
 /** The lid's share of the buffer, clamped so it's a lip and never a ceiling. */
@@ -316,24 +185,9 @@ export interface Band {
 }
 
 /**
- * Where the strata break, given a buffer height and how many are open.
- *
- * **Every zone gets the same share of the shaft whether or not the ones below
- * it are open**, and whatever's left over is solid undug potato. That's the
- * single most important line in the file's layout and it was wrong first time
- * round: the first pass divided the shaft *among the open zones*, so a farm one
- * purchase into the inside got one stratum stretched over the entire screen —
- * two hundred pixels of flat ochre with a row of sprites along the bottom. The
- * same failure the old scene had with its empty hollow, in a different colour.
- *
- * Sized this way, a new farm is a lid, one thin working, and a great mass of
- * potato it hasn't touched. Which is the correct read in both directions: there
- * is obviously a long way down, and every zone you open visibly eats into it
- * until the last one closes the gap and the shaft is worked out top to bottom.
- *
- * `openF` is fractional on purpose: a zone arriving eases its own share in from
- * zero, so the floor above it gives way and the undug below recedes, rather than
- * the whole picture jumping a band. See `drawBreak`.
+ * Where the strata break. Every zone gets the same share whether or not the ones below are open;
+ * the remainder is undug potato (dividing the shaft among open zones stretched one band over the screen).
+ * `openF` is fractional: an arriving zone eases its share in from zero. See `drawBreak`.
  */
 export function bandsFor(sh: number, openF: number): Band[] {
   const lidH = clamp(Math.round(sh * LID_SHARE), LID_MIN, LID_MAX);
@@ -348,9 +202,7 @@ export function bandsFor(sh: number, openF: number): Band[] {
 
   let y = lidH;
   for (let i = 0; i < whole; i++) {
-    // The arriving band is scaled by how far in it is; the rest are at full size
-    // already, which is what makes the reveal open a floor rather than re-lay
-    // the picture.
+    // Only the arriving band is scaled, so the reveal opens a floor rather than re-laying the picture.
     const part = i === whole - 1 ? open - (whole - 1) : 1;
     const full = Math.max(BAND_MIN, Math.round((ZONES[i]!.weight / total) * body));
     const h = Math.max(1, Math.round(full * part));
@@ -364,34 +216,18 @@ export function bandsFor(sh: number, openF: number): Band[] {
   return bands;
 }
 
-/**
- * How wide the bore is, given everything you own inside.
- *
- * The one measure in the scene that reads the whole farm rather than one tier,
- * because the shaft is the whole farm's throat: a first purchase gets a crack
- * you can drop a potato down, a finished ladder gets a working shaft. Log, like
- * every other count that has to survive running into the hundreds.
- */
+/** Bore width from everything owned inside. Log, like every count that runs into the hundreds. */
 export function boreWidth(total: number): number {
-  // Never sealed: sinking the shaft is how you reached the sump at all, so the
-  // fold leaves a crack before the first rung is bought. Without it the arrival
-  // is a solid brown wall standing over a mound it can't explain.
+  // Never sealed: the fold leaves a crack before the first rung, or the arrival is a wall over a mound.
   return Math.max(10, Math.round(territory(total, 11, 34)));
 }
 
 /** Where the bore's left edge sits. Under the mound, which is the point. */
 const BORE_X = 7;
 
-// ---------------------------------------------------------------------------
-// Counts, ground and traffic
-// ---------------------------------------------------------------------------
+// --- Counts, ground and traffic ---
 
-/**
- * How many of a tier to actually draw. Counts run to hundreds and a stratum
- * holds a handful of things before it's soup, so the mapping is logarithmic: the
- * first few are one-for-one and after that it takes a doubling to add another
- * silhouette. Same curve the outside farm reads its field with.
- */
+/** How many of a tier to draw. Log: first few one-for-one, then a doubling per extra silhouette. */
 export function shownCount(owned: number, cap: number, spread = 2.4): number {
   if (owned <= 0) return 0;
   if (owned <= 4) return Math.min(owned, cap);
@@ -399,34 +235,10 @@ export function shownCount(owned: number, cap: number, spread = 2.4): number {
 }
 
 /**
- * How a tier occupies its stratum.
- *
- * Every rung used to be laid out the same way: `n` copies of one sprite, evenly
- * spaced, on a ruled line. Which is fine once and is the whole picture eight
- * times — the descent came out as eight shelves of merchandise, and the fact
- * that the sprites differed didn't matter, because what you read first is the
- * rhythm and the rhythm was identical all the way down. It's the same failure
- * the header blames for five Periderm Gates in a gallery row, wearing better
- * art.
- *
- * So the bench stops being where things *stand* and goes back to being what it
- * is — the walkway the crew use — and each rung does something else with the
- * space around it:
- *
- * - `bench`: standing on the line. Kept for the rungs that are few and huge, so
- *   the picture still has a floor to read the rest against.
- * - `knot`: gathered into two or three working groups with real gaps between
- *   them, some units tucked *behind* their neighbours and dimmed, so a count is
- *   a crowd with depth in it rather than a row.
- * - `niche`: cut into the wall above the bench at staggered heights, each in its
- *   own pocket. The one that most obviously isn't a shelf.
- * - `sunk`: set into the floor, showing only what's above the rim.
- * - `hang`: suspended from the roof of the stratum on stems of different lengths,
- *   with the walkway clear underneath.
- *
- * Assigned so that no two rungs you can see at once do the same thing, and so
- * that what each rung does is something its fiction would do: quarries cut into
- * a face, wells go down, a vascular ring hangs off the vessel above it.
+ * How a tier occupies its stratum. Identical `n`-in-a-row layouts read as eight shelves of merchandise,
+ * so each rung does something else with the space: `bench` stands on the line, `knot` gathers into
+ * groups with some tucked behind, `niche` is cut into the wall, `sunk` into the floor, `hang` off the roof.
+ * No two rungs visible at once share a layout.
  */
 type Layout = "bench" | "knot" | "niche" | "sunk" | "hang";
 
@@ -439,18 +251,11 @@ const LAYOUT: Record<InsideId, Layout> = {
   main: "hang",
   chorus: "knot",
   heart: "niche",
-  // Two of them, and each is most of a stratum. Anything but standing there.
+  // Two of them, each most of a stratum.
   second: "bench",
 };
 
-/**
- * How often the gap between two units is a tight one rather than an open one.
- *
- * This is what turns a spread into knots: high, and a tier gathers into a couple
- * of working groups with daylight between them; low, and it's a picket fence
- * again. Per layout, because a crowd wants to clump and a row of wall pockets
- * wants to breathe.
- */
+/** Odds a gap between two units is tight rather than open. High clumps into knots; low is a picket fence. */
 const TIGHT: Record<Layout, number> = {
   bench: 0.3,
   knot: 0.62,
@@ -459,15 +264,7 @@ const TIGHT: Record<Layout, number> = {
   hang: 0.36,
 };
 
-/**
- * The closest two units of a tier can ever be, on top of their own width.
- *
- * A knot wants its units touching — that's what makes it a knot. Anything with a
- * *setting* around it does not: the first pass let pockets abut at staggered
- * heights and four cut niches merged into one stepped black block that read as a
- * broken shelf rather than as four holes in a wall. The gap is the difference
- * between a pocket and a mass.
- */
+/** Minimum gap on top of unit width. Knots touch; pockets that abut merge into one stepped black block. */
 const MIN_GAP: Record<Layout, number> = {
   bench: 1,
   knot: 0,
@@ -496,17 +293,7 @@ const CAP: Record<InsideId, number> = {
   second: 2,
 };
 
-/**
- * How big a tier's *ground* is, given how many of it you own.
- *
- * The outside farm answers "how much of this do I have" by building the lot
- * further back up the hill. Down here it's how far along its stratum the tier
- * has cut: how wide the worked face runs, and how much of the band's width its
- * units are spread across.
- *
- * Log, and pinned at both ends: one of something is always visibly *some*
- * ground, and a hundred and twenty-eight of it is all the ground there is.
- */
+/** How much ground a tier has worked, from count. Log, pinned: one is visibly some, 128 is all of it. */
 export function territory(owned: number, min: number, max: number): number {
   if (owned <= 0) return 0;
   const k = Math.min(1, Math.log2(owned) / Math.log2(128));
@@ -514,25 +301,14 @@ export function territory(owned: number, min: number, max: number): number {
 }
 
 /**
- * How often a tier with `n` units drawn turns something up, per second.
- *
- * Not tied to the actual rate. The real one crosses twenty orders of magnitude
- * over a run and any honest mapping of it is either nothing at all or a solid
- * wall of potatoes; this is tied to the count you can *see*, so more of a thing
- * visibly makes more of them, which is the promise that matters.
- *
- * Sub-linear and capped. Everything now funnels down one bore rather than eight
- * separate vessels, so the cap matters more than it used to: overfeed it and the
- * shaft is a solid column of potatoes, which reads as a texture rather than as
- * traffic.
+ * Spawn rate per second for `n` drawn units. Tied to the visible count, not the real rate (which spans
+ * twenty orders of magnitude). Sub-linear and capped: overfeed the one bore and it reads as texture.
  */
 export function flow(n: number): number {
   return Math.min(1.1, 0.24 + n * 0.1);
 }
 
-// ---------------------------------------------------------------------------
-// Loose things
-// ---------------------------------------------------------------------------
+// --- Loose things ---
 
 /** Starch dust, drifting up the bore. The ambient motion in a room with no weather. */
 interface Mote {
@@ -567,15 +343,7 @@ interface Puff {
 
 const MAX_PUFFS = 40;
 
-/**
- * A potato on its way to the mound, which is the only journey in the scene.
- *
- * Three phases and no branching: roll left along the ledge you were cut onto,
- * tip into the bore and fall the height of the picture, then slide across the
- * sump into the pile. That's the whole logistics layer, and it replaces a
- * network of per-tier vessels, intakes, rolling loose crop and porters that
- * between them were most of the old file and all of the visual noise.
- */
+/** A potato on its way to the mound: roll left along the ledge, fall the bore, slide into the pile. */
 interface Crop {
   phase: "roll" | "fall" | "slide";
   x: number;
@@ -587,29 +355,10 @@ interface Crop {
   from: InsideId | "above";
 }
 
-/**
- * How often the farm overhead sends a potato down the shaft, per second.
- *
- * The other site keeps producing the whole time you're down here — the HUD
- * says so — and this is the picture agreeing with it, from the first second
- * after the fold, before you own a single rung. A constant, not a metering of
- * the real rate: like everything else in the scene it's a token of the fact,
- * and the fact doesn't change with the number.
- */
+/** Potatoes/sec the farm overhead sends down. Constant from the first second after the fold, not a metering. */
 const OUTSIDE_FLOW = 0.4;
 
-/**
- * One of the shaft crew, and the reason the place stops looking abandoned.
- *
- * The outside farm has hands walking crop down to the yard, and dropping them on
- * the way in here is most of why the inside read as machinery running in an
- * empty building. These do the same job the hands do — give the picture
- * something with intent in it — with the descent's own set of verbs: work a
- * face, walk the bench, wait at the shaft, ride the cage to another level.
- *
- * `post` is which bench they're on, as a zone index and which of its two rungs.
- * Everything else is where they are on it and what they're in the middle of.
- */
+/** Shaft crew: work a face, walk the bench, wait at the shaft, ride the cage. `post` is (zone, rung). */
 interface Crew {
   x: number;
   y: number;
@@ -621,23 +370,9 @@ interface Crew {
   until: number;
   /** Where they're going when the cage comes, while waiting or riding. */
   bound: { zone: number; first: boolean } | null;
-  /**
-   * Whether the current trip goes by the manway rather than the cage. One
-   * bench up or down is a ladder climb; anything further is a fare. Without
-   * the split every stratum is a sealed room with a lift lobby, and the cage
-   * spends its life on hops a miner would never ring for.
-   */
+  /** By manway rather than cage: one bench up or down is a climb, further is a fare. */
   ladder: boolean;
-  /**
-   * Carrying a fresh-cut potato up to the Bruise Beds to be pressed.
-   *
-   * This is the one journey in the scene that runs *against* the bore, and
-   * it's what makes the ladder of rungs read as one works instead of eight
-   * parallel generators: the deep tiers cut, the crew carry, the beds press,
-   * and only then does the crop take the fall. Not a metering of anything —
-   * the sim pays out the moment the tier produced — but the picture's claim
-   * about who does what to whose material, which is the claim a farm is.
-   */
+  /** Carrying a fresh cut up to the Bruise Beds — the one journey that runs against the bore. */
   cargo: boolean;
   facing: 1 | -1;
   /** Phase for the walk bob, so a line of them isn't in lockstep. */
@@ -651,28 +386,12 @@ const CREW_SPEED = 13;
 /** Slower than the walk: it's a ladder, and they're carrying lamps. */
 const CLIMB_SPEED = 10;
 const MAX_CREW = 9;
-/**
- * How many can be carrying at once. Two: enough that the trip is usually
- * happening somewhere, few enough that the bore stays the crop's road and the
- * carry stays the exception you notice.
- */
+/** Two: enough that a carry is usually happening, few enough the bore stays the crop's road. */
 const MAX_CARRY = 2;
 
 /**
- * The hoist: a cage on a rope, fetching and carrying people between benches.
- *
- * Crop goes *down* by gravity and always will — that's the scene's spine. So the
- * cage carries the only thing that has any reason to go up, which is people, and
- * the two motions don't compete: potatoes fall past a cage climbing, which is
- * exactly the traffic a working shaft has.
- *
- * **It only moves when it has a reason to.** It used to patrol: top to bottom,
- * bottom to top, pausing at every bench forever, whether or not there was a
- * single body underground to carry. Which read as exactly what it was — a thing
- * oscillating because the loop said to — and immediately after the Ur-Potato,
- * with no benches and no crew yet, it was a box travelling between nothing and
- * nothing. Now it fetches whoever is standing at the shaft head, takes them where
- * they're going, and parks at the nearest bench until somebody else calls it.
+ * The hoist: a cage on a rope carrying people between benches (crop always goes down by gravity).
+ * Only moves when called: fetches whoever waits at the shaft head, delivers, parks at the nearest bench.
  */
 interface Hoist {
   y: number;
@@ -683,53 +402,24 @@ interface Hoist {
   errand: Crew | null;
   /** Which lane of the bore it runs in, as an offset from `BORE_X`. */
   lane: number;
-  /**
-   * Rope paid out over the cage's whole life, in pixels. The sheave at the
-   * pit-head turns off this and nothing else, so the wheel moves exactly when
-   * the cage does — a wheel that idles round with nothing on the rope is the
-   * patrol bug back again, wearing a hat.
-   */
+  /** Rope paid out over the cage's life, px. The pit-head sheave turns off this and nothing else. */
   spin: number;
 }
 
-/**
- * How many cages the shaft runs.
- *
- * Two readings, and it takes the smaller. The bore's width is off everything you
- * own, so a widening shaft is a shaft with room for more rope — but a cage is
- * there to carry people, and hanging three of them for a crew of two is three
- * boxes with nothing between them to do. So the crew caps it: no bodies down
- * here, no cages at all, which is the state the farm is in for the first moments
- * after the fold.
- *
- * Capped at three regardless: a fourth has nowhere to run that isn't on top of
- * the falling crop.
- */
+/** Cage count: min of bore width and crew size (no crew, no cages), capped at three. */
 export function hoistCount(bore: number, crew: number): number {
   if (crew <= 0) return 0;
   const lanes = clamp(Math.floor((bore - 1) / 10), 1, 3);
   return Math.min(lanes, Math.ceil(crew / 3));
 }
 
-/** Lane pitch. A cage is nine wide, so they overlap slightly and that's fine —
- * cages in a shaft pass each other close, and the rope tells you which is which. */
+/** Lane pitch. A cage is nine wide; slight overlap is fine, the rope tells you which is which. */
 const HOIST_LANE = 9;
 
 /**
- * Run one cage `dist` pixels towards where it's been called to, and say whether
- * it got there.
- *
- * Pure so it can be tested, because the motion has had the worst kind of bug in
- * it once already: **the cages didn't move at all**, and nothing caught it. The
- * old patrol asked whether a cage was *near* a bench rather than whether it had
- * *crossed* one, so a cage that had stopped sat exactly on the bench, advanced a
- * third of a pixel, was still inside the threshold, snapped back and rested
- * again. It survived review and a screenshot pass because a still of three cages
- * parked at three benches looks exactly like a still of three cages working.
- *
- * Landing exactly on the target is the whole contract here: crew step on and off
- * at a bench's own height, and a cage that stops a pixel short of one puts them
- * in the wall.
+ * Run one cage `dist` px toward its target; returns whether it arrived. Pure so it can be tested:
+ * a near-threshold check once left cages parked forever and stills couldn't tell. Must land exactly
+ * on target, or riders step off into the wall.
  */
 export function hoistRun(y: number, target: number, dist: number): { y: number; arrived: boolean } {
   const d = target - y;
@@ -737,10 +427,7 @@ export function hoistRun(y: number, target: number, dist: number): { y: number; 
   return { y: y + Math.sign(d) * dist, arrived: false };
 }
 
-/**
- * How far down the cage sprite its floor is — the row a rider stands on, and so
- * the row that has to line up with a bench.
- */
+/** Row of the cage sprite a rider stands on — the row that lines up with a bench. */
 const CAGE_FLOOR = 9;
 
 const HOIST_SPEED = 19;
@@ -754,32 +441,16 @@ const ROLL_SPEED = 26;
 const FALL_G = 190;
 const SLIDE_SPEED = 34;
 
-// ---------------------------------------------------------------------------
-// The hoard
-// ---------------------------------------------------------------------------
+// --- The hoard ---
 
-/**
- * The hoard, as a mound.
- *
- * Deliberately the same pile in the same corner as the outside yard's, because
- * it is the same potatoes — the fold doesn't take your money off you, and the
- * one thing that should carry between the two pictures unchanged is the number
- * you're spending. The build-out around it doesn't carry: sheds and silos are
- * things you put up on a farm, and there's nothing to build them out of down
- * here. What the sump gets instead is the flesh growing storage for you.
- */
+/** The hoard as a mound: same pile, same corner as outside. Storage down here is cysts, not sheds. */
 const HEAP_BASE = 11;
 const HEAP_COURSES = 10;
 const HEAP_X = -14;
 const HEAP_STEP = 5;
 const HEAP_CLIMB = 1.15;
 
-/**
- * How many potatoes the slot table above can hold — derived here rather than
- * imported from the outside scene, which has its own copy of these constants.
- * Importing its cap while keeping our own courses is how the two silently
- * disagree the first time either mound is retuned.
- */
+/** Capacity of the slot table above. Derived here, not imported: the outside scene has its own courses. */
 const HEAP_CAP = ((HEAP_BASE + (HEAP_BASE - HEAP_COURSES + 1)) * HEAP_COURSES) / 2;
 
 let heapCache: { x: number; y: number }[] | null = null;
@@ -807,15 +478,7 @@ function heapSlots(): { x: number; y: number }[] {
 /** Where a sliding potato is aiming, and where the pile's shoulder is. */
 const HEAP_CROWN_X = HEAP_X + Math.round((HEAP_COURSES - 1) * (HEAP_STEP / 2)) + 3;
 
-/**
- * A cyst: a pale swelling in the flesh that the tuber grows around what you're
- * holding, and the inside's answer to the outside yard's sheds and silos.
- *
- * One arrives per stage of the same build-out curve the outside yard is read
- * with — so the two yards fill at the same pace and mean the same thing —
- * except that here they're all the same organ getting bigger, which is what a
- * potato would do about storage.
- */
+/** A cyst: a swelling grown around your hoard. One per stage of the outside yard's build-out curve. */
 const CYST_SLOTS: { x: number; row: number; w: number }[] = [
   { x: 158, row: 0, w: 9 },
   { x: 140, row: 1, w: 11 },
@@ -855,37 +518,15 @@ export class InsideScene {
   private crop: Crop[] = [];
   private crew: Crew[] = [];
   private hoists: Hoist[] = [];
-  /**
-   * When each drawn unit last turned something up, keyed `id:index`.
-   *
-   * Production used to be a potato appearing next to a machine that never moved,
-   * which reads as the potato having nothing to do with the machine. A unit that
-   * has just worked bobs and throws a spark for a moment, so the thing you bought
-   * is visibly the thing making the number go up.
-   */
+  /** When each drawn unit last turned something up, keyed `id:index`. Drives the work bob and spark. */
   private worked = new Map<string, number>();
   private sawView = false;
-  /**
-   * How many strata are drawn open, which chases how many *are*.
-   *
-   * Snapped on the first view and eased after it, on the same rule the fold
-   * animates by: a farm that was already four deep when the tab opened renders
-   * four deep, because replaying a reveal on every reload spends it. `revealAt`
-   * is when the current one started, or null if nothing is opening.
-   */
+  /** Strata drawn open, chasing how many are. Snapped on first view, eased after. `revealAt` = reveal start. */
   private openShown = 0;
   private revealAt: number | null = null;
-  /**
-   * Where the heartbeat's wavefront was last frame, or null between beats.
-   * `drawAccent` reads it a frame late, which at sixty of them is invisible;
-   * the accents brightening as the pulse passes is what makes the beat touch
-   * the strata rather than slide over them.
-   */
+  /** Heartbeat wavefront last frame, or null. `drawAccent` reads it a frame late. */
   private pulseY: number | null = null;
-  /**
-   * The hoard the sump is currently showing, which chases the real one rather
-   * than snapping to it — spending should look like spending here too.
-   */
+  /** Hoard shown, chasing the real one so spending looks like spending. */
   private shown = -1;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -952,13 +593,7 @@ export class InsideScene {
     this.ro?.disconnect();
   }
 
-  /**
-   * A dig: a potato comes up out of the flesh where you put your finger.
-   *
-   * The same verb as outside and deliberately the same feedback — digging is the
-   * one thing you do with your hands in either world, and it would be a strange
-   * kind of continuity for it to feel different on the other side of the fold.
-   */
+  /** A dig: a potato comes up where you put your finger. Same feedback as outside. */
   dig(at?: { x: number; y: number }): void {
     if (this.dug.length > 14) return;
     const bands = this.bands();
@@ -974,14 +609,13 @@ export class InsideScene {
     this.puff(x + 3, y, 10);
   }
 
-  // --- Where things are ------------------------------------------------------
+  // --- Where things are ---
 
   /** How far through the current reveal, 0..1, eased. */
   private revealK(): number {
     if (this.revealAt === null) return 1;
     const k = clamp((this.clock - this.revealAt) / REVEAL_S, 0, 1);
-    // Slow out of the break and fast into the settle: the floor gives, then the
-    // stratum drops into place.
+    // Slow out of the break, fast into the settle.
     return k * k * (3 - 2 * k);
   }
 
@@ -1008,11 +642,7 @@ export class InsideScene {
     return BORE_X + boreWidth(total);
   }
 
-  /**
-   * The manway's left rail: against the bore's working side, clear of the
-   * cage lanes, which hang from the other wall. A falling potato crosses it
-   * now and then, which is what a ladderway beside an ore pass looks like.
-   */
+  /** Manway's left rail: on the bore's working side, clear of the cage lanes on the other wall. */
   private manwayX(): number {
     return this.boreRight() - 4;
   }
@@ -1043,22 +673,9 @@ export class InsideScene {
   }
 
   /**
-   * Where a tier's units stand along its stratum.
-   *
-   * The two rungs of a zone get **their own half of the ledge and their own
-   * bench**, not opposite ends of one line. Two things went wrong before that:
-   * growing them toward each other produced an alternating bruise/eye/bruise/eye
-   * stripe the moment both were well bought, and standing everything on the
-   * band's floor left each stratum an empty rectangle with a shelf of
-   * merchandise along the bottom of it. Cutting the shallower rung a bench
-   * half-way up fills the band, separates the two tiers by more than position,
-   * and is what a worked seam actually looks like.
-   *
-   * Within its half a tier spreads by `territory`, and how it uses that spread is
-   * its `LAYOUT` — knots on the bench, pockets cut into the wall, sunk into the
-   * floor, hung off the roof. The gaps are uneven on purpose: the spacing carries
-   * as much of the read as the sprite does, and evenly spaced anything is a shelf
-   * whatever's on it.
+   * Where a tier's units stand. Each rung of a zone gets its own half of the ledge and its own bench
+   * (interleaving made a bruise/eye stripe). Spread by `territory`, arranged by `LAYOUT`, gaps uneven
+   * on purpose — evenly spaced anything is a shelf.
    */
   private slots(id: InsideId, band: Band): Slot[] {
     const n = this.working(id);
@@ -1074,26 +691,19 @@ export class InsideScene {
     const kind = LAYOUT[id];
 
     const room = Math.max(art.w, to - from);
-    // Never tighter than the units are wide. `territory` alone is a *how much
-    // ground* number and says nothing about how many things are standing on it,
-    // so a well-bought tier whose ground hadn't caught up drew six sprites into
-    // four sprites' worth of ledge and came out as a heap of rubble.
+    // Never tighter than the units are wide, or a well-bought tier draws as a heap of rubble.
     const pitch = art.w + MIN_GAP[kind];
     const spread = clamp(territory(this.owned(id), art.w + 2, room), n * (pitch + 1), room);
-    // Seeded off the tier, so a farm's scatter is the same every frame and the
-    // same on every reload. Jitter that re-rolls per frame is a vibrating farm.
+    // Seeded off the tier: per-frame jitter is a vibrating farm.
     const rng = mulberry32(hashSeed(id) ^ 0x51e);
 
-    // Every gap is either tight or open, and the slack in the tier's ground gets
-    // divided between them by weight — so the same spread comes out as groups
-    // with daylight between them instead of a constant pitch.
+    // Each gap is tight or open; the slack is divided by weight, giving groups with daylight between.
     const gaps: number[] = [];
     for (let i = 0; i < n - 1; i++) gaps.push(rng() < TIGHT[kind] ? 0.22 : 1.5);
     const total = gaps.reduce((a, w) => a + w, 0) || 1;
     const slack = Math.max(0, spread - n * pitch);
 
-    // Headroom between this tier's line and whatever is above it, which is what
-    // the layouts that leave the line have to play with.
+    // Headroom between this tier's line and whatever is above it.
     const roof = first ? band.top : this.benchY(band, true);
     const headroom = Math.max(0, foot - roof - art.h - 4);
 
@@ -1101,8 +711,7 @@ export class InsideScene {
     let x = from;
     for (let i = 0; i < n; i++) {
       if (i > 0) x += pitch + (slack * gaps[i - 1]!) / total;
-      // Only inside a knot, and only behind someone: a unit on its own with
-      // nothing to be behind just looks faded.
+      // Only inside a knot and only behind someone; a lone faded unit just looks faded.
       const back = kind === "knot" && i > 0 && gaps[i - 1]! < 1 && rng() < 0.55;
       let y: number;
       switch (kind) {
@@ -1119,8 +728,7 @@ export class InsideScene {
           y = roof + 3 + Math.round(rng() * Math.min(14, headroom));
           break;
         default:
-          // On the line, bedded a pixel or two into it so the bottom edge is
-          // ragged rather than ruled — and a step back if it's tucked in behind.
+          // Bedded a pixel or two into the line so the bottom edge is ragged; a step back if tucked.
           y = foot - art.h + Math.round(rng() * 2) - (back ? 3 : 0);
       }
       out.push({
@@ -1132,26 +740,18 @@ export class InsideScene {
     return out;
   }
 
-  /**
-   * The line a tier's units stand on: the band's own floor for the deeper rung,
-   * a bench cut half-way up it for the shallower one.
-   *
-   * Clamped so the bench can't ride up into the cut above it on a thin band —
-   * a short buffer squeezes every stratum, and the first thing to go wrong is a
-   * machine standing on the ceiling of its own seam.
-   */
+  /** The line a tier stands on: band floor for the deeper rung, a bench half-way up for the shallower. Clamped off the cut above. */
   private benchY(band: Band, first: boolean): number {
     if (!first) return band.bottom - 1;
     const h = band.bottom - band.top;
     return band.top + clamp(Math.round(h * 0.52), 11, Math.max(11, h - 12));
   }
 
-  // --- Drawing ---------------------------------------------------------------
+  // --- Drawing ---
 
   private draw(): void {
     const now = performance.now();
-    // Capped, so a backgrounded tab doesn't come back with a minute of scene
-    // time to catch up on and set every animation off at once.
+    // Capped, so a backgrounded tab doesn't come back and fire every animation at once.
     this.dt = Math.min(0.05, (now - this.lastFrame) / 1000);
     this.lastFrame = now;
     this.clock += this.dt;
@@ -1163,10 +763,7 @@ export class InsideScene {
 
     ctx.clearRect(0, 0, SCENE_W, this.sh);
 
-    // The place first, then the dark over it, then everything you built on top
-    // of the dark. That order is the whole reason a primed tier reads as a light
-    // source down here rather than as a bright sprite: there's no sun inside a
-    // potato, so the only thing lighting the picture is kit you paid for.
+    // Place, then the dark, then everything you built over the dark: lit kit is the only light source.
     this.drawLid(bands[0]!);
     for (const band of bands) {
       if (band.zone >= 0) this.drawStratum(band, t);
@@ -1179,8 +776,7 @@ export class InsideScene {
     // Over the gloom, like the kit: it's lit sap, not terrain.
     this.drawVein(bands, t);
 
-    // Everything standing in the strata, deepest first so the near ledges
-    // overlap the far ones where a sprite overhangs its cut.
+    // Deepest first, so near ledges overlap far ones where a sprite overhangs its cut.
     for (let i = bands.length - 1; i >= 0; i--) {
       const band = bands[i]!;
       if (band.zone >= 0) this.drawTiers(band, t);
@@ -1205,15 +801,7 @@ export class InsideScene {
     this.emit(bands, t);
   }
 
-  /**
-   * The lid: the underside of what closed over you.
-   *
-   * The one warm, bright thing in the picture, and it's above everything — so
-   * the eye enters at the top, where you came in, and travels down the shaft
-   * with the crop. Two wavy vascular lines and nothing else: it's a lip, not a
-   * ceiling, and the first draft of this scene proved that giving the roof real
-   * estate just costs the half of the screen that has things in it.
-   */
+  /** The lid: the one warm, bright thing, so the eye enters at the top. A lip, not a ceiling. */
   private drawLid(lid: Band): void {
     const ctx = this.ctx;
     const grad = ctx.createLinearGradient(0, 0, 0, lid.bottom);
@@ -1230,10 +818,7 @@ export class InsideScene {
       ctx.fillStyle = rgba(rng() > 0.6 ? "#f7ecd0" : "#b0854a", 0.22);
       ctx.fillRect(x, y, w, 1);
     }
-    // Two vascular rings running the width of it, and eyes sprouting downward
-    // out of the underside. Carried over from the ceiling the fold used to leave
-    // you under: it's the only thing in this scene the player has seen before,
-    // and it's what stops the lid being a blank bar at the top of the screen.
+    // Two vascular rings and eyes sprouting downward: the one thing here the player has seen before.
     for (let i = 0; i < 2; i++) {
       const base = Math.round(lid.bottom * (0.42 + i * 0.3));
       ctx.fillStyle = rgba("#a8703c", 0.35);
@@ -1248,8 +833,7 @@ export class InsideScene {
       ctx.fillRect(x, y, 3, 2);
       ctx.fillStyle = rgba("#f2e0b4", 0.5);
       ctx.fillRect(x, y - 1, 3, 1);
-      // Pale stems, not green: a potato sprouting in the dark etiolates, and the
-      // pale also keeps the one growing thing up there from reading as crop.
+      // Pale stems, not green: sprouting in the dark etiolates, and green would read as crop.
       ctx.fillStyle = rgba("#e6dcc0", 0.55);
       ctx.fillRect(x + 1, y + 2, 1, 2 + Math.round(rng() * 2));
     }
@@ -1258,14 +842,7 @@ export class InsideScene {
     ctx.fillRect(0, lid.bottom - 1, SCENE_W, 1);
   }
 
-  /**
-   * One stratum: its material, its marbling, its worked face and its floor.
-   *
-   * The gradient inside each band runs lit → deep, so every band is brighter at
-   * the top than the one above it is at the bottom. That saw-tooth is what makes
-   * a stack of bands read as cut steps going down rather than as stripes: each
-   * floor throws a little light onto the material below it.
-   */
+  /** One stratum. Gradient runs lit -> deep so each band is brighter at top than the one above is at bottom. */
   private drawStratum(band: Band, t: number): void {
     const ctx = this.ctx;
     const zone = ZONES[band.zone]!;
@@ -1279,8 +856,7 @@ export class InsideScene {
     ctx.fillStyle = grad;
     ctx.fillRect(0, band.top, SCENE_W, h);
 
-    // Marbling. Low contrast on purpose — anything with an edge on it up here
-    // starts competing with the kit standing in front of it.
+    // Marbling, low contrast so it doesn't compete with the kit in front of it.
     const rng = mulberry32(0x5a1 + band.zone * 977);
     const veins = Math.round(h * 0.55);
     for (let i = 0; i < veins; i++) {
@@ -1291,16 +867,8 @@ export class InsideScene {
       ctx.fillRect(x, y, w, 1);
     }
 
-    // The worked face: a paler bite cut back into the wall at the far end of the
-    // ledge, as wide as the two rungs of this zone have cut between them. This is
-    // where "owning more takes over more of the place" lives now that there's no
-    // hill to build into.
-    //
-    // Scored *vertically*. The first pass terraced it with horizontal steps, on
-    // the theory that steps say "cut" — and eight horizontal lines across a tan
-    // rectangle say "wooden panelling" far louder, in every band at once. A face
-    // you've worked back into is cut top to bottom, so the tool marks run that
-    // way too, and the band's own gradient is left to do the lighting.
+    // The worked face: a paler bite cut back into the far end of the ledge, as wide as the zone has cut.
+    // Scored vertically; horizontal steps read as wooden panelling.
     const cut = this.faceWidth(band.zone);
     if (cut > 0) {
       const x0 = SCENE_W - cut;
@@ -1319,17 +887,10 @@ export class InsideScene {
       }
     }
 
-    // Whatever this stratum is made of that isn't flesh: sprouts in the hollow,
-    // sap beading in the ring, embers in the core. One accent per zone, moving.
+    // One accent per zone, moving: sprouts, sap, embers.
     this.drawAccent(band, t);
 
-    // The floor. The one hard line in the band, and it's a cut, so it's earned.
-    //
-    // Three pixels rather than two, and the bright one is *bright*: the ring and
-    // the core are close enough in value that a subtle cut between them let the
-    // bottom half of the picture pool into one dark mass. A cut face catches
-    // light along its lip — leaning on that is what keeps four strata reading as
-    // four when two of them are nearly black.
+    // The floor: three pixels with a bright lip, or the ring and core pool into one dark mass.
     ctx.fillStyle = rgba(mix(zone.lit, "#ffffff", 0.55), 0.75);
     ctx.fillRect(0, band.bottom - 3, SCENE_W, 1);
     ctx.fillStyle = rgba(mix(zone.lit, "#ffffff", 0.2), 0.5);
@@ -1339,18 +900,8 @@ export class InsideScene {
   }
 
   /**
-   * The potato you haven't cut into yet.
-   *
-   * Denser and darker than anything you've opened, and deliberately featureless
-   * next to the strata: what makes a worked band look worked is having unworked
-   * material to sit against. It's also the endgame's only remaining sense of
-   * scale — on a farm one rung in, this is most of the screen, and the read is
-   * "there is a very long way down", which is exactly what the ladder is about
-   * to charge you for.
-   *
-   * Tinted a little toward whatever zone comes next, so what's under your feet
-   * is a hint rather than a wall. Not more than a hint: naming the next stratum
-   * before you've bought into it spends the reveal.
+   * Undug potato: denser, darker, featureless next to the strata. Tinted slightly toward the next
+   * zone — a hint only; naming the next stratum before it's bought spends the reveal.
    */
   private drawUndug(band: Band, bands: Band[]): void {
     const ctx = this.ctx;
@@ -1366,9 +917,7 @@ export class InsideScene {
     ctx.fillStyle = grad;
     ctx.fillRect(0, band.top, SCENE_W, h);
 
-    // Dense, close-packed mottle: solid material, not a surface. This is most of
-    // the screen on a farm that's one rung in, so it has to hold up as something
-    // to look at rather than as a brown rectangle waiting to be replaced.
+    // Dense mottle: solid material, not a surface. Most of the screen on a farm one rung in.
     const rng = mulberry32(0x3f0d);
     for (let i = 0; i < Math.round(h * 5); i++) {
       const x = Math.round(rng() * SCENE_W);
@@ -1376,8 +925,7 @@ export class InsideScene {
       ctx.fillStyle = rgba(rng() > 0.55 ? near : "#0e0710", 0.22 + rng() * 0.3);
       ctx.fillRect(x, y, 1 + Math.round(rng() * 3), 1);
     }
-    // Starch nodules: lumps of the pale stuff still locked in the flesh, which
-    // is the one thing down here that says the mass is worth cutting into.
+    // Starch nodules: the pale stuff locked in the flesh, the reason to cut into it.
     for (let i = 0; i < Math.round(h / 7); i++) {
       const x = 3 + Math.round(rng() * (SCENE_W - 8));
       const y = band.top + 2 + Math.round(rng() * Math.max(1, h - 5));
@@ -1387,8 +935,7 @@ export class InsideScene {
       ctx.fillStyle = rgba("#e6dcc0", 0.16);
       ctx.fillRect(x + 1, y - 1, Math.max(1, w - 2), 1);
     }
-    // And a few fissures, running off the shaft — the flesh is under its own
-    // weight down here, which the stulls in the bore are the answer to.
+    // Fissures off the shaft; the stulls in the bore are the answer to them.
     for (let i = 0; i < Math.round(h / 22) + 1; i++) {
       let x = Math.round(rng() * SCENE_W);
       let y = band.top + Math.round(rng() * Math.max(1, h - 12));
@@ -1410,14 +957,7 @@ export class InsideScene {
     return Math.round(territory(owned, 0, 62));
   }
 
-  /**
-   * The one thing in each stratum that isn't the material it's made of.
-   *
-   * Small and moving, and it carries most of what tells the four zones apart at
-   * a glance once they're all open — the gradients do it at rest, but a picture
-   * this dark needs something with a highlight on it in each band or the deep
-   * two go to mush.
-   */
+  /** The one moving, highlighted thing per stratum; without it the deep two go to mush. */
   private drawAccent(band: Band, t: number): void {
     const ctx = this.ctx;
     const zone = ZONES[band.zone]!;
@@ -1427,14 +967,11 @@ export class InsideScene {
     for (let i = 0; i < n; i++) {
       const x = Math.round(rng() * (SCENE_W - 8)) + 4;
       const y = band.top + 2 + Math.round(rng() * Math.max(1, h - 6));
-      // The heartbeat passing lifts whatever it passes: the flesh answering
-      // the deepest thing you own, one stratum at a time.
+      // The heartbeat passing lifts whatever it passes.
       const lift = this.pulseY !== null && Math.abs(this.pulseY - y) < 9 ? 1.9 : 1;
       const pulse = (0.35 + 0.3 * Math.sin(t * 0.9 + i * 1.9)) * lift;
       if (band.zone === 0) {
-        // Pale stems: a potato sprouting in the dark etiolates, and keeping them
-        // off green is also what stops the one growing thing down here reading
-        // as crop.
+        // Pale stems: etiolated, and off green so they don't read as crop.
         ctx.fillStyle = rgba(mix(zone.accent, "#f7f1dc", 0.55), Math.min(0.85, 0.5 * lift));
         ctx.fillRect(x, y, 1, 3);
         ctx.fillRect(x + 1, y - 1, 1, 1);
@@ -1459,18 +996,13 @@ export class InsideScene {
     const ctx = this.ctx;
     const zone = ZONES[band.zone]!;
     zone.tiers.forEach((id, ti) => {
-      // The Pit Hands aren't drawn here: they *are* the crew, walking the whole
-      // shaft. Blitting a static row of them on their own bench as well would
-      // put the same rung on the screen twice, once alive and once not.
+      // Pit Hands aren't drawn here: they are the crew, and a static row would show the rung twice.
       if (id === "deephand") return;
       const slots = this.slots(id, band);
       if (slots.length === 0) return;
       const art = artCanvas(this.mark(id));
 
-      // The bench under the shallower rung, cut only as far as that rung has
-      // worked. The deeper rung stands on the band's own floor, which is already
-      // drawn — cutting a second full-width line for it would put two hard rules
-      // a few pixels apart and undo the whole reason the floors are legible.
+      // Bench under the shallower rung only; the deeper stands on the band floor, already drawn.
       if (ti === 0) {
         const foot = this.benchY(band, true);
         const x0 = Math.max(this.boreRight(), slots[0]!.x - 3);
@@ -1479,8 +1011,7 @@ export class InsideScene {
         ctx.fillRect(x0, foot - 1, x1 - x0, 1);
         ctx.fillStyle = INK;
         ctx.fillRect(x0, foot, x1 - x0, 1);
-        // The undercut, so the bench is a shelf of material rather than a line
-        // ruled across the band.
+        // The undercut, so the bench is a shelf of material rather than a ruled line.
         ctx.fillStyle = rgba(zone.deep, 0.5);
         ctx.fillRect(x0 + 1, foot + 1, x1 - x0 - 2, 2);
       }
@@ -1495,20 +1026,14 @@ export class InsideScene {
 
       order.forEach((i) => {
         const slot = slots[i]!;
-        // The work beat: a unit that just turned something up drops a pixel and
-        // comes back, and throws a spark off its face. It's two pixels of motion
-        // and it's the difference between "a potato appeared near that thing" and
-        // "that thing made a potato".
-        // `worked` can hold a *future* time — the chorus wave books beats in
-        // advance — so a unit whose turn hasn't come yet holds still.
+        // Work beat: a unit that just produced drops a pixel and throws a spark.
+        // `worked` can hold a future time (the chorus books beats ahead), so hold still until then.
         const since = t - (this.worked.get(`${id}:${i}`) ?? -99);
         const beat = since >= 0 && since < WORK_BEAT_S ? 1 - since / WORK_BEAT_S : 0;
         const drop = Math.round(Math.sin(beat * Math.PI) * 2);
         this.setting(kind, zone, slot, art.w, art.h, roof, foot);
         this.primeGlow(id, slot.x, slot.y, art.w, art.h, t, i);
-        // Set back into the group, so it takes the stratum's own shadow — the
-        // cheapest depth cue there is, and the only one available at eleven
-        // pixels a sprite.
+        // Set back into the group, so it takes the stratum's own shadow.
         const sprite = slot.back ? artTinted(this.mark(id), zone.deep, 0.45) : art;
         if (kind === "sunk") {
           // Only what's above the rim. The rest is in the floor.
@@ -1530,15 +1055,7 @@ export class InsideScene {
     });
   }
 
-  /**
-   * What a unit sits in, hangs off or is cut into — drawn behind it.
-   *
-   * This is where most of the difference between the strata actually lands. The
-   * sprites were always distinct; what made the descent read as one repeated row
-   * was that every one of them was blitted onto the same ruled line with nothing
-   * around it. A pocket in the wall, a rim in the floor and a stem from the roof
-   * cost a handful of rectangles each and they change what the tier *is*.
-   */
+  /** What a unit sits in, hangs off or is cut into — drawn behind it. Most of the strata difference lives here. */
   private setting(
     kind: Layout,
     zone: Zone,
@@ -1550,23 +1067,12 @@ export class InsideScene {
   ): void {
     const ctx = this.ctx;
     if (kind === "niche") {
-      // Its own short ledge, cut into the face at whatever height it works at.
-      //
-      // This was a *pocket* first — a bounded box behind each unit — and a
-      // bounded box with a lit line under it and something pale inside it is a
-      // picture in a frame. Five of them in a row is the exact failure this
-      // file's header blames for the scene it replaced, rebuilt from scratch.
-      //
-      // A ledge has no left or right edge to close the shape, so it reads as the
-      // face being cut rather than as an object hung on it. Same three lines the
-      // main benches use — lit top, ink, undercut — so the strata agree with each
-      // other about what cut material looks like; short and staggered rather than
-      // ruled across the band, which is the whole point.
+      // Its own short ledge cut into the face. A bounded pocket read as a picture in a frame; a ledge
+      // has no side edges. Same three lines as the main benches: lit top, ink, undercut.
       const rng = mulberry32(hashSeed(zone.id) ^ (slot.x * 2654435761));
       const lx = slot.x - 1 - Math.round(rng() * 2);
       const lw = w + 3 + Math.round(rng() * 3);
-      // The face behind it, in its own shadow, so the unit isn't lit from behind
-      // by the flat wall.
+      // The face behind it, in shadow, so the unit isn't lit from behind by the flat wall.
       ctx.fillStyle = rgba(zone.deep, 0.45);
       ctx.fillRect(slot.x - 1, slot.y + 1, w + 2, h);
       ctx.fillStyle = rgba(mix(zone.lit, "#ffffff", 0.35), 0.6);
@@ -1581,8 +1087,7 @@ export class InsideScene {
         ctx.fillRect(lx + Math.round(rng() * lw), slot.y + h + 3 + Math.round(rng() * 2), 1, 1);
       }
     } else if (kind === "hang") {
-      // The stem, all the way up to the roof of the seam. Two pixels of it are
-      // what say the thing is hanging rather than floating at a strange height.
+      // The stem up to the roof: two pixels of it say hanging rather than floating.
       const x = slot.x + Math.floor(w / 2);
       ctx.fillStyle = rgba(mix(zone.lit, "#ffffff", 0.3), 0.5);
       ctx.fillRect(x, roof, 1, Math.max(0, slot.y - roof));
@@ -1597,15 +1102,7 @@ export class InsideScene {
     }
   }
 
-  /**
-   * The bore: the open shaft everything falls down, and the spine of the picture.
-   *
-   * Drawn over the strata rather than between them, because it's a hole cut
-   * through all of them — the same hole, continuous top to bottom, which is the
-   * thing that makes four separate bands add up to one place. Its edges catch
-   * the light of whatever band they're passing through, so the shaft reads as
-   * going *through* the potato instead of being painted on it.
-   */
+  /** The bore, drawn over the strata: one continuous hole, edges lit per band it passes through. */
   private drawBore(bands: Band[], t: number): void {
     const ctx = this.ctx;
     const right = this.boreRight();
@@ -1619,10 +1116,7 @@ export class InsideScene {
     ctx.fillStyle = grad;
     ctx.fillRect(BORE_X, top, right - BORE_X, floor - top);
 
-    // The two walls, lit per band, and a cut lip where each stratum's floor meets
-    // the shaft — the ledges the crop rolls along to get here. The bore runs the
-    // *whole* height including the undug, because sinking it is how you got to
-    // the sump at all; the strata are worked sideways off it one at a time.
+    // Walls lit per band, a cut lip at each floor. Runs the whole height including the undug.
     for (const band of bands) {
       const h = band.bottom - band.top;
       if (h <= 0 || band.zone === LID || band.zone === SUMP) continue;
@@ -1638,9 +1132,7 @@ export class InsideScene {
       ctx.fillRect(BORE_X, band.bottom - 1, right - BORE_X, 1);
     }
 
-    // Stulls across the shaft: the one piece of kit in the picture holding the
-    // place open. They're what stops a tall black rectangle reading as a gap in
-    // the art rather than as a hole somebody dug.
+    // Stulls: what stops a tall black rectangle reading as a gap in the art.
     for (let y = top + 9; y < floor - 4; y += 13) {
       ctx.fillStyle = rgba("#4d4148", 0.85);
       ctx.fillRect(BORE_X + 1, y, right - BORE_X - 2, 1);
@@ -1648,25 +1140,12 @@ export class InsideScene {
       ctx.fillRect(BORE_X + 1, y - 1, right - BORE_X - 2, 1);
     }
 
-    // A slow breath of light down it, so the shaft is never completely static
-    // even on a farm that isn't producing.
+    // A slow breath of light, so the shaft is never static.
     const drift = ((t * 9) % (floor - top + 40)) - 20;
     this.glow(BORE_X + (right - BORE_X) / 2, top + drift, 14, "#f0c68c", 0.07);
   }
 
-  /**
-   * The sap vein: what the Ring Main is once you own it.
-   *
-   * Before this, the ring was five pumps hung in their own seam — the most
-   * expensive cluster in a picture the whole complaint about which was that it
-   * was clusters. Now the pumps hang off one vessel that runs the full height
-   * of the workings, sap climbing it, a drip-feed elbowing off into every
-   * stratum it passes. Buying the Ring Main is buying plumbing for the whole
-   * shaft, and the deep half of the farm finally does something the top half
-   * can see.
-   *
-   * Sap only. The bore stays the one road crop travels; this carries light.
-   */
+  /** The sap vein: the Ring Main as one vessel the full height of the workings, drip-feeding each stratum. Sap only, never crop. */
   private drawVein(bands: Band[], t: number): void {
     if (this.owned("main") <= 0) return;
     const ctx = this.ctx;
@@ -1679,8 +1158,7 @@ export class InsideScene {
     const vein = ZONES[2]!.accent;
     for (let y = top; y < bottom; y++) {
       const jag = Math.round(Math.sin(y * 0.16 + 2) * 1.5);
-      // Shadowed on both sides: over the pale worked faces a bare pink line
-      // vanished entirely, and a vessel with no walls is a scratch in the art.
+      // Shadowed both sides: a bare pink line vanished over the pale worked faces.
       ctx.fillStyle = rgba("#4e2833", 0.6);
       ctx.fillRect(trunkX + jag - 1, y, 1, 1);
       ctx.fillStyle = rgba(vein, 0.85);
@@ -1688,8 +1166,7 @@ export class InsideScene {
       ctx.fillStyle = rgba("#4e2833", 0.6);
       ctx.fillRect(trunkX + jag + 1, y, 1, 1);
     }
-    // Sap moving up it — with the heartbeat, one of the two flows in the
-    // scene that climbs, and both of them are the deep tiers talking.
+    // Sap climbing it — with the heartbeat, one of two upward flows.
     for (let i = 0; i < 2; i++) {
       const y = bottom - ((t * 20 + (i * (bottom - top)) / 2) % (bottom - top));
       const jag = Math.round(Math.sin(y * 0.16 + 2) * 1.5);
@@ -1726,19 +1203,7 @@ export class InsideScene {
     }
   }
 
-  /**
-   * The pit-head: the shaft carrying on up through the lid, and the winding
-   * gear hung under it.
-   *
-   * The lid used to seal the picture — the bore stopped dead against its
-   * underside, which quietly told the player the world above was gone. It
-   * isn't: the outside farm is up there producing the income the HUD never
-   * stopped showing. So the shaft runs off the top of the frame with daylight
-   * in it, and `OUTSIDE_FLOW` potatoes falling out of it are that farm's
-   * harvest arriving. One cut and one gradient, and the picture stops
-   * contradicting the economy at the exact moment the player is most likely to
-   * think the fold took everything.
-   */
+  /** The pit-head: the shaft continues up through the lid with daylight in it; `OUTSIDE_FLOW` potatoes fall out of it. */
   private drawHeadgear(bands: Band[]): void {
     const ctx = this.ctx;
     const lid = bands[0]!;
@@ -1747,16 +1212,14 @@ export class InsideScene {
     const w = right - x0 - 1;
     if (w <= 2) return;
 
-    // The shaft above, lit from the top: there's a sky up there, and this is
-    // the only place in the picture it shows.
+    // The shaft above, lit from the top: the only place the sky shows.
     const grad = ctx.createLinearGradient(0, 0, 0, lid.bottom);
     grad.addColorStop(0, mix(LID_LIT, "#fff7e0", 0.5));
     grad.addColorStop(0.55, mix(VOID, LID_DEEP, 0.4));
     grad.addColorStop(1, mix(VOID, LID_DEEP, 0.15));
     ctx.fillStyle = grad;
     ctx.fillRect(x0 + 1, 0, w - 1, lid.bottom);
-    // Its walls, cut through the lid's own material: lit on the side the light
-    // falls down, in shadow on the other, same as the bore below.
+    // Walls cut through the lid: lit one side, shadow the other, same as the bore below.
     ctx.fillStyle = rgba("#8a5a2c", 0.9);
     ctx.fillRect(x0, 0, 1, lid.bottom);
     ctx.fillStyle = rgba(LID_DEEP, 0.9);
@@ -1769,8 +1232,7 @@ export class InsideScene {
     ctx.fillStyle = rgba("#8a8f96", 0.6);
     ctx.fillRect(x0 - 1, beamY, w + 2, 1);
 
-    // One idle sheave even with no cages hung yet: the gear came down with
-    // you, and a pit-head with no wheel is scaffolding.
+    // One idle sheave even with no cages: a pit-head with no wheel is scaffolding.
     const lanes = Math.max(1, this.hoists.length);
     for (let i = 0; i < lanes; i++) {
       const h = this.hoists[i];
@@ -1789,8 +1251,7 @@ export class InsideScene {
     ctx.fillRect(cx - 1, cy + 2, 3, 1);
     ctx.fillStyle = "#3a2a30";
     ctx.fillRect(cx - 1, cy - 1, 3, 3);
-    // Four stations round the rim, advanced by rope travel — the wheel turns
-    // exactly as fast as its cage moves, and not at all when it doesn't.
+    // Four stations round the rim, advanced by rope travel only.
     const spots = [
       [0, -2],
       [2, 0],
@@ -1804,14 +1265,7 @@ export class InsideScene {
     ctx.fillRect(cx, cy, 1, 1);
   }
 
-  /**
-   * The manway: a fixed ladder down the shaft's working side.
-   *
-   * The cage used to be the only way between benches, which made every stratum
-   * a sealed room with a lift lobby. A working shaft has a ladderway beside the
-   * rope for exactly the trips a cage is overkill for; the crew climb one bench
-   * and ride the rest, and the strata stop being floors of a building.
-   */
+  /** The manway: a fixed ladder on the shaft's working side, for the trips a cage is overkill for. */
   private drawLadderway(bands: Band[]): void {
     const posts = this.posts(bands);
     if (posts.length < 2) return;
@@ -1820,8 +1274,7 @@ export class InsideScene {
     const top = this.postY(bands, posts[0]!) - 9;
     const bottom = this.postY(bands, posts[posts.length - 1]!);
     if (bottom <= top) return;
-    // Timber rails, not steel: it shares the shaft with the ropes and has to
-    // read as the other thing.
+    // Timber rails, not steel: has to read as the other thing beside the ropes.
     ctx.fillStyle = rgba("#8a6a58", 0.75);
     ctx.fillRect(rx, top, 1, bottom - top);
     ctx.fillRect(rx + 3, top, 1, bottom - top);
@@ -1829,14 +1282,7 @@ export class InsideScene {
     for (let y = top + 2; y < bottom; y += 4) ctx.fillRect(rx + 1, y, 2, 1);
   }
 
-  /**
-   * The sump: the floor of the workings, where everything ends up.
-   *
-   * Dark, and that's a decision rather than an accident of being deepest — the
-   * mound is the one thing on the canvas the player is actually spending, and a
-   * pile of warm ochre potatoes needs something dark under it to read against.
-   * Outside, the yard gets that from being dirt in shadow.
-   */
+  /** The sump: dark on purpose, so the mound reads against it. */
   private drawSump(sump: Band): void {
     const ctx = this.ctx;
     const h = this.sh - sump.top;
@@ -1888,29 +1334,18 @@ export class InsideScene {
     }
   }
 
-  // --- The crop, going down --------------------------------------------------
+  // --- The crop, going down ---
 
-  /**
-   * Every tier turns something up, on the count you can see rather than the rate.
-   *
-   * This is the promise the first inside failed hardest: eight sprites standing
-   * in the dark doing nothing read as the afterlife rather than as a farm. A
-   * potato appearing at a machine and visibly ending up in your pile is the
-   * whole of what makes it a farm, and it's now the same three-phase journey for
-   * every rung on the ladder.
-   */
+  /** Every tier turns something up, on the visible count. Same three-phase journey for every rung. */
   private emit(bands: Band[], t: number): void {
-    // The farm overhead, tipping its harvest down the shaft it left you in.
-    // Runs from the first frame after the fold, whether or not you own a thing.
+    // The farm overhead, from the first frame after the fold, whether or not you own a thing.
     if (this.chance(OUTSIDE_FLOW)) this.dropFromAbove();
     for (const band of bands) {
       if (band.zone < 0) continue;
       ZONES[band.zone]!.tiers.forEach((id, ti) => {
         const n = this.working(id);
         if (n <= 0 || !this.chance(flow(n))) return;
-        // A Pit Hand turns crop up wherever they happen to be standing, which is
-        // the point of making the people a rung: what they produce comes out of
-        // the figure you can watch, not out of a slot on a shelf.
+        // A Pit Hand turns crop up wherever they stand: what they produce comes out of the figure.
         if (id === "deephand") {
           const who = this.crew[Math.floor(Math.random() * this.crew.length)];
           if (who && who.state === "work") this.cut(who.x + 2, who.y - 3, id);
@@ -1923,25 +1358,17 @@ export class InsideScene {
         this.worked.set(`${id}:${pick}`, t);
         const art = artCanvas(this.mark(id));
         const cx = from.x + art.w / 2;
-        // A hand on this bench may shoulder it for the presses instead of
-        // letting it roll — see `tryCarry`.
+        // A hand on this bench may shoulder it for the presses — see `tryCarry`.
         if (this.tryCarry(id, band, ti, cx, bands)) return;
-        // Off the bench it was cut on, not off the band's floor — a potato that
-        // appears a bench below the machine that made it breaks the one link the
-        // whole scene is trying to draw.
+        // Off the bench it was cut on, not the band floor.
         this.cut(cx, this.benchY(band, ti === 0) - 4, id);
       });
     }
-    // The Second Potato is the one rung that fruits rather than being worked, so
-    // it drops straight into the bore instead of rolling to it. Nothing else in
-    // the picture ignores the ledges.
+    // The Second Potato fruits rather than being worked, so it drops straight into the bore.
     if (this.owned("second") > 0 && this.chance(0.2)) {
       this.puff(this.boreRight() + 2, bands[bands.length - 1]!.top - 6, -4);
     }
-    // The Chorus, coordinating: every so often the whole shaft answers it,
-    // band by band — a wave of work-beats radiating out from the singers'
-    // seam. It's the only thing in the picture every tier does *together*,
-    // which is the point of a chorus.
+    // The Chorus: every so often the whole shaft answers, band by band, a wave of work-beats.
     if (
       this.owned("chorus") > 0 &&
       bands.filter((b) => b.zone >= 0).length > 1 &&
@@ -1951,19 +1378,9 @@ export class InsideScene {
     }
   }
 
-  /**
-   * Whether a hand on this bench shoulders a fresh cut and carries it to the
-   * Bruise Beds, rather than the crop rolling for the bore where it was made.
-   *
-   * The chain this draws — deep tiers cut, crew carry, beds press, bore takes
-   * the fall — is the scene's whole answer to the eight rungs reading as eight
-   * separate generators. Rationed hard: the bore must stay the road, and a
-   * carry should be something you watch happen, not a second logistics layer.
-   */
+  /** Whether a hand shoulders a fresh cut for the Bruise Beds instead of letting it roll. Rationed hard. */
   private tryCarry(id: InsideId, band: Band, ti: number, cutX: number, bands: Band[]): boolean {
-    // The beds don't feed themselves, and the Pit Hands' own cuts happen in
-    // the crew's hands already — a hand carrying its own dig to a press it was
-    // standing next to reads as make-work.
+    // The beds don't feed themselves, and a hand carrying its own dig reads as make-work.
     if (id === "fold" || id === "deephand") return false;
     if (this.owned("fold") <= 0) return false;
     if (Math.random() > 0.35) return false;
@@ -1990,12 +1407,7 @@ export class InsideScene {
     return true;
   }
 
-  /**
-   * The end of a carry: pressed into the nearest bed if the trip got there, or
-   * set down to roll for the bore if the bench it was bound for stopped
-   * existing under it. Nothing is deleted mid-journey — a potato vanishing out
-   * of a hand's arms is worse than no carry at all.
-   */
+  /** End of a carry: pressed into the nearest bed, or set down to roll if its bench stopped existing. */
   private deliver(c: Crew, bands: Band[], t: number): void {
     c.cargo = false;
     const band = bands.find((b) => b.zone === 0);
@@ -2008,8 +1420,7 @@ export class InsideScene {
         });
         const art = artCanvas(this.mark("fold"));
         const slot = slots[best]!;
-        // The press takes its beat, and the pressed crop rolls from the bed —
-        // the same exit every other cut takes.
+        // The press takes its beat and the pressed crop rolls from the bed.
         this.worked.set(`fold:${best}`, t);
         this.cut(slot.x + art.w / 2, this.benchY(band, true) - 4, "fold");
         return;
@@ -2039,11 +1450,7 @@ export class InsideScene {
     this.puff(x, y, Math.random() > 0.5 ? 6 : -6);
   }
 
-  /**
-   * A potato from the farm above, entering at the very top of the frame so
-   * there's no doubt about where it came from: it falls out of the daylight in
-   * the pit-head cut, past everything you've built, into the same mound.
-   */
+  /** A potato from the farm above, entering at the very top of the frame. */
   private dropFromAbove(): void {
     if (this.crop.length >= MAX_CROP) return;
     const potato = artCanvas(POTATO_SPRITE);
@@ -2053,8 +1460,7 @@ export class InsideScene {
       phase: "fall",
       x,
       y: 1,
-      // Already moving when it clears the lid: it's been falling since the
-      // farm, not dropped off a shelf at the frame line.
+      // Already moving when it clears the lid: it's been falling since the farm.
       vy: 26 + Math.random() * 18,
       spin: Math.random() * 6.28,
       from: "above",
@@ -2084,8 +1490,7 @@ export class InsideScene {
         }
       } else {
         c.x -= SLIDE_SPEED * this.dt;
-        // Into the pile, and gone. The hoard number is already climbing; this is
-        // the picture agreeing with it.
+        // Into the pile, and gone.
         if (c.x <= HEAP_CROWN_X + 6) {
           this.puff(c.x, c.y, -4);
           continue;
@@ -2101,23 +1506,15 @@ export class InsideScene {
     const ctx = this.ctx;
     const potato = artCanvas(POTATO_SPRITE);
     for (const c of this.crop) {
-      // A falling potato gets a pixel of wobble rather than a rotation: rotating
-      // the blit resamples it off the grid and the outline doubles.
+      // A pixel of wobble rather than rotation: rotating the blit resamples off the grid.
       const wob = c.phase === "fall" ? Math.round(Math.sin(c.spin) * 1) : 0;
       ctx.drawImage(potato.canvas, Math.round(c.x) + wob, Math.round(c.y));
     }
   }
 
-  // --- The crew and the hoist ------------------------------------------------
+  // --- The crew and the hoist ---
 
-  /**
-   * How many bodies are underground: exactly the Pit Hands you've bought.
-   *
-   * This used to scale off *everything* you owned, which made the crew ambient
-   * decoration answerable to nothing — the one thing on the canvas that didn't
-   * keep the scene's own promise that everything you own does something you can
-   * see. Now the people are a rung, and buying it puts people in the shaft.
-   */
+  /** Bodies underground: exactly the Pit Hands you own. */
   private crewSize(bands: Band[]): number {
     if (bands.filter((b) => b.zone >= 0).length === 0) return 0;
     return Math.min(MAX_CREW, shownCount(this.owned("deephand"), MAX_CREW, 1.7));
@@ -2140,13 +1537,7 @@ export class InsideScene {
     return band ? this.benchY(band, post.first) : bands[bands.length - 1]!.top;
   }
 
-  /**
-   * The crew, going about it.
-   *
-   * Nothing here is fast and nothing here is synchronised, which is the same rule
-   * the outside hands run on: a farm where everyone starts and stops together
-   * reads as a machine, and a farm where they don't reads as a place people work.
-   */
+  /** The crew. Nothing fast, nothing synchronised, or it reads as a machine. */
   private stepCrew(bands: Band[], t: number): void {
     const posts = this.posts(bands);
     if (posts.length === 0) {
@@ -2175,8 +1566,7 @@ export class InsideScene {
 
     const head = this.boreRight() - 4;
     for (const c of this.crew) {
-      // A bench that stopped existing — the tier was sold or the farm was wiped —
-      // puts whoever was standing on it back on a bench that does.
+      // A bench that stopped existing puts whoever was on it back on one that does.
       if (!posts.some((p) => p.zone === c.post.zone && p.first === c.post.first)) {
         c.post = posts[Math.floor(this.rng() * posts.length)]!;
         c.state = "walk";
@@ -2192,11 +1582,9 @@ export class InsideScene {
             if (c.tx <= head + 2 && c.bound) {
               c.state = c.ladder ? "climb" : "wait";
             } else {
-              // A carry ends the moment the walk does: pressed if this is the
-              // beds' bench, set down to roll if the trip fell through.
+              // A carry ends when the walk does: pressed on the beds' bench, else set down to roll.
               if (c.cargo) this.deliver(c, bands, t);
-              // Most of the time, go and lean on a machine. Sometimes go and
-              // stand next to whoever else is on this bench instead.
+              // Usually lean on a machine; sometimes stand next to whoever else is here.
               const near = this.crew.find(
                 (o) =>
                   o !== c &&
@@ -2222,18 +1610,14 @@ export class InsideScene {
         case "mingle": {
           if (t < c.until) break;
           c.state = "walk";
-          // Every so often, change levels. That's what the cage is for, and it's
-          // the only thing that makes the shaft feel connected to the benches
-          // rather than a hole they happen to stand next to.
+          // Every so often, change levels; that's what the cage is for.
           if (posts.length > 1 && this.rng() < 0.3) {
             let to = posts[Math.floor(this.rng() * posts.length)]!;
             if (to.zone === c.post.zone && to.first === c.post.first) {
               to = posts[(posts.indexOf(c.post) + 1) % posts.length] ?? to;
             }
             c.bound = to;
-            // One bench over is a climb down the manway; further is a fare.
-            // `posts` is built top-of-shaft first, so index distance is bench
-            // distance.
+            // One bench over is a climb; further is a fare. `posts` is top-first, so index distance is bench distance.
             const at = posts.findIndex(
               (p) => p.zone === c.post.zone && p.first === c.post.first,
             );
@@ -2246,18 +1630,14 @@ export class InsideScene {
           break;
         }
         case "wait": {
-          // Nothing on the rope to wait for — the crew shrank out from under the
-          // cages, or the bench they were going to stopped existing. Give up on
-          // the trip rather than stand at the head of the shaft forever.
+          // Nothing on the rope to wait for: give up the trip rather than stand at the head forever.
           if (this.hoists.length === 0) {
             c.bound = null;
             c.state = "walk";
             c.tx = this.wanderTo(c, bands);
             break;
           }
-          // Whichever cage happens to be standing at this level with a seat in
-          // it. Waiting for *your* cage would mean tracking which one you meant,
-          // and nobody at a pit head does that.
+          // Whichever cage is at this level with a seat; nobody waits for a specific cage.
           const at = this.postY(bands, c.post);
           const cage = this.hoists.find(
             (h) => h.riders.length < HOIST_SEATS && Math.abs(h.y - at) <= 3 && t < h.restUntil,
@@ -2270,17 +1650,14 @@ export class InsideScene {
         }
         case "climb": {
           const to = c.bound;
-          // The bench they were climbing to stopped existing — sold out from
-          // under them, or the farm was wiped. Back onto the one they left.
+          // The bench they were climbing to stopped existing: back onto the one they left.
           if (!to || !posts.some((p) => p.zone === to.zone && p.first === to.first)) {
             c.bound = null;
             c.state = "walk";
             c.tx = this.wanderTo(c, bands);
             break;
           }
-          // On the rails of the manway, hands up, moving at ladder pace. Same
-          // arrive-exactly contract as the cage, for the same reason: a climber
-          // who stops a pixel short of a bench steps off into the wall.
+          // On the manway at ladder pace. Same arrive-exactly contract as the cage.
           c.x = this.manwayX() - 2;
           const step = hoistRun(c.y, this.postY(bands, to), CLIMB_SPEED * this.dt);
           c.y = step.y;
@@ -2300,9 +1677,7 @@ export class InsideScene {
             break;
           }
           c.x = BORE_X + cage.lane + 1 + cage.riders.indexOf(c) * 4;
-          // Standing on the cage floor, which is the level the cage is at — so
-          // a rider arriving at a bench is already at the height they'll walk
-          // off onto, rather than dropping nine pixels as they step out.
+          // Standing on the cage floor, so arrival is already at bench height.
           c.y = cage.y;
           const to = c.bound;
           if (to && Math.abs(cage.y - this.postY(bands, to)) <= 3 && t < cage.restUntil) {
@@ -2333,38 +1708,20 @@ export class InsideScene {
   }
 
   /**
-   * The cages, running errands.
-   *
-   * A cage with a rider is taking them where they said; a cage without one goes
-   * to collect whoever is standing at the shaft head; a cage with neither parks
-   * at the nearest bench and waits to be called. Nothing here moves for the sake
-   * of moving, which is the difference between a working hoist and a metronome.
-   *
-   * **Two benches is the floor for a cage existing at all.** With one, there is
-   * nowhere to be carried *to*, and a cage that can only ever return you to where
-   * you're standing is the same nothing-to-nothing trip as running an empty shaft.
-   *
-   * **The benches are the whole of where a cage can be**, and nothing here is
-   * clamped to anything else. It used to be held off the sump by a dozen pixels,
-   * which sounds harmless and wasn't: the lower bench of the deepest open band
-   * sits a pixel off that band's bottom, so it was *below* the limit. A cage
-   * carrying anyone down there parked on the limit instead, never got within the
-   * three pixels a rider needs to step off, and sat at the bottom of the shaft
-   * with its passenger for the rest of the run. One fare each and the shaft was
-   * moored.
+   * The cages: a rider is taken where they said; an empty cage collects whoever waits at the head;
+   * otherwise park at the nearest bench. Two benches is the floor for a cage existing at all.
+   * Benches are the whole of where a cage can be — clamping off the sump once moored a cage forever.
    */
   private stepHoist(bands: Band[], t: number): void {
     const posts = this.posts(bands);
     const want =
       posts.length < 2 ? 0 : hoistCount(this.boreRight() - BORE_X, this.crew.length);
     while (this.hoists.length > want) {
-      // Whoever was aboard a cage that's just been taken off the rope walks
-      // instead, rather than staying stuck to a hoist nothing is stepping any more.
+      // Whoever was aboard a cage just taken off the rope walks instead.
       for (const r of this.hoists.pop()!.riders) r.state = "walk";
     }
     while (this.hoists.length < want) {
-      // Parked at different benches, so a new cage isn't shadowing one that's
-      // already on the rope.
+      // Parked at different benches, so a new cage isn't shadowing one already on the rope.
       const i = this.hoists.length;
       this.hoists.push({
         y: this.postY(bands, posts[i % posts.length]!),
@@ -2377,7 +1734,7 @@ export class InsideScene {
     }
 
     for (const h of this.hoists) {
-      // Someone aboard outranks someone waiting: you finish the trip you're on.
+      // Someone aboard outranks someone waiting.
       const rider = h.riders.find((r) => r.bound);
       if (rider) h.errand = null;
       else {
@@ -2390,8 +1747,7 @@ export class InsideScene {
       const to = rider?.bound ?? h.errand?.post ?? null;
       if (t < h.restUntil) continue;
       if (to === null) {
-        // Idle, so it sits at a level rather than halfway between two. A cage
-        // stopped in the middle of the shaft reads as broken down.
+        // Idle sits at a level: a cage stopped mid-shaft reads as broken down.
         const park = hoistRun(h.y, this.nearestPost(posts, bands, h.y), HOIST_SPEED * this.dt);
         h.spin += Math.abs(park.y - h.y);
         h.y = park.y;
@@ -2400,8 +1756,7 @@ export class InsideScene {
       const step = hoistRun(h.y, this.postY(bands, to), HOIST_SPEED * this.dt);
       h.spin += Math.abs(step.y - h.y);
       h.y = step.y;
-      // Doors, at both ends of the trip: long enough for whoever called it to get
-      // on, and for whoever's aboard to get off.
+      // Doors at both ends, long enough to get on and off.
       if (step.arrived) h.restUntil = t + HOIST_REST_S;
     }
   }
@@ -2413,8 +1768,7 @@ export class InsideScene {
     let near = Infinity;
     for (const c of this.crew) {
       if (c.state !== "wait" || !c.bound) continue;
-      // One cage per caller. Without this all three set off for the same person
-      // and two of them arrive at a bench with nobody on it.
+      // One cage per caller, or all three set off for the same person.
       if (this.hoists.some((o) => o !== h && o.errand === c)) continue;
       const d = Math.abs(this.postY(bands, c.post) - h.y);
       if (d < near) {
@@ -2448,18 +1802,12 @@ export class InsideScene {
     const top = bands[0]!.bottom;
     for (const h of this.hoists) {
       const x = BORE_X + 1 + h.lane;
-      // `h.y` is the level it's stopped at, so the cage hangs *above* it and its
-      // floor lands on the bench — which is what makes stepping off a step
-      // across rather than a drop, and keeps a cage at the deepest bench out of
-      // the sump.
+      // `h.y` is the level; the cage hangs above it so its floor lands on the bench.
       const y = Math.round(h.y) - CAGE_FLOOR;
-      // The rope, all the way up to the head. It's what says the cage is hung
-      // rather than hovering, and with several running it's also the only thing
-      // telling you which box is on which line.
+      // The rope up to the head: says hung, not hovering, and which box is on which line.
       ctx.fillStyle = rgba("#b8c0c8", 0.75);
       ctx.fillRect(x + 4, top, 1, Math.max(0, y - top));
-      // Lit from inside, so a steel box in a black shaft is something you can
-      // find without hunting for it — same reason the crew carry lamps.
+      // Lit from inside, so a steel box in a black shaft is findable.
       this.glow(x + 4, y + 6, 13, "#ffe6a0", 0.16);
       ctx.drawImage(cage.canvas, x, y);
     }
@@ -2468,30 +1816,22 @@ export class InsideScene {
   private drawCrew(): void {
     const ctx = this.ctx;
     for (const c of this.crew) {
-      // Arms up on the ladder and at the face; down while walking or standing
-      // about. Two poses is the whole animation budget at eleven pixels, and it's
-      // enough as long as which one you see means something.
+      // Two poses: arms up on the ladder and at the face, down otherwise.
       const up = c.state === "ride" || c.state === "work" || c.state === "climb";
-      // Walking crew wear whichever mark the Pit Hand tier is on, so buying its
-      // upgrades visibly re-kits the people. The arms-up pose is the one shared
-      // sprite: four more of it for four marks is a lot of char grids for a pose
-      // you see a third of the time.
+      // Walking crew wear the Pit Hand tier's mark; the arms-up pose is the one shared sprite.
       const art = artCanvas(up ? SHAFT_CREW_UP : this.mark("deephand"));
       const bob = c.state === "walk" ? Math.round(Math.sin(this.clock * 7 + c.phase) * 0.5) : 0;
       const x = Math.round(c.x);
       const y = Math.round(c.y) - art.h + bob;
-      // The lamp, which is what makes them findable in the deep strata at all.
+      // The lamp, which is what makes them findable in the deep strata.
       this.glow(x + 3, y + 2, 9, "#ffe6a0", 0.22);
       ctx.drawImage(art.canvas, x, y);
-      // The load, held overhead — up the ladder, into the cage, along the
-      // bench, one potato riding the whole way to the presses in plain sight.
+      // The load, held overhead the whole way to the presses.
       if (c.cargo) {
         const potato = artCanvas(POTATO_SPRITE);
         ctx.drawImage(potato.canvas, x + 1, y - potato.h + 2);
       }
-      // The call: a blink at the lip while somebody stands at the shaft head,
-      // so a body waiting reads as having rung for the cage rather than as
-      // stuck against the wall.
+      // The call: a blink at the lip while somebody waits at the shaft head.
       if (c.state === "wait" && Math.sin(this.clock * 6 + c.phase) > 0) {
         ctx.fillStyle = "#ffd166";
         ctx.fillRect(this.boreRight() - 1, y + 1, 1, 1);
@@ -2500,22 +1840,14 @@ export class InsideScene {
     }
   }
 
-  // --- The sump --------------------------------------------------------------
+  // --- The sump ---
 
-  /**
-   * The hoard: a mound of potatoes at the front, with the flesh swelling up
-   * around it into cysts as you get richer.
-   *
-   * The mound chases the real number rather than snapping to it, which is what
-   * makes spending look like spending — buy a rung and you watch the pile come
-   * down.
-   */
+  /** The hoard: a mound at the front, cysts swelling around it as you get richer. Chases the real number. */
   private drawHoard(sumpTop: number): void {
     const ctx = this.ctx;
     const target = Math.max(0, this.view.hoard);
     if (this.shown < 0) this.shown = target;
-    // Exponential chase on the magnitude, so it takes about the same moment to
-    // cross one order as the next.
+    // Exponential chase on the magnitude, so each order takes about the same moment.
     const k = 1 - Math.pow(0.06, this.dt);
     this.shown += (target - this.shown) * k;
     const layout = yardLayout(this.shown);
@@ -2536,26 +1868,8 @@ export class InsideScene {
   }
 
   /**
-   * One swelling in the flesh, drawn rather than blitted.
-   *
-   * A cyst is the one thing in either scene whose size is a *variable* — it's how
-   * much of your hoard the tuber has grown around — so it's built from courses
-   * rather than being ten sprites.
-   *
-   * It was a plain dome for a long time and it was the least legible object on
-   * the canvas: a smooth pale blob with an outline, ten of them scattered across
-   * an empty floor, holding nothing and never moving. Outside, a silo reads as
-   * storage because you already know what a silo is; a dome has no such luck and
-   * has to earn it. Three things do that here, and they're the parts to keep:
-   *
-   *  - **You can see the crop through it.** Yield packed inside, showing as
-   *    dark rounds under a translucent skin. A container you can see into is a
-   *    container. This is the whole fix; the rest is polish.
-   *  - **It breathes.** A slow swell on a phase taken from its own slot, so a
-   *    bank of them isn't pulsing in lockstep. Nothing else in the sump moves,
-   *    and something that never moves reads as scenery.
-   *  - **It's lit from the shaft**, like everything else down here, with a wet
-   *    highlight — flesh rather than a UI shape sitting on top of the picture.
+   * One cyst, drawn from courses since its size is a variable. What makes it read as storage:
+   * crop visible through the skin, a slow breathe on its own phase, and a wet highlight lit from the shaft.
    */
   private drawCyst(slot: { x: number; row: number; w: number }, sumpTop: number, i: number): void {
     const ctx = this.ctx;
@@ -2565,14 +1879,9 @@ export class InsideScene {
     const courses = Math.max(2, Math.round(w / 2.4));
     const skin = mix(SUMP_SPOIL, "#e6dcc0", 0.4);
 
-    // The skin, opaque. Drawing it translucent over the crop was the obvious way
-    // round and it was wrong: a pale film at 60% over a dark sump comes out grey,
-    // and a bank of grey blobs is less legible than the plain domes were. Opaque
-    // skin first keeps the silhouette warm, and the crop goes *on* it — dimmed,
-    // which reads as "under the surface" without spending the colour.
+    // Skin opaque, crop dimmed on top: a translucent film over a dark sump comes out grey.
     for (let c = 0; c < courses; c++) {
-      // Narrows faster near the crown, which is what makes it a dome and not a
-      // ziggurat. Whole pixels: no rounding fudge on a 176-wide buffer.
+      // Narrows faster near the crown: a dome, not a ziggurat. Whole pixels.
       const inset = Math.round(Math.pow(c / courses, 1.5) * (w / 2));
       const span = w - inset * 2;
       if (span <= 0) break;
@@ -2583,8 +1892,7 @@ export class InsideScene {
       ctx.fillRect(slot.x + inset, y, span, 1);
     }
 
-    // What it's holding, showing through: packed rounds of crop, in the potato's
-    // own colour so there's no doubt what's in there.
+    // The crop showing through, in the potato's own colour.
     const rng = mulberry32(0x9c + i * 71);
     for (let c = 1; c < courses - 1; c += 2) {
       const inset = Math.round(Math.pow(c / courses, 1.5) * (w / 2)) + 2;
@@ -2605,14 +1913,7 @@ export class InsideScene {
     ctx.fillRect(slot.x + 3, base - courses + 1, 1, 1);
   }
 
-  /**
-   * What the tuber closed around, left where it stands in a strip along the
-   * front. One strip of dead kit is a thing you notice from across the room;
-   * the same units scattered among the working ones is not.
-   *
-   * It starts clear of the left corner, which is where the bore comes down into
-   * the sump — the one thing down here that has to stay legible.
-   */
+  /** Dead kit, in one strip along the front, clear of the corner where the bore comes down. */
   private drawBroken(sumpTop: number): void {
     const ctx = this.ctx;
     let x = Math.max(24, this.boreRight() + 6);
@@ -2627,18 +1928,9 @@ export class InsideScene {
     }
   }
 
-  // --- The reveal ------------------------------------------------------------
+  // --- The reveal ---
 
-  /**
-   * The floor giving way when a new stratum opens.
-   *
-   * Three of these across the endgame, which previously had no beats in it at
-   * all after the fold — you bought eight rungs and the picture got denser. The
-   * whole effect is a crack down the floor that was the bottom of the workings,
-   * plus a lot of starch coming off it, over the same window `bandsFor` is easing
-   * the new band in through. Cheap on purpose: the fold is the set piece, and
-   * this must not try to compete with it.
-   */
+  /** The floor giving way when a stratum opens: a crack plus starch, over the window `bandsFor` eases in. Cheap on purpose. */
   private drawBreak(bands: Band[], t: number): void {
     if (this.revealAt === null) return;
     const ctx = this.ctx;
@@ -2662,7 +1954,7 @@ export class InsideScene {
     }
   }
 
-  // --- Small things ----------------------------------------------------------
+  // --- Small things ---
 
   private drawDug(now: number): void {
     const ctx = this.ctx;
@@ -2695,15 +1987,7 @@ export class InsideScene {
     }
   }
 
-  /**
-   * The heartbeat: a beat of warm light that leaves the core and climbs the
-   * bore to the lid, brushing every stratum's lip on the way past.
-   *
-   * The one signal in the scene that travels *against* the crop, which is why
-   * it reads as circulation rather than as more logistics — and it's the
-   * deepest thing you own touching everything above it, which is the whole
-   * argument the strata needed for being one organ instead of four rooms.
-   */
+  /** The heartbeat: warm light climbing the bore from core to lid, the one signal that travels against the crop. */
   private drawPulse(bands: Band[], t: number): void {
     this.pulseY = null;
     if (this.owned("heart") <= 0) return;
@@ -2727,16 +2011,15 @@ export class InsideScene {
     const ctx = this.ctx;
     ctx.fillStyle = rgba("#140a10", GLOOM);
     ctx.fillRect(0, top, SCENE_W, this.sh - top);
-    // The lid takes less: it's the closest thing to a source in the picture.
+    // The lid takes less: it's the closest thing to a source.
     ctx.fillStyle = rgba("#140a10", GLOOM * 0.35);
     ctx.fillRect(0, 0, SCENE_W, top);
-    // And the sump is warmed rather than dimmed, because the hoard is the thing
-    // you came back to look at.
+    // The sump is warmed rather than dimmed: the hoard is what you came to look at.
     ctx.fillStyle = rgba("#f0c68c", 0.07);
     ctx.fillRect(0, sumpTop, SCENE_W, this.sh - sumpTop);
   }
 
-  // --- Light -----------------------------------------------------------------
+  // --- Light ---
 
   private glow(cx: number, cy: number, r: number, color: string, alpha: number): void {
     if (alpha <= 0.001 || r <= 0) return;
@@ -2748,10 +2031,7 @@ export class InsideScene {
     ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
   }
 
-  /**
-   * What a hundred-owned tier throws. It breathes, on a phase taken from the
-   * unit's index — a whole stratum of them pulsing in lockstep reads as a shader.
-   */
+  /** A hundred-owned tier's glow. Breathes on a per-unit phase, or a stratum of them reads as a shader. */
   private primeGlow(
     id: InsideId,
     x: number,

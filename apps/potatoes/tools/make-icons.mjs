@@ -1,10 +1,4 @@
-// Generates the PWA icon set from the pixel-art grid below.
-//
-// The art is kept as source (a character grid) rather than a binary blob so it
-// stays editable — tweak SPRITE, re-run `npm run icons`, done. Every output is
-// an integer-scaled nearest-neighbour blit of the grid onto a flat background,
-// so pixels stay crisp at any target size; leftover pixels become background
-// padding, which is invisible because the background is flat.
+// Generates the PWA icon set from the SPRITE grid: integer-scaled nearest-neighbour blit on a flat background.
 
 import { deflateSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -93,9 +87,7 @@ function encodePng(size, pixels) {
   ]);
 }
 
-// `coverage` is how much of the canvas the sprite is allowed to fill. Maskable
-// icons get a smaller value so nothing important survives outside Android's
-// 80% safe zone.
+// `coverage`: how much of the canvas the sprite may fill. Maskable icons stay inside Android's 80% safe zone.
 function render(size, coverage = 1) {
   const scale = Math.max(1, Math.floor((size * coverage) / GRID));
   const drawn = scale * GRID;

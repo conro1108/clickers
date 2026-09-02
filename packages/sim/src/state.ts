@@ -3,19 +3,13 @@ import type { AttackId, DefenseId, ProducerId, UpgradeId } from "./content.js";
 
 export type PlayerId = string;
 
-/**
- * Effects are the only thing that makes a player's rate time-varying, and they
- * all end at a known instant. That's what keeps production integrable in
- * closed form (see STACK.md) — rate is piecewise-constant with boundaries we
- * can enumerate.
- */
+// Effects all end at a known instant, which keeps production integrable in closed form (see STACK.md).
 export type ActiveEffect =
   | {
       kind: "slow";
       id: string;
       source: PlayerId;
       label: string;
-      /** Multiplier on total output, e.g. 0.65 = a 35% cut. */
       multiplier: number;
       startedAt: Millis;
       expiresAt: Millis;
@@ -25,7 +19,6 @@ export type ActiveEffect =
       id: string;
       source: PlayerId;
       label: string;
-      /** Remaining absorb pool. Drained by incoming attacks. */
       power: number;
       initialPower: number;
       startedAt: Millis;
@@ -37,31 +30,22 @@ export interface PlayerState {
   name: string;
   isBot: boolean;
 
-  /** Checkpoint: stock on hand as of `checkpointAt`. */
+  /** `stock` and `produced` are checkpointed as of `checkpointAt`. */
   stock: Yield;
   checkpointAt: Millis;
 
-  /** Lifetime stock produced, also checkpointed at `checkpointAt`. */
   produced: Yield;
 
   producers: Partial<Record<ProducerId, number>>;
-  /**
-   * Units knocked out by sabotage. These stay owned but produce nothing until
-   * repaired — unlike a timed effect, nothing brings them back on its own.
-   */
+  /** Sabotaged units: still owned, produce nothing until repaired. */
   broken: Partial<Record<ProducerId, number>>;
   upgrades: UpgradeId[];
-  /** How many times each repeatable action has been bought — drives its cost curve. */
   attacksUsed: Partial<Record<AttackId, number>>;
   defensesUsed: Partial<Record<DefenseId, number>>;
 
   effects: ActiveEffect[];
 
-  /**
-   * Clicks left in the bucket, and when it was last drawn from. Refilled by
-   * elapsed time in `applyCommand`, so it's folded from the log like everything
-   * else — no wall clock, no state the database has to hold.
-   */
+  /** Click bucket; refilled by elapsed time in `applyCommand`, so folded from the log. */
   clicks: number;
   clickAt: Millis;
 }
@@ -71,7 +55,7 @@ export type ScoringRule = "total_produced" | "on_hand";
 export interface MatchConfig {
   seed: string;
   durationMs: number;
-  /** What the winner is measured on. See README — this is a live design fork. */
+  /** See README — a live design fork. */
   scoring: ScoringRule;
 }
 
@@ -100,7 +84,6 @@ export type Command =
   | { type: "buy_upgrade"; player: PlayerId; upgrade: UpgradeId }
   | { type: "attack"; player: PlayerId; target: PlayerId; attack: AttackId }
   | { type: "defend"; player: PlayerId; defense: DefenseId }
-  /** Bring broken units of one producer type back online. */
   | { type: "repair"; player: PlayerId; producer: ProducerId };
 
 export type CommandResult =
