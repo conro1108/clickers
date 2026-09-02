@@ -46,10 +46,13 @@ Tests are a small regression net, not tuning assertions — keep `npm test` unde
 
 ## The games are allowed to diverge
 
-Nothing about the visual layer is shared. `apps/potatoes/src/render/farmScene.ts`
-and `apps/puppies/src/render/millScene.ts` are ~4k lines each of independent art,
-and the components, styles and copy are per-game. Divergence there is expected
-and costs nothing.
+Nothing about the visual layer is shared, and the two scenes are different
+pictures on purpose: the farm (`apps/potatoes/src/render/farmScene.ts`) is a
+landscape — sky, hills, rows, a yard — while the mill
+(`apps/puppies/src/render/millScene.ts`) is a building — a cutaway shed that
+grows a floor at a time, stacked cages under heat lamps, a lift, a lot out
+front, a neon sign against a city sky. Components, styles and copy are
+per-game too. Divergence there is expected and costs nothing.
 
 The one thing the scenes agree on is the producer id list they switch on — that
 is "what you own", not "what it looks like".

@@ -34,7 +34,7 @@
 
 import { chromium } from "playwright-core";
 
-import { solo } from "@mill/sim";
+import { solo } from "@clickers/sim";
 
 const args = Object.fromEntries(
   process.argv
@@ -46,17 +46,25 @@ const args = Object.fromEntries(
 const out = args.out ?? "/tmp/mill.png";
 const port = args.port ?? "5199";
 
-const now = Date.now();
-const mill = solo.createMill({ seed: "shot", startedAt: now });
+// The save is stamped on the faked clock too, or the hours between "now" and
+// the hour asked for are hours of weather, and nothing in the shot survives.
+const shift = (() => {
+  if (!args.hour) return 0;
+  const at = new Date();
+  at.setHours(Number(args.hour), 30, 0, 0);
+  return at.getTime() - Date.now();
+})();
+const now = Date.now() + shift;
+const mill = solo.createSite({ seed: "shot", startedAt: now });
 
 for (const p of solo.SOLO_PRODUCERS) {
   const n = Number(args[p.id] ?? 0);
   if (n > 0) mill.producers[p.id] = n;
 }
-mill.puppies = Number(args.puppies ?? 1e9);
-mill.raised = mill.puppies;
-mill.lifetimeRaised = mill.puppies;
-if (args.bedding) mill.bedding = Number(args.bedding);
+mill.stock = Number(args.puppies ?? 1e9) as typeof mill.stock;
+mill.produced = mill.stock;
+mill.lifetimeProduced = mill.stock;
+if (args.bedding) mill.condition = Number(args.bedding);
 // `broken=n` knocks n of every owned tier offline, which is what the Upkeep
 // sheet and the damaged-mark art both need to have anything to show.
 if (args.broken) {
@@ -74,7 +82,7 @@ if (args.marks === "all") mill.upgrades = solo.SOLO_UPGRADES.map((u) => u.id);
 // the scene refuses to replay the fold on a restore. `buy=` is how you get at
 // the transition: seed the mill one purchase short of it and make that purchase
 // through the shop.
-mill.converged = args.converged !== "0" && (args.converged === "1" || mill.upgrades.includes("ur_chihuahua"));
+mill.converged = args.converged !== "0" && (args.converged === "1" || mill.upgrades.includes(solo.CONVERGENCE_UPGRADE));
 // Which of the two mills to stand on. A converged save lands inside by default,
 // because that's where the fold leaves you; `world=outside` is how the old mill
 // gets photographed with its ceiling on.
@@ -82,7 +90,10 @@ mill.world = mill.converged && args.world !== "outside" ? "inside" : "outside";
 if (args.generation) mill.generation = Number(args.generation);
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
-const page = await browser.newPage({ viewport: { width: 400, height: 800 }, deviceScaleFactor: 2 });
+const page = await browser.newPage({
+  viewport: { width: Number(args.width ?? 400), height: Number(args.height ?? 800) },
+  deviceScaleFactor: 2,
+});
 
 // The sky is a pure function of `new Date().getHours()`, so pinning that is the
 // whole of what it takes to shoot 2am. Installed before any app code runs.
@@ -110,7 +121,7 @@ await page.evaluate(
     localStorage.setItem(key!, save!);
     localStorage.setItem("puppy-mill:taught-tap", "1");
   },
-  ["puppy-mill:mill", solo.serializeMill(mill, now)],
+  ["puppy-mill:mill", solo.serializeSite(mill, now)],
 );
 await page.reload();
 
@@ -181,6 +192,17 @@ async function openBackRoom() {
   await page.waitForTimeout(900);
   await page.mouse.up();
   await page.waitForTimeout(500);
+}
+
+// `tap=x,y` taps the scene at that fraction of its width and height, for the whistle.
+if (args.tap) {
+  const [fx, fy] = args.tap.split(",").map(Number) as [number, number];
+  const scene = page.locator("canvas.scene");
+  const box = await scene.boundingBox();
+  if (box) {
+    await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy);
+    await page.waitForTimeout(Number(args.afterTap ?? 250));
+  }
 }
 
 const burst = Number(args.burst ?? 0);

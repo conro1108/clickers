@@ -181,209 +181,6 @@ export const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
-// --- Scenery ---
-
-export const BARN: Art = {
-  rows: [
-    "........kkkk........",
-    "......kkrrrrkk......",
-    "....kkrrrrrrrrkk....",
-    "..kkrrrrrrrrrrrrkk..",
-    ".krrrrrrrrrrrrrrrrk.",
-    ".krrrrrrrrrrrrrrrrk.",
-    "kkkkkkkkkkkkkkkkkkkk",
-    "krrrrrrrrrrrrrrrrrrk",
-    "krrwwwrrrrrrrrwwwrrk",
-    "krrwwwrrkkkkrrwwwrrk",
-    "krrrrrrkwwwwkrrrrrrk",
-    "krrrrrrkwwwwkrrrrrrk",
-    "krrrrrrkwwwwkrrrrrrk",
-    "krrrrrrkwwwwkrrrrrrk",
-    "kkkkkkkkkkkkkkkkkkkk",
-  ],
-  palette: { k: K, r: "#b5503c", w: "#f2e3c8" },
-};
-
-/** The one tree, and it is a lollipop on purpose. */
-export const TREE: Art = {
-  rows: [
-    "....kkkkkk......",
-    "..kkgglgggkk....",
-    ".kgglllggggk....",
-    "kglllfgglggggk..",
-    "kglllggglllgggk.",
-    "kgglgggfgglllgk.",
-    ".kggggggggglgk..",
-    "kkgglfggggggkk..",
-    "kglgggggglggk...",
-    "kgglggggfggk....",
-    ".kkggglggkk.....",
-    "...kkgggkk......",
-    "......ktb.......",
-    ".....kttb.......",
-    ".....kttbk......",
-  ],
-  palette: { k: K, g: "#5fa34a", l: "#8cc76a", t: "#8a6242", b: "#68472c", f: "#f7d3e2" },
-};
-
-export const CLOUD: Art = {
-  rows: [
-    "...wwwww......",
-    ".wwwwwwwww....",
-    "wwwwwwwwwwwww.",
-    ".wwwwwwwwwww..",
-  ],
-  palette: { w: "#ffffff" },
-};
-
-/** One tileable panel of chain-link. */
-export const FENCE: Art = {
-  rows: [
-    "pkkkkkkk",
-    "pmmmmmmm",
-    "pn.n.n.n",
-    "p.n.n.n.",
-    "pn.n.n.n",
-    "p.n.n.n.",
-    "pn.n.n.n",
-    "pkkkkkkk",
-  ],
-  palette: { k: K, p: "#6e7780", m: "#b4bcc2", n: "#ccd4da" },
-};
-
-/** The yard light, on its post by the gate. */
-const LAMP_ROWS = [
-  "kkkkk",
-  "kgggk",
-  "kgggk",
-  ".kgk.",
-  "..m..",
-  "..m..",
-  "..m..",
-  "..m..",
-  "..m..",
-  "..m..",
-  "..m..",
-  "..m..",
-  "..m..",
-  "..m..",
-  "..m..",
-  "..m..",
-  "..m..",
-  "..m..",
-  ".kmk.",
-  "kkmkk",
-];
-
-export const LAMP: Art = {
-  rows: LAMP_ROWS,
-  palette: { k: K, g: "#5e6870", m: "#7f8891" },
-};
-
-/** The same post with the light on. */
-export const LAMP_ON: Art = {
-  rows: LAMP_ROWS,
-  palette: { k: K, g: "#ffe9a8", m: "#8b949c" },
-};
-
-/** Filler for the bits of field nothing has been built on yet. */
-export const TUFT: Art = {
-  rows: ["g..g..g", ".g.g.g.", ".ggggg."],
-  palette: { g: "#548f3e" },
-};
-
-export const FLOWERS: Art = {
-  rows: [".r...w...p.", "rrr.www.ppp", ".r.g.w.g.p.", ".g.g.g.g.g."],
-  palette: { g: "#548f3e", r: "#e06a7c", w: "#f6f1dc", p: "#c98add" },
-};
-
-/** One chihuahua sitting in its straw. */
-export const PEN_PUP: Art = {
-  rows: [
-    "g.....g",
-    "ggg.ggg",
-    ".ggggg.",
-    "gsgggsg",
-    ".glllg.",
-    "ddddddd",
-  ],
-  palette: { g: "#c98b4b", l: "#f4e6cc", s: "#402e3a", d: "#c9a86a" },
-};
-
-const SCRUFFY = new Map<Art, Art>();
-
-/** The same pen, gone to seed. */
-export function scruffy(art: Art): Art {
-  const hit = SCRUFFY.get(art);
-  if (hit) return hit;
-  const dusty: Art = {
-    rows: art.rows,
-    palette: { ...art.palette, g: "#8f7f68", l: "#a89a83", s: "#6b5f4e", d: "#8a8168", w: "#cdc7b6" },
-  };
-  SCRUFFY.set(art, dusty);
-  return dusty;
-}
-
-const SHRUNK = new Map<Art, Art>();
-
-/** The same thing, half the size, for the ranks of the property that stand further back than the near one. */
-export function shrunk(art: Art): Art {
-  const hit = SHRUNK.get(art);
-  if (hit) return hit;
-
-  const w = art.rows.reduce((m, r) => Math.max(m, r.length), 0);
-  const rows: string[] = [];
-  for (let y = 0; y < art.rows.length; y += 2) {
-    let row = "";
-    for (let x = 0; x < w; x += 2) {
-      const votes = new Map<string, number>();
-      let best = ".";
-      for (const [dy, dx] of [
-        [0, 0],
-        [0, 1],
-        [1, 0],
-        [1, 1],
-      ] as const) {
-        const c = art.rows[y + dy]?.[x + dx] ?? ".";
-        if (c === "." || !art.palette[c]) continue;
-        const n = (votes.get(c) ?? 0) + 1;
-        votes.set(c, n);
-        if (n > (votes.get(best) ?? 0)) best = c;
-      }
-      row += best;
-    }
-    rows.push(row);
-  }
-
-  const small: Art = { rows, palette: art.palette };
-  SHRUNK.set(art, small);
-  return small;
-}
-
-const GROWTH_STAGES = new Map<Art, Art[]>();
-
-/** A bed part-grown: four stages from just-planted to ready to lift. */
-export function growthStages(art: Art): readonly Art[] {
-  const hit = GROWTH_STAGES.get(art);
-  if (hit) return hit;
-
-  const rows = art.rows;
-  const n = rows.length;
-  const slice = (from: number): Art => ({ rows: rows.slice(from), palette: art.palette });
-
-  // Ready: more of them, showing pale through the straw at the base.
-  const base = rows[n - 1] ?? "";
-  const lifted = [...base].map((c, i) => (c !== "." && i % 2 === 1 ? "o" : c)).join("");
-  const ripe: Art = {
-    rows: [...rows.slice(0, n - 1), lifted],
-    palette: { ...art.palette, o: "#e2b077" },
-  };
-
-  const stages = [slice(n - 3), slice(Math.max(1, Math.floor(n * 0.4))), art, ripe];
-  GROWTH_STAGES.set(art, stages);
-  return stages;
-}
-
 // --- The hoard — what a pile of puppies turns into as it stops being a pile ---
 
 /** The puppy itself, everywhere it appears loose: carried, whistled, heaped, and riding down the pipeline. */
@@ -559,40 +356,7 @@ export const BALL: Art = {
   palette: { k: K, b: "#e0b23c", w: "#fff0b8" },
 };
 
-/** One bunting flag. */
-export const FLAG: Art = {
-  rows: ["ffff", ".fff", ".ff.", "..f."],
-  palette: { f: "#ffffff" },
-};
-
 /** Four flags' worth of colour, cycled along the run. */
-export const BUNTING = ["#e8697d", "#f2c14e", "#5fb0d8", "#7fc96a"] as const;
-
-/** A heart, for when you whistle one up. */
-export const HEART: Art = {
-  rows: [".h.h.", "hhhhh", ".hhh.", "..h.."],
-  palette: { h: "#f2718c" },
-};
-
-export const BASKET: Art = {
-  rows: [
-    "...ppppp...",
-    "...kkkkk...",
-    "..kbbbbbk..",
-    "..kbbbbbk..",
-    ".kbbllbbbk.",
-    ".kblllbbbk.",
-    "kbbllbbbbbk",
-    "kbbbbbbbbbk",
-    "kbbbbbbbbbk",
-    "kbbbbbbbbbk",
-    "kbbbbbbbbbk",
-    ".kbbbbbbbk.",
-    "..kkkkkkk..",
-  ],
-  palette: { k: K, b: "#b98a52", l: "#d6ab73", p: "#c98b4b" },
-};
-
 /** Repeating middle is generated; writing the tower row by row would be more typo than art. */
 function stack(cap: string[], body: string[], reps: number, base: string[]): string[] {
   const rows = [...cap];
@@ -618,23 +382,6 @@ export const KENNEL_HAND: Art = {
     ".k...k.",
   ],
   palette: { k: K, t: "#c9a24a", f: "#e8bb8e", e: K, b: "#4a7fa5", v: "#5e3e29" },
-};
-
-/** A lamp on a post, throwing down rather than a heat lamp throwing up. */
-export const HEAT_LAMP: Art = {
-  rows: [
-    "..kkmmmkk....",
-    "...kmmmk.....",
-    "....aaa......",
-    "...a.a.a.....",
-    "..a..a..a....",
-    "......m......",
-    "......m......",
-    "......m......",
-    "....kkkkk....",
-    "...kkkkkkk...",
-  ],
-  palette: { k: K, m: "#a8b0b8", a: "#ffb347" },
 };
 
 /** A transport van, and pointedly not a tractor. */
@@ -1028,70 +775,7 @@ function repaint(art: Art, palette: Record<string, string>): Art {
 }
 
 /** Straw Bedding: a bigger dog, and twice as much under it. */
-/** Straw Bedding: a bigger dog, and twice as much under it. */
-const PEN_PUP_2: Art = {
-  rows: [
-    "g......g",
-    "ggg..ggg",
-    ".gggggg.",
-    "gsggggsg",
-    ".gllllg.",
-    "dddddddd",
-    "dddddddd",
-  ],
-  palette: PEN_PUP.palette,
-};
-
 /** Underfloor Heating: the warm comes up through the straw. */
-/** Underfloor Heating: the warm comes up through the straw. */
-const PEN_PUP_3: Art = {
-  rows: [
-    "g......g",
-    "ggg..ggg",
-    ".gggggg.",
-    "gsggggsg",
-    ".gllllg.",
-    "dhdhdhdh",
-    "dddddddd",
-    "dddddddd",
-  ],
-  palette: { ...PEN_PUP.palette, h: "#ffb347" },
-};
-
-/** Ceramic Bulbs: a second shade on the same post, and it runs hotter. */
-const HEAT_LAMP_2: Art = {
-  rows: [
-    ".kkmmmkkkmmmkk.",
-    "..kmmmkkkmmmk..",
-    "...aaa...aaa...",
-    "..a.a.a.a.a.a..",
-    ".a..a....a..a..",
-    ".......m.......",
-    ".......m.......",
-    ".......m.......",
-    ".....kkkkk.....",
-    "....kkkkkkk....",
-  ],
-  palette: HEAT_LAMP.palette,
-};
-
-/** Thermostats: three shades, a crossbar to hang them off, and a sensor. */
-const HEAT_LAMP_3: Art = {
-  rows: [
-    "kkmmmkkmmmkkmmm",
-    ".kmmmk.kmmmk.km",
-    "..aaa...aaa...a",
-    ".a.a.a.a.a.a.a.",
-    "a..a..a.a..a..a",
-    "..mmmmmmmmmmm..",
-    ".......m.......",
-    ".......m.......",
-    ".....kkkkk.....",
-    "....kkkkkkk....",
-  ],
-  palette: HEAT_LAMP.palette,
-};
-
 /** Turbo Diesel: the stack is the whole joke, so it goes on the roof. */
 const VAN_2: Art = {
   rows: [
@@ -1266,21 +950,6 @@ const ZEPPELIN_3: Art = {
 // --- The fourth marks — what a hundred of something turns into ---
 
 /** Show Lineage: it is twice the dog, it is sitting on twice the straw, and it is wearing the rosette. */
-/** Show Lineage: twice the dog, twice the straw, and it is wearing the rosette. */
-const PEN_PUP_4: Art = {
-  rows: [
-    "g........g",
-    "ggg....ggg",
-    ".gggggggg.",
-    ".gsggggsg.",
-    ".gllllllg.",
-    "..grrgggg.",
-    "dddddddddd",
-    "dddddddddd",
-  ],
-  palette: { ...PEN_PUP.palette, r: "#c93f34" },
-};
-
 /** Equity Stake: a hat, a good coat, and gold on the lapels. Part owner. */
 const KENNEL_HAND_4: Art = {
   rows: [
@@ -1298,24 +967,6 @@ const KENNEL_HAND_4: Art = {
     "..k...k..",
   ],
   palette: { k: K, t: "#e0c04a", f: "#e8bb8e", e: K, b: "#2f5f7a", v: "#5e3e29", a: "#e0c04a" },
-};
-
-/** Whole-Yard Radiant: the thing that actually heats a yard this size. */
-const HEAT_LAMP_4: Art = {
-  rows: [
-    ".........m.........",
-    "kmmmmmmmmmmmmmmmmmk",
-    ".m..m..m.m.m..m..m.",
-    "kmk.kmk.kmk.kmk.kmk",
-    ".a...a...a...a...a.",
-    "a.a.a.a.a.a.a.a.a.a",
-    ".........m.........",
-    ".........m.........",
-    ".........m.........",
-    ".......kkkkk.......",
-    "......kkkkkkk......",
-  ],
-  palette: HEAT_LAMP.palette,
 };
 
 /** Tracked Chassis: twin stacks, a beacon, and it runs on tracks now. */
@@ -1692,16 +1343,275 @@ const SECOND_CHIHUAHUA_4: Art = {
   },
 };
 
+
+// --- The building — what the mill looks like once it's a shed and not a field ---
+// Cages, hanging lamps and the kit of a cutaway: cool wire greys and institutional teals, so the tan of a dog is the warm thing in the room.
+
+const WIRE = "#c4ccd2";
+const CAGE_BACK = "#5f6f74";
+const STRAW = "#e6c76a";
+
+/** One chihuahua in a wire cage, seen through the door. */
+export const CAGE: Art = {
+  rows: [
+    "kkkkkkkkkkkk",
+    "kwwwwwwwwwwk",
+    "kwiiiiiiiiwk",
+    "kwigiiiiigwk",
+    "kwigggigggwk",
+    "kwiigggggiwk",
+    "kwigsgggsgwk",
+    "kwiiglllgiwk",
+    "kwffffffffwk",
+    "kkkkkkkkkkkk",
+  ],
+  palette: { k: K, w: WIRE, i: CAGE_BACK, g: "#c98b4b", s: K, l: "#f4e6cc", f: "#8f8a83" },
+};
+
+/** Straw Bedding: something under it. */
+const CAGE_2: Art = {
+  rows: [
+    "kkkkkkkkkkkk",
+    "kwwwwwwwwwwk",
+    "kwiiiiiiiiwk",
+    "kwigiiiiigwk",
+    "kwigggigggwk",
+    "kwiigggggiwk",
+    "kwigsgggsgwk",
+    "kwiyglllgywk",
+    "kwyyyyyyyywk",
+    "kkkkkkkkkkkk",
+  ],
+  palette: { k: K, w: WIRE, i: CAGE_BACK, g: "#c98b4b", s: K, l: "#f4e6cc", y: STRAW },
+};
+
+/** Underfloor Heating: the tray glows. */
+const CAGE_3: Art = {
+  rows: [
+    "kkkkkkkkkkkk",
+    "kwwwwwwwwwwk",
+    "kwiiiiiiiiwk",
+    "kwigiiiiigwk",
+    "kwigggigggwk",
+    "kwiigggggiwk",
+    "kwigsgggsgwk",
+    "kwiyglllgywk",
+    "kwyyyyyyyywk",
+    "kkooooooookk",
+  ],
+  palette: { k: K, w: WIRE, i: "#6b6f6a", g: "#d69a58", s: K, l: "#f4e6cc", y: "#f0d27a", o: "#ff9a4a" },
+};
+
+/** Show Lineage: a cushion, a rosette on the door, and a bow. */
+const CAGE_4: Art = {
+  rows: [
+    "kkkkkkkkkkkk",
+    "kaaaaaaaaaak",
+    "kaiiiiiirrak",
+    "kaigiiiirgak",
+    "kaigggbgggak",
+    "kaiigggggiak",
+    "kaigsgggsgak",
+    "kaiiglllgiak",
+    "kaccccccccak",
+    "kkkkkkkkkkkk",
+  ],
+  palette: {
+    k: K,
+    a: "#e0c04a",
+    i: "#4a5a70",
+    g: "#ddb987",
+    s: K,
+    l: "#f4e6cc",
+    b: "#f2718c",
+    r: "#e8405a",
+    c: "#c96a8a",
+  },
+};
+
+/** Trampled: the door hangs off and nobody's home. */
+export const CAGE_BROKEN: Art = {
+  rows: [
+    "kkkkkkkkkkkk",
+    "kwwwwwwwwwwk",
+    "kwiiiiiiiiik",
+    "kwiiiiiiii.k",
+    "kwiiiiiii.wk",
+    "kwiiiiii.wwk",
+    "kwiiiiii.wik",
+    "kwiiiiii.iik",
+    "kwddddddddwk",
+    "kkkkkkkkkkkk",
+  ],
+  palette: { k: K, w: "#8a9298", i: "#3e4a4e", d: "#6b6458" },
+};
+
+/** A heat lamp on a cord, throwing red onto whatever's under it. */
+export const LAMP_HANG: Art = {
+  rows: [
+    "....k....",
+    "....k....",
+    "...kmk...",
+    "..kmmmk..",
+    ".kmmmmmk.",
+    "kmmmmmmmk",
+    "kkkkkkkkk",
+    ".krrrrrk.",
+    "..rrrrr..",
+  ],
+  palette: { k: K, m: "#8f9aa3", r: "#ff6a3d" },
+};
+
+/** Ceramic Bulbs: a white shade, an orange bulb. */
+const LAMP_HANG_2 = repaint(LAMP_HANG, { m: "#e2e8ee", r: "#ff8c3a" });
+
+/** Thermostats: a green light on the shade. */
+const LAMP_HANG_3: Art = {
+  rows: [
+    "....k....",
+    "....k....",
+    "...kmk...",
+    "..kmmmk..",
+    ".kmmmmmk.",
+    "kmmmemmmk",
+    "kkkkkkkkk",
+    ".krrrrrk.",
+    "..rrrrr..",
+  ],
+  palette: { k: K, m: "#e2e8ee", r: "#ff8c3a", e: "#7fe08a" },
+};
+
+/** Whole-Yard Radiant: a bar across the ceiling instead of a bulb. */
+const LAMP_HANG_4: Art = {
+  rows: [
+    ".......k.......",
+    ".......k.......",
+    "kkkkkkkkkkkkkkk",
+    "kmmmmmmemmmmmmk",
+    "kkkkkkkkkkkkkkk",
+    ".rrrrrrrrrrrrr.",
+    "..rrrrrrrrrrr..",
+  ],
+  palette: { k: K, m: "#e2e8ee", r: "#ff9a4a", e: "#7fe08a" },
+};
+
+/** A wall floodlight over the lot. */
+export const FLOOD: Art = {
+  rows: [
+    "kkkk..",
+    "kyyykk",
+    "kyyyk.",
+    "kkkk..",
+    "..kk..",
+  ],
+  palette: { k: K, y: "#fff0b8" },
+};
+
+/** A skip, for the corner of the lot. */
+export const SKIP: Art = {
+  rows: [
+    "kkkkkkkkkkkkkk",
+    "kddddddddddddk",
+    ".kggggggggggk.",
+    ".kgggglgggggk.",
+    ".kggggggggggk.",
+    ".kggggggggggk.",
+    ".kkkkkkkkkkkk.",
+    "..kk......kk..",
+  ],
+  palette: { k: K, d: "#3f6b5e", g: "#4f8f7a", l: "#7fbfa8" },
+};
+
+/** A stack of pallets. */
+export const PALLETS: Art = {
+  rows: [
+    "kkkkkkkkkkkk",
+    "kbbbbbbbbbbk",
+    "k.kkkkkkkk.k",
+    "kbbbbbbbbbbk",
+    "k.kkkkkkkk.k",
+    "kbbbbbbbbbbk",
+    "kkkkkkkkkkkk",
+  ],
+  palette: { k: K, b: "#b8965a" },
+};
+
+/** A tyre, on its side. */
+export const TYRE: Art = {
+  rows: [
+    ".kkkkkk.",
+    "kddddddk",
+    "kdkkkkdk",
+    "kddddddk",
+    ".kkkkkk.",
+  ],
+  palette: { k: K, d: "#4d4148" },
+};
+
+/** A sack of kibble, for the stack by the lift. */
+export const SACK: Art = {
+  rows: [
+    "..kkk..",
+    ".kbbbk.",
+    "kbbbbbk",
+    "kbblbbk",
+    "kbbbbbk",
+    "kbbbbbk",
+    ".kkkkk.",
+  ],
+  palette: { k: K, b: "#d8b070", l: "#f2e0c0" },
+};
+
+/** A ¾-height desk with a phone on it, for whoever is on the ground floor. */
+export const DESK: Art = {
+  rows: [
+    "....kkk.......",
+    "....krk.......",
+    "kkkkkkkkkkkkkk",
+    "kbbbbbbbbbbbbk",
+    "kbbbbbbbbbbbbk",
+    "kkkkkkkkkkkkkk",
+    ".k..........k.",
+    ".k..........k.",
+  ],
+  palette: { k: K, b: "#8a6a4a", r: "#e8405a" },
+};
+
+/** A music note, for a whistle. */
+export const NOTE: Art = {
+  rows: [
+    "...nn",
+    "...nn",
+    "...n.",
+    "...n.",
+    ".nnn.",
+    "nnnn.",
+    ".nn..",
+  ],
+  palette: { n: "#fff0f4" },
+};
+
+/** The word on the roof. 3x5, and only the letters it needs. */
+export const GLYPHS: Readonly<Record<string, readonly string[]>> = {
+  P: ["###", "#.#", "###", "#..", "#.."],
+  U: ["#.#", "#.#", "#.#", "#.#", "###"],
+  Y: ["#.#", "#.#", "###", ".#.", ".#."],
+  M: ["#.#", "###", "###", "#.#", "#.#"],
+  I: ["###", ".#.", ".#.", ".#.", "###"],
+  L: ["#..", "#..", "#..", "#..", "###"],
+  " ": ["...", "...", "...", "...", "..."],
+};
+
 /** Four marks per tier, indexed by how many of its three upgrades you own. */
 export const PRODUCER_MARKS = {
-  patch: [PEN_PUP, PEN_PUP_2, PEN_PUP_3, PEN_PUP_4],
+  patch: [CAGE, CAGE_2, CAGE_3, CAGE_4],
   hand: [
     KENNEL_HAND,
     repaint(KENNEL_HAND, { b: "#e08a3c", t: "#f2e3c8" }),
     repaint(KENNEL_HAND, { b: "#3f8f86", t: "#e0c04a" }),
     KENNEL_HAND_4,
   ],
-  rig: [HEAT_LAMP, HEAT_LAMP_2, HEAT_LAMP_3, HEAT_LAMP_4],
+  rig: [LAMP_HANG, LAMP_HANG_2, LAMP_HANG_3, LAMP_HANG_4],
   hauler: [VAN, VAN_2, VAN_3, VAN_4],
   machine: [GROOMER, GROOMER_2, GROOMER_3, GROOMER_4],
   lab: [

@@ -1,25 +1,26 @@
 /*
- * Cozy pixel-mill skin.
+ * Pixel-mill skin.
  *
- * Same visual language as cozy_sprites: a cream-and-wood palette, a monospace
- * stack, chunky 2px borders with a hard drop shadow instead of a blur, and
- * bottom sheets rather than centred dialogs. Nothing here is round-and-soft;
- * everything is a wooden sign someone nailed up.
+ * Same bones as the farm — a monospace stack, chunky 2px borders with a hard
+ * drop shadow instead of a blur, bottom sheets rather than centred dialogs —
+ * in a different paint: plum-grey steel and pale lilac instead of wood and
+ * cream, with the neon pink off the roof sign as the accent. Nothing here is
+ * a wooden sign; it's a laminated notice taped to a fire door.
  */
 
 :root {
-  --wood: #7a5237;
-  --wood-dark: #5e3e29;
-  --cream: #f7ecd8;
-  --cream-2: #efe0c2;
-  --cream-3: #fffdf7;
-  --ink: #4a3527;
-  --ink-soft: #8a6f57;
-  --accent: #e07a4a;
-  --gold: #d29a3c;
-  --leaf: #5f9c46;
-  --blood: #c0492f;
-  --panel-shadow: 0 4px 0 rgba(94, 62, 41, 0.28);
+  --wood: #4b3f5e;
+  --wood-dark: #35293f;
+  --cream: #f3eef4;
+  --cream-2: #e4dcea;
+  --cream-3: #fdfbfe;
+  --ink: #2f2738;
+  --ink-soft: #6f6580;
+  --accent: #e0507a;
+  --gold: #d8a33a;
+  --leaf: #3f9d8a;
+  --blood: #c0392f;
+  --panel-shadow: 0 4px 0 rgba(53, 41, 63, 0.28);
 
   color-scheme: light;
   font-family: ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Mono", "Courier New", monospace;
@@ -61,7 +62,7 @@ html {
 
 body {
   height: 100%;
-  background: radial-gradient(circle at 50% 0%, #8a5f3f 0%, #6b4630 60%, #4a2f20 100%);
+  background: radial-gradient(circle at 50% 0%, #3d3352 0%, #2a2238 60%, #1a1424 100%);
   color: var(--ink);
   /* Rapid tapping otherwise reads as a double-tap zoom, which makes the whistle
      button feel broken exactly when you're using it hardest. */
@@ -89,7 +90,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #caa980;
+  background: #2a2438;
   padding-top: env(safe-area-inset-top);
 }
 
@@ -127,7 +128,7 @@ button {
 }
 button:active:not(:disabled) {
   transform: translateY(3px);
-  box-shadow: 0 1px 0 rgba(94, 62, 41, 0.28);
+  box-shadow: 0 1px 0 rgba(53, 41, 63, 0.28);
 }
 button:disabled {
   cursor: not-allowed;
