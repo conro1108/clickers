@@ -421,7 +421,8 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   useLayoutEffect(() => {
     const was = wasBreached.current;
     wasBreached.current = farm.breached;
-    if (!farm.breached || was) return;
+    // The dev lever opens the way without walking you through it; no cut for that.
+    if (!farm.breached || was || farm.world !== "beyond") return;
     setSheet(null);
     setCut("breach");
     setHeldWorld("inside");
@@ -615,7 +616,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
       {sheet === "upkeep" && (
         <Sheet
           title="Upkeep"
-          sub={`What ${farm.converged ? "the tuber" : "the weather"} broke, what it costs, and what stops it next time.`}
+          sub={`What ${farm.breached ? "the sun" : farm.converged ? "the tuber" : "the weather"} broke, what it costs, and what stops it next time.`}
           onClose={() => setSheet(null)}
           foot={
             <>

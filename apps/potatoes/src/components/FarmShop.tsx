@@ -306,7 +306,7 @@ export function LandPanel({
         <>
           <p className="hint">
             Nothing here mends on its own. What the weather hurt stays hurt and tired soil
-            stays tired until you spend on it — that's what {farm.converged ? "the tuber" : "the weather"}{" "}
+            stays tired until you spend on it — that's what {farm.breached ? "the sun" : farm.converged ? "the tuber" : "the weather"}{" "}
             actually costs.
           </p>
           {jobs > 1 && (
@@ -370,7 +370,7 @@ export function LandPanel({
 
       <p className="hint">
         Buildings work whether you're here or not, which is the only kind of defence worth having
-        against {farm.converged ? "something that stirs" : "weather that lands"} while the tab is
+        against {farm.breached ? "a sun that watches" : farm.converged ? "something that stirs" : "weather that lands"} while the tab is
         closed. They never stop it outright.
       </p>
       <div className="rows">

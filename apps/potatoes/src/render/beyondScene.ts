@@ -413,6 +413,8 @@ export class BeyondScene {
   /** The far side: your field, upside down overhead, hazed by the distance across the sun. */
   private drawFar(t: number): void {
     const ctx = this.ctx;
+    const furrow = rgba(INK, 0.18);
+    const crop = mix(GRASS, FAR_LIT, 0.35);
     for (let x = 0; x < SCENE_W; x++) {
       const c = this.ceil[x]!;
       if (c <= 0) continue;
@@ -421,11 +423,11 @@ export class BeyondScene {
       ctx.fillStyle = FAR_LIT;
       ctx.fillRect(x, Math.max(0, c - 4), 1, 4);
       // Furrows, following the curve, hanging the wrong way.
-      ctx.fillStyle = rgba(INK, 0.18);
+      ctx.fillStyle = furrow;
       for (let r = 7; r < c; r += 6) ctx.fillRect(x, c - r, 1, 1);
       // Tiny crops along the lip, pointing at you.
       if ((x * 7 + 3) % 9 === 0) {
-        ctx.fillStyle = mix(GRASS, FAR_LIT, 0.35);
+        ctx.fillStyle = crop;
         ctx.fillRect(x, c, 1, 2);
       }
     }

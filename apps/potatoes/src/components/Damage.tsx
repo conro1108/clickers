@@ -13,7 +13,7 @@ export function Damage({ farm }: { farm: solo.SiteState }) {
   return (
     <div className="damage">
       <div className="damage-head">
-        What {farm.converged ? "the tuber's" : "the weather's"} costing you
+        What {farm.breached ? "the sun's" : farm.converged ? "the tuber's" : "the weather's"} costing you
       </div>
       <div className="damage-body">
         {lostToBreak > 0 && (
