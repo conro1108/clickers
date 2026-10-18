@@ -316,6 +316,23 @@ function BackRoom({
         </button>
       </section>
 
+      {mill.converged && (
+        <section>
+          <h3>The dream</h3>
+          <p className="muted small">
+            {mill.breached
+              ? "Strips the kit that only exists in the dream and puts the breach back on the shelf. The nest and the yard are untouched."
+              : "Opens it without the purchase, so without the animation. To watch that, buy the Dream."}
+          </p>
+          <button
+            className="ghost"
+            onClick={() => dispatch({ type: "dev_breach", breached: !mill.breached })}
+          >
+            {mill.breached ? "Wake it up" : "Go in now"}
+          </button>
+        </section>
+      )}
+
       <section>
         <h3>Versus a bot</h3>
         <p className="muted small">
@@ -392,7 +409,9 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   }, [singularities]);
 
   // The Convergence, same shape: an answer to a purchase, seeded from first render so a folded save reopens folded.
-  const [converging, setConverging] = useState(false);
+  // Which cut is playing: the fold into the nest, or the breach into the dream. Same overlay, different words.
+  const [crossing, setCrossing] = useState<"fold" | "breach" | null>(null);
+  const converging = crossing !== null;
   // Which mill the canvas draws while the trip holds it back. Null once swapped, and forever after.
   const [heldWorld, setHeldWorld] = useState<solo.World | null>(null);
   const wasConverged = useRef(mill.converged);
@@ -402,16 +421,34 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     wasConverged.current = mill.converged;
     if (!mill.converged || was) return;
     setSheet(null);
-    setConverging(true);
+    setCrossing("fold");
     // Stay out under the sky until the dark has taken the screen.
     setHeldWorld("outside");
     const swap = setTimeout(() => setHeldWorld(null), FOLD_SWAP_MS);
-    const id = setTimeout(() => setConverging(false), CONVERGE_MS);
+    const id = setTimeout(() => setCrossing(null), CONVERGE_MS);
     return () => {
       clearTimeout(id);
       clearTimeout(swap);
     };
   }, [mill.converged]);
+
+  // The breach, on the same terms: held in the nest until the dark is over it, then the dream.
+  const wasBreached = useRef(mill.breached);
+  useLayoutEffect(() => {
+    const was = wasBreached.current;
+    wasBreached.current = mill.breached;
+    // Only a purchase that moved you there; the back-room lever opens it without the cut.
+    if (!mill.breached || was || mill.world !== "beyond") return;
+    setSheet(null);
+    setCrossing("breach");
+    setHeldWorld("inside");
+    const swap = setTimeout(() => setHeldWorld(null), FOLD_SWAP_MS);
+    const id = setTimeout(() => setCrossing(null), CONVERGE_MS);
+    return () => {
+      clearTimeout(id);
+      clearTimeout(swap);
+    };
+  }, [mill.breached]);
 
   // Close the shop on the first of a kind: those are the purchases that reveal (new lot, new stratum) rather than add.
   // Only the first — throwing you out on every pen would make the shop unusable.
@@ -467,7 +504,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const kitOnTheLand = solo.SOLO_PRODUCERS.reduce((n, p) => n + (mill.producers[p.id] ?? 0), 0);
 
   // The shop has emptied itself for the Ur-Chihuahua; the bottom bar is where that announces itself.
-  const lastPurchase = solo.convergencePending(mill);
+  const lastPurchase = solo.convergencePending(mill) || solo.breachPending(mill);
 
   return (
     <div className="app mill-app">
@@ -564,7 +601,9 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           sub={
             lastPurchase
               ? "What's below was never stock."
-              : mill.world === "inside"
+              : mill.world === "beyond"
+                ? "What there is out here, while it's still dreaming."
+                : mill.world === "inside"
                 ? "What there is to work down here, and what makes it work harder."
                 : "More kit on the land, and the upgrades that make it worth more."
           }
@@ -596,7 +635,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
       {sheet === "upkeep" && (
         <Sheet
           title="Upkeep"
-          sub={`What ${mill.converged ? "the nest" : "the weather"} broke, what it costs, and what stops it next time.`}
+          sub={`What ${mill.breached ? "the dream" : mill.converged ? "the nest" : "the weather"} broke, what it costs, and what stops it next time.`}
           onClose={() => setSheet(null)}
           foot={
             <>
@@ -613,8 +652,8 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
               door belongs on top of them rather than three taps away with the
               cheats. */}
           {mill.converged && (
-            <div className="choices halves world-door">
-              {(["outside", "inside"] as const).map((to) => (
+            <div className={`choices ${mill.breached ? "thirds" : "halves"} world-door`}>
+              {(["outside", "inside", "beyond"] as const).filter((to) => solo.isWorldOpen(mill, to)).map((to) => (
                 <button
                   key={to}
                   className={mill.world === to ? "on" : ""}
@@ -625,7 +664,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
                     setSheet(null);
                   }}
                 >
-                  {to === "outside" ? "Out under the sky" : "Inside the nest"}
+                  {to === "outside" ? "Out under the sky" : to === "inside" ? "Inside the nest" : "In the dream"}
                 </button>
               ))}
             </div>
@@ -704,8 +743,8 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           underneath has already swapped to the other scene by the time the
           words clear. The cut is the whole journey now — there's no second act
           waiting on the canvas for it to get out of the way of. */}
-      {converging && (
-        <div className="converge" role="presentation">
+      {crossing && (
+        <div className={`converge ${crossing === "breach" ? "breach" : ""}`} role="presentation">
           <div className="converge-dog" />
           <div className="converge-warm" />
           {/* In the order they arrive. The sentence lands first, on the frame
@@ -713,11 +752,19 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
               the name for what just happened to you, and naming it before it
               happens is a chapter heading on a thing you haven't read. It's
               also what's still up as the mill comes back underneath it. */}
-          <div className="converge-words">
-            <p className="converge-line">The ground was never ground</p>
-            <p className="converge-call">You have always been under the blanket</p>
-            <p className="converge-title">The Convergence</p>
-          </div>
+          {crossing === "breach" ? (
+            <div className="converge-words">
+              <p className="converge-line">Its paws are twitching</p>
+              <p className="converge-call">It has been dreaming of you the whole time</p>
+              <p className="converge-title">The Dream</p>
+            </div>
+          ) : (
+            <div className="converge-words">
+              <p className="converge-line">The ground was never ground</p>
+              <p className="converge-call">You have always been under the blanket</p>
+              <p className="converge-title">The Convergence</p>
+            </div>
+          )}
         </div>
       )}
     </div>

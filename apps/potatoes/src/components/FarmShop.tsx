@@ -93,12 +93,17 @@ function Convergence({
   farm,
   budget,
   dispatch,
+  upgrade,
+  line,
 }: {
   farm: solo.SiteState;
   budget: Yield;
   dispatch: (cmd: solo.SiteCommand) => void;
+  /** The fold's `ur_form`, or the breach one world further in. */
+  upgrade: string;
+  line: string;
 }) {
-  const ur = solo.SOLO_UPGRADE_BY_ID[solo.CONVERGENCE_UPGRADE]!;
+  const ur = solo.SOLO_UPGRADE_BY_ID[upgrade]!;
   const affordable = Y.gte(budget, ur.cost);
   const held = Math.max(0, Math.min(1, budget / ur.cost));
   const rate = solo.currentRate(farm);
@@ -109,7 +114,7 @@ function Convergence({
       <div className="grave-mark" aria-hidden />
       <h3 className="grave-name">{ur.name}</h3>
       <p className="grave-blurb">{ur.blurb}</p>
-      <p className="grave-line">You have spent this whole run on its skin.</p>
+      <p className="grave-line">{line}</p>
 
       <div className="grave-price">
         <div className="grave-track">
@@ -150,7 +155,27 @@ export function GrowPanel({
 
   // Once the tenth Singularity stands, everything else leaves the board: buying another would push the Ur-Potato out.
   if (solo.convergencePending(farm)) {
-    return <Convergence farm={farm} budget={budget} dispatch={dispatch} />;
+    return (
+      <Convergence
+        farm={farm}
+        budget={budget}
+        dispatch={dispatch}
+        upgrade={solo.CONVERGENCE_UPGRADE}
+        line="You have spent this whole run on its skin."
+      />
+    );
+  }
+  // Same again at the bottom of the inside: the tenth Second Potato, and the eye it has.
+  if (solo.breachPending(farm)) {
+    return (
+      <Convergence
+        farm={farm}
+        budget={budget}
+        dispatch={dispatch}
+        upgrade={solo.BREACH_UPGRADE}
+        line="You have spent this whole run getting to the middle of it."
+      />
+    );
   }
 
   // One shop per world; warping is how you change it.
@@ -235,6 +260,12 @@ export function GrowPanel({
   );
 }
 
+const WHERE: Record<solo.World, string> = {
+  outside: "out under the sky",
+  inside: "down inside the potato",
+  beyond: "through the eye",
+};
+
 export function LandPanel({
   farm,
   budget,
@@ -249,9 +280,14 @@ export function LandPanel({
   const damaged = solo
     .producersIn(farm.world)
     .filter((p) => solo.brokenCount(farm, p.id) > 0);
-  const elsewhere = solo
-    .producersIn(farm.world === "inside" ? "outside" : "inside")
-    .reduce((n, p) => n + solo.brokenCount(farm, p.id), 0);
+  // Every other open world, so the hint can say where.
+  const elsewhere = (["outside", "inside", "beyond"] as const)
+    .filter((w) => w !== farm.world && solo.isWorldOpen(farm, w))
+    .map((w) => ({
+      world: w,
+      n: solo.producersIn(w).reduce((n, p) => n + solo.brokenCount(farm, p.id), 0),
+    }))
+    .filter((e) => e.n > 0);
 
   // Fix-all only when there is more than one thing to pay for.
   const bill = solo.upkeepBill(farm);
@@ -325,13 +361,12 @@ export function LandPanel({
         </>
       )}
 
-      {elsewhere > 0 && (
-        <p className="hint">
-          {elsewhere} more {elsewhere === 1 ? "thing is" : "things are"} broken{" "}
-          {farm.world === "inside" ? "out under the sky" : "down inside the potato"}. You'll have to
-          be standing there to put {elsewhere === 1 ? "it" : "them"} right.
+      {elsewhere.map(({ world, n }) => (
+        <p key={world} className="hint">
+          {n} more {n === 1 ? "thing is" : "things are"} broken {WHERE[world]}. You'll have to be
+          standing there to put {n === 1 ? "it" : "them"} right.
         </p>
-      )}
+      ))}
 
       <p className="hint">
         Buildings work whether you're here or not, which is the only kind of defence worth having
@@ -430,8 +465,8 @@ export function LegacyPanel({
           <p className="hint">
             You can hand down the sky as well. Stay inside and the next generation starts under the
             ceiling, with the tiers that farm it already in the shop. Go back out and the horizon
-            opens — no Bruise Bed, no Taproot Well, weather instead of the tuber, and the
-            Convergence to reach all over again.
+            opens — no Bruise Bed, no Taproot Well{farm.breached ? ", nothing through the eye" : ""},
+            weather instead of the tuber, and the Convergence to reach all over again.
           </p>
           <div className="choices halves">
             <button className={outside ? "" : "on"} onClick={() => setOutside(false)}>

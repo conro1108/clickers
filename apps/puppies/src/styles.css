@@ -249,6 +249,12 @@ input {
   margin-bottom: 14px;
 }
 
+.choices.thirds {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  margin-bottom: 14px;
+}
+
 /* Eight opponents don't fit a row. A grid keeps the ladder readable as a
    ladder: two columns, easiest top-left, hardest bottom-right. */
 .choices.roster {
@@ -713,6 +719,27 @@ input {
   inset: 0;
   background: #fff3d6;
   animation: converge-flash 9600ms ease-out both;
+}
+
+/* The breach: the same fall, toward the Second Chihuahua asleep — eyes shut —
+   and out the other side into a night lawn under a moon instead of fleece. */
+.converge.breach::before {
+  background: radial-gradient(circle at 50% 50%, rgba(200, 214, 244, 0.22), rgba(6, 4, 10, 0) 48%);
+}
+.converge.breach .converge-dog::before,
+.converge.breach .converge-dog::after {
+  height: 1.6%;
+  top: 45%;
+  border-radius: 0;
+  background: #2a1a10;
+}
+.converge.breach .converge-warm {
+  background:
+    radial-gradient(circle at 72% 22%, #f4f0dc 0 9vmin, rgba(244, 240, 220, 0) 9.4vmin),
+    linear-gradient(#07071c 0%, #2a2452 58%, #3f6a5a 58.4%, #2c4a5a 100%);
+}
+.converge.breach .converge-warm::before {
+  background: #e8eefc;
 }
 
 .converge-words {

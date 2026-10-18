@@ -301,6 +301,23 @@ function BackRoom({
         </button>
       </section>
 
+      {farm.converged && (
+        <section>
+          <h3>The eye</h3>
+          <p className="muted small">
+            {farm.breached
+              ? "Strips the kit that only grows through the eye and puts the Eye back on the shelf. Everything else is untouched."
+              : "Opens it without the purchase, so without the cut. To watch that, buy the Eye."}
+          </p>
+          <button
+            className="ghost"
+            onClick={() => dispatch({ type: "dev_breach", breached: !farm.breached })}
+          >
+            {farm.breached ? "Close the eye" : "Go through now"}
+          </button>
+        </section>
+      )}
+
       <section>
         <h3>Versus a bot</h3>
         <p className="muted small">
@@ -377,7 +394,8 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   }, [singularities]);
 
   // The Convergence, same shape: an answer to a purchase, seeded from first render so a folded save reopens folded.
-  const [converging, setConverging] = useState(false);
+  // Which cut is playing: the fold into the potato, or the breach through the Second Potato's eye.
+  const [cut, setCut] = useState<"fold" | "breach" | null>(null);
   // Which farm the canvas draws while the trip holds it back. Null once swapped, and forever after.
   const [heldWorld, setHeldWorld] = useState<solo.World | null>(null);
   const wasConverged = useRef(farm.converged);
@@ -387,16 +405,33 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     wasConverged.current = farm.converged;
     if (!farm.converged || was) return;
     setSheet(null);
-    setConverging(true);
+    setCut("fold");
     // Stay out under the sky until the dark has taken the screen.
     setHeldWorld("outside");
     const swap = setTimeout(() => setHeldWorld(null), FOLD_SWAP_MS);
-    const id = setTimeout(() => setConverging(false), CONVERGE_MS);
+    const id = setTimeout(() => setCut(null), CONVERGE_MS);
     return () => {
       clearTimeout(id);
       clearTimeout(swap);
     };
   }, [farm.converged]);
+
+  // The breach: the same cut, one world further in, held on the inside until the dark is up.
+  const wasBreached = useRef(farm.breached);
+  useLayoutEffect(() => {
+    const was = wasBreached.current;
+    wasBreached.current = farm.breached;
+    if (!farm.breached || was) return;
+    setSheet(null);
+    setCut("breach");
+    setHeldWorld("inside");
+    const swap = setTimeout(() => setHeldWorld(null), FOLD_SWAP_MS);
+    const id = setTimeout(() => setCut(null), CONVERGE_MS);
+    return () => {
+      clearTimeout(id);
+      clearTimeout(swap);
+    };
+  }, [farm.breached]);
 
   // Close the shop on the first of a kind: those are the purchases that reveal (new lot, new stratum) rather than add.
   // Only the first — throwing you out on every plot would make the shop unusable.
@@ -445,14 +480,14 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 700);
   }, [dig, farm]);
 
-  useSpaceToDig(onDig, report === null && sheet === null && omen === null && !converging);
+  useSpaceToDig(onDig, report === null && sheet === null && omen === null && cut === null);
 
   const soilPct = Math.round(farm.condition * 100);
   const hold = useHold(useCallback(() => setSheet("back"), []));
   const kitOnTheLand = solo.SOLO_PRODUCERS.reduce((n, p) => n + (farm.producers[p.id] ?? 0), 0);
 
   // The shop has emptied itself for the Ur-Potato; the bottom bar is where that announces itself.
-  const lastPurchase = solo.convergencePending(farm);
+  const lastPurchase = solo.convergencePending(farm) || solo.breachPending(farm);
 
   return (
     <div className="app farm-app">
@@ -546,9 +581,11 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           sub={
             lastPurchase
               ? "What's below was never stock."
-              : farm.world === "inside"
-                ? "What there is to work down here, and what makes it work harder."
-                : "More kit on the land, and the upgrades that make it worth more."
+              : farm.world === "beyond"
+                ? "What grows on the inside of the inside, and what makes it grow harder."
+                : farm.world === "inside"
+                  ? "What there is to work down here, and what makes it work harder."
+                  : "More kit on the land, and the upgrades that make it worth more."
           }
           onClose={() => setSheet(null)}
           foot={
@@ -595,8 +632,8 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
               door belongs on top of them rather than three taps away with the
               cheats. */}
           {farm.converged && (
-            <div className="choices halves world-door">
-              {(["outside", "inside"] as const).map((to) => (
+            <div className={`choices ${farm.breached ? "thirds" : "halves"} world-door`}>
+              {(["outside", "inside", "beyond"] as const).filter((to) => solo.isWorldOpen(farm, to)).map((to) => (
                 <button
                   key={to}
                   className={farm.world === to ? "on" : ""}
@@ -607,7 +644,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
                     setSheet(null);
                   }}
                 >
-                  {to === "outside" ? "Out under the sky" : "Inside the potato"}
+                  {to === "outside" ? "Out under the sky" : to === "inside" ? "Inside the potato" : "Through the eye"}
                 </button>
               ))}
             </div>
@@ -685,7 +722,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           underneath has already swapped to the other scene by the time the
           words clear. The cut is the whole journey now — there's no second act
           waiting on the canvas for it to get out of the way of. */}
-      {converging && (
+      {cut && (
         <div className="converge" role="presentation">
           <div className="converge-skin" />
           <div className="converge-flesh" />
@@ -694,11 +731,19 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
               the name for what just happened to you, and naming it before it
               happens is a chapter heading on a thing you haven't read. It's
               also what's still up as the farm comes back underneath it. */}
-          <div className="converge-words">
-            <p className="converge-line">The first potato was never in the ground</p>
-            <p className="converge-call">You have always been inside it</p>
-            <p className="converge-title">The Convergence</p>
-          </div>
+          {cut === "fold" ? (
+            <div className="converge-words">
+              <p className="converge-line">The first potato was never in the ground</p>
+              <p className="converge-call">You have always been inside it</p>
+              <p className="converge-title">The Convergence</p>
+            </div>
+          ) : (
+            <div className="converge-words">
+              <p className="converge-line">The second potato was never asleep</p>
+              <p className="converge-call">There is a field on the other side of its eye</p>
+              <p className="converge-title">The Breach</p>
+            </div>
+          )}
         </div>
       )}
     </div>

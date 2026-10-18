@@ -11,6 +11,7 @@ import { solo, type Yield } from "@clickers/sim";
 
 import { producerMark } from "../marks.js";
 import { EMPTY_VIEW, FarmScene as Scene, type FarmView } from "../render/farmScene.js";
+import { BeyondScene } from "../render/beyondScene.js";
 import { InsideScene } from "../render/insideScene.js";
 
 export interface FarmSceneHandle {
@@ -18,7 +19,7 @@ export interface FarmSceneHandle {
   dig(at?: { x: number; y: number }): void;
 }
 
-/** What React needs from either renderer (farmScene.ts / insideScene.ts). */
+/** What React needs from any renderer (farmScene.ts / insideScene.ts / beyondScene.ts). */
 interface SceneLike {
   update(view: FarmView): void;
   start(): void;
@@ -42,7 +43,12 @@ const SceneCanvas = forwardRef<FarmSceneHandle, {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const scene: SceneLike = world === "inside" ? new InsideScene(canvas) : new Scene(canvas);
+    const scene: SceneLike =
+      world === "beyond"
+        ? new BeyondScene(canvas)
+        : world === "inside"
+          ? new InsideScene(canvas)
+          : new Scene(canvas);
     sceneRef.current = scene;
     scene.update(latest.current);
     scene.start();

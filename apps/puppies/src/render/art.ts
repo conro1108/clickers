@@ -1602,6 +1602,209 @@ export const GLYPHS: Readonly<Record<string, readonly string[]>> = {
   " ": ["...", "...", "...", "...", "..."],
 };
 
+// --- Beyond — the dream the Second Chihuahua is having ---
+// Moonlit and cool: everything out here is the colour of a lawn at three in the morning.
+
+const DREAM_K = "#3a3a6a";
+
+/** A kennel the way a dog remembers one: pale, and with the door always open. */
+export const ECHO_KENNEL: Art = {
+  rows: [
+    "....kkk....",
+    "...kaaak...",
+    "..kaaaaak..",
+    ".kaaaaaaak.",
+    "kkkkkkkkkkk",
+    ".kbbbbbbbk.",
+    ".kbbkkkbbk.",
+    ".kbknnnkbk.",
+    ".kbknnnkbk.",
+    ".kkkkkkkkk.",
+  ],
+  palette: { k: DREAM_K, a: "#9fb4e6", b: "#c8d6f4", n: "#141430" },
+};
+
+const ECHO_KENNEL_4: Art = {
+  rows: [
+    "....kkk....",
+    "...kaaak...",
+    "..kaaaaak..",
+    ".kkkkkkkkk.",
+    ".kbbbybbbk.",
+    ".kbbbbbbbk.",
+    "kkkkkkkkkkk",
+    ".kbbkkkbbk.",
+    ".kbknnnkbk.",
+    ".kbknnnkbk.",
+    ".kkkkkkkkk.",
+  ],
+  palette: { ...ECHO_KENNEL.palette, y: "#ffe9a8" },
+};
+
+/** Somebody with a ball. Seen from knee height, which is mostly legs. */
+export const THROWER: Art = {
+  rows: [
+    ".....o.",
+    "..hh.k.",
+    "..ff.k.",
+    ".bbbbk.",
+    "kbbbb..",
+    ".bbbb..",
+    ".bbbb..",
+    ".ll.ll.",
+    ".ll.ll.",
+    ".ll.ll.",
+    ".ll.ll.",
+    ".kk.kk.",
+  ],
+  palette: { k: DREAM_K, o: "#ffd166", h: "#5a4060", f: "#e8c8a8", b: "#7f9fd8", l: "#4a4a80" },
+};
+
+const THROWER_4: Art = {
+  rows: [
+    "o.....o",
+    "k.hh.k.",
+    ".kffk..",
+    "..bbb..",
+    ".bbbbb.",
+    ".bbbbb.",
+    ".ll.ll.",
+    ".ll.ll.",
+    ".ll.ll.",
+    ".ll.ll.",
+    ".ll.ll.",
+    ".kk.kk.",
+  ],
+  palette: THROWER.palette,
+};
+
+/** A tree that is mostly sticks, which is what trees are for. */
+export const STICK_TREE: Art = {
+  rows: [
+    "...ggggg...",
+    ".ggglgggg..",
+    "gggggggglgg",
+    "ggglggggggg",
+    ".gggggggg..",
+    "...gstg....",
+    "....t..s...",
+    "....t......",
+    "....t......",
+    "...ttt.....",
+  ],
+  palette: { g: "#3f6a7a", l: "#7fb8c8", t: "#6a4a3a", s: "#8a6a4a" },
+};
+
+const STICK_TREE_4: Art = {
+  rows: [
+    "..ggggggg..",
+    ".ggggglgggg",
+    "ggglggggggg",
+    "ggggggggglg",
+    "gggggggggg.",
+    ".ggggggggg.",
+    "...gtgt.g..",
+    "....t.r....",
+    "....t.r....",
+    "....trrr...",
+    "....trrr...",
+    "...ttt.....",
+  ],
+  palette: { ...STICK_TREE.palette, r: "#2a2a3a" },
+};
+
+/** A puddle with the moon in it. */
+export const MOON_PUDDLE: Art = {
+  rows: [
+    "..kkkkkkkk..",
+    ".kwwwmwwwwk.",
+    "kwwwmmmwwwwk",
+    ".kwwwmwwwwk.",
+    "..kkkkkkkk..",
+  ],
+  palette: { k: "#22304a", w: "#3a5a9a", m: "#e8eefc" },
+};
+
+const MOON_PUDDLE_4: Art = {
+  rows: [
+    "......n.....",
+    "......n.....",
+    "..kkkknkkk..",
+    ".kwwwwnmwwk.",
+    "kwwwwmnmmwwk",
+    ".kwwwwnmwwk.",
+    "..kkkkkkkk..",
+  ],
+  palette: { ...MOON_PUDDLE.palette, n: "#8a6a4a" },
+};
+
+/** A porch light on a post. Somebody always leaves it on. */
+export const PORCH_LIGHT: Art = {
+  rows: [
+    "..kkk..",
+    ".kyyyk.",
+    ".kyyyk.",
+    "..kkk..",
+    "...p...",
+    "...p...",
+    "...p...",
+    "...p...",
+    "...p...",
+    "...p...",
+    "...p...",
+    "..ppp..",
+    ".kkkkk.",
+  ],
+  palette: { k: "#2a2238", y: "#ffe08a", p: "#5a4a5a" },
+};
+
+const PORCH_LIGHT_4: Art = {
+  rows: [
+    "kkk.kkk",
+    "kyk.kyk",
+    "kkk.kkk",
+    ".ppppp.",
+    "...p...",
+    "...p...",
+    "...p...",
+    "...p...",
+    "...p...",
+    "...p...",
+    "...p...",
+    "..ppp..",
+    ".kkkkk.",
+  ],
+  palette: PORCH_LIGHT.palette,
+};
+
+/** The last rung: a small moon, curled up. */
+export const MOON_DOG: Art = {
+  rows: [
+    ".k...k....",
+    "kmk.kmk...",
+    "kmmkmmmkk.",
+    "kmemmmmmmk",
+    ".kmmmmmmmk",
+    "..kmmmmddk",
+    "...kkkkkk.",
+  ],
+  palette: { k: "#6a6a9a", m: "#f4f0dc", d: "#c8c0a0", e: DREAM_K },
+};
+
+const MOON_DOG_4: Art = {
+  rows: [
+    "y........y",
+    ".k...k....",
+    "kmk.kmk.y.",
+    "kmmkmmmkk.",
+    "kmemmmmmmk",
+    ".kmmmmmmmk",
+    "..kmmmmddk",
+    "y..kkkkkk.",
+  ],
+  palette: { ...MOON_DOG.palette, y: "#ffe9a8" },
+};
+
 /** Four marks per tier, indexed by how many of its three upgrades you own. */
 export const PRODUCER_MARKS = {
   patch: [CAGE, CAGE_2, CAGE_3, CAGE_4],
@@ -1689,6 +1892,42 @@ export const PRODUCER_MARKS = {
     repaint(SECOND_CHIHUAHUA, { p: "#d69a58", l: "#f0c68c" }),
     repaint(SECOND_CHIHUAHUA, { p: "#e0c04a", l: "#f7e08a", d: "#8a6a1c" }),
     SECOND_CHIHUAHUA_4,
+  ],
+  echo: [
+    ECHO_KENNEL,
+    repaint(ECHO_KENNEL, { a: "#b9a8e6", b: "#e0d8f8" }),
+    repaint(ECHO_KENNEL, { a: "#e0c04a", b: "#f4ecd0", n: "#2a2050" }),
+    ECHO_KENNEL_4,
+  ],
+  kin: [
+    THROWER,
+    repaint(THROWER, { b: "#d88a7f", o: "#a8f07a" }),
+    repaint(THROWER, { b: "#e0c04a", l: "#3a5a8a", o: "#ff7a6a" }),
+    THROWER_4,
+  ],
+  grove: [
+    STICK_TREE,
+    repaint(STICK_TREE, { g: "#4f6a8f", l: "#a8c0e8" }),
+    repaint(STICK_TREE, { g: "#6a5a8f", l: "#e0c6f0", s: "#e0c04a" }),
+    STICK_TREE_4,
+  ],
+  tide: [
+    MOON_PUDDLE,
+    repaint(MOON_PUDDLE, { w: "#4a6aaa", m: "#fff4c0" }),
+    repaint(MOON_PUDDLE, { w: "#5a5aa8", m: "#ffe08a", k: "#2a2a5a" }),
+    MOON_PUDDLE_4,
+  ],
+  beacon: [
+    PORCH_LIGHT,
+    repaint(PORCH_LIGHT, { y: "#ffc46a" }),
+    repaint(PORCH_LIGHT, { y: "#fff4c0", p: "#8d959d" }),
+    PORCH_LIGHT_4,
+  ],
+  third: [
+    MOON_DOG,
+    repaint(MOON_DOG, { m: "#fff4d0", d: "#e0c890" }),
+    repaint(MOON_DOG, { m: "#ffe9a8", d: "#e0c04a" }),
+    MOON_DOG_4,
   ],
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 

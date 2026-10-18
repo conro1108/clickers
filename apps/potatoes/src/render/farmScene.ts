@@ -302,7 +302,7 @@ const HEAP_SPILL = 4;
 
 let heapCache: { x: number; y: number }[] | null = null;
 
-function heapSlots(): { x: number; y: number }[] {
+export function heapSlots(): { x: number; y: number }[] {
   if (!heapCache) {
     const h = artCanvas(POTATO_SPRITE).h;
     const slots: { x: number; y: number; key: number }[] = [];

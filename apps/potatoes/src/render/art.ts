@@ -1611,6 +1611,211 @@ const SECOND_POTATO_4: Art = {
   },
 };
 
+// --- Beyond: inside the Second Potato ---
+
+/** A potato plant and the one it already was, pale beside it. */
+export const ECHO_PLOT: Art = {
+  rows: [
+    "..e...g..",
+    ".eee.ggg.",
+    "eelegglgg",
+    ".eee.ggg.",
+    "..e...g..",
+    "..e..kgk.",
+    ".kdddddk.",
+    "kdddddddk",
+  ],
+  palette: { k: K, g: "#6aa348", l: "#a4e884", e: "#cfc6e8", d: "#8a5f3f" },
+};
+
+const ECHO_PLOT_4: Art = {
+  rows: [
+    "e.e...g.g",
+    "eeee.gggg",
+    "elee.glgg",
+    "eeee.gggg",
+    ".ee...gg.",
+    "..e..kgk.",
+    ".kpdddpk.",
+    "kdddddddk",
+  ],
+  palette: { k: K, g: "#6aa348", l: "#a4e884", e: "#cfc6e8", d: "#8a5f3f", p: "#c98b4b" },
+};
+
+/** A farmhand with no face. The hat is the one you wore. */
+export const KINFOLK: Art = {
+  rows: [
+    "..hhh..",
+    ".hhhhh.",
+    "..fff..",
+    "..fff..",
+    "..fff..",
+    ".bbbbb.",
+    "bbbbbbb",
+    ".bbbbb.",
+    ".b...b.",
+    ".b...b.",
+    ".k...k.",
+  ],
+  palette: { k: K, h: "#8f7ab8", f: "#f2dcc0", b: "#6a8fb0" },
+};
+
+const KINFOLK_4: Art = {
+  rows: [
+    "..hhh..",
+    ".hhhhh.",
+    "b.fef.b",
+    "b.fff.b",
+    "bbfffbb",
+    ".bbbbb.",
+    ".bbbbb.",
+    ".bbbbb.",
+    ".b...b.",
+    ".b...b.",
+    ".k...k.",
+  ],
+  palette: { k: K, h: "#8f7ab8", f: "#f2dcc0", b: "#6a8fb0", e: K },
+};
+
+/** A potato tree, drawn right way up. The scene hangs it from the far side. */
+export const UPSIDE_GROVE: Art = {
+  rows: [
+    "...kkkkk...",
+    "..kgggggk..",
+    ".kggpgggggk",
+    "kgggggggpgk",
+    "kgpgggggggk",
+    ".kgggggpgk.",
+    "..kggggggk.",
+    "....ktk....",
+    "....ktk....",
+    "....ktk....",
+    "...kttk....",
+    "..kk..kk...",
+  ],
+  palette: { k: K, g: "#5b8f3d", p: "#c98b4b", t: "#7a5237" },
+};
+
+const UPSIDE_GROVE_4: Art = {
+  rows: [
+    "..kkkkkkk..",
+    ".kggyggggk.",
+    "kggggggyggk",
+    "kgygggggggk",
+    "kggggyggggk",
+    ".kgggggggk.",
+    "..kgk.kgk..",
+    "...kt.tk...",
+    "...kt.tk...",
+    "....ktk....",
+    "....ktk....",
+    "..kk...kk..",
+  ],
+  palette: { k: K, g: "#5b8f3d", y: "#ffd166", t: "#7a5237" },
+};
+
+/** A tide wheel standing in the starch sea. */
+export const TIDE_MILL: Art = {
+  rows: [
+    "....kkkk....",
+    "...kwwwwk...",
+    "..kwmmmmwk..",
+    ".kwmkmmkmwk.",
+    ".kwmmkkmmwk.",
+    ".kwmkmmkmwk.",
+    "sskwmmmmwkss",
+    "sssskkkkssss",
+    "tsstssstssts",
+  ],
+  palette: { k: K, w: "#7a5237", m: "#a8b0b8", s: "#f2e3c8", t: "#d8c49a" },
+};
+
+const TIDE_MILL_4: Art = {
+  rows: [
+    "..s......s..",
+    ".kkk....kkk.",
+    "kmkmk..kmkmk",
+    "kkmkk..kkmkk",
+    "kmkmk..kmkmk",
+    ".kkkwwwwkkk.",
+    "sskwwwwwwkss",
+    "sssskkkkssss",
+    "tsstssstssts",
+  ],
+  palette: { k: K, w: "#7a5237", m: "#a8b0b8", s: "#f2e3c8", t: "#d8c49a" },
+};
+
+/** A lantern on a pole. One flame per farm handed down, which the scene counts. */
+export const HEARTH_LANTERN: Art = {
+  rows: [
+    ".kkk.",
+    "kfyfk",
+    "kyyyk",
+    "kfyfk",
+    ".kkk.",
+    "..k..",
+    "..w..",
+    "..w..",
+    "..w..",
+    "..w..",
+    "..w..",
+    ".www.",
+    "wwwww",
+  ],
+  palette: { k: K, f: "#ff9a3c", y: "#fff4c0", w: "#5e3e29" },
+};
+
+const HEARTH_LANTERN_4: Art = {
+  rows: [
+    "y.k.y",
+    ".kkk.",
+    "kyyyk",
+    "kyfyk",
+    "kyyyk",
+    ".kkk.",
+    ".kwk.",
+    "..w..",
+    ".kwk.",
+    "..w..",
+    ".kwk.",
+    ".www.",
+    "wwwww",
+  ],
+  palette: { k: K, f: "#ff9a3c", y: "#fff4c0", w: "#5e3e29" },
+};
+
+/** The sun in here: a potato, lit from inside, with one eye. */
+export const INNER_SUN: Art = {
+  rows: [
+    "...kkkkk...",
+    ".kkllllpkk.",
+    "klllpppppdk",
+    "kllpkkkppdk",
+    "klppkekppdk",
+    "kpppkkkppdk",
+    "kppppppppdk",
+    ".kkpppppkk.",
+    "...kkkkk...",
+  ],
+  palette: { k: K, p: "#ffd166", l: "#fff4c0", d: "#e0a040", e: "#2a1520" },
+};
+
+const INNER_SUN_4: Art = {
+  rows: [
+    "..y..y..y..",
+    "...kkkkk...",
+    ".kkllllpkk.",
+    "kllkkkkkpdk",
+    "klkkeeekkdk",
+    "kppkkkkkpdk",
+    "kppppppppdk",
+    ".kkpppppkk.",
+    "...kkkkk...",
+    "..y..y..y..",
+  ],
+  palette: { k: K, p: "#ffd166", l: "#fff4c0", d: "#e0a040", e: "#7a3aa0", y: "#fff4c0" },
+};
+
 /** Four marks per tier, indexed by how many of its three upgrades you own. See the marks note above. */
 export const PRODUCER_MARKS = {
   patch: [PLANT, PLANT_2, PLANT_3, PLANT_4],
@@ -1698,6 +1903,42 @@ export const PRODUCER_MARKS = {
     repaint(SECOND_POTATO, { p: "#d69a58", l: "#f0c68c" }),
     repaint(SECOND_POTATO, { p: "#e0c04a", l: "#f7e08a", d: "#8a6a1c" }),
     SECOND_POTATO_4,
+  ],
+  echo: [
+    ECHO_PLOT,
+    repaint(ECHO_PLOT, { e: "#e8d8ff", g: "#7fc45a" }),
+    repaint(ECHO_PLOT, { e: "#fff4c0", g: "#a4e884", l: "#e8ffd0" }),
+    ECHO_PLOT_4,
+  ],
+  kin: [
+    KINFOLK,
+    repaint(KINFOLK, { b: "#8f7ab8", h: "#6a8fb0" }),
+    repaint(KINFOLK, { b: "#c9a24a", h: "#e0c04a", f: "#fff0d8" }),
+    KINFOLK_4,
+  ],
+  grove: [
+    UPSIDE_GROVE,
+    repaint(UPSIDE_GROVE, { g: "#4f8f7a", p: "#e2b077" }),
+    repaint(UPSIDE_GROVE, { g: "#7fc45a", p: "#ffd166", t: "#8a5a2c" }),
+    UPSIDE_GROVE_4,
+  ],
+  tide: [
+    TIDE_MILL,
+    repaint(TIDE_MILL, { m: "#cfd6dc", w: "#8a5a2c" }),
+    repaint(TIDE_MILL, { m: "#ffd166", w: "#a8792c", s: "#fff4e0" }),
+    TIDE_MILL_4,
+  ],
+  beacon: [
+    HEARTH_LANTERN,
+    repaint(HEARTH_LANTERN, { f: "#ff7a4a", w: "#7a5237" }),
+    repaint(HEARTH_LANTERN, { f: "#ffd166", w: "#a8792c" }),
+    HEARTH_LANTERN_4,
+  ],
+  third: [
+    INNER_SUN,
+    repaint(INNER_SUN, { p: "#ffc04a", d: "#e07a30" }),
+    repaint(INNER_SUN, { p: "#fff0a0", d: "#ffd166", e: "#7a3aa0" }),
+    INNER_SUN_4,
   ],
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 

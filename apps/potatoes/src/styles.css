@@ -251,6 +251,11 @@ input {
   grid-template-columns: 1fr 1fr;
   margin-bottom: 14px;
 }
+.choices.thirds {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  margin-bottom: 14px;
+}
 
 /* A live diorama, not a hero image — same scene the game runs, sized down. */
 .title-scene {
