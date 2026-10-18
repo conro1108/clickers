@@ -3,6 +3,7 @@ import { Y, format, solo, type Millis, type Yield } from "@clickers/sim";
 
 import { producerArt, upgradePreview } from "../marks.js";
 import { artUrl, type Art } from "../render/pixel.js";
+import { culprit, threat, WORLD_COPY } from "../worlds.js";
 
 type BuyQty = 1 | 10 | "max";
 
@@ -153,27 +154,17 @@ export function GrowPanel({
     setQtyRaw(next);
   };
 
-  // Once the tenth Singularity stands, everything else leaves the board: buying another would push the Ur-Potato out.
-  if (solo.convergencePending(farm)) {
+  // Once ten of the last rung stand, everything else leaves the board: buying another would push the gate out.
+  // The Ur-Potato first, then the same again at the bottom of every world after it.
+  const gate = solo.gatePending(farm);
+  if (gate) {
     return (
       <Convergence
         farm={farm}
         budget={budget}
         dispatch={dispatch}
-        upgrade={solo.CONVERGENCE_UPGRADE}
-        line="You have spent this whole run on its skin."
-      />
-    );
-  }
-  // Same again at the bottom of the inside: the tenth Second Potato, and the eye it has.
-  if (solo.breachPending(farm)) {
-    return (
-      <Convergence
-        farm={farm}
-        budget={budget}
-        dispatch={dispatch}
-        upgrade={solo.BREACH_UPGRADE}
-        line="You have spent this whole run getting to the middle of it."
+        upgrade={solo.WORLD_GATE[gate]}
+        line={WORLD_COPY[gate].gateLine ?? ""}
       />
     );
   }
@@ -260,12 +251,6 @@ export function GrowPanel({
   );
 }
 
-const WHERE: Record<solo.World, string> = {
-  outside: "out under the sky",
-  inside: "down inside the potato",
-  beyond: "through the eye",
-};
-
 export function LandPanel({
   farm,
   budget,
@@ -281,8 +266,9 @@ export function LandPanel({
     .producersIn(farm.world)
     .filter((p) => solo.brokenCount(farm, p.id) > 0);
   // Every other open world, so the hint can say where.
-  const elsewhere = (["outside", "inside", "beyond"] as const)
-    .filter((w) => w !== farm.world && solo.isWorldOpen(farm, w))
+  const elsewhere = solo
+    .openWorlds(farm)
+    .filter((w) => w !== farm.world)
     .map((w) => ({
       world: w,
       n: solo.producersIn(w).reduce((n, p) => n + solo.brokenCount(farm, p.id), 0),
@@ -306,7 +292,7 @@ export function LandPanel({
         <>
           <p className="hint">
             Nothing here mends on its own. What the weather hurt stays hurt and tired soil
-            stays tired until you spend on it — that's what {farm.breached ? "the sun" : farm.converged ? "the tuber" : "the weather"}{" "}
+            stays tired until you spend on it — that's what {culprit(farm)}{" "}
             actually costs.
           </p>
           {jobs > 1 && (
@@ -363,14 +349,14 @@ export function LandPanel({
 
       {elsewhere.map(({ world, n }) => (
         <p key={world} className="hint">
-          {n} more {n === 1 ? "thing is" : "things are"} broken {WHERE[world]}. You'll have to be
+          {n} more {n === 1 ? "thing is" : "things are"} broken {WORLD_COPY[world].where}. You'll have to be
           standing there to put {n === 1 ? "it" : "them"} right.
         </p>
       ))}
 
       <p className="hint">
         Buildings work whether you're here or not, which is the only kind of defence worth having
-        against {farm.breached ? "a sun that watches" : farm.converged ? "something that stirs" : "weather that lands"} while the tab is
+        against {threat(farm)} while the tab is
         closed. They never stop it outright.
       </p>
       <div className="rows">
@@ -453,20 +439,23 @@ export function LegacyPanel({
           the warning has to live somewhere — and a sentence is a better version
           of it than a locked door, because it tells you what you'd be giving up
           instead of pretending there's nothing there. */}
-      {!farm.converged && (
+      {farm.depth === 0 && (
         <p className="hint">
           The shop still has an end you haven't reached. Nothing stops you handing this farm down
           first, but the run that gets all the way there is worth having once.
         </p>
       )}
 
-      {farm.converged && (
+      {farm.depth >= 1 && (
         <>
           <p className="hint">
-            You can hand down the sky as well. Stay inside and the next generation starts under the
-            ceiling, with the tiers that farm it already in the shop. Go back out and the horizon
-            opens — no Bruise Bed, no Taproot Well{farm.breached ? ", nothing through the eye" : ""},
-            weather instead of the tuber, and the Convergence to reach all over again.
+            You can hand down the sky as well. Stay inside and the next generation starts out in the
+            yard with every door you've opened still open, and the tiers behind them already in the
+            shop. Go back out and the horizon opens — nothing past the skin
+            {farm.depth >= 2 ? ", nothing past the eye" : ""}
+            {farm.depth >= 3 ? ", none of the crystal" : ""}
+            {farm.depth >= 4 ? ", not the first field" : ""}, weather instead of {culprit(farm)}, and the
+            Convergence to reach all over again.
           </p>
           <div className="choices halves">
             <button className={outside ? "" : "on"} onClick={() => setOutside(false)}>
@@ -488,7 +477,11 @@ export function LegacyPanel({
               ? `Clears everything this generation built. Output goes ×${multNow.toFixed(
                   2,
                 )} → ×${multAfter.toFixed(2)}.${
-                  farm.converged ? (outside ? " Starts outside the potato." : " Starts inside the potato.") : ""
+                  farm.depth >= 1
+                    ? outside
+                      ? " Starts under the sky, every door closed."
+                      : " Starts in the yard, every door still open."
+                    : ""
                 }`
               : "Not worth doing yet — grow this generation further first."
           }
@@ -496,8 +489,8 @@ export function LegacyPanel({
           affordable={pending > 0}
           onBuy={() => {
             const where =
-              farm.converged && outside
-                ? " The next farm starts outside the potato, and everything above the fold goes with it."
+              farm.depth >= 1 && outside
+                ? " The next farm starts under the sky, and every world past it closes."
                 : "";
             if (
               window.confirm(

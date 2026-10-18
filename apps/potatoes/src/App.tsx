@@ -33,6 +33,7 @@ import { Sheet } from "./components/Sheet.js";
 import { VersusLobby } from "./components/Lobby.js";
 import { Shop } from "./components/Shop.js";
 import { hasSavedFarm, useFarm } from "./useFarm.js";
+import { culprit, WORLD_COPY } from "./worlds.js";
 import { BOTS, useMatch, type MatchRuntime, type MatchSetup } from "./useMatch.js";
 
 // `greedy` is left out: it is a control group for the balance harness, not an opponent.
@@ -287,36 +288,25 @@ function BackRoom({
       </section>
 
       <section>
-        <h3>The horizon</h3>
+        <h3>The worlds</h3>
         <p className="muted small">
-          {farm.converged
-            ? "Strips the kit that only exists in here and puts the Ur-Potato back on the shelf, which leaves you one purchase short of the fold. Your yard and this run's harvest are untouched."
-            : "Folds it without the purchase, so without the animation. To watch that, buy the Ur-Potato."}
+          Opens every world up to the one you pick, without the purchases, so without the cuts —
+          to watch one, buy its gate. Picking a shallower one strips the kit that only exists past
+          it and puts those gates back on the shelf. Your yard and this run's harvest are untouched.
         </p>
-        <button
-          className="ghost"
-          onClick={() => dispatch({ type: "dev_fold", converged: !farm.converged })}
-        >
-          {farm.converged ? "Put the sky back" : "Fold it now"}
-        </button>
+        <div className="choices">
+          {solo.WORLDS.map((w, depth) => (
+            <button
+              key={w}
+              className={farm.depth === depth ? "ghost on" : "ghost"}
+              disabled={farm.depth === depth}
+              onClick={() => dispatch({ type: "dev_depth", depth })}
+            >
+              {WORLD_COPY[w].door}
+            </button>
+          ))}
+        </div>
       </section>
-
-      {farm.converged && (
-        <section>
-          <h3>The eye</h3>
-          <p className="muted small">
-            {farm.breached
-              ? "Strips the kit that only grows through the eye and puts the Eye back on the shelf. Everything else is untouched."
-              : "Opens it without the purchase, so without the cut. To watch that, buy the Eye."}
-          </p>
-          <button
-            className="ghost"
-            onClick={() => dispatch({ type: "dev_breach", breached: !farm.breached })}
-          >
-            {farm.breached ? "Close the eye" : "Go through now"}
-          </button>
-        </section>
-      )}
 
       <section>
         <h3>Versus a bot</h3>
@@ -374,8 +364,8 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const nudge = useRef("");
   nudge.current = omenNudge(farm);
   // Same reason.
-  const folded = useRef(farm.converged);
-  folded.current = farm.converged;
+  const folded = useRef(farm.depth >= 1);
+  folded.current = farm.depth >= 1;
   // Seeded from the first render so a loaded save is not eleven purchases' worth of news.
   const hadSingularities = useRef(singularities);
   useEffect(() => {
@@ -394,45 +384,30 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   }, [singularities]);
 
   // The Convergence, same shape: an answer to a purchase, seeded from first render so a folded save reopens folded.
-  // Which cut is playing: the fold into the potato, or the breach through the Second Potato's eye.
-  const [cut, setCut] = useState<"fold" | "breach" | null>(null);
+  // Every gate after it plays the same cut with its own words; `cut` is the world being arrived in.
+  const [cut, setCut] = useState<solo.World | null>(null);
   // Which farm the canvas draws while the trip holds it back. Null once swapped, and forever after.
   const [heldWorld, setHeldWorld] = useState<solo.World | null>(null);
-  const wasConverged = useRef(farm.converged);
+  const wasDepth = useRef(farm.depth);
   // Layout effect: the purchase and the world it moves you to land in the same render, so a plain effect lets a frame through.
   useLayoutEffect(() => {
-    const was = wasConverged.current;
-    wasConverged.current = farm.converged;
-    if (!farm.converged || was) return;
+    const was = wasDepth.current;
+    wasDepth.current = farm.depth;
+    const arrived = solo.WORLDS[farm.depth];
+    // Only one step down, and only if it took you with it: the dev lever opens worlds without walking you
+    // through them, and a hand-down or a lever going the other way is not an arrival.
+    if (farm.depth !== was + 1 || farm.world !== arrived || !WORLD_COPY[arrived].cut) return;
     setSheet(null);
-    setCut("fold");
-    // Stay out under the sky until the dark has taken the screen.
-    setHeldWorld("outside");
+    setCut(arrived);
+    // Stay in the world you bought it from until the dark has taken the screen.
+    setHeldWorld(solo.WORLDS[was]!);
     const swap = setTimeout(() => setHeldWorld(null), FOLD_SWAP_MS);
     const id = setTimeout(() => setCut(null), CONVERGE_MS);
     return () => {
       clearTimeout(id);
       clearTimeout(swap);
     };
-  }, [farm.converged]);
-
-  // The breach: the same cut, one world further in, held on the inside until the dark is up.
-  const wasBreached = useRef(farm.breached);
-  useLayoutEffect(() => {
-    const was = wasBreached.current;
-    wasBreached.current = farm.breached;
-    // The dev lever opens the way without walking you through it; no cut for that.
-    if (!farm.breached || was || farm.world !== "beyond") return;
-    setSheet(null);
-    setCut("breach");
-    setHeldWorld("inside");
-    const swap = setTimeout(() => setHeldWorld(null), FOLD_SWAP_MS);
-    const id = setTimeout(() => setCut(null), CONVERGE_MS);
-    return () => {
-      clearTimeout(id);
-      clearTimeout(swap);
-    };
-  }, [farm.breached]);
+  }, [farm.depth]);
 
   // Close the shop on the first of a kind: those are the purchases that reveal (new lot, new stratum) rather than add.
   // Only the first — throwing you out on every plot would make the shop unusable.
@@ -456,9 +431,9 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const needsAttention =
     farm.condition < 1 ||
     solo.producersIn(farm.world).some((p) => solo.brokenCount(farm, p.id) > 0);
-  // Shown the moment a hand-down would pay anything, and then never taken away (also covers saves that predate `converged`).
+  // Shown the moment a hand-down would pay anything, and then never taken away (also covers saves that predate `depth`).
   const showSeeds =
-    farm.converged || farm.heirlooms > 0 || farm.generation > 1 || solo.pendingHeirlooms(farm) > 0;
+    farm.depth >= 1 || farm.heirlooms > 0 || farm.generation > 1 || solo.pendingHeirlooms(farm) > 0;
 
   // Right to left by how often you reach for it: Shop nearest the thumb, Seeds at the far end so appearing later shuffles nothing.
   const nav: { id: FarmSheet; label: string; icon: Parameters<typeof PxIcon>[0]["name"] }[] = [
@@ -488,7 +463,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const kitOnTheLand = solo.SOLO_PRODUCERS.reduce((n, p) => n + (farm.producers[p.id] ?? 0), 0);
 
   // The shop has emptied itself for the Ur-Potato; the bottom bar is where that announces itself.
-  const lastPurchase = solo.convergencePending(farm) || solo.breachPending(farm);
+  const lastPurchase = solo.gatePending(farm) !== null;
 
   return (
     <div className="app farm-app">
@@ -582,11 +557,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           sub={
             lastPurchase
               ? "What's below was never stock."
-              : farm.world === "beyond"
-                ? "What grows on the inside of the inside, and what makes it grow harder."
-                : farm.world === "inside"
-                  ? "What there is to work down here, and what makes it work harder."
-                  : "More kit on the land, and the upgrades that make it worth more."
+              : WORLD_COPY[farm.world].shopSub
           }
           onClose={() => setSheet(null)}
           foot={
@@ -609,14 +580,14 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           and paying for it in another.
 
           The title is the job; the subtitle names whatever's been doing the
-          damage. That's keyed off `converged` rather than `world`, because so is
-          the weather schedule: once the horizon has closed nothing sends weather
-          at either farm, so the sheet reads the same on both sides of the
+          damage. That's keyed off `depth` rather than `world`, because so is
+          the weather schedule: it's the deepest open world's table that blows
+          at every farm, so the sheet reads the same on every side of the
           door. */}
       {sheet === "upkeep" && (
         <Sheet
           title="Upkeep"
-          sub={`What ${farm.breached ? "the sun" : farm.converged ? "the tuber" : "the weather"} broke, what it costs, and what stops it next time.`}
+          sub={`What ${culprit(farm)} broke, what it costs, and what stops it next time.`}
           onClose={() => setSheet(null)}
           foot={
             <>
@@ -632,9 +603,9 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
               build and what's broken both change when you step across, so the
               door belongs on top of them rather than three taps away with the
               cheats. */}
-          {farm.converged && (
-            <div className={`choices ${farm.breached ? "thirds" : "halves"} world-door`}>
-              {(["outside", "inside", "beyond"] as const).filter((to) => solo.isWorldOpen(farm, to)).map((to) => (
+          {farm.depth >= 1 && (
+            <div className="choices world-door">
+              {solo.openWorlds(farm).map((to) => (
                 <button
                   key={to}
                   className={farm.world === to ? "on" : ""}
@@ -645,7 +616,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
                     setSheet(null);
                   }}
                 >
-                  {to === "outside" ? "Out under the sky" : to === "inside" ? "Inside the potato" : "Through the eye"}
+                  {WORLD_COPY[to].door}
                 </button>
               ))}
             </div>
@@ -732,19 +703,11 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
               the name for what just happened to you, and naming it before it
               happens is a chapter heading on a thing you haven't read. It's
               also what's still up as the farm comes back underneath it. */}
-          {cut === "fold" ? (
-            <div className="converge-words">
-              <p className="converge-line">The first potato was never in the ground</p>
-              <p className="converge-call">You have always been inside it</p>
-              <p className="converge-title">The Convergence</p>
-            </div>
-          ) : (
-            <div className="converge-words">
-              <p className="converge-line">The second potato was never asleep</p>
-              <p className="converge-call">There is a field on the other side of its eye</p>
-              <p className="converge-title">The Breach</p>
-            </div>
-          )}
+          <div className="converge-words">
+            <p className="converge-line">{WORLD_COPY[cut].cut?.line}</p>
+            <p className="converge-call">{WORLD_COPY[cut].cut?.call}</p>
+            <p className="converge-title">{WORLD_COPY[cut].cut?.title}</p>
+          </div>
         </div>
       )}
     </div>

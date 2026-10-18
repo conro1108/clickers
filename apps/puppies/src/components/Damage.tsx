@@ -1,5 +1,7 @@
 import { format, solo } from "@clickers/sim";
 
+import { culprit } from "../worlds.js";
+
 export function Damage({ mill }: { mill: solo.SiteState }) {
   const rate = solo.currentRate(mill);
   const lostToBreak = solo.brokenRate(mill);
@@ -13,7 +15,7 @@ export function Damage({ mill }: { mill: solo.SiteState }) {
   return (
     <div className="damage">
       <div className="damage-head">
-        What {mill.breached ? "the dream's" : mill.converged ? "the nest's" : "the weather's"} costing you
+        What {culprit(mill)}'s costing you
       </div>
       <div className="damage-body">
         {lostToBreak > 0 && (

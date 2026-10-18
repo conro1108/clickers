@@ -1816,6 +1816,394 @@ const INNER_SUN_4: Art = {
   palette: { k: K, p: "#ffd166", l: "#fff4c0", d: "#e0a040", e: "#7a3aa0", y: "#fff4c0" },
 };
 
+// --- Deep: under the floor of the hollow world, where the starch has set into crystal ---
+
+const STARCH_GLASS = "#cfe8f0";
+const STARCH_GLINT = "#ffffff";
+const STARCH_EDGE = "#7fb0c8";
+const CAVE_ROCK = "#3a3150";
+const CAVE_ROCK_LIT = "#5a4e78";
+
+/** A seam of crystal starch in the cave wall. You chip at it and it comes away as potatoes. */
+export const GLINT_SEAM: Art = {
+  rows: [
+    "....c....",
+    "...cwc.c.",
+    ".c.clc.cc",
+    "cc.clccwc",
+    "cwcclcclc",
+    "rclcccclr",
+    "RrrrrrrrR",
+    ".rrrrrrr.",
+  ],
+  palette: { c: STARCH_EDGE, l: STARCH_GLASS, w: STARCH_GLINT, r: CAVE_ROCK, R: CAVE_ROCK_LIT },
+};
+
+const GLINT_SEAM_4: Art = {
+  rows: [
+    "..c..c..c..",
+    ".cwc.cwc.w.",
+    ".clc.clccl.",
+    "cclccclcclc",
+    "cwlcwclccwc",
+    "clcclcclclc",
+    "rclcccclclr",
+    "RrrrrrrrrrR",
+    ".rrrrrrrrr.",
+  ],
+  palette: { c: STARCH_EDGE, l: STARCH_GLASS, w: STARCH_GLINT, r: CAVE_ROCK, R: CAVE_ROCK_LIT },
+};
+
+/** A cutter: helmet, a lamp on it, and a pick that has been blunted on something harder than rock. */
+export const CUTTER: Art = {
+  rows: [
+    "..hhy..",
+    ".hhhhh.",
+    "..fff..",
+    "..fff..",
+    ".bbbbbp",
+    "bbbbbbp",
+    "fbbbbbp",
+    ".bbbbb.",
+    ".b...b.",
+    ".b...b.",
+    ".k...k.",
+  ],
+  palette: { k: K, h: "#c9a24a", y: "#fff4c0", f: "#f2dcc0", b: "#4f6a8a", p: "#8d959d" },
+};
+
+const CUTTER_4: Art = {
+  rows: [
+    "....ccc",
+    "..hhycc",
+    ".hhhhhp",
+    "..fff.p",
+    "..fff.p",
+    ".bbbbbp",
+    "bbbbbb.",
+    "fbbbbb.",
+    ".bbbbb.",
+    ".b...b.",
+    ".k...k.",
+  ],
+  palette: { k: K, h: "#c9a24a", y: "#fff4c0", f: "#f2dcc0", b: "#4f6a8a", p: "#8d959d", c: STARCH_GLASS },
+};
+
+/** A loom strung with crystal thread. It hums at the pitch the rock settles to, and the rock settles. */
+export const HUSH_LOOM: Art = {
+  rows: [
+    "wwwwwwwww",
+    "wks.s.skw",
+    "w.s.s.s.w",
+    "w.s.s.s.w",
+    "w.s.s.s.w",
+    "w.s.s.s.w",
+    "w.s.s.s.w",
+    "wwwwwwwww",
+    "w.......w",
+    "w.......w",
+  ],
+  palette: { k: K, w: "#7a5237", s: STARCH_GLASS },
+};
+
+const HUSH_LOOM_4: Art = {
+  rows: [
+    "...www...",
+    ".wwwwwww.",
+    "wks.s.skw",
+    "w.s.s.s.w",
+    "wsssssssw",
+    "w.s.s.s.w",
+    "w.s.s.s.w",
+    "wsssssssw",
+    "wwwwwwwww",
+    "w.w...w.w",
+    "w.......w",
+  ],
+  palette: { k: K, w: "#a8792c", s: STARCH_GLINT },
+};
+
+/** A geode, split. What's inside is lit by whatever the field up top is doing. */
+export const GEODE: Art = {
+  rows: [
+    "...rrrrr...",
+    ".rrcccccrr.",
+    "rrcclwlccrr",
+    "rcclwwwlccr",
+    "rcclwwwlccr",
+    "rrcclllccrr",
+    ".rrcccccrr.",
+    "...rrrrr...",
+  ],
+  palette: { r: CAVE_ROCK_LIT, c: "#9a6ad0", l: "#d0b0f8", w: "#fff4ff" },
+};
+
+const GEODE_4: Art = {
+  rows: [
+    "....r.r....",
+    "..rrcrcrr..",
+    ".rcclclccr.",
+    "rcclwwwlccr",
+    "rclwwpwwlcr",
+    "rclwpppwlcr",
+    "rclwwpwwlcr",
+    "rcclwwwlccr",
+    ".rcclllccr.",
+    "..rrrrrrr..",
+  ],
+  palette: { r: CAVE_ROCK_LIT, c: "#9a6ad0", l: "#d0b0f8", w: "#fff4ff", p: "#ffd166" },
+};
+
+/** A spire of crystal that grows a band for every generation that worked this farm. */
+export const CROWN_SPIRE: Art = {
+  rows: [
+    "...w...",
+    "..wlw..",
+    "..lcl..",
+    "..lcl..",
+    ".llcll.",
+    ".lcccl.",
+    ".lcccl.",
+    "llcccll",
+    "lcccccl",
+    "lcccccl",
+    "rrrrrrr",
+  ],
+  palette: { w: STARCH_GLINT, l: STARCH_GLASS, c: STARCH_EDGE, r: CAVE_ROCK_LIT },
+};
+
+const CROWN_SPIRE_4: Art = {
+  rows: [
+    "y.y.y.y",
+    "yyyyyyy",
+    "..wlw..",
+    "..lcl..",
+    ".llcll.",
+    ".lcwcl.",
+    ".lcccl.",
+    "llcwcll",
+    "lcccccl",
+    "lccwccl",
+    "lcccccl",
+    "rrrrrrr",
+  ],
+  palette: { w: STARCH_GLINT, l: STARCH_GLASS, c: STARCH_EDGE, r: CAVE_ROCK_LIT, y: "#ffd166" },
+};
+
+/** The Fourth Potato: the shape of a potato, cut by nobody, out of something clear. */
+export const FOURTH_POTATO: Art = {
+  rows: [
+    "...kkkkk...",
+    ".kkwlllckk.",
+    "kwwlllcccck",
+    "klllclccccd",
+    "kllcccccccd",
+    "klcccclcccd",
+    "kccccccccdd",
+    ".kkccccdkk.",
+    "...kkkkk...",
+  ],
+  palette: { k: STARCH_EDGE, w: STARCH_GLINT, l: "#e8f6ff", c: STARCH_GLASS, d: "#9fc4d8" },
+};
+
+const FOURTH_POTATO_4: Art = {
+  rows: [
+    "....w.w....",
+    "...kkkkk...",
+    ".kkwlllckk.",
+    "kwwlkkkccck",
+    "kllkeeekccd",
+    "klckkkkkccd",
+    "kccccccccdd",
+    ".kkccccdkk.",
+    "...kkkkk...",
+    "....w.w....",
+  ],
+  palette: { k: STARCH_EDGE, w: STARCH_GLINT, l: "#e8f6ff", c: STARCH_GLASS, d: "#9fc4d8", e: "#7a3aa0" },
+};
+
+// --- Origin: the first morning of the first field ---
+
+/** A wild potato plant, flowering. Nobody put it there. */
+export const WILD_PATCH: Art = {
+  rows: [
+    "...f.....",
+    "..fyf..f.",
+    "...f..fyf",
+    ".g.g.g.f.",
+    "gglgglgg.",
+    ".gglgggl.",
+    "..ggggg..",
+    ".kdddddk.",
+    "kdddddddk",
+  ],
+  palette: { k: K, f: "#c8a0e8", y: "#ffe066", g: "#5f9a40", l: "#9ccc6a", d: "#7a5237" },
+};
+
+const WILD_PATCH_4: Art = {
+  rows: [
+    ".f.f.f.f.",
+    "fyfyfyfyf",
+    ".f.f.f.f.",
+    "g.g.g.g.g",
+    "gglgglggl",
+    ".gglgggl.",
+    "..gbgbg..",
+    ".kdddddk.",
+    "kdddddddk",
+  ],
+  palette: { k: K, f: "#c8a0e8", y: "#ffe066", g: "#5f9a40", l: "#9ccc6a", d: "#7a5237", b: "#b8d86a" },
+};
+
+/** The first farmhand: a hide cloak, long hair, a digging stick taller than they are. */
+export const ELDER: Art = {
+  rows: [
+    "..hhh..s",
+    ".hhfhh.s",
+    ".hfffh.s",
+    "..fff..s",
+    ".ccccc.s",
+    "cccccccs",
+    "c.ccc.cs",
+    "..ccc..s",
+    "..c.c...",
+    "..c.c...",
+    "..k.k...",
+  ],
+  palette: { k: K, h: "#5a3a28", f: "#d9a77a", c: "#a07a4a", s: "#8a6a3a" },
+};
+
+const ELDER_4: Art = {
+  rows: [
+    ".wyw..y.",
+    "..hhh.ys",
+    ".hhfhh.s",
+    ".hfffh.s",
+    "..fff..s",
+    ".ccccc.s",
+    "cpcccpcs",
+    "c.ccc.cs",
+    "..ccc..s",
+    "..c.c...",
+    "..k.k...",
+  ],
+  palette: { k: K, h: "#5a3a28", f: "#d9a77a", c: "#a07a4a", s: "#8a6a3a", w: "#c8a0e8", y: "#ffe066", p: "#c8a0e8" },
+};
+
+/** Where the root that holds the valley still comes up for air. */
+export const MOTHER_ROOT: Art = {
+  rows: [
+    "....g.g....",
+    ".....g.....",
+    "....kak....",
+    "..kaaaaak..",
+    ".kaarraaak.",
+    "kaarrrraaak",
+    "a.ar.ra.a.a",
+    "a..r..a..a.",
+  ],
+  palette: { k: K, a: "#8a5a3a", r: "#c99a5a", g: "#7fc45a" },
+};
+
+const MOTHER_ROOT_4: Art = {
+  rows: [
+    "..g.g.g.g..",
+    "...ggggg...",
+    "....kak....",
+    "..kayyyak..",
+    ".kayaaayak.",
+    "kayaarraya.",
+    "y.ay.ya.y.y",
+    "y..y..y..y.",
+  ],
+  palette: { k: K, a: "#8a5a3a", r: "#c99a5a", g: "#7fc45a", y: "#ffd166" },
+};
+
+/** The first water, coming up through a ring of stones. */
+export const VALLEY_SPRING: Art = {
+  rows: [
+    "....ww....",
+    "...wllw...",
+    ".sswllwss.",
+    "sbwwwwwwbs",
+    "sbbwwwwbbs",
+    ".ssssssss.",
+  ],
+  palette: { w: "#7ab8d8", l: "#e0f4ff", s: "#8a8a7a", b: "#6a6a5e" },
+};
+
+const VALLEY_SPRING_4: Art = {
+  rows: [
+    ".l..ww..l.",
+    "..l.wl.l..",
+    "g..wllw..g",
+    "gsswllwssg",
+    "sbwwwwwwbs",
+    "sbbwwwwbbs",
+    ".ssssssss.",
+  ],
+  palette: { w: "#7ab8d8", l: "#e0f4ff", s: "#8a8a7a", b: "#6a6a5e", g: "#6aa348" },
+};
+
+/** A fire in a ring of stones. Nobody has cooked anything on it yet. */
+export const FIRST_FIRE: Art = {
+  rows: [
+    "....y....",
+    "...yfy...",
+    "..yfrfy..",
+    "..frrrf..",
+    ".wkwwwkw.",
+    "s.wkwkw.s",
+    "sssssssss",
+  ],
+  palette: { k: K, y: "#fff4c0", f: "#ff9a3c", r: "#e0503a", w: "#7a5237", s: "#8a8a7a" },
+};
+
+const FIRST_FIRE_4: Art = {
+  rows: [
+    "k...y...k",
+    "kwwpppwwk",
+    "k..yfy..k",
+    "k.yfrfy.k",
+    "k.frrrf.k",
+    ".wkwwwkw.",
+    "sssssssss",
+  ],
+  palette: { k: K, y: "#fff4c0", f: "#ff9a3c", r: "#e0503a", w: "#7a5237", s: "#8a8a7a", p: "#d9a35a" },
+};
+
+/** The First Potato. It looks like a potato. */
+export const FIRST_POTATO: Art = {
+  rows: [
+    ".....g.....",
+    "....gg.....",
+    "...kkkkk...",
+    ".kkllppppk.",
+    "kllppppppdk",
+    "klpppepppdk",
+    "kppppppppdk",
+    ".kpppppddk.",
+    "..kkkkkkk..",
+  ],
+  palette: { k: K, g: "#7fc45a", l: "#f7e0a8", p: "#e0b070", d: "#b07f4a", e: "#a8794a" },
+};
+
+const FIRST_POTATO_4: Art = {
+  rows: [
+    "...w.g.w...",
+    "..wyw.wyw..",
+    "...wgggw...",
+    "....kgk....",
+    ".kkkllpkkk.",
+    "kllpppppgdk",
+    "klgpppppppk",
+    "kppppppgpdk",
+    ".kpppppddk.",
+    "..kkkkkkk..",
+  ],
+  palette: { k: K, g: "#7fc45a", l: "#f7e0a8", p: "#e0b070", d: "#b07f4a", w: "#fff4e0", y: "#ffe066" },
+};
+
 /** Four marks per tier, indexed by how many of its three upgrades you own. See the marks note above. */
 export const PRODUCER_MARKS = {
   patch: [PLANT, PLANT_2, PLANT_3, PLANT_4],
@@ -1939,6 +2327,79 @@ export const PRODUCER_MARKS = {
     repaint(INNER_SUN, { p: "#ffc04a", d: "#e07a30" }),
     repaint(INNER_SUN, { p: "#fff0a0", d: "#ffd166", e: "#7a3aa0" }),
     INNER_SUN_4,
+  ],
+  dawn: [
+    WILD_PATCH,
+    repaint(WILD_PATCH, { f: "#f0c0e0", g: "#6aa348" }),
+    repaint(WILD_PATCH, { f: "#fff4e0", y: "#ffd166", l: "#c8f0a0" }),
+    WILD_PATCH_4,
+  ],
+  elder: [
+    ELDER,
+    repaint(ELDER, { c: "#8a6a9a", h: "#3a2a20" }),
+    repaint(ELDER, { c: "#c9a24a", s: "#a8792c" }),
+    ELDER_4,
+  ],
+  root: [
+    MOTHER_ROOT,
+    repaint(MOTHER_ROOT, { r: "#e0b070", g: "#a4e884" }),
+    repaint(MOTHER_ROOT, { a: "#a8703a", r: "#ffd166" }),
+    MOTHER_ROOT_4,
+  ],
+  spring: [
+    VALLEY_SPRING,
+    repaint(VALLEY_SPRING, { w: "#8ad0e8", s: "#a09a88" }),
+    repaint(VALLEY_SPRING, { w: "#a8e8f0", l: "#ffffff", s: "#c8b88a" }),
+    VALLEY_SPRING_4,
+  ],
+  hearth: [
+    FIRST_FIRE,
+    repaint(FIRST_FIRE, { f: "#ffb04a", r: "#ff7a3a" }),
+    repaint(FIRST_FIRE, { f: "#ffd166", r: "#ff9a3c", s: "#a8a090" }),
+    FIRST_FIRE_4,
+  ],
+  first: [
+    FIRST_POTATO,
+    repaint(FIRST_POTATO, { p: "#e8c080", l: "#fff0c0" }),
+    repaint(FIRST_POTATO, { p: "#ffd166", l: "#fff4c0", d: "#e0a040" }),
+    FIRST_POTATO_4,
+  ],
+  // Deep.
+  spark: [
+    GLINT_SEAM,
+    repaint(GLINT_SEAM, { c: "#8a9ad8", l: "#d8e0ff" }),
+    repaint(GLINT_SEAM, { c: "#c9a24a", l: "#fff0c0" }),
+    GLINT_SEAM_4,
+  ],
+  kith: [
+    CUTTER,
+    repaint(CUTTER, { b: "#6a8f6a", h: "#d8d0c0" }),
+    repaint(CUTTER, { b: "#7a5ab0", h: "#ffd166", p: "#cfe8f0" }),
+    CUTTER_4,
+  ],
+  loom: [
+    HUSH_LOOM,
+    repaint(HUSH_LOOM, { w: "#5e3e29", s: "#d0b0f8" }),
+    repaint(HUSH_LOOM, { w: "#a8792c", s: "#fff4c0" }),
+    HUSH_LOOM_4,
+  ],
+  vault: [
+    GEODE,
+    repaint(GEODE, { c: "#4f8fb0", l: "#a8d8f0" }),
+    repaint(GEODE, { c: "#c9a24a", l: "#fff0a0" }),
+    GEODE_4,
+  ],
+  crown: [
+    CROWN_SPIRE,
+    repaint(CROWN_SPIRE, { c: "#9a6ad0", l: "#d0b0f8" }),
+    repaint(CROWN_SPIRE, { c: "#c9a24a", l: "#fff0a0" }),
+    CROWN_SPIRE_4,
+  ],
+  fourth: [
+    FOURTH_POTATO,
+    repaint(FOURTH_POTATO, { c: "#d0b0f8", d: "#9a6ad0" }),
+    repaint(FOURTH_POTATO, { c: "#fff0a0", d: "#e0a040", k: "#c9a24a" }),
+    FOURTH_POTATO_4,
   ],
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 

@@ -1805,7 +1805,405 @@ const MOON_DOG_4: Art = {
   palette: { ...MOON_DOG.palette, y: "#ffe9a8" },
 };
 
+// --- Origin — the first morning, the first fire, the first dog ---
+// Firelit and old: ochre, ash and wolf-grey, the warmest palette in the game.
+
+const OR_K = "#2a2018";
+
+/** A fire somebody kept going all night, in a ring of stones. */
+export const DAWN_FIRE: Art = {
+  rows: [
+    ".....f.....",
+    "....fyf..f.",
+    "..f.fyyf.f.",
+    "..fyyywyff.",
+    ".ffywwwyyf.",
+    "..fyywyyf..",
+    ".ssllllllss",
+    "sggsllllsgg",
+    ".sssssssss.",
+  ],
+  palette: { f: "#ff7a3c", y: "#ffc04a", w: "#fff4c0", l: "#6a4030", s: "#7a7068", g: "#4a4440" },
+};
+
+/** The same fire with a spit over it: the night's meat, and the reason anything came closer. */
+const DAWN_FIRE_4: Art = {
+  rows: [
+    "k.........k",
+    "k....f....k",
+    "k...fyf.f.k",
+    "kmmmfyyfmmk",
+    "k.fyyywyf.k",
+    ".ffywwwyyf.",
+    "..fyywyyf..",
+    ".ssllllllss",
+    "sggsllllsgg",
+    ".sssssssss.",
+  ],
+  palette: { ...DAWN_FIRE.palette, k: "#4a3020", m: "#a8503c" },
+};
+
+/** Someone in furs, with a stick for the fire. */
+export const FIRE_KEEPER: Art = {
+  rows: [
+    "..hhh..",
+    ".hfffh.",
+    "..fff..",
+    ".PpPpP.",
+    "PpPpPps",
+    "pPpPpPs",
+    ".pPpPps",
+    ".ppppp.",
+    ".pp.pp.",
+    ".ll.ll.",
+    ".ll.ll.",
+    ".kk.kk.",
+  ],
+  palette: { h: "#3a2a20", f: "#c89070", p: "#8a6a4a", P: "#b08a5a", s: "#6a4a30", l: "#5a4030", k: OR_K },
+};
+
+/** An elder in an antler crown, carrying a pup nobody else would pick up. */
+const FIRE_KEEPER_4: Art = {
+  rows: [
+    "a.....a",
+    "aa...aa",
+    ".ahhha.",
+    ".hfffh.",
+    "..fff..",
+    ".PpPpP.",
+    "PpwwwpP",
+    "pPwwwPp",
+    ".pPpPp.",
+    ".ppppp.",
+    ".ll.ll.",
+    ".ll.ll.",
+    ".kk.kk.",
+  ],
+  palette: { ...FIRE_KEEPER.palette, a: "#d8c8a8", w: "#9a9aa0" },
+};
+
+/** Thrown just past the light, on purpose. */
+export const BONE_PILE: Art = {
+  rows: [
+    "....b...b..",
+    "...bBb.bBb.",
+    "..b..bbb...",
+    ".bBbbbBbbb.",
+    "bbdbbbbdbbb",
+    ".ddddddddd.",
+  ],
+  palette: { b: "#e8e0cc", B: "#fff8e8", d: "#5a4632" },
+};
+
+const BONE_PILE_4: Art = {
+  rows: [
+    "....sss....",
+    "...sesse...",
+    "...sssss...",
+    "....s.s....",
+    ".bBbbbBbbb.",
+    "bbdbbbbdbbb",
+    "bBbbdbbBbdb",
+    ".ddddddddd.",
+  ],
+  palette: { ...BONE_PILE.palette, s: "#f4ecd8", e: OR_K },
+};
+
+/** Water out of the rock, into a basin of it. */
+export const COLD_SPRING: Art = {
+  rows: [
+    "..rrr......",
+    ".rRrrr.....",
+    ".rrwrr.....",
+    "..rwr......",
+    "...w.......",
+    ".rrwwwwrr..",
+    "rwwWwwwwwr.",
+    "rrwwwwWwrr.",
+    ".rrrrrrrr..",
+  ],
+  palette: { r: "#6a6a70", R: "#9a9aa0", w: "#5aa0d0", W: "#e0f4ff" },
+};
+
+/** A standing stone over the spring now, with a mark cut in it. */
+const COLD_SPRING_4: Art = {
+  rows: [
+    "..RRR......",
+    "..rcr......",
+    "..rrr......",
+    "..rwr......",
+    "...w....rr.",
+    ".rrwwwwrrR.",
+    "rwwWwwwwwwr",
+    "rrwwwwWwwrr",
+    ".rrrrrrrrr.",
+  ],
+  palette: { ...COLD_SPRING.palette, c: "#c8642c" },
+};
+
+/** A rock face with a dog on it in ochre, and a hand next to it to say who. */
+export const PAINTED_CAVE: Art = {
+  rows: [
+    "...rrrrrrr...",
+    ".rrRrrrrrRrr.",
+    "rrrorrrrhrrrr",
+    "rrooooorrrrrr",
+    "rrorrorrrrrrr",
+    "rrrrrrrrrrrrr",
+    "rrrrrnnnrrrrr",
+    "rrrrnnnnnrrrr",
+    "rrrnnnnnnnrrr",
+  ],
+  palette: { r: "#7a6a5a", R: "#a09080", o: "#c8642c", h: "#e8a060", n: "#1e1612" },
+};
+
+/** Two dogs on the wall now, and a fire lit in the mouth of it. */
+const PAINTED_CAVE_4: Art = {
+  rows: [
+    "...rrrrrrr...",
+    ".rrRrrrrrRrr.",
+    "rrrorrrorrhrr",
+    "rrooooroooorr",
+    "rrorrorroorrr",
+    "rrrrrrrrrrrrr",
+    "rrrrrnnnrrrrr",
+    "rrrrnnynnrrrr",
+    "rrrnnyyynnrrr",
+  ],
+  palette: { ...PAINTED_CAVE.palette, y: "#ffb04a" },
+};
+
+/** The last rung: a wolf, sitting, with the fire in its eye. */
+export const FIRST_DOG: Art = {
+  rows: [
+    "..k.k.....",
+    ".kgkgk....",
+    "kggeggk...",
+    "nggggk....",
+    ".kkggk....",
+    "..kgggk...",
+    "..kgwggk.t",
+    "..kgwgggkt",
+    "..kglglgk.",
+    "..kkkkkkk.",
+  ],
+  palette: { k: "#3a3440", g: "#8a8490", e: "#ffd166", n: "#1a1418", w: "#d8d0c8", l: "#6a6470", t: "#8a8490" },
+};
+
+/** Wearing a bead collar now, and it's had a pup. */
+const FIRST_DOG_4: Art = {
+  rows: [
+    "..k.k........",
+    ".kgkgk.......",
+    "kggeggk......",
+    "nggggk.......",
+    ".kcbcck......",
+    "..kgggk......",
+    "..kgwggk.t...",
+    "..kgwgggkt.k.",
+    "..kglglgk.kpk",
+    "..kkkkkkkkppk",
+  ],
+  palette: { ...FIRST_DOG.palette, c: "#c8642c", b: "#f4ecd8", p: "#c8a070" },
+};
+
 /** Four marks per tier, indexed by how many of its three upgrades you own. */
+// --- Deep — under the dream, on the bottom of sleep ---
+// Cold water, a long way down: everything is blue-black except what glows.
+
+const SEA_K = "#0c2230";
+
+/** A tennis ball that went over the fence. All of them end up here. */
+export const SUNK_BALL: Art = {
+  rows: [
+    "..kkk..",
+    ".kyyyk.",
+    "kwyyyyk",
+    "kywwyyk",
+    "kyyywwk",
+    ".kyyyk.",
+    "..kkk..",
+  ],
+  palette: { k: SEA_K, y: "#b8d84a", w: "#eef4d0" },
+};
+
+const SUNK_BALL_4: Art = {
+  rows: [
+    "...ggg...",
+    "..g...g..",
+    ".g.kkk.g.",
+    "g.kwyyk.g",
+    "g.kywwk.g",
+    "g.kyyyk.g",
+    ".g.kkk.g.",
+    "..g...g..",
+    "...ggg...",
+  ],
+  palette: { ...SUNK_BALL.palette, g: "#d8f08a" },
+};
+
+/** Somebody in a brass helmet, on a hose that goes all the way back up to the dream. */
+export const DIVER: Art = {
+  rows: [
+    "...h....",
+    "...h....",
+    "..ooo...",
+    ".owwwo..",
+    ".owwwo..",
+    "..ooo...",
+    ".sssss..",
+    "ssssssn.",
+    "s.sss.n.",
+    "..s.s...",
+    "..s.s...",
+    ".bb.bb..",
+  ],
+  palette: { h: "#3a4a4a", o: "#c8963c", w: "#7fd0d8", s: "#4a6a6a", n: "#d8c08a", b: "#1e2a2a" },
+};
+
+const DIVER_4: Art = {
+  rows: [
+    "........",
+    "..ooo...",
+    ".owwwo.y",
+    ".owwwo.k",
+    "..ooo..k",
+    ".sssssk.",
+    "sssssss.",
+    "s.sss...",
+    "..s.s...",
+    "..s.s...",
+    "..s.s...",
+    "fff.fff.",
+  ],
+  palette: { ...DIVER.palette, y: "#ffe08a", k: "#3a4a4a", f: "#2a6a7a" },
+};
+
+/** A chewed slipper, grown over with coral. */
+export const SLIPPER_REEF: Art = {
+  rows: [
+    "..c....c...",
+    ".cdc..cdc..",
+    "..c.c.c.c..",
+    "...ccccc...",
+    "....cdc....",
+    "..ppppppp..",
+    ".pwwpppppp.",
+    "ppppppppppp",
+    ".kkkkkkkkk.",
+  ],
+  palette: { c: "#e07a8a", d: "#a84a6a", p: "#7a6a9a", w: "#d8c8e8", k: SEA_K },
+};
+
+const SLIPPER_REEF_4: Art = {
+  rows: [
+    ".c..c..c..c",
+    "cdc.cdc.cdc",
+    ".c.c.c.c.c.",
+    "..ccccccc..",
+    "...cdcdc...",
+    "....ccc....",
+    "ppppp.ppppp",
+    "pwwpp.pwwpp",
+    "ppppp.ppppp",
+    ".kkkkkkkkk.",
+  ],
+  palette: SLIPPER_REEF.palette,
+};
+
+/** A kennel on the bottom, barnacled, holding a pocket of air from the bedding up top. */
+export const SUNK_KENNEL: Art = {
+  rows: [
+    ".....kk.....",
+    "....kaak....",
+    "...kaaaak...",
+    "..kaaaaaak..",
+    ".kkkkkkkkkk.",
+    ".kbxbbbbxbk.",
+    ".kbbknnkbbk.",
+    ".kbknnnnkbk.",
+    ".kbknnnnkbk.",
+    "skkkkkkkkkks",
+  ],
+  palette: { k: "#14303a", a: "#3a6a6a", b: "#5a7a6a", x: "#d8d0b8", n: "#050d14", s: "#a89870" },
+};
+
+const SUNK_KENNEL_4: Art = {
+  rows: [
+    "...gggggg...",
+    "..g......g..",
+    ".g...kk...g.",
+    ".g..kaak..g.",
+    ".g.kaaaak.g.",
+    "g.kkkkkkkk.g",
+    "g.kbbyybbk.g",
+    "g.kbknnkbk.g",
+    "g.kbknnkbk.g",
+    "gskkkkkkkksg",
+  ],
+  palette: { ...SUNK_KENNEL.palette, g: "#a8e0f0", y: "#ffe08a" },
+};
+
+/** An anglerfish with a chihuahua's ears, and a light on a stalk. */
+export const ANGLER_PUP: Art = {
+  rows: [
+    "......sL...",
+    ".....s.....",
+    "...e.s.e...",
+    "..eppppe...",
+    "t.pppopppp.",
+    "ttpppppppw.",
+    "t.ppppppkk.",
+    "...pp.pp...",
+  ],
+  palette: { s: "#5a4a6a", L: "#c8ffe0", e: "#5a3a5a", p: "#7a5a7a", o: "#f0ffb0", t: "#4a3a5a", w: "#f4f0dc", k: "#2a1a2a" },
+};
+
+const ANGLER_PUP_4: Art = {
+  rows: [
+    ".L..L..L...",
+    "..s.s.s....",
+    "...esse....",
+    "..eppppe...",
+    "t.pppopppp.",
+    "ttpppppppw.",
+    "t.ppppppkk.",
+    "...pp.pp...",
+  ],
+  palette: ANGLER_PUP.palette,
+};
+
+/** Curled up asleep on the bottom of everything. */
+export const FOURTH_CHIHUAHUA: Art = {
+  rows: [
+    "..........e...",
+    ".........eep..",
+    "..ppppp.pppp..",
+    ".pppppppppcpp.",
+    "pppppppppppppn",
+    "ptttpppppppp..",
+    ".kkkkkkkkkkk..",
+  ],
+  palette: { p: "#b8a08a", e: "#8a6a5a", c: "#3a2a2a", n: "#2a1a1a", t: "#9a8470", k: "#0a1620" },
+};
+
+const FOURTH_CHIHUAHUA_4: Art = {
+  rows: [
+    "........oooo..",
+    ".......o.yy.o.",
+    "........oooo..",
+    "..........o...",
+    "..........e...",
+    ".........eep..",
+    "..ppppp.pppp..",
+    ".pppppppppcpp.",
+    "pppppppppppppn",
+    "ptttpppppppp..",
+    ".kkkkkkkkkkk..",
+  ],
+  palette: { ...FOURTH_CHIHUAHUA.palette, o: "#c8e8f8", y: "#ffe08a" },
+};
+
 export const PRODUCER_MARKS = {
   patch: [CAGE, CAGE_2, CAGE_3, CAGE_4],
   hand: [
@@ -1928,6 +2326,78 @@ export const PRODUCER_MARKS = {
     repaint(MOON_DOG, { m: "#fff4d0", d: "#e0c890" }),
     repaint(MOON_DOG, { m: "#ffe9a8", d: "#e0c04a" }),
     MOON_DOG_4,
+  ],
+  spark: [
+    SUNK_BALL,
+    repaint(SUNK_BALL, { y: "#f08a5a", w: "#fff0e0" }),
+    repaint(SUNK_BALL, { y: "#e0c04a", w: "#fff8d0", k: "#3a2a10" }),
+    SUNK_BALL_4,
+  ],
+  kith: [
+    DIVER,
+    repaint(DIVER, { o: "#d8b060", s: "#6a5a4a" }),
+    repaint(DIVER, { o: "#e8d07a", s: "#3a5a7a", w: "#a8f0f0" }),
+    DIVER_4,
+  ],
+  loom: [
+    SLIPPER_REEF,
+    repaint(SLIPPER_REEF, { c: "#f0a85a", d: "#b86a3a" }),
+    repaint(SLIPPER_REEF, { c: "#7ae0d0", d: "#3a9a8a", p: "#9a6a5a" }),
+    SLIPPER_REEF_4,
+  ],
+  vault: [
+    SUNK_KENNEL,
+    repaint(SUNK_KENNEL, { a: "#6a5a8a", b: "#7a6a9a" }),
+    repaint(SUNK_KENNEL, { a: "#c8963c", b: "#8a7a5a", x: "#fff4d0" }),
+    SUNK_KENNEL_4,
+  ],
+  crown: [
+    ANGLER_PUP,
+    repaint(ANGLER_PUP, { L: "#ffe08a", p: "#6a5a8a" }),
+    repaint(ANGLER_PUP, { L: "#ff9aa8", p: "#8a5a6a", o: "#ffd8e0" }),
+    ANGLER_PUP_4,
+  ],
+  fourth: [
+    FOURTH_CHIHUAHUA,
+    repaint(FOURTH_CHIHUAHUA, { p: "#c8b08a", t: "#a8906a" }),
+    repaint(FOURTH_CHIHUAHUA, { p: "#d8c08a", t: "#b8a06a", e: "#c8963c" }),
+    FOURTH_CHIHUAHUA_4,
+  ],
+  dawn: [
+    DAWN_FIRE,
+    repaint(DAWN_FIRE, { f: "#ff5a2c", y: "#ffd86a" }),
+    repaint(DAWN_FIRE, { f: "#ffb04a", y: "#fff0a0", s: "#9a8a78" }),
+    DAWN_FIRE_4,
+  ],
+  elder: [
+    FIRE_KEEPER,
+    repaint(FIRE_KEEPER, { p: "#6a5a4a", P: "#d8c8a8" }),
+    repaint(FIRE_KEEPER, { p: "#8a4a2c", P: "#e0c04a", h: "#d8d0c8" }),
+    FIRE_KEEPER_4,
+  ],
+  root: [
+    BONE_PILE,
+    repaint(BONE_PILE, { b: "#f4ecd8", d: "#6a3a2a" }),
+    repaint(BONE_PILE, { b: "#fff4c0", B: "#ffffff", d: "#4a3a2a" }),
+    BONE_PILE_4,
+  ],
+  spring: [
+    COLD_SPRING,
+    repaint(COLD_SPRING, { w: "#6ab8e0", R: "#b0b0b8" }),
+    repaint(COLD_SPRING, { w: "#8ad0f0", r: "#7a7a88", W: "#ffffff" }),
+    COLD_SPRING_4,
+  ],
+  hearth: [
+    PAINTED_CAVE,
+    repaint(PAINTED_CAVE, { o: "#e07a3c", h: "#f4c080" }),
+    repaint(PAINTED_CAVE, { o: "#e0c04a", h: "#fff4c0", r: "#8a7868" }),
+    PAINTED_CAVE_4,
+  ],
+  first: [
+    FIRST_DOG,
+    repaint(FIRST_DOG, { g: "#a8a0a8", w: "#f0e8e0" }),
+    repaint(FIRST_DOG, { g: "#c8a070", w: "#f4ecd8", k: "#4a3828" }),
+    FIRST_DOG_4,
   ],
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 

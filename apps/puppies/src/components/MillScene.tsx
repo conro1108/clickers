@@ -13,6 +13,8 @@ import { matchMark, producerMark } from "../marks.js";
 import { EMPTY_VIEW, MillScene as Scene, type MillView } from "../render/millScene.js";
 import { InsideScene } from "../render/insideScene.js";
 import { BeyondScene } from "../render/beyondScene.js";
+import { DeepScene } from "../render/deepScene.js";
+import { OriginScene } from "../render/originScene.js";
 
 export interface MillSceneHandle {
   whistle(at?: { x: number; y: number }): void;
@@ -24,6 +26,15 @@ interface SceneLike {
   stop(): void;
   whistle(at?: { x: number; y: number }): void;
 }
+
+/** One picture per world. Warping is a different place, not a repaint. */
+const SCENES: Record<solo.World, new (canvas: HTMLCanvasElement) => SceneLike> = {
+  outside: Scene,
+  inside: InsideScene,
+  beyond: BeyondScene,
+  deep: DeepScene,
+  origin: OriginScene,
+};
 
 /** The canvas and its rAF loop. React only ever hands it a view. */
 const SceneCanvas = forwardRef<MillSceneHandle, {
@@ -40,12 +51,7 @@ const SceneCanvas = forwardRef<MillSceneHandle, {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const scene: SceneLike =
-      world === "beyond"
-        ? new BeyondScene(canvas)
-        : world === "inside"
-          ? new InsideScene(canvas)
-          : new Scene(canvas);
+    const scene: SceneLike = new SCENES[world](canvas);
     sceneRef.current = scene;
     scene.update(latest.current);
     scene.start();
@@ -107,7 +113,7 @@ export const MillScene = forwardRef<MillSceneHandle, {
       hoard,
       seed: mill.seed,
       // Zero once it's happened: `convergenceProgress` pins at 1 forever, and the stain is a warning rather than a state.
-      looming: mill.converged ? 0 : solo.convergenceProgress(mill),
+      looming: mill.depth >= 1 ? 0 : solo.convergenceProgress(mill),
       generation: mill.generation,
     };
   }, [mill, hoard, world]);

@@ -3,6 +3,7 @@ import { Y, format, solo, type Millis, type Yield } from "@clickers/sim";
 
 import { producerArt, upgradePreview } from "../marks.js";
 import { Row } from "./Row.js";
+import { WORLD_COPY, culprit, deepest } from "../worlds.js";
 
 type BuyQty = 1 | 10 | "max";
 
@@ -39,28 +40,22 @@ function waitText(msLeft: number): string {
 }
 
 /** Where each world is, as a phrase that finishes "broken …". */
-const WHERE: Record<solo.World, string> = {
-  outside: "out under the sky",
-  inside: "down inside the puppy",
-  beyond: "in the dream",
-};
-
 // The single-item end-of-run sheet: no cream, price as a fill bar, button does not say Buy.
 // Says nothing about what it does on purpose — see the blurb note in content.ts.
 function Convergence({
   mill,
   budget,
   dispatch,
-  upgrade = solo.CONVERGENCE_UPGRADE,
-  line = "You have spent this whole run on the outside of it.",
+  world,
 }: {
   mill: solo.SiteState;
   budget: Yield;
   dispatch: (cmd: solo.SiteCommand) => void;
-  upgrade?: string;
-  line?: string;
+  /** The world the gate opens. */
+  world: Exclude<solo.World, "outside">;
 }) {
-  const ur = solo.SOLO_UPGRADE_BY_ID[upgrade]!;
+  const ur = solo.SOLO_UPGRADE_BY_ID[solo.WORLD_GATE[world]]!;
+  const line = WORLD_COPY[world].arrival?.waiting;
   const affordable = Y.gte(budget, ur.cost);
   const held = Math.max(0, Math.min(1, budget / ur.cost));
   const rate = solo.currentRate(mill);
@@ -71,7 +66,7 @@ function Convergence({
       <div className="grave-mark" aria-hidden />
       <h3 className="grave-name">{ur.name}</h3>
       <p className="grave-blurb">{ur.blurb}</p>
-      <p className="grave-line">{line}</p>
+      {line && <p className="grave-line">{line}</p>}
 
       <div className="grave-price">
         <div className="grave-track">
@@ -110,22 +105,10 @@ export function GrowPanel({
     setQtyRaw(next);
   };
 
-  // Once the tenth Singularity stands, everything else leaves the board: buying another would push the Ur-Chihuahua out.
-  if (solo.convergencePending(mill)) {
-    return <Convergence mill={mill} budget={budget} dispatch={dispatch} />;
-  }
-  // The same again at the bottom of the nest: the tenth Second Chihuahua, and the dream it's having.
-  if (solo.breachPending(mill)) {
-    return (
-      <Convergence
-        mill={mill}
-        budget={budget}
-        dispatch={dispatch}
-        upgrade={solo.BREACH_UPGRADE}
-        line="You have spent this whole run in the warm, next to it, while it slept."
-      />
-    );
-  }
+  // Once the tenth of a world's last rung stands, everything else leaves the board: buying another would
+  // push the gate out. Ten Singularities and the Ur-Chihuahua first, then the same at the bottom of every world.
+  const gate = solo.gatePending(mill);
+  if (gate) return <Convergence mill={mill} budget={budget} dispatch={dispatch} world={gate} />;
 
   // One shop per world; warping is how you change it.
   const ladder = solo.producersIn(mill.world);
@@ -224,10 +207,11 @@ export function LandPanel({
     .producersIn(mill.world)
     .filter((p) => solo.brokenCount(mill, p.id) > 0);
   // Every other open world, by name, so the hint can say where.
-  const elsewhere = (["outside", "inside", "beyond"] as const)
-    .filter((w) => w !== mill.world && solo.isWorldOpen(mill, w))
+  const elsewhere = solo
+    .openWorlds(mill)
+    .filter((w) => w !== mill.world)
     .map((w) => ({
-      where: WHERE[w],
+      where: WORLD_COPY[w].where,
       n: solo.producersIn(w).reduce((n, p) => n + solo.brokenCount(mill, p.id), 0),
     }))
     .filter((e) => e.n > 0);
@@ -249,7 +233,7 @@ export function LandPanel({
         <>
           <p className="hint">
             Nothing here mends on its own. What the weather hurt stays hurt and tired bedding
-            stays tired until you spend on it — that's what {mill.breached ? "the dream" : mill.converged ? "the nest" : "the weather"}{" "}
+            stays tired until you spend on it — that's what {culprit(mill)}{" "}
             actually costs.
           </p>
           {jobs > 1 && (
@@ -313,7 +297,7 @@ export function LandPanel({
 
       <p className="hint">
         Buildings work whether you're here or not, which is the only kind of defence worth having
-        against {mill.breached ? "a dream that twitches" : mill.converged ? "something that stirs" : "weather that lands"} while the tab is
+        against {WORLD_COPY[deepest(mill)].against} while the tab is
         closed. They never stop it outright.
       </p>
       <div className="rows">
@@ -337,6 +321,12 @@ export function LandPanel({
       </div>
     </>
   );
+}
+
+/** "the nest, the dream and the deep" — every open world past the yard, by door name. */
+function openPast(mill: solo.SiteState): string {
+  const names = solo.openWorlds(mill).slice(1).map((w) => WORLD_COPY[w].door.toLowerCase());
+  return names.length <= 1 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 }
 
 export function LegacyPanel({
@@ -396,24 +386,24 @@ export function LegacyPanel({
           the warning has to live somewhere — and a sentence is a better version
           of it than a locked door, because it tells you what you'd be giving up
           instead of pretending there's nothing there. */}
-      {!mill.converged && (
+      {mill.depth === 0 && (
         <p className="hint">
           The shop still has an end you haven't reached. Nothing stops you handing this mill down
           first, but the run that gets all the way there is worth having once.
         </p>
       )}
 
-      {mill.converged && (
+      {mill.depth >= 1 && (
         <>
           <p className="hint">
-            You can hand down the sky as well. Stay inside and the next generation starts under the
-            ceiling, with the tiers that mill it already in the shop{mill.breached ? ", and the dream still open" : ""}. Go back out and the horizon
-            opens — no Hem Hollow, no Warm Heart{mill.breached ? ", no dream" : ""}, weather instead of the nest, and the
-            Convergence to reach all over again.
+            You can hand down the sky as well. Every generation starts in the yard, but keep the
+            doors open and the next one can walk back through — {openPast(mill)} still there, with
+            their tiers in the shop. Close them and the horizon opens: nothing past the yard, weather
+            instead of {culprit(mill)}, and the Convergence to reach all over again.
           </p>
           <div className="choices halves">
             <button className={outside ? "" : "on"} onClick={() => setOutside(false)}>
-              Inside the puppy
+              Keep the doors open
             </button>
             <button className={outside ? "on" : ""} onClick={() => setOutside(true)}>
               Back under the sky
@@ -431,7 +421,11 @@ export function LegacyPanel({
               ? `Clears everything this generation built. Output goes ×${multNow.toFixed(
                   2,
                 )} → ×${multAfter.toFixed(2)}.${
-                  mill.converged ? (outside ? " Starts outside the puppy." : " Starts inside the puppy.") : ""
+                  mill.depth >= 1
+                    ? outside
+                      ? " Starts under an open sky; every door closes."
+                      : " Starts in the yard, with every door still open."
+                    : ""
                 }`
               : "Not worth doing yet — grow this generation further first."
           }
@@ -439,8 +433,8 @@ export function LegacyPanel({
           affordable={pending > 0}
           onBuy={() => {
             const where =
-              mill.converged && outside
-                ? " The next mill starts outside the puppy, and everything above the fold goes with it."
+              mill.depth >= 1 && outside
+                ? " The next mill starts under an open sky, and everything past the yard goes with it."
                 : "";
             if (
               window.confirm(

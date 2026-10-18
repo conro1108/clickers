@@ -251,11 +251,6 @@ input {
   grid-template-columns: 1fr 1fr;
   margin-bottom: 14px;
 }
-.choices.thirds {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  margin-bottom: 14px;
-}
 
 /* A live diorama, not a hero image — same scene the game runs, sized down. */
 .title-scene {
@@ -1498,6 +1493,9 @@ input {
    the buildings rather than among them, because it changes what the rest of the
    sheet is about. */
 .world-door {
+  display: grid;
+  /* Up to five worlds; a phone fits two or three a row, and the rest wrap into equal cells. */
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   margin-bottom: 12px;
 }
 

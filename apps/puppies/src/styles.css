@@ -249,11 +249,6 @@ input {
   margin-bottom: 14px;
 }
 
-.choices.thirds {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  margin-bottom: 14px;
-}
 
 /* Eight opponents don't fit a row. A grid keeps the ladder readable as a
    ladder: two columns, easiest top-left, hardest bottom-right. */
@@ -723,23 +718,71 @@ input {
 
 /* The breach: the same fall, toward the Second Chihuahua asleep — eyes shut —
    and out the other side into a night lawn under a moon instead of fleece. */
-.converge.breach::before {
+.converge.beyond::before {
   background: radial-gradient(circle at 50% 50%, rgba(200, 214, 244, 0.22), rgba(6, 4, 10, 0) 48%);
 }
-.converge.breach .converge-dog::before,
-.converge.breach .converge-dog::after {
+.converge.beyond .converge-dog::before,
+.converge.beyond .converge-dog::after {
   height: 1.6%;
   top: 45%;
   border-radius: 0;
   background: #2a1a10;
 }
-.converge.breach .converge-warm {
+.converge.beyond .converge-warm {
   background:
     radial-gradient(circle at 72% 22%, #f4f0dc 0 9vmin, rgba(244, 240, 220, 0) 9.4vmin),
     linear-gradient(#07071c 0%, #2a2452 58%, #3f6a5a 58.4%, #2c4a5a 100%);
 }
-.converge.breach .converge-warm::before {
+.converge.beyond .converge-warm::before {
   background: #e8eefc;
+}
+
+/* The deep: no face at all this time. A dropped ball, sinking ahead of you,
+   and you go down after it into dark water lit by the things that sank. */
+.converge.deep::before {
+  background: radial-gradient(circle at 50% 50%, rgba(110, 200, 220, 0.2), rgba(6, 4, 10, 0) 48%);
+}
+.converge.deep .converge-dog {
+  border-radius: 50%;
+  background: radial-gradient(60% 60% at 38% 32%, #f2e070 0%, #c9b03a 46%, #6a5a1c 80%, #1c1a10 100%);
+}
+.converge.deep .converge-dog::before,
+.converge.deep .converge-dog::after {
+  display: none;
+}
+.converge.deep .converge-warm {
+  background:
+    radial-gradient(circle at 30% 78%, rgba(130, 230, 210, 0.35) 0 6vmin, rgba(130, 230, 210, 0) 14vmin),
+    radial-gradient(circle at 74% 66%, rgba(240, 200, 120, 0.28) 0 4vmin, rgba(240, 200, 120, 0) 11vmin),
+    linear-gradient(#0a1830 0%, #0c2a40 55%, #12384a 100%);
+}
+.converge.deep .converge-warm::before {
+  background: #cfeff0;
+}
+
+/* The first fire: you fall toward a fire, and two eyes at the edge of it are
+   the last thing to pass the camera. Out into dawn and firelight. */
+.converge.origin::before {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 150, 60, 0.3), rgba(6, 4, 10, 0) 48%);
+}
+.converge.origin .converge-dog {
+  background: radial-gradient(60% 64% at 50% 60%, #fff0b0 0%, #ffb040 34%, #c84a18 66%, #2a0e06 100%);
+}
+.converge.origin .converge-dog::before,
+.converge.origin .converge-dog::after {
+  top: 22%;
+  width: 6%;
+  height: 4%;
+  background: radial-gradient(circle, #fff4a0 0%, #e0b030 60%, rgba(224, 176, 48, 0) 100%);
+  box-shadow: none;
+}
+.converge.origin .converge-warm {
+  background:
+    radial-gradient(ellipse at 50% 92%, #ffb050 0 10vmin, rgba(255, 176, 80, 0) 34vmin),
+    linear-gradient(#2a2440 0%, #8a4a5a 44%, #e89a5a 64%, #3a2a1c 64.4%, #1c140e 100%);
+}
+.converge.origin .converge-warm::before {
+  background: #fff0d0;
 }
 
 .converge-words {
@@ -1558,7 +1601,24 @@ input {
    the buildings rather than among them, because it changes what the rest of the
    sheet is about. */
 .world-door {
+  display: grid;
+  /* Up to five doors, one row: a lone door wrapped onto a second line read as
+     a different kind of button. Labels are "The x", so two short lines fit. */
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
   margin-bottom: 12px;
+}
+
+.world-door button {
+  padding-inline: 2px;
+  font-size: 0.85em;
+}
+
+/* The back room's depth lever: one button per world, as small as they'll go. */
+.depth-row button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-left: 6px;
+  padding-right: 6px;
 }
 
 .damage {

@@ -12,6 +12,8 @@ import { solo, type Yield } from "@clickers/sim";
 import { producerMark } from "../marks.js";
 import { EMPTY_VIEW, FarmScene as Scene, type FarmView } from "../render/farmScene.js";
 import { BeyondScene } from "../render/beyondScene.js";
+import { DeepScene } from "../render/deepScene.js";
+import { OriginScene } from "../render/originScene.js";
 import { InsideScene } from "../render/insideScene.js";
 
 export interface FarmSceneHandle {
@@ -26,6 +28,15 @@ interface SceneLike {
   stop(): void;
   dig(at?: { x: number; y: number }): void;
 }
+
+/** One renderer per world. Warping rebuilds the scene, so these are constructors, not instances. */
+const SCENES: Record<solo.World, new (canvas: HTMLCanvasElement) => SceneLike> = {
+  outside: Scene,
+  inside: InsideScene,
+  beyond: BeyondScene,
+  deep: DeepScene,
+  origin: OriginScene,
+};
 
 /** The canvas and its rAF loop. React only ever hands it a view. */
 const SceneCanvas = forwardRef<FarmSceneHandle, {
@@ -43,12 +54,7 @@ const SceneCanvas = forwardRef<FarmSceneHandle, {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const scene: SceneLike =
-      world === "beyond"
-        ? new BeyondScene(canvas)
-        : world === "inside"
-          ? new InsideScene(canvas)
-          : new Scene(canvas);
+    const scene: SceneLike = new SCENES[world](canvas);
     sceneRef.current = scene;
     scene.update(latest.current);
     scene.start();
@@ -100,8 +106,8 @@ export const FarmScene = forwardRef<FarmSceneHandle, {
       condition: farm.condition,
       hoard,
       seed: farm.seed,
-      // Zero once converged: `convergenceProgress` pins at 1 forever and the stain is a warning.
-      looming: farm.converged ? 0 : solo.convergenceProgress(farm),
+      // Zero once folded: `convergenceProgress` pins at 1 forever and the stain is a warning.
+      looming: farm.depth >= 1 ? 0 : solo.convergenceProgress(farm),
       generation: farm.generation,
     };
   }, [farm, hoard, world]);

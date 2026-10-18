@@ -44,6 +44,8 @@ const args = Object.fromEntries(
 );
 
 const out = args.out ?? "/tmp/mill.png";
+// `game=potatoes` seeds the potato game's save instead; run it against that app's dev server.
+const prefix = args.game === "potatoes" ? "potatoes-inc" : "puppy-mill";
 const port = args.port ?? "5199";
 
 // The save is stamped on the faked clock too, or the hours between "now" and
@@ -119,11 +121,11 @@ if (args.hour) {
 
 await page.goto(`http://localhost:${port}/`);
 await page.evaluate(
-  ([key, save]) => {
+  ([key, save, taught]) => {
     localStorage.setItem(key!, save!);
-    localStorage.setItem("puppy-mill:taught-tap", "1");
+    localStorage.setItem(taught!, "1");
   },
-  ["puppy-mill:mill", solo.serializeSite(mill, now)],
+  [`${prefix}:${args.game === "potatoes" ? "farm" : "mill"}`, solo.serializeSite(mill, now), `${prefix}:taught-tap`],
 );
 await page.reload();
 
