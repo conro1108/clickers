@@ -2,7 +2,7 @@
 
 import { Y, ms, type Millis, type Yield } from "../numbers.js";
 import { MAX_CONDITION, type World } from "./content.js";
-import { advance, CONVERGENCE_UPGRADE, rebase } from "./site.js";
+import { advance, BREACH_UPGRADE, CONVERGENCE_UPGRADE, rebase } from "./site.js";
 import type { SiteState } from "./state.js";
 import type { WeatherEvent } from "./weather.js";
 
@@ -39,7 +39,9 @@ export function parseSite(raw: string): SiteState | null {
 
   // backfill for saves predating the flag
   const converged = f.converged ?? upgrades.includes(CONVERGENCE_UPGRADE);
-  const world: World = converged && f.world !== "outside" ? "inside" : "outside";
+  const breached = converged && (f.breached ?? upgrades.includes(BREACH_UPGRADE));
+  const world: World =
+    f.world === "beyond" && breached ? "beyond" : converged && f.world !== "outside" ? "inside" : "outside";
 
   // fill missing fields so a partial save can't produce NaN forever
   return {
@@ -56,6 +58,7 @@ export function parseSite(raw: string): SiteState | null {
     weatherIndex: Math.max(0, Math.floor(f.weatherIndex ?? 0)),
     nextWeatherAt: ms(f.nextWeatherAt ?? f.checkpointAt),
     converged,
+    breached,
     world,
     heirlooms: Math.max(0, Math.floor(f.heirlooms ?? 0)),
     perks: remapKeys(f.perks),

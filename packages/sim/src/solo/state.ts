@@ -28,6 +28,8 @@ export interface SiteState {
   // --- Persists across prestige resets ---
   /** The horizon has closed. Survives prestige unless `prestige.outside` reopens it. */
   converged: boolean;
+  /** The second fold: `beyond` is open. Only ever true alongside `converged`, and goes with it. */
+  breached: boolean;
   /** Which site you're standing on. Both run at once; this picks shop, land and picture only. */
   world: World;
   heirlooms: number;
@@ -66,7 +68,9 @@ export type SiteCommand =
   | { type: "dev_weather" }
   | { type: "dev_heirlooms"; heirlooms: number }
   /** Opening back up strips core-only kit and `ur_form`, leaving a site one purchase short of the fold. */
-  | { type: "dev_fold"; converged: boolean };
+  | { type: "dev_fold"; converged: boolean }
+  /** Closing strips beyond-only kit and `breach`, leaving a site one purchase short of it. */
+  | { type: "dev_breach"; breached: boolean };
 
 export type SiteResult =
   | { ok: true; site: SiteState; entries: SiteLogEntry[] }

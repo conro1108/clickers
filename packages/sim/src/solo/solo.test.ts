@@ -9,7 +9,7 @@ import {
   totalRepairCost,
   upkeepBill,
 } from "./economy.js";
-import { advance, applySiteCommand, pendingHeirlooms } from "./site.js";
+import { BREACH_UPGRADE, advance, applySiteCommand, mustApplySite, pendingHeirlooms } from "./site.js";
 import { parseSite, resumeSite, serializeSite } from "./persist.js";
 import { MULT_PER_UNSPENT_HEIRLOOM } from "./prestige.js";
 import { simulateSite } from "./sim.js";
@@ -156,6 +156,20 @@ describe("the two worlds", () => {
     expect(next.converged).toBe(false);
     expect(next.world).toBe("outside");
     expect(applySiteCommand(next, { type: "warp", to: "inside" }, next.checkpointAt).ok).toBe(false);
+  });
+
+  it("opens the beyond on the breach, and closes it with the sky", () => {
+    const folded: SiteState = { ...developedSite("breach"), converged: true, world: "inside" };
+    const rich: SiteState = { ...folded, stock: 1e30 as never, producers: { ...folded.producers, second: 10 } };
+    expect(applySiteCommand(rich, { type: "buy_producer", producer: "echo", qty: 1 }, rich.checkpointAt).ok).toBe(false);
+    const through = mustApplySite(rich, { type: "buy_upgrade", upgrade: BREACH_UPGRADE }, rich.checkpointAt);
+    expect(through.breached).toBe(true);
+    expect(through.world).toBe("beyond");
+    expect(applySiteCommand(through, { type: "buy_producer", producer: "echo", qty: 1 }, through.checkpointAt).ok).toBe(true);
+
+    const out = mustApplySite(worthHandingDown(through), { type: "prestige", outside: true }, through.checkpointAt);
+    expect(out.breached).toBe(false);
+    expect(applySiteCommand(out, { type: "warp", to: "beyond" }, out.checkpointAt).ok).toBe(false);
   });
 });
 

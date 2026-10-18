@@ -120,7 +120,29 @@ const CORE_KIND_SHAPES: readonly Shape<WeatherKind>[] = [
 
 const CORE_KINDS: readonly WeatherKind[] = named(CORE_KIND_SHAPES, THEME.weather, "weather");
 
+/**
+ * What the weather becomes through the `breach`. Same three effects again, a
+ * little harder on the kit than the core, because the beyond is somewhere you
+ * walked into rather than something asleep around you.
+ */
+const BEYOND_KIND_SHAPES: readonly Shape<WeatherKind>[] = [
+  { id: "drift", weight: 16, effect: { kind: "break", scope: "cheapest", share: 0.28 } },
+  { id: "undertow", weight: 12, effect: { kind: "break", scope: "best", share: 0.26 } },
+  {
+    id: "unravel",
+    weight: 8,
+    effect: { kind: "break", scope: "all", share: 0.2, condition: 0.06 },
+  },
+  { id: "fade", weight: 18, effect: { kind: "condition", loss: 0.09 } },
+  { id: "hush", weight: 11, effect: { kind: "condition", loss: 0.16 } },
+  { id: "bloom", weight: 9, effect: { kind: "boon", seconds: 90 } },
+  { id: "clearing", weight: 3, effect: { kind: "boon", seconds: 300 } },
+];
+
+const BEYOND_KINDS: readonly WeatherKind[] = named(BEYOND_KIND_SHAPES, THEME.weather, "weather");
+
 function kindsFor(f: SiteState): readonly WeatherKind[] {
+  if (f.breached) return BEYOND_KINDS;
   return f.converged ? CORE_KINDS : KINDS;
 }
 
@@ -128,6 +150,7 @@ function kindsFor(f: SiteState): readonly WeatherKind[] {
 export const WEATHER_IDS = {
   sky: KINDS.map((k) => k.id),
   core: CORE_KINDS.map((k) => k.id),
+  beyond: BEYOND_KINDS.map((k) => k.id),
 } as const;
 
 /** Average gap between events, before any mitigation stretches it. */

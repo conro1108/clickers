@@ -18,6 +18,7 @@ import {
   type LandRole,
   type SoloProducerId,
   type SoloUpgrade,
+  type World,
 } from "./content.js";
 import { MULT_PER_UNSPENT_HEIRLOOM, PERK_BY_ID } from "./prestige.js";
 import type { SiteState } from "./state.js";
@@ -53,7 +54,7 @@ export function producerMultiplier(f: SiteState, id: SoloProducerId): number {
     if (u.effect.kind === "producer_mult" && u.effect.producer === id) m *= u.effect.factor;
   }
   if (prod.generationScaled) m *= f.generation;
-  if (prod.world === "inside") m *= 1 + perkLevel(f, "ur_yield");
+  if (prod.world !== "outside") m *= 1 + perkLevel(f, "ur_yield");
   return m;
 }
 
@@ -155,12 +156,18 @@ export function mitigation(f: SiteState, role: LandRole): number {
 
 // --- What a site is allowed to own --- enforced here, not just in the shop, against hand-edited saves
 
+/** Whether a site can stand in a world: outside always, inside once folded, beyond once breached. */
+export function isWorldOpen(f: SiteState, world: World): boolean {
+  if (world === "beyond") return f.converged && f.breached;
+  return world === "outside" || f.converged;
+}
+
 export function isProducerAvailable(f: SiteState, id: SoloProducerId): boolean {
-  return f.converged || SOLO_PRODUCER_BY_ID[id].world === "outside";
+  return isWorldOpen(f, SOLO_PRODUCER_BY_ID[id].world);
 }
 
 export function isLandAvailable(f: SiteState, id: LandId): boolean {
-  return f.converged || LAND_BY_ID[id].world === "outside";
+  return isWorldOpen(f, LAND_BY_ID[id].world);
 }
 
 export function isPerkAvailable(f: SiteState, id: keyof typeof PERK_BY_ID): boolean {

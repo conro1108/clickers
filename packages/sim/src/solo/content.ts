@@ -21,8 +21,13 @@ import { named, THEME, type Shape } from "../theme.js";
  *
  * `SiteState.world` is only ever "which one am I looking at". It has no effect
  * on production — see `currentRate`, which sums the lot.
+ *
+ * `beyond` is the third place, opened by the `breach` at the bottom of the
+ * inside ladder the same way the `ur_form` opens the inside. Same rules: a
+ * fresh ladder, its own land, its own picture, and everything behind you keeps
+ * producing.
  */
-export type World = "outside" | "inside";
+export type World = "outside" | "inside" | "beyond";
 
 export type SoloProducerId =
   | "patch"
@@ -44,7 +49,13 @@ export type SoloProducerId =
   | "main"
   | "chorus"
   | "heart"
-  | "second";
+  | "second"
+  | "echo"
+  | "kin"
+  | "grove"
+  | "tide"
+  | "beacon"
+  | "third";
 
 export interface SoloProducer {
   id: SoloProducerId;
@@ -285,6 +296,58 @@ const SOLO_PRODUCER_SHAPES: readonly Shape<SoloProducer>[] = [
     baseCost: Y.of(8_000_000_000_000_000_000),
     growth: 1.19,
     world: "inside",
+  },
+
+  // --- Beyond ------------------------------------------------------------
+  //
+  // The third site, through the `breach`. Six rungs carrying on the inside's
+  // steps (~3.8x cost, ~2.8x output) from where the `second` left off, so the
+  // first one is buyable about on arrival and payback keeps rising.
+  {
+    id: "echo",
+    baseRate: 62_000_000_000_000,
+    baseCost: Y.of(30_000_000_000_000_000_000),
+    growth: 1.19,
+    world: "beyond",
+  },
+  {
+    // The beyond's Hand: people, early, so the new place isn't empty.
+    id: "kin",
+    baseRate: 170_000_000_000_000,
+    baseCost: Y.of(115_000_000_000_000_000_000),
+    growth: 1.19,
+    world: "beyond",
+  },
+  {
+    id: "grove",
+    baseRate: 480_000_000_000_000,
+    baseCost: Y.of(440_000_000_000_000_000_000),
+    growth: 1.19,
+    world: "beyond",
+    calmPerUnit: 0.003,
+  },
+  {
+    id: "tide",
+    baseRate: 1_350_000_000_000_000,
+    baseCost: Y.of(1_700_000_000_000_000_000_000),
+    growth: 1.19,
+    world: "beyond",
+    conditionScaled: true,
+  },
+  {
+    id: "beacon",
+    baseRate: 3_800_000_000_000_000,
+    baseCost: Y.of(6_500_000_000_000_000_000_000),
+    growth: 1.19,
+    world: "beyond",
+    generationScaled: true,
+  },
+  {
+    id: "third",
+    baseRate: 10_700_000_000_000_000,
+    baseCost: Y.of(25_000_000_000_000_000_000_000),
+    growth: 1.19,
+    world: "beyond",
   },
 ];
 
@@ -545,6 +608,25 @@ const GLOBAL_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
     effect: { kind: "global_mult", factor: 2 },
     requires: { producer: "second", count: 25 },
   },
+  /** The second fold, built like the first: ten of the last rung, about its fleet's price, opens `beyond`. */
+  {
+    id: "breach",
+    cost: fleetCost("second", 10),
+    effect: { kind: "global_mult", factor: 2 },
+    requires: { producer: "second", count: 10 },
+  },
+  {
+    id: "beyond_rights",
+    cost: fleetCost("grove", 25, 5),
+    effect: { kind: "global_mult", factor: 2 },
+    requires: { producer: "grove", count: 25 },
+  },
+  {
+    id: "last_form",
+    cost: fleetCost("third", 25),
+    effect: { kind: "global_mult", factor: 2 },
+    requires: { producer: "third", count: 25 },
+  },
 ];
 
 const GLOBAL_UPGRADES: SoloUpgrade[] = [...named(GLOBAL_UPGRADE_SHAPES, THEME.soloGlobalUpgrades, "upgrade")];
@@ -576,7 +658,11 @@ export type LandId =
   | "inner_beds"
   | "inner_calm"
   | "inner_lining"
-  | "inner_reclaim";
+  | "inner_reclaim"
+  | "beyond_beds"
+  | "beyond_lining"
+  | "beyond_calm"
+  | "beyond_reclaim";
 
 export type LandRole =
   /** Cuts how many units a disaster knocks offline. */
@@ -678,6 +764,39 @@ const LAND_SHAPES: readonly Shape<Land>[] = [
     baseCost: Y.of(3_000_000_000_000_000),
     growth: 1.9,
     world: "inside",
+  },
+  // The same four again, priced at a few minutes of production on arrival beyond.
+  {
+    id: "beyond_beds",
+    role: "breakage",
+    perLevel: 0.12,
+    baseCost: Y.of(20_000_000_000_000_000_000),
+    growth: 1.9,
+    world: "beyond",
+  },
+  {
+    id: "beyond_lining",
+    role: "condition",
+    perLevel: 0.12,
+    baseCost: Y.of(32_000_000_000_000_000_000),
+    growth: 1.9,
+    world: "beyond",
+  },
+  {
+    id: "beyond_calm",
+    role: "frequency",
+    perLevel: 0.08,
+    baseCost: Y.of(60_000_000_000_000_000_000),
+    growth: 2.1,
+    world: "beyond",
+  },
+  {
+    id: "beyond_reclaim",
+    role: "payout",
+    perLevel: 0.12,
+    baseCost: Y.of(120_000_000_000_000_000_000),
+    growth: 1.9,
+    world: "beyond",
   },
 ];
 

@@ -18,6 +18,7 @@ import {
   producersIn,
   type LandId,
   type SoloProducerId,
+  type World,
 } from "./content.js";
 import {
   brokenCount,
@@ -27,6 +28,7 @@ import {
   isPerkAvailable,
   isProducerAvailable,
   isUnlocked,
+  isWorldOpen,
   landCost,
   perkLevel,
   producerCost,
@@ -47,6 +49,35 @@ export const CONVERGENCE_UPGRADE = "ur_form";
 /** The rung that gates it, and so the first sign that anything is coming. */
 export const CONVERGENCE_GATE_PRODUCER: SoloProducerId =
   SOLO_UPGRADE_BY_ID[CONVERGENCE_UPGRADE]!.requires!.producer;
+
+/** The second fold: opens `beyond`. Gated, like the first, on the last rung of the world before it. */
+export const BREACH_UPGRADE = "breach";
+
+/**
+ * Strip everything that only exists in `worlds`, and the upgrades gated on it
+ * (plus `alsoDrop`). What the dev levers use to put a fold back.
+ */
+function stripWorlds(site: SiteState, worlds: readonly World[], alsoDrop: readonly string[]): SiteState {
+  const gone = new Set(SOLO_PRODUCERS.filter((p) => worlds.includes(p.world)).map((p) => p.id));
+  const keep = <T extends Partial<Record<SoloProducerId, number>>>(rec: T) =>
+    Object.fromEntries(Object.entries(rec).filter(([id]) => !gone.has(id as SoloProducerId)));
+  return {
+    ...site,
+    producers: keep(site.producers),
+    broken: keep(site.broken),
+    land: Object.fromEntries(
+      Object.entries(site.land).filter(([id]) => {
+        const w = LAND_BY_ID[id as LandId]?.world;
+        return !w || !worlds.includes(w);
+      }),
+    ),
+    upgrades: site.upgrades.filter((id) => {
+      if (alsoDrop.includes(id)) return false;
+      const req = SOLO_UPGRADE_BY_ID[id]?.requires?.producer;
+      return !(req && gone.has(req));
+    }),
+  };
+}
 
 /**
  * Ceiling on how many weather events one `advance` will resolve. A year-long
@@ -71,6 +102,7 @@ export function createSite(opts: { seed: string; startedAt: Millis }): SiteState
     weatherIndex: 0,
     nextWeatherAt: opts.startedAt,
     converged: false,
+    breached: false,
     world: "outside",
     heirlooms: 0,
     perks: {},
@@ -285,26 +317,32 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       // Everything that only exists under a ceiling goes with the ceiling. An
       // upgrade belongs to the world of the producer that gates it, which is
       // also why `ur_form` has to be named here rather than derived: it's
-      // gated on the `singularity`, out under the sky.
-      const inside = new Set(producersIn("inside").map((p) => p.id));
-      const keep = <T extends Partial<Record<SoloProducerId, number>>>(rec: T) =>
-        Object.fromEntries(Object.entries(rec).filter(([id]) => !inside.has(id as SoloProducerId)));
+      // gated on the `singularity`, out under the sky. The beyond is behind
+      // the ceiling, so it goes too.
       site = {
-        ...site,
+        ...stripWorlds(site, ["inside", "beyond"], [CONVERGENCE_UPGRADE, BREACH_UPGRADE]),
         converged: false,
+        breached: false,
         world: "outside",
-        producers: keep(site.producers),
-        broken: keep(site.broken),
-        land: Object.fromEntries(
-          Object.entries(site.land).filter(([id]) => LAND_BY_ID[id as LandId]?.world !== "inside"),
-        ),
-        upgrades: site.upgrades.filter((id) => {
-          if (id === CONVERGENCE_UPGRADE) return false;
-          const req = SOLO_UPGRADE_BY_ID[id]?.requires?.producer;
-          return !(req && inside.has(req));
-        }),
       };
       note("dev: put the sky back.", "neutral");
+      break;
+    }
+
+    case "dev_breach": {
+      if (cmd.breached === site.breached) return fail("It's already like that.");
+      if (cmd.breached) {
+        if (!site.converged) return fail("Fold the horizon first.");
+        site = { ...site, breached: true };
+        note("dev: opened the way through.", "neutral");
+        break;
+      }
+      site = {
+        ...stripWorlds(site, ["beyond"], [BREACH_UPGRADE]),
+        breached: false,
+        world: site.world === "beyond" ? "inside" : site.world,
+      };
+      note("dev: closed the way through.", "neutral");
       break;
     }
 
@@ -346,6 +384,10 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       if (upgrade.id === CONVERGENCE_UPGRADE && !site.converged) {
         site = { ...site, converged: true, world: "inside" };
         note("the horizon closed.", "good");
+      }
+      if (upgrade.id === BREACH_UPGRADE && !site.breached) {
+        site = { ...site, breached: true, world: "beyond" };
+        note("it opened. you went through.", "good");
       }
       break;
     }
@@ -425,6 +467,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
 
     case "warp": {
       if (!site.converged) return fail("There's only the one world out here.");
+      if (!isWorldOpen(site, cmd.to)) return fail("There's no way through to there yet.");
       if (site.world === cmd.to) return fail("You're already there.");
       site = { ...site, world: cmd.to };
       break;
@@ -465,6 +508,7 @@ function resetForNextGeneration(
 ): SiteState {
   const heirlooms = f.heirlooms + earned;
   const converged = f.converged && !outside;
+  const breached = f.breached && converged;
   const next: SiteState = {
     ...f,
     stock: Y.zero,
@@ -477,6 +521,7 @@ function resetForNextGeneration(
     condition: MAX_CONDITION,
     weatherIndex: f.weatherIndex,
     converged,
+    breached,
     /**
      * Every generation starts outside, folded or not.
      *
@@ -577,3 +622,10 @@ export function pendingHeirlooms(f: SiteState): number {
 }
 
 export { SOLO_PRODUCERS, type SoloProducerId };
+
+/** The `breach` is on the table and unbought. Same idea as `convergencePending`, one world further. */
+export function breachPending(f: SiteState): boolean {
+  const upgrade = SOLO_UPGRADE_BY_ID[BREACH_UPGRADE];
+  if (!upgrade || f.breached || f.upgrades.includes(BREACH_UPGRADE)) return false;
+  return isUnlocked(f, upgrade);
+}
