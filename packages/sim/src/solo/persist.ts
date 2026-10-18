@@ -1,8 +1,8 @@
 // Save/load. A save is the SiteState plus a version tag; resuming is `advance` with a big interval.
 
 import { Y, ms, type Millis, type Yield } from "../numbers.js";
-import { MAX_CONDITION, type World } from "./content.js";
-import { advance, BREACH_UPGRADE, CONVERGENCE_UPGRADE, rebase } from "./site.js";
+import { MAX_CONDITION, WORLD_GATE, WORLDS, type World } from "./content.js";
+import { advance, rebase } from "./site.js";
 import type { SiteState } from "./state.js";
 import type { WeatherEvent } from "./weather.js";
 
@@ -37,11 +37,14 @@ export function parseSite(raw: string): SiteState | null {
 
   const upgrades = Array.isArray(f.upgrades) ? (f.upgrades as string[]).map(migrateId) : [];
 
-  // backfill for saves predating the flag
-  const converged = f.converged ?? upgrades.includes(CONVERGENCE_UPGRADE);
-  const breached = converged && (f.breached ?? upgrades.includes(BREACH_UPGRADE));
-  const world: World =
-    f.world === "beyond" && breached ? "beyond" : converged && f.world !== "outside" ? "inside" : "outside";
+  const depth = savedDepth(f, upgrades);
+  // An open world stays where it was. Otherwise a folded save that predates `world` lands inside, as it always did.
+  const open = WORLDS.slice(0, depth + 1) as readonly unknown[];
+  const world: World = open.includes(f.world)
+    ? (f.world as World)
+    : depth >= 1 && f.world !== "outside"
+      ? "inside"
+      : "outside";
 
   // fill missing fields so a partial save can't produce NaN forever
   return {
@@ -57,8 +60,7 @@ export function parseSite(raw: string): SiteState | null {
     condition: Number.isFinite(f.condition) ? Math.min(MAX_CONDITION, f.condition as number) : MAX_CONDITION,
     weatherIndex: Math.max(0, Math.floor(f.weatherIndex ?? 0)),
     nextWeatherAt: ms(f.nextWeatherAt ?? f.checkpointAt),
-    converged,
-    breached,
+    depth,
     world,
     heirlooms: Math.max(0, Math.floor(f.heirlooms ?? 0)),
     perks: remapKeys(f.perks),
@@ -251,4 +253,18 @@ export const REPORT_THRESHOLD_MS = 60_000;
 export function worthReporting(report: OfflineReport | null): boolean {
   if (!report) return false;
   return report.awayMs >= REPORT_THRESHOLD_MS && (report.earned > 0 || report.events.length > 0);
+}
+
+/**
+ * `depth` replaced two flags, `converged` (inside open) and `breached` (beyond
+ * open), and those were themselves backfilled from the gates in `upgrades` for
+ * saves older than either. Read whichever this save has.
+ */
+function savedDepth(f: Partial<SiteState> & { converged?: boolean; breached?: boolean }, upgrades: string[]): number {
+  if (typeof f.depth === "number" && Number.isFinite(f.depth)) {
+    return Math.max(0, Math.min(WORLDS.length - 1, Math.floor(f.depth)));
+  }
+  const converged = f.converged ?? upgrades.includes(WORLD_GATE.inside);
+  if (!converged) return 0;
+  return (f.breached ?? upgrades.includes(WORLD_GATE.beyond)) ? 2 : 1;
 }

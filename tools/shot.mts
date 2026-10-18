@@ -76,17 +76,19 @@ if (args.broken) {
 }
 // The scene reads owned upgrades to pick which mark of each tier it draws.
 if (args.marks === "all") mill.upgrades = solo.SOLO_UPGRADES.map((u) => u.id);
-// ...and whether the horizon has closed. Settable on its own so the fold can be
-// shot against a mill that hasn't bought every other upgrade in the game. Note
-// that a mill seeded as already-converged renders folded without animating —
-// the scene refuses to replay the fold on a restore. `buy=` is how you get at
-// the transition: seed the mill one purchase short of it and make that purchase
-// through the shop.
-mill.converged = args.converged !== "0" && (args.converged === "1" || mill.upgrades.includes(solo.CONVERGENCE_UPGRADE));
-// Which of the two mills to stand on. A converged save lands inside by default,
-// because that's where the fold leaves you; `world=outside` is how the old mill
-// gets photographed with its ceiling on.
-mill.world = mill.converged && args.world !== "outside" ? "inside" : "outside";
+// ...and how far in it has been. `depth=` is an index into `solo.WORLDS`; left
+// unset it's the deepest world whose gate the seeded upgrades include. Note that
+// a mill seeded already-open renders open without animating — the scene refuses
+// to replay a fold on a restore. `buy=` is how you get at a transition: seed the
+// mill one purchase short of it and make that purchase through the shop.
+const gates = solo.WORLDS.slice(1).map((w) => solo.WORLD_GATE[w as Exclude<solo.World, "outside">]);
+let gated = 0;
+while (gated < gates.length && mill.upgrades.includes(gates[gated]!)) gated++;
+mill.depth = args.depth !== undefined ? Number(args.depth) : gated;
+// Where to stand. Defaults to the deepest open world, because that's where the
+// last gate leaves you; `world=` picks any open one.
+const open = solo.WORLDS.slice(0, mill.depth + 1);
+mill.world = open.includes(args.world as solo.World) ? (args.world as solo.World) : open.at(-1)!;
 if (args.generation) mill.generation = Number(args.generation);
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
@@ -143,7 +145,7 @@ if (args.buy) {
   // The Ur-Puppy isn't a shop row and its button doesn't carry its name — the
   // sheet is given over to it, and the only thing to press says "Take it".
   const row =
-    args.buy === solo.CONVERGENCE_UPGRADE
+    Object.values(solo.WORLD_GATE).includes(args.buy)
       ? page.getByRole("button", { name: "Take it" })
       : page.getByRole("button").filter({ hasText: thing.name }).first();
   await row.click();

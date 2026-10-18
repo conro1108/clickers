@@ -26,10 +26,12 @@ export interface SiteState {
   nextWeatherAt: Millis;
 
   // --- Persists across prestige resets ---
-  /** The horizon has closed. Survives prestige unless `prestige.outside` reopens it. */
-  converged: boolean;
-  /** The second fold: `beyond` is open. Only ever true alongside `converged`, and goes with it. */
-  breached: boolean;
+  /**
+   * How far in you've been: an index into `WORLDS`, and every world up to it is
+   * open. 0 is the yard alone; 1 is the old `converged`. Survives prestige
+   * unless `prestige.outside` puts it back to 0.
+   */
+  depth: number;
   /** Which site you're standing on. Both run at once; this picks shop, land and picture only. */
   world: World;
   heirlooms: number;
@@ -58,7 +60,7 @@ export type SiteCommand =
   /** Every repair on the current world plus condition, all or nothing on purpose. */
   | { type: "fix_all" }
   | { type: "buy_perk"; perk: PerkId }
-  /** `outside` reopens the horizon for the next generation; ignored if never folded. */
+  /** `outside` closes every world but the first for the next generation; ignored if never folded. */
   | { type: "prestige"; outside?: boolean }
   /** A camera move, not a decision. Refused if never folded. */
   | { type: "warp"; to: World }
@@ -67,10 +69,11 @@ export type SiteCommand =
   /** Pull the next scheduled weather event forward to now; changes when, not which. */
   | { type: "dev_weather" }
   | { type: "dev_heirlooms"; heirlooms: number }
-  /** Opening back up strips core-only kit and `ur_form`, leaving a site one purchase short of the fold. */
-  | { type: "dev_fold"; converged: boolean }
-  /** Closing strips beyond-only kit and `breach`, leaving a site one purchase short of it. */
-  | { type: "dev_breach"; breached: boolean };
+  /**
+   * Cheat: open worlds up to `depth`, or close back to it. Closing strips every
+   * deeper world's kit and gates, leaving a site one purchase short of the next.
+   */
+  | { type: "dev_depth"; depth: number };
 
 export type SiteResult =
   | { ok: true; site: SiteState; entries: SiteLogEntry[] }

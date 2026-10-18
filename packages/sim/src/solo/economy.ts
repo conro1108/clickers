@@ -19,6 +19,7 @@ import {
   type SoloProducerId,
   type SoloUpgrade,
   type World,
+  WORLDS,
 } from "./content.js";
 import { MULT_PER_UNSPENT_HEIRLOOM, PERK_BY_ID } from "./prestige.js";
 import type { SiteState } from "./state.js";
@@ -156,10 +157,14 @@ export function mitigation(f: SiteState, role: LandRole): number {
 
 // --- What a site is allowed to own --- enforced here, not just in the shop, against hand-edited saves
 
-/** Whether a site can stand in a world: outside always, inside once folded, beyond once breached. */
+/** Whether a site can stand in a world: everything up to `depth`. */
 export function isWorldOpen(f: SiteState, world: World): boolean {
-  if (world === "beyond") return f.converged && f.breached;
-  return world === "outside" || f.converged;
+  return WORLDS.indexOf(world) <= f.depth;
+}
+
+/** The worlds a site can stand in, in order. */
+export function openWorlds(f: SiteState): readonly World[] {
+  return WORLDS.slice(0, f.depth + 1);
 }
 
 export function isProducerAvailable(f: SiteState, id: SoloProducerId): boolean {
@@ -171,7 +176,7 @@ export function isLandAvailable(f: SiteState, id: LandId): boolean {
 }
 
 export function isPerkAvailable(f: SiteState, id: keyof typeof PERK_BY_ID): boolean {
-  return f.converged || !PERK_BY_ID[id].afterFold;
+  return f.depth >= 1 || !PERK_BY_ID[id].afterFold;
 }
 
 // --- Prices ---

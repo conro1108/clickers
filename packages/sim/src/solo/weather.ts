@@ -21,6 +21,8 @@ import {
   SOLO_MAX_BROKEN_SHARE,
   SOLO_PRODUCERS,
   type SoloProducerId,
+  type World,
+  WORLDS,
 } from "./content.js";
 import {
   cleanRate,
@@ -141,17 +143,45 @@ const BEYOND_KIND_SHAPES: readonly Shape<WeatherKind>[] = [
 
 const BEYOND_KINDS: readonly WeatherKind[] = named(BEYOND_KIND_SHAPES, THEME.weather, "weather");
 
+/** Deep: heavier on the kit, because what you work down there is stone and it falls. */
+const DEEP_KIND_SHAPES: readonly Shape<WeatherKind>[] = [
+  { id: "quake", weight: 16, effect: { kind: "break", scope: "cheapest", share: 0.3 } },
+  { id: "shear", weight: 13, effect: { kind: "break", scope: "best", share: 0.27 } },
+  { id: "collapse", weight: 8, effect: { kind: "break", scope: "all", share: 0.2, condition: 0.06 } },
+  { id: "dim", weight: 16, effect: { kind: "condition", loss: 0.09 } },
+  { id: "smother", weight: 10, effect: { kind: "condition", loss: 0.16 } },
+  { id: "vein", weight: 9, effect: { kind: "boon", seconds: 90 } },
+  { id: "lode", weight: 3, effect: { kind: "boon", seconds: 300 } },
+];
+
+/** Origin: the first world's weather again in shape, because it is the first world again. */
+const ORIGIN_KIND_SHAPES: readonly Shape<WeatherKind>[] = [
+  { id: "mist", weight: 16, effect: { kind: "break", scope: "cheapest", share: 0.28 } },
+  { id: "gale", weight: 12, effect: { kind: "break", scope: "best", share: 0.26 } },
+  { id: "unmaking", weight: 8, effect: { kind: "break", scope: "all", share: 0.2, condition: 0.06 } },
+  { id: "wilt", weight: 18, effect: { kind: "condition", loss: 0.09 } },
+  { id: "fallow", weight: 11, effect: { kind: "condition", loss: 0.16 } },
+  { id: "harvest", weight: 9, effect: { kind: "boon", seconds: 90 } },
+  { id: "jubilee", weight: 3, effect: { kind: "boon", seconds: 300 } },
+];
+
+/** One table per world; the deepest open world's is the one that blows. */
+const KINDS_BY_WORLD: Record<World, readonly WeatherKind[]> = {
+  outside: KINDS,
+  inside: CORE_KINDS,
+  beyond: BEYOND_KINDS,
+  deep: named(DEEP_KIND_SHAPES, THEME.weather, "weather"),
+  origin: named(ORIGIN_KIND_SHAPES, THEME.weather, "weather"),
+};
+
 function kindsFor(f: SiteState): readonly WeatherKind[] {
-  if (f.breached) return BEYOND_KINDS;
-  return f.converged ? CORE_KINDS : KINDS;
+  return KINDS_BY_WORLD[WORLDS[f.depth] ?? "outside"];
 }
 
-/** Which ids each table can produce, so a test can pin that the swap happened. */
-export const WEATHER_IDS = {
-  sky: KINDS.map((k) => k.id),
-  core: CORE_KINDS.map((k) => k.id),
-  beyond: BEYOND_KINDS.map((k) => k.id),
-} as const;
+/** Which ids each world's table can produce, so a test can pin that the swap happened. */
+export const WEATHER_IDS = Object.fromEntries(
+  WORLDS.map((w) => [w, KINDS_BY_WORLD[w].map((k) => k.id)]),
+) as Record<World, string[]>;
 
 /** Average gap between events, before any mitigation stretches it. */
 export const MEAN_WEATHER_GAP_MS = seconds(300);

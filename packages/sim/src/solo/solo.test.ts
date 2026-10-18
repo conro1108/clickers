@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ms, seconds } from "../numbers.js";
-import { MAX_CONDITION, MIN_CONDITION, SOLO_PRODUCERS } from "./content.js";
+import { MAX_CONDITION, MIN_CONDITION, SOLO_PRODUCERS, WORLD_GATE, WORLDS, type World } from "./content.js";
 import {
   brokenCount,
   currentRate,
@@ -9,7 +9,7 @@ import {
   totalRepairCost,
   upkeepBill,
 } from "./economy.js";
-import { BREACH_UPGRADE, advance, applySiteCommand, mustApplySite, pendingHeirlooms } from "./site.js";
+import { advance, applySiteCommand, gatePending, mustApplySite, pendingHeirlooms } from "./site.js";
 import { parseSite, resumeSite, serializeSite } from "./persist.js";
 import { MULT_PER_UNSPENT_HEIRLOOM } from "./prestige.js";
 import { simulateSite } from "./sim.js";
@@ -125,51 +125,34 @@ describe("prestige", () => {
   });
 });
 
-describe("the Convergence", () => {
-  it("keeps the tiers above the fold out of an unfolded world", () => {
-    const site = developedSite("gate");
-    expect(site.converged).toBe(false);
-    for (const prod of SOLO_PRODUCERS.filter((p) => p.world === "inside")) {
-      const rich: SiteState = { ...site, stock: 1e30 as never };
-      expect(applySiteCommand(rich, { type: "buy_producer", producer: prod.id, qty: 1 }, rich.checkpointAt).ok)
-        .toBe(false);
-      expect(applySiteCommand(
-        { ...rich, converged: true },
-        { type: "buy_producer", producer: prod.id, qty: 1 },
-        rich.checkpointAt,
-      ).ok).toBe(true);
+describe("the worlds", () => {
+  it("opens each world with the gate at the bottom of the one before, and not before", () => {
+    let site: SiteState = { ...developedSite("gates"), stock: 1e40 as never };
+    for (const world of WORLDS.slice(1)) {
+      const rung = SOLO_PRODUCERS.find((p) => p.world === world)!;
+      const buy = { type: "buy_producer", producer: rung.id, qty: 1 } as const;
+      expect(applySiteCommand(site, buy, site.checkpointAt).ok).toBe(false);
+      // Ten of the last rung of the world you're in puts the gate on the shelf.
+      const last = SOLO_PRODUCERS.filter((p) => p.world === site.world).at(-1)!;
+      site = { ...site, producers: { ...site.producers, [last.id]: 10 } };
+      expect(gatePending(site)).toBe(world);
+      site = mustApplySite(site, { type: "buy_upgrade", upgrade: WORLD_GATE[world as Exclude<World, "outside">] }, site.checkpointAt);
+      expect(site.world).toBe(world);
+      expect(applySiteCommand(site, buy, site.checkpointAt).ok).toBe(true);
     }
+    expect(site.depth).toBe(WORLDS.length - 1);
   });
-});
 
-describe("the two worlds", () => {
-  it("starts every generation outside, with the door still open behind it", () => {
-    const base: SiteState = { ...worthHandingDown(developedSite("handdown")), converged: true, world: "inside" };
-    const stay = applySiteCommand(base, { type: "prestige" }, base.checkpointAt);
-    const kept = (stay as { site: SiteState }).site;
+  it("starts every generation outside, with the doors still open behind it", () => {
+    const base: SiteState = { ...worthHandingDown(developedSite("handdown")), depth: 3, world: "deep" };
+    const kept = mustApplySite(base, { type: "prestige" }, base.checkpointAt);
     expect(kept.world).toBe("outside");
-    expect(kept.converged).toBe(true);
-    expect(applySiteCommand(kept, { type: "warp", to: "inside" }, kept.checkpointAt).ok).toBe(true);
+    expect(kept.depth).toBe(3);
+    expect(applySiteCommand(kept, { type: "warp", to: "deep" }, kept.checkpointAt).ok).toBe(true);
 
-    const leave = applySiteCommand(base, { type: "prestige", outside: true }, base.checkpointAt);
-    const next = (leave as { site: SiteState }).site;
-    expect(next.converged).toBe(false);
-    expect(next.world).toBe("outside");
+    const next = mustApplySite(base, { type: "prestige", outside: true }, base.checkpointAt);
+    expect(next.depth).toBe(0);
     expect(applySiteCommand(next, { type: "warp", to: "inside" }, next.checkpointAt).ok).toBe(false);
-  });
-
-  it("opens the beyond on the breach, and closes it with the sky", () => {
-    const folded: SiteState = { ...developedSite("breach"), converged: true, world: "inside" };
-    const rich: SiteState = { ...folded, stock: 1e30 as never, producers: { ...folded.producers, second: 10 } };
-    expect(applySiteCommand(rich, { type: "buy_producer", producer: "echo", qty: 1 }, rich.checkpointAt).ok).toBe(false);
-    const through = mustApplySite(rich, { type: "buy_upgrade", upgrade: BREACH_UPGRADE }, rich.checkpointAt);
-    expect(through.breached).toBe(true);
-    expect(through.world).toBe("beyond");
-    expect(applySiteCommand(through, { type: "buy_producer", producer: "echo", qty: 1 }, through.checkpointAt).ok).toBe(true);
-
-    const out = mustApplySite(worthHandingDown(through), { type: "prestige", outside: true }, through.checkpointAt);
-    expect(out.breached).toBe(false);
-    expect(applySiteCommand(out, { type: "warp", to: "beyond" }, out.checkpointAt).ok).toBe(false);
   });
 });
 
@@ -178,6 +161,13 @@ describe("saving", () => {
     const site = developedSite("save");
     const restored = parseSite(serializeSite(site, site.checkpointAt));
     expect(restored).toEqual(site);
+  });
+
+  it("reads a save from before `depth` as the worlds it had open", () => {
+    const { depth: _, ...old } = { ...developedSite("old"), world: "beyond" as const };
+    const parsed = parseSite(serializeSite({ ...old, converged: true, breached: true } as never, old.checkpointAt));
+    expect(parsed?.depth).toBe(2);
+    expect(parsed?.world).toBe("beyond");
   });
 
   it("refuses junk rather than throwing", () => {

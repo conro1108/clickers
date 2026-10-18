@@ -22,12 +22,29 @@ import { named, THEME, type Shape } from "../theme.js";
  * `SiteState.world` is only ever "which one am I looking at". It has no effect
  * on production — see `currentRate`, which sums the lot.
  *
- * `beyond` is the third place, opened by the `breach` at the bottom of the
- * inside ladder the same way the `ur_form` opens the inside. Same rules: a
- * fresh ladder, its own land, its own picture, and everything behind you keeps
- * producing.
+ * `beyond`, `deep` and `origin` follow the same rules, each opened by a gate
+ * at the bottom of the ladder before it (see `WORLD_GATE`): a fresh ladder,
+ * its own land, its own picture, and everything behind you keeps producing.
  */
-export type World = "outside" | "inside" | "beyond";
+export type World = "outside" | "inside" | "beyond" | "deep" | "origin";
+
+/**
+ * Every world in the order you reach them. `SiteState.depth` is an index into
+ * this: everything up to and including it is open.
+ */
+export const WORLDS: readonly World[] = ["outside", "inside", "beyond", "deep", "origin"];
+
+/**
+ * The upgrade that opens each world, bought in the world before it. Each is
+ * gated on ten of the last rung of the previous ladder and costs about that
+ * fleet — the `ur_form`'s shape, repeated.
+ */
+export const WORLD_GATE: Record<Exclude<World, "outside">, string> = {
+  inside: "ur_form",
+  beyond: "breach",
+  deep: "rift",
+  origin: "return",
+};
 
 export type SoloProducerId =
   | "patch"
@@ -55,7 +72,19 @@ export type SoloProducerId =
   | "grove"
   | "tide"
   | "beacon"
-  | "third";
+  | "third"
+  | "spark"
+  | "kith"
+  | "loom"
+  | "vault"
+  | "crown"
+  | "fourth"
+  | "dawn"
+  | "elder"
+  | "root"
+  | "spring"
+  | "hearth"
+  | "first";
 
 export interface SoloProducer {
   id: SoloProducerId;
@@ -349,6 +378,104 @@ const SOLO_PRODUCER_SHAPES: readonly Shape<SoloProducer>[] = [
     growth: 1.19,
     world: "beyond",
   },
+
+  // --- Deep, then origin ---------------------------------------------------
+  //
+  // Two more ladders of six on the same steps (~3.8x cost, ~2.8x output), each
+  // carrying on from the top rung of the world before. Same three twists per
+  // world, in the same slots: a calming rung, a condition rung, a generation
+  // rung. Past ~1e21 the literals are in exponent form because nobody can
+  // count that many underscores.
+  {
+    id: "spark",
+    baseRate: 3e16,
+    baseCost: Y.of(9.5e22),
+    growth: 1.19,
+    world: "deep",
+  },
+  {
+    id: "kith",
+    baseRate: 8.4e16,
+    baseCost: Y.of(3.6e23),
+    growth: 1.19,
+    world: "deep",
+  },
+  {
+    id: "loom",
+    baseRate: 2.35e17,
+    baseCost: Y.of(1.37e24),
+    growth: 1.19,
+    world: "deep",
+    calmPerUnit: 0.0025,
+  },
+  {
+    id: "vault",
+    baseRate: 6.6e17,
+    baseCost: Y.of(5.2e24),
+    growth: 1.19,
+    world: "deep",
+    conditionScaled: true,
+  },
+  {
+    id: "crown",
+    baseRate: 1.85e18,
+    baseCost: Y.of(2e25),
+    growth: 1.19,
+    world: "deep",
+    generationScaled: true,
+  },
+  {
+    id: "fourth",
+    baseRate: 5.2e18,
+    baseCost: Y.of(7.5e25),
+    growth: 1.19,
+    world: "deep",
+  },
+  {
+    id: "dawn",
+    baseRate: 1.45e19,
+    baseCost: Y.of(2.85e26),
+    growth: 1.19,
+    world: "origin",
+  },
+  {
+    id: "elder",
+    baseRate: 4.1e19,
+    baseCost: Y.of(1.08e27),
+    growth: 1.19,
+    world: "origin",
+  },
+  {
+    id: "root",
+    baseRate: 1.15e20,
+    baseCost: Y.of(4.1e27),
+    growth: 1.19,
+    world: "origin",
+    calmPerUnit: 0.002,
+  },
+  {
+    id: "spring",
+    baseRate: 3.2e20,
+    baseCost: Y.of(1.56e28),
+    growth: 1.19,
+    world: "origin",
+    conditionScaled: true,
+  },
+  {
+    id: "hearth",
+    baseRate: 9e20,
+    baseCost: Y.of(5.9e28),
+    growth: 1.19,
+    world: "origin",
+    generationScaled: true,
+  },
+  {
+    id: "first",
+    baseRate: 2.5e21,
+    baseCost: Y.of(2.25e29),
+    growth: 1.19,
+    world: "origin",
+  },
 ];
 
 export const SOLO_PRODUCERS: readonly SoloProducer[] = named(SOLO_PRODUCER_SHAPES, THEME.soloProducers, "producer");
@@ -608,7 +735,7 @@ const GLOBAL_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
     effect: { kind: "global_mult", factor: 2 },
     requires: { producer: "second", count: 25 },
   },
-  /** The second fold, built like the first: ten of the last rung, about its fleet's price, opens `beyond`. */
+  // The gates past the first are on `WORLD_GATE`; each sits next to its world's two globals.
   {
     id: "breach",
     cost: fleetCost("second", 10),
@@ -626,6 +753,32 @@ const GLOBAL_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
     cost: fleetCost("third", 25),
     effect: { kind: "global_mult", factor: 2 },
     requires: { producer: "third", count: 25 },
+  },
+  { id: "rift", cost: fleetCost("third", 10), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "third", count: 10 } },
+  {
+    id: "deep_charter",
+    cost: fleetCost("loom", 25, 5),
+    effect: { kind: "global_mult", factor: 2 },
+    requires: { producer: "loom", count: 25 },
+  },
+  {
+    id: "fourth_form",
+    cost: fleetCost("fourth", 25),
+    effect: { kind: "global_mult", factor: 2 },
+    requires: { producer: "fourth", count: 25 },
+  },
+  { id: "return", cost: fleetCost("fourth", 10), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "fourth", count: 10 } },
+  {
+    id: "origin_charter",
+    cost: fleetCost("root", 25, 5),
+    effect: { kind: "global_mult", factor: 2 },
+    requires: { producer: "root", count: 25 },
+  },
+  {
+    id: "final_form",
+    cost: fleetCost("first", 25),
+    effect: { kind: "global_mult", factor: 2 },
+    requires: { producer: "first", count: 25 },
   },
 ];
 
@@ -662,7 +815,15 @@ export type LandId =
   | "beyond_beds"
   | "beyond_lining"
   | "beyond_calm"
-  | "beyond_reclaim";
+  | "beyond_reclaim"
+  | "deep_beds"
+  | "deep_lining"
+  | "deep_calm"
+  | "deep_reclaim"
+  | "origin_beds"
+  | "origin_lining"
+  | "origin_calm"
+  | "origin_reclaim";
 
 export type LandRole =
   /** Cuts how many units a disaster knocks offline. */
@@ -798,6 +959,15 @@ const LAND_SHAPES: readonly Shape<Land>[] = [
     growth: 1.9,
     world: "beyond",
   },
+  // Deep and origin: the same four again, at the same share of each world's first rung.
+  { id: "deep_beds", role: "breakage", perLevel: 0.12, baseCost: Y.of(6.365e22), growth: 1.9, world: "deep" },
+  { id: "deep_lining", role: "condition", perLevel: 0.12, baseCost: Y.of(9.975e22), growth: 1.9, world: "deep" },
+  { id: "deep_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(1.9e23), growth: 2.1, world: "deep" },
+  { id: "deep_reclaim", role: "payout", perLevel: 0.12, baseCost: Y.of(3.8e23), growth: 1.9, world: "deep" },
+  { id: "origin_beds", role: "breakage", perLevel: 0.12, baseCost: Y.of(1.91e26), growth: 1.9, world: "origin" },
+  { id: "origin_lining", role: "condition", perLevel: 0.12, baseCost: Y.of(2.993e26), growth: 1.9, world: "origin" },
+  { id: "origin_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(5.7e26), growth: 2.1, world: "origin" },
+  { id: "origin_reclaim", role: "payout", perLevel: 0.12, baseCost: Y.of(1.14e27), growth: 1.9, world: "origin" },
 ];
 
 export const LANDS: readonly Land[] = named(LAND_SHAPES, THEME.lands, "land");

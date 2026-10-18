@@ -19,6 +19,8 @@ import {
   type LandId,
   type SoloProducerId,
   type World,
+  WORLD_GATE,
+  WORLDS,
 } from "./content.js";
 import {
   brokenCount,
@@ -43,15 +45,20 @@ import { fireWeather, scheduleNext, type WeatherEvent } from "./weather.js";
 /** Clamp on batched clicks, matching the versus mode's flush window. */
 export const MAX_CLICKS_PER_FLUSH = 25;
 
-/** The purchase that folds the horizon. See `converged` on `SiteState`. */
-export const CONVERGENCE_UPGRADE = "ur_form";
+/** The purchase that folds the horizon: the first gate, opening `inside`. */
+export const CONVERGENCE_UPGRADE = WORLD_GATE.inside;
 
 /** The rung that gates it, and so the first sign that anything is coming. */
 export const CONVERGENCE_GATE_PRODUCER: SoloProducerId =
   SOLO_UPGRADE_BY_ID[CONVERGENCE_UPGRADE]!.requires!.producer;
 
-/** The second fold: opens `beyond`. Gated, like the first, on the last rung of the world before it. */
-export const BREACH_UPGRADE = "breach";
+/** What the log says when each world opens. Engine vocabulary, so nothing game-specific. */
+const ARRIVAL: Record<Exclude<World, "outside">, string> = {
+  inside: "the horizon closed.",
+  beyond: "it opened. you went through.",
+  deep: "the floor gave. you went down.",
+  origin: "you came out where you started. it is the first morning.",
+};
 
 /**
  * Strip everything that only exists in `worlds`, and the upgrades gated on it
@@ -101,8 +108,7 @@ export function createSite(opts: { seed: string; startedAt: Millis }): SiteState
     condition: MAX_CONDITION,
     weatherIndex: 0,
     nextWeatherAt: opts.startedAt,
-    converged: false,
-    breached: false,
+    depth: 0,
     world: "outside",
     heirlooms: 0,
     perks: {},
@@ -307,42 +313,26 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       break;
     }
 
-    case "dev_fold": {
-      if (cmd.converged === site.converged) return fail("It's already like that.");
-      if (cmd.converged) {
-        site = { ...site, converged: true };
-        note("dev: folded the horizon.", "neutral");
+    case "dev_depth": {
+      const depth = Math.max(0, Math.min(WORLDS.length - 1, Math.floor(cmd.depth)));
+      if (depth === site.depth) return fail("It's already like that.");
+      if (depth > site.depth) {
+        site = { ...site, depth };
+        note(`dev: opened the way to ${WORLDS[depth]}.`, "neutral");
         break;
       }
-      // Everything that only exists under a ceiling goes with the ceiling. An
-      // upgrade belongs to the world of the producer that gates it, which is
-      // also why `ur_form` has to be named here rather than derived: it's
-      // gated on the `singularity`, out under the sky. The beyond is behind
-      // the ceiling, so it goes too.
+      // Everything that only exists past the line goes with it. An upgrade
+      // belongs to the world of the producer that gates it, which is also why
+      // the gates have to be named rather than derived: each one is gated on a
+      // producer in the world *before* the one it opens.
+      const closed = WORLDS.slice(depth + 1);
+      const here = WORLDS.indexOf(site.world) > depth ? WORLDS[depth]! : site.world;
       site = {
-        ...stripWorlds(site, ["inside", "beyond"], [CONVERGENCE_UPGRADE, BREACH_UPGRADE]),
-        converged: false,
-        breached: false,
-        world: "outside",
+        ...stripWorlds(site, closed, closed.map((w) => WORLD_GATE[w as Exclude<World, "outside">])),
+        depth,
+        world: here,
       };
-      note("dev: put the sky back.", "neutral");
-      break;
-    }
-
-    case "dev_breach": {
-      if (cmd.breached === site.breached) return fail("It's already like that.");
-      if (cmd.breached) {
-        if (!site.converged) return fail("Fold the horizon first.");
-        site = { ...site, breached: true };
-        note("dev: opened the way through.", "neutral");
-        break;
-      }
-      site = {
-        ...stripWorlds(site, ["beyond"], [BREACH_UPGRADE]),
-        breached: false,
-        world: site.world === "beyond" ? "inside" : site.world,
-      };
-      note("dev: closed the way through.", "neutral");
+      note(`dev: closed everything past ${WORLDS[depth]}.`, "neutral");
       break;
     }
 
@@ -381,13 +371,14 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       // The Convergence puts you *in* the core, not merely under a new
       // ceiling: the fold ends with you standing on the inside site, with a
       // shop you have never seen. Coming back out is a thing you go and ask for.
-      if (upgrade.id === CONVERGENCE_UPGRADE && !site.converged) {
-        site = { ...site, converged: true, world: "inside" };
-        note("the horizon closed.", "good");
-      }
-      if (upgrade.id === BREACH_UPGRADE && !site.breached) {
-        site = { ...site, breached: true, world: "beyond" };
-        note("it opened. you went through.", "good");
+      //
+      // Every later gate is the same move one world further. Only the gate of
+      // the *next* world opens anything; buying one again after a hand-down is
+      // just its multiplier.
+      const opens = WORLDS[site.depth + 1] as Exclude<World, "outside"> | undefined;
+      if (opens && upgrade.id === WORLD_GATE[opens]) {
+        site = { ...site, depth: site.depth + 1, world: opens };
+        note(ARRIVAL[opens], "good");
       }
       break;
     }
@@ -466,7 +457,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
     }
 
     case "warp": {
-      if (!site.converged) return fail("There's only the one world out here.");
+      if (site.depth === 0) return fail("There's only the one world out here.");
       if (!isWorldOpen(site, cmd.to)) return fail("There's no way through to there yet.");
       if (site.world === cmd.to) return fail("You're already there.");
       site = { ...site, world: cmd.to };
@@ -476,7 +467,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
     case "prestige": {
       const earned = heirloomsFor(site.produced);
       if (earned <= 0) return fail("Nothing worth handing down yet.");
-      const out = cmd.outside === true && site.converged;
+      const out = cmd.outside === true && site.depth > 0;
       site = resetForNextGeneration(site, earned, at, out);
       note(`handed the site down. +${earned} Heirloom.`, "good");
       if (out) note("the horizon is open again.", "neutral");
@@ -490,7 +481,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
 /**
  * Everything a generation earns is wiped except the heirlooms and what they bought.
  * `lifetimeProduced` deliberately survives — it's the only number in the game
- * that never goes backwards — and so does `converged`, unless the site is being
+ * that never goes backwards — and so does `depth`, unless the site is being
  * handed down with the sky asked for.
  *
  * `outside` is the only way out of the core, and it's a door rather than a
@@ -507,8 +498,6 @@ function resetForNextGeneration(
   outside = false,
 ): SiteState {
   const heirlooms = f.heirlooms + earned;
-  const converged = f.converged && !outside;
-  const breached = f.breached && converged;
   const next: SiteState = {
     ...f,
     stock: Y.zero,
@@ -520,8 +509,7 @@ function resetForNextGeneration(
     land: {},
     condition: MAX_CONDITION,
     weatherIndex: f.weatherIndex,
-    converged,
-    breached,
+    depth: outside ? 0 : f.depth,
     /**
      * Every generation starts outside, folded or not.
      *
@@ -592,7 +580,7 @@ export function mustApplySite(f: SiteState, cmd: SiteCommand, now: Millis): Site
  * blue on the frame you press the button.
  */
 export function convergenceProgress(f: SiteState): number {
-  if (f.converged) return 1;
+  if (f.depth >= 1) return 1;
   const gate = SOLO_UPGRADE_BY_ID[CONVERGENCE_UPGRADE]?.requires;
   if (!gate || gate.count <= 0) return 0;
   return Math.min(1, (f.producers[gate.producer] ?? 0) / gate.count);
@@ -611,9 +599,19 @@ export function convergenceProgress(f: SiteState): number {
  * for.
  */
 export function convergencePending(f: SiteState): boolean {
-  const upgrade = SOLO_UPGRADE_BY_ID[CONVERGENCE_UPGRADE];
-  if (!upgrade || f.converged || f.upgrades.includes(CONVERGENCE_UPGRADE)) return false;
-  return isUnlocked(f, upgrade);
+  return gatePending(f) === "inside";
+}
+
+/**
+ * The world whose gate is on the table and unbought, if any — the same
+ * last-stretch moment as `convergencePending`, for whichever world is next.
+ */
+export function gatePending(f: SiteState): Exclude<World, "outside"> | null {
+  const next = WORLDS[f.depth + 1] as Exclude<World, "outside"> | undefined;
+  if (!next) return null;
+  const upgrade = SOLO_UPGRADE_BY_ID[WORLD_GATE[next]];
+  if (!upgrade || f.upgrades.includes(upgrade.id)) return null;
+  return isUnlocked(f, upgrade) ? next : null;
 }
 
 /** What a prestige right now would pay. Zero means it isn't worth doing yet. */
@@ -622,10 +620,3 @@ export function pendingHeirlooms(f: SiteState): number {
 }
 
 export { SOLO_PRODUCERS, type SoloProducerId };
-
-/** The `breach` is on the table and unbought. Same idea as `convergencePending`, one world further. */
-export function breachPending(f: SiteState): boolean {
-  const upgrade = SOLO_UPGRADE_BY_ID[BREACH_UPGRADE];
-  if (!upgrade || f.breached || f.upgrades.includes(BREACH_UPGRADE)) return false;
-  return isUnlocked(f, upgrade);
-}

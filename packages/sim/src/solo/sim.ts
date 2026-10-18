@@ -249,7 +249,7 @@ export function simulateCadence(opts: {
         firstOwned[prod.id] = at;
       }
     }
-    if (convergedAt === null && site.converged) {
+    if (convergedAt === null && site.depth >= 1) {
       convergedAt = at;
       convergedRate = currentRate(site);
     }

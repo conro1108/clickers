@@ -24,7 +24,11 @@ export const ms = (n: number): Millis => n as Millis;
 export const seconds = (n: number): number => n * 1000;
 export const rate = (n: number): Rate => n as Rate;
 
-const SUFFIXES = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"];
+// Runs to 1e63: the fifth world's top rung, fully upgraded, is somewhere past 1e40.
+const SUFFIXES = [
+  "", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No",
+  "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod", "Vg",
+];
 
 /** Idle-game number formatting: 1234567 -> "1.23M". */
 export function format(n: number): string {
