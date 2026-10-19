@@ -837,8 +837,10 @@ const GLOBAL_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
     requires: { producer: "first", count: 25 },
   },
   // The two taxed gates are taxed too. Each freezes the shop until it's bought (the
-  // gate sale screen), so they're priced to take hours, not days; the weeks are in the ladders.
-  { id: "before", cost: Y.of(1.6e34), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "first", count: 10 } },
+  // gate sale screen), from the moment the tenth of the last rung stands — before the
+  // site can buy out the rungs below it — so they're priced to take hours from that
+  // frozen rate, not days; the weeks are in the ladders.
+  { id: "before", cost: fleetCost("first", 10, 30), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "first", count: 10 } },
   { id: "void_charter", cost: fleetCost("veil", 25, 5), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "veil", count: 25 } },
   { id: "fifth_form", cost: fleetCost("fifth", 25), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "fifth", count: 25 } },
   { id: "ending", cost: Y.of(END_COST * 0.3), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "fifth", count: 10 } },

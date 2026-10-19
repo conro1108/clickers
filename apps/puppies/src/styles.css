@@ -785,6 +785,48 @@ input {
   background: #fff0d0;
 }
 
+/* Look up: you fall up, past the smoke, toward one star that is shaking. */
+.converge.void::before {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 244, 192, 0.25), rgba(6, 4, 10, 0) 48%);
+}
+.converge.void .converge-dog {
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #fff4c0 22%, #ffd166 40%, #2a2458 72%, #04061a 100%);
+}
+.converge.void .converge-dog::before,
+.converge.void .converge-dog::after {
+  display: none;
+}
+.converge.void .converge-warm {
+  background:
+    radial-gradient(circle at 48% 34%, rgba(255, 244, 192, 0.5) 0 3vmin, rgba(255, 244, 192, 0) 12vmin),
+    linear-gradient(#04061a 0%, #10163a 60%, #2a2458 74%, #0e0c1c 74.4%, #0e0c1c 100%);
+}
+.converge.void .converge-warm::before {
+  background: #e8e8ff;
+}
+
+/* The bridge: you fall toward a rainbow and come out on the grass under it. */
+.converge.end::before {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 216, 160, 0.3), rgba(6, 4, 10, 0) 48%);
+}
+.converge.end .converge-dog {
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 100%, transparent 0 34%, #9060c0 34% 39%, #5080e0 39% 44%, #60c060 44% 49%, #f0e060 49% 54%, #f0a040 54% 59%, #e05050 59% 64%, transparent 64%);
+}
+.converge.end .converge-dog::before,
+.converge.end .converge-dog::after {
+  display: none;
+}
+.converge.end .converge-warm {
+  background:
+    radial-gradient(ellipse at 50% 60%, rgba(255, 244, 192, 0.4) 0 8vmin, rgba(255, 244, 192, 0) 26vmin),
+    linear-gradient(#3a2a6a 0%, #c07aa8 33%, #ffd8a0 60%, #7ab858 60.4%, #3e7a34 100%);
+}
+.converge.end .converge-warm::before {
+  background: #fff4e0;
+}
+
 .converge-words {
   position: absolute;
   inset: 0;
@@ -1602,9 +1644,9 @@ input {
    sheet is about. */
 .world-door {
   display: grid;
-  /* Up to five doors, one row: a lone door wrapped onto a second line read as
+  /* Seven doors: four over three rather than six and a lone one, which read as
      a different kind of button. Labels are "The x", so two short lines fit. */
-  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   margin-bottom: 12px;
 }
 

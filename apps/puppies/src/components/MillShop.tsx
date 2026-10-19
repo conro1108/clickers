@@ -136,7 +136,7 @@ export function GrowPanel({
       (i === 0 ||
         owned > 0 ||
         (prev !== undefined && (mill.producers[prev.id] ?? 0) > 0) ||
-        Y.gte(Y.mul(budget, 3), prod.baseCost));
+        Y.gte(Y.mul(budget, 3), solo.producerCost(mill, prod.id, 1)));
     if (!visible) return [];
     return [{ prod, owned, n, cost, each, broken }];
   });
