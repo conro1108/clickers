@@ -19,6 +19,8 @@ import {
   type SoloProducerId,
   type SoloUpgrade,
   type World,
+  TAXED_WORLDS,
+  WORLD_GATE,
   WORLDS,
 } from "./content.js";
 import { MULT_PER_UNSPENT_HEIRLOOM, PERK_BY_ID } from "./prestige.js";
@@ -41,10 +43,40 @@ export function globalMultiplier(f: SiteState): number {
   for (const u of ownedUpgrades(f)) {
     if (u.effect.kind === "global_mult") m *= u.effect.factor;
   }
-  m *= 1 + MULT_PER_UNSPENT_HEIRLOOM * f.heirlooms;
-  m *= 1 + 0.15 * perkLevel(f, "knack");
-  m *= 1 + 0.4 * perkLevel(f, "core_tithe");
-  return m;
+  return m * heirloomMultiplier(f);
+}
+
+/** Seeds held, and the perks that multiply every rung. */
+function heirloomMultiplier(f: SiteState): number {
+  return (
+    (1 + MULT_PER_UNSPENT_HEIRLOOM * f.heirlooms) *
+    (1 + 0.15 * perkLevel(f, "knack")) *
+    (1 + 0.4 * perkLevel(f, "core_tithe"))
+  );
+}
+
+/**
+ * How much of an inheritance's output multiplier the taxed worlds charge back
+ * in price. At 0.95 it still pays there, but as `I^0.05` rather than `I`: a
+ * site with a thousand times the seeds is about 40% faster, not a thousand
+ * times.
+ */
+export const SEED_TAX_EXPONENT = 0.95;
+
+/**
+ * The price multiplier on anything in a taxed world: everything a site has
+ * inherited — seeds held, seeds spent on output perks, and the square root of
+ * the generation for the rungs that scale with it — to `SEED_TAX_EXPONENT`.
+ * The root because only some rungs scale with generation; taxed in full, a
+ * long line of hand-downs came out *slower* than a short one.
+ *
+ * 1 for a seedless first generation, and 1 everywhere outside `TAXED_WORLDS`.
+ * It only moves on a hand-down or a perk, so the offline model is untouched.
+ */
+export function seedTax(f: SiteState, world: World): number {
+  if (!TAXED_WORLDS.includes(world)) return 1;
+  const inherited = heirloomMultiplier(f) * (1 + perkLevel(f, "ur_yield")) * Math.sqrt(Math.max(1, f.generation));
+  return Math.pow(inherited, SEED_TAX_EXPONENT);
 }
 
 /** Before condition. */
@@ -182,15 +214,30 @@ export function isPerkAvailable(f: SiteState, id: keyof typeof PERK_BY_ID): bool
 // --- Prices ---
 
 export function producerCost(f: SiteState, id: SoloProducerId, qty = 1): Yield {
-  const { baseCost, growth } = SOLO_PRODUCER_BY_ID[id];
+  const { baseCost, growth, world } = SOLO_PRODUCER_BY_ID[id];
   const owned = f.producers[id] ?? 0;
   const geometric = (Math.pow(growth, qty) - 1) / (growth - 1);
-  return Y.of(Math.ceil(baseCost * Math.pow(growth, owned) * geometric));
+  return Y.of(Math.ceil(baseCost * Math.pow(growth, owned) * geometric * seedTax(f, world)));
 }
 
 export function landCost(f: SiteState, id: LandId): Yield {
   const land = LAND_BY_ID[id];
-  return Y.of(Math.ceil(land.baseCost * Math.pow(land.growth, landLevel(f, id))));
+  return Y.of(Math.ceil(land.baseCost * Math.pow(land.growth, landLevel(f, id)) * seedTax(f, land.world)));
+}
+
+/**
+ * Which world an upgrade is priced in: a gate in the world it opens, anything
+ * else in the world of the producer that unlocks it.
+ */
+function upgradeWorld(u: SoloUpgrade): World {
+  const opens = WORLDS.find((w) => w !== "outside" && WORLD_GATE[w] === u.id);
+  if (opens) return opens;
+  return u.requires ? SOLO_PRODUCER_BY_ID[u.requires.producer].world : "outside";
+}
+
+/** `u.cost` is the seedless price; this is the one to charge and show. */
+export function upgradeCost(f: SiteState, u: SoloUpgrade): Yield {
+  return Y.of(Math.ceil(u.cost * seedTax(f, upgradeWorld(u))));
 }
 
 /** Priced on output restored, not the cost curve: both ends of 1.15^n give nonsense answers. */

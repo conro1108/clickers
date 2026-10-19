@@ -15,6 +15,7 @@ import {
   producerRateEach,
   repairCost,
   conditionRestoreCost,
+  upgradeCost,
 } from "./economy.js";
 import { advance, applySiteCommand, createSite } from "./site.js";
 import type { SiteCommand, SiteState } from "./state.js";
@@ -86,7 +87,7 @@ export function rivalTurn(f: SiteState, style: RivalStyle): SiteCommand[] {
 
   for (const u of SOLO_UPGRADES) {
     if (f.upgrades.includes(u.id) || !isUnlocked(f, u)) continue;
-    if (Y.gte(pile, u.cost)) return [{ type: "buy_upgrade", upgrade: u.id }];
+    if (Y.gte(pile, upgradeCost(f, u))) return [{ type: "buy_upgrade", upgrade: u.id }];
   }
 
   if (style.landBudget > 0) {

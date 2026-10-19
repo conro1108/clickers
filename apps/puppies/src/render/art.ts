@@ -2204,6 +2204,350 @@ const FOURTH_CHIHUAHUA_4: Art = {
   palette: { ...FOURTH_CHIHUAHUA.palette, o: "#c8e8f8", y: "#ffe08a" },
 };
 
+// --- Void: the sky before there were dogs, with a dog in it ---
+
+/** A Star Pup: a puppy-shaped hole in the dark, lit. */
+export const STAR_PUP: Art = {
+  rows: [
+    "l.....l",
+    "ll...ll",
+    "lwwwwwl",
+    "lwkwkwl",
+    "lwwwwwl",
+    ".lwnwl.",
+    "..lll..",
+  ],
+  palette: { l: "#a8b8ff", w: "#fff4ff", k: "#2a2050", n: "#ffb0c0" },
+};
+
+const STAR_PUP_4: Art = {
+  rows: [
+    "l.....l....",
+    "ll...ll....",
+    "lwwwwwl...y",
+    "lwkwkwl..y.",
+    "lwwwwwllly.",
+    ".lwnwlwwwl.",
+    "..lllwwwwl.",
+    "....l.l.l..",
+  ],
+  palette: { l: "#a8b8ff", w: "#fff4ff", k: "#2a2050", n: "#ffb0c0", y: "#fff4c0" },
+};
+
+/** A Sky Herder and their crook. */
+export const SKY_HERDER: Art = {
+  rows: [
+    "c.hhh..",
+    "c.hfh..",
+    "c.hhh..",
+    "crrrrr.",
+    "rrrrrrr",
+    "c.rrr.r",
+    "c.rrr..",
+    "c.rrr..",
+    "c.r.r..",
+    "c.r.r..",
+    "c.k.k..",
+  ],
+  palette: { k: K, c: "#c8b080", h: "#2a3a6a", f: "#e0d0f0", r: "#3a4a8a" },
+};
+
+const SKY_HERDER_4: Art = {
+  rows: [
+    "yc.....",
+    "c..hhh.",
+    "c..hfh.",
+    "c..hhh.",
+    "crrrrr.",
+    "crrrrrr",
+    "c.rrr.r",
+    "c.rrr..",
+    "c.r.r..",
+    "c.r.r..",
+    "c.k.k..",
+  ],
+  palette: { k: K, c: "#c8b080", h: "#2a3a6a", f: "#e0d0f0", r: "#3a4a8a", y: "#fff4c0" },
+};
+
+/** A Crate Blanket, plaid, fringed, big enough for the sky. */
+export const CRATE_BLANKET: Art = {
+  rows: [
+    "bbrbbbrbbbr",
+    "rrrrrrrrrrr",
+    "bbrbbbrbbbr",
+    "bbrbbbrbbbr",
+    "rrrrrrrrrrr",
+    ".b.b.b.b.b.",
+  ],
+  palette: { b: "#3a3a7a", r: "#7a5ab0" },
+};
+
+const CRATE_BLANKET_4: Art = {
+  rows: [
+    "bbrbybrbbbr",
+    "rrrrrrrrrrr",
+    "bbrbbbrbybr",
+    "bybbbbrbbbr",
+    "rrrrrrrrrrr",
+    "bbrbbbrbbbr",
+    ".b.b.b.b.b.",
+  ],
+  palette: { b: "#3a3a7a", r: "#7a5ab0", y: "#fff4c0" },
+};
+
+/** A Litter Nebula: where puppies are before they're anywhere. */
+export const LITTER_NEBULA: Art = {
+  rows: [
+    "...ppp.....",
+    ".ppllpp.pp.",
+    "ppllwlpppl.",
+    "plwwllllpp.",
+    ".pplllllpp.",
+    "..ppppppp..",
+    "....pp.....",
+  ],
+  palette: { p: "#8a4a8a", l: "#e0a0d0", w: "#fff4ff" },
+};
+
+const LITTER_NEBULA_4: Art = {
+  rows: [
+    "...ppp...p.",
+    ".ppllpp.ppp",
+    "ppwlwlpppl.",
+    "plwwwlwlpp.",
+    ".pplllwwwp.",
+    "..ppppppp..",
+    "...pp..pp..",
+  ],
+  palette: { p: "#8a4a8a", l: "#e0a0d0", w: "#fff4ff" },
+};
+
+/** A Constellation, dot to dot. It's a dog. */
+export const CONSTELLATION: Art = {
+  rows: [
+    "y.y........",
+    ".y.........",
+    ".l.......y.",
+    ".yllllllly.",
+    ".l......l..",
+    ".y......y..",
+  ],
+  palette: { y: "#fff4c0", l: "#6a7ab0" },
+};
+
+const CONSTELLATION_4: Art = {
+  rows: [
+    "y.y.......y",
+    ".y.......l.",
+    ".l.......y.",
+    ".yllllllly.",
+    ".l.l....ll.",
+    ".y.y....yy.",
+  ],
+  palette: { y: "#fff4c0", l: "#a8b8ff" },
+};
+
+/** The Fifth Chihuahua, which is the Dog Star, which is shaking. */
+export const FIFTH_CHIHUAHUA: Art = {
+  rows: [
+    "k.........k",
+    "kk.......kk",
+    "kwk.....kwk",
+    "kwwkkkkkwwk",
+    "kwwwwwwwwwk",
+    "kwbwwwwwbwk",
+    ".kwwwnwwwk.",
+    "..kwwwwwk..",
+    "...kkkkk...",
+  ],
+  palette: { k: "#ffd166", w: "#fff4c0", b: "#2a2050", n: K },
+};
+
+const FIFTH_CHIHUAHUA_4: Art = {
+  rows: [
+    "y....y....y",
+    "kk.......kk",
+    "kwk.....kwk",
+    "kwwkkkkkwwk",
+    "kwwwwwwwwwk",
+    "kwbwwwwwbwk",
+    "ykwwwnwwwky",
+    "..kwwwwwk..",
+    "...kkkkk...",
+    "y....y....y",
+  ],
+  palette: { k: "#ffd166", w: "#fff4c0", b: "#2a2050", n: K, y: "#ffffff" },
+};
+
+// --- End: the bridge at the end of everything ---
+
+/** A patch of the Long Meadow. Never needs mowing. */
+export const LONG_MEADOW: Art = {
+  rows: [
+    "..f...f..",
+    ".fyf.fyf.",
+    "..g...g..",
+    "ggglgglgg",
+    "glggggglg",
+    ".ggggggg.",
+  ],
+  palette: { f: "#ff9ad0", y: "#ffe066", g: "#5f9a40", l: "#9ccc6a" },
+};
+
+const LONG_MEADOW_4: Art = {
+  rows: [
+    "f.f.f.f.f",
+    "yfyfyfyfy",
+    "f.f.f.f.f",
+    "g.g.g.g.g",
+    "ggglgglgg",
+    "glggggglg",
+    ".ggggggg.",
+  ],
+  palette: { f: "#ff9ad0", y: "#ffe066", g: "#5f9a40", l: "#9ccc6a" },
+};
+
+/** A Bridge Keeper, treat in hand. */
+export const BRIDGE_KEEPER: Art = {
+  rows: [
+    "..hhh..",
+    ".hhfhh.",
+    "..fff..",
+    ".wwwww.",
+    "wwwwwwt",
+    "f.www.t",
+    "..www..",
+    "..www..",
+    "..w.w..",
+    "..k.k..",
+  ],
+  palette: { k: K, h: "#e0e0e0", f: "#e0b090", w: "#f0f0ff", t: "#c08040" },
+};
+
+const BRIDGE_KEEPER_4: Art = {
+  rows: [
+    ".yyyyy.",
+    "..hhh..",
+    ".hhfhh.",
+    "..fff..",
+    ".wwwww.",
+    "wwwwwwt",
+    "f.www.t",
+    "..www..",
+    "..w.w..",
+    "..k.k..",
+  ],
+  palette: { k: K, h: "#e0e0e0", f: "#e0b090", w: "#f0f0ff", t: "#c08040", y: "#fff4c0" },
+};
+
+/** A Sunbeam, and the warm patch it makes on the floor. */
+export const SUNBEAM: Art = {
+  rows: [
+    "..yyy..",
+    "..yly..",
+    ".yylyy.",
+    ".yllly.",
+    "yylllyy",
+    "yllllly",
+    "lllllll",
+  ],
+  palette: { y: "#ffe8a0", l: "#fff8d8" },
+};
+
+const SUNBEAM_4: Art = {
+  rows: [
+    "..yyy..",
+    "..yly..",
+    ".yylyy.",
+    ".yllly.",
+    "yylllyy",
+    "ylbbbly",
+    "lbbbbbl",
+  ],
+  palette: { y: "#ffe8a0", l: "#fff8d8", b: "#c08a50" },
+};
+
+/** A Collar Rack: one collar, one tag, for every dog that crossed. */
+export const COLLAR_RACK: Art = {
+  rows: [
+    "kkkkkkkkk",
+    ".k..k..k.",
+    ".r..b..g.",
+    "r.rb.bg.g",
+    "r.rb.bg.g",
+    ".r..b..g.",
+    "..y..y..y",
+  ],
+  palette: { k: "#7a5237", r: "#e04a4a", b: "#4a8ae0", g: "#4ac04a", y: "#ffd166" },
+};
+
+const COLLAR_RACK_4: Art = {
+  rows: [
+    "w.......w",
+    "kkkkkkkkk",
+    ".k..k..k.",
+    ".r..b..g.",
+    "r.rb.bg.g",
+    "r.rb.bg.g",
+    ".r..b..g.",
+    ".y..y..y.",
+  ],
+  palette: { k: "#7a5237", r: "#e04a4a", b: "#4a8ae0", g: "#4ac04a", y: "#ffd166", w: "#ffffff" },
+};
+
+/** Part of the Waiting Pack, sat in a row. */
+export const WAITING_PACK: Art = {
+  rows: [
+    "b.b.c.c.d.d",
+    "bbb.ccc.ddd",
+    "bbb.ccc.ddd",
+    "bbb.ccc.ddd",
+    "b.b.c.c.d.d",
+  ],
+  palette: { b: "#c08a50", c: "#e0e0d0", d: "#5a4030" },
+};
+
+const WAITING_PACK_4: Art = {
+  rows: [
+    "..r...r...r",
+    "b.b.c.c.d.d",
+    "bbb.ccc.ddd",
+    "bbbtccctddd",
+    "bbb.ccc.ddd",
+    "b.b.c.c.d.d",
+  ],
+  palette: { b: "#c08a50", c: "#e0e0d0", d: "#5a4030", r: "#ff6a8a", t: "#a07040" },
+};
+
+/** The Last Dog, sat facing you, the way it has been the whole time. */
+export const LAST_DOG: Art = {
+  rows: [
+    "..k.....k..",
+    ".kek...kek.",
+    ".keekkkeek.",
+    ".kwwwwwwwk.",
+    ".kwbwwwbwk.",
+    ".kwwwnwwwk.",
+    "..kwwwwwk..",
+    "...kk.kk...",
+  ],
+  palette: { k: "#8a5a3a", e: "#c08a5a", w: "#f0d8b0", b: "#2a2050", n: K },
+};
+
+const LAST_DOG_4: Art = {
+  rows: [
+    ".yyyyyyyyy.",
+    "..k.....k..",
+    ".kek...kek.",
+    ".keekkkeek.",
+    ".kwbwwwbwk.",
+    ".kwwwnwwwk.",
+    "..kwwwwwkkk",
+    "...kk.kk...",
+  ],
+  palette: { k: "#8a5a3a", e: "#c08a5a", w: "#f0d8b0", b: "#2a2050", n: K, y: "#fff4c0" },
+};
+
 export const PRODUCER_MARKS = {
   patch: [CAGE, CAGE_2, CAGE_3, CAGE_4],
   hand: [
@@ -2398,6 +2742,78 @@ export const PRODUCER_MARKS = {
     repaint(FIRST_DOG, { g: "#a8a0a8", w: "#f0e8e0" }),
     repaint(FIRST_DOG, { g: "#c8a070", w: "#f4ecd8", k: "#4a3828" }),
     FIRST_DOG_4,
+  ],
+  mote: [
+    STAR_PUP,
+    repaint(STAR_PUP, { l: "#c0a8ff", w: "#fff0f8" }),
+    repaint(STAR_PUP, { l: "#ffd166", w: "#fff4c0" }),
+    STAR_PUP_4,
+  ],
+  wisp: [
+    SKY_HERDER,
+    repaint(SKY_HERDER, { r: "#4a3a8a", c: "#e0c890" }),
+    repaint(SKY_HERDER, { r: "#6a4aa0", h: "#1a2a5a", c: "#ffd166" }),
+    SKY_HERDER_4,
+  ],
+  veil: [
+    CRATE_BLANKET,
+    repaint(CRATE_BLANKET, { b: "#2a4a6a", r: "#5a8ab0" }),
+    repaint(CRATE_BLANKET, { b: "#5a2a5a", r: "#c07ab0" }),
+    CRATE_BLANKET_4,
+  ],
+  nebula: [
+    LITTER_NEBULA,
+    repaint(LITTER_NEBULA, { p: "#4a4a8a", l: "#a0b0e0" }),
+    repaint(LITTER_NEBULA, { p: "#9a5a3a", l: "#f0c090" }),
+    LITTER_NEBULA_4,
+  ],
+  aeon: [
+    CONSTELLATION,
+    repaint(CONSTELLATION, { l: "#8a7ab0", y: "#fff0d0" }),
+    repaint(CONSTELLATION, { l: "#c8a0e8", y: "#ffd166" }),
+    CONSTELLATION_4,
+  ],
+  fifth: [
+    FIFTH_CHIHUAHUA,
+    repaint(FIFTH_CHIHUAHUA, { k: "#ffe080", w: "#fffae0" }),
+    repaint(FIFTH_CHIHUAHUA, { k: "#a8d8ff", w: "#f0f8ff" }),
+    FIFTH_CHIHUAHUA_4,
+  ],
+  ember: [
+    LONG_MEADOW,
+    repaint(LONG_MEADOW, { f: "#ffc0e0", g: "#6aa348" }),
+    repaint(LONG_MEADOW, { f: "#fff4e0", y: "#ffd166", l: "#c8f0a0" }),
+    LONG_MEADOW_4,
+  ],
+  ward: [
+    BRIDGE_KEEPER,
+    repaint(BRIDGE_KEEPER, { w: "#e0e8ff", t: "#d09050" }),
+    repaint(BRIDGE_KEEPER, { w: "#fff4d0", h: "#ffffff" }),
+    BRIDGE_KEEPER_4,
+  ],
+  lull: [
+    SUNBEAM,
+    repaint(SUNBEAM, { y: "#ffd890", l: "#fff0c0" }),
+    repaint(SUNBEAM, { y: "#ffc070", l: "#ffe8b0" }),
+    SUNBEAM_4,
+  ],
+  relic: [
+    COLLAR_RACK,
+    repaint(COLLAR_RACK, { k: "#8a6a47", y: "#ffe080" }),
+    repaint(COLLAR_RACK, { k: "#a8792c", r: "#ff6a6a", b: "#6aa8ff" }),
+    COLLAR_RACK_4,
+  ],
+  legion: [
+    WAITING_PACK,
+    repaint(WAITING_PACK, { c: "#f0e8c0", d: "#3a3a3a" }),
+    repaint(WAITING_PACK, { b: "#e0a060", d: "#7a5a40" }),
+    WAITING_PACK_4,
+  ],
+  last: [
+    LAST_DOG,
+    repaint(LAST_DOG, { e: "#d0a070", w: "#f8e8c8" }),
+    repaint(LAST_DOG, { k: "#c9a24a", e: "#ffd166", w: "#fff4d8" }),
+    LAST_DOG_4,
   ],
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 

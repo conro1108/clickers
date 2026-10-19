@@ -25,14 +25,16 @@ import { named, THEME, type Shape } from "../theme.js";
  * `beyond`, `deep` and `origin` follow the same rules, each opened by a gate
  * at the bottom of the ladder before it (see `WORLD_GATE`): a fresh ladder,
  * its own land, its own picture, and everything behind you keeps producing.
+ * `void` and `end` do too, but they're priced against your seeds — see
+ * `TAXED_WORLDS`.
  */
-export type World = "outside" | "inside" | "beyond" | "deep" | "origin";
+export type World = "outside" | "inside" | "beyond" | "deep" | "origin" | "void" | "end";
 
 /**
  * Every world in the order you reach them. `SiteState.depth` is an index into
  * this: everything up to and including it is open.
  */
-export const WORLDS: readonly World[] = ["outside", "inside", "beyond", "deep", "origin"];
+export const WORLDS: readonly World[] = ["outside", "inside", "beyond", "deep", "origin", "void", "end"];
 
 /**
  * The upgrade that opens each world, bought in the world before it. Each is
@@ -44,7 +46,18 @@ export const WORLD_GATE: Record<Exclude<World, "outside">, string> = {
   beyond: "breach",
   deep: "rift",
   origin: "return",
+  void: "before",
+  end: "ending",
 };
+
+/**
+ * The worlds past the origin, where everything — and the gate in — costs more
+ * the more your seeds have bought you (`economy.seedTax`). Elsewhere seeds
+ * compound without limit, so a long prestige track clears any fixed price in an
+ * afternoon; here they're worth a tenth of the power they are anywhere else,
+ * and what sets the pace is the ladder.
+ */
+export const TAXED_WORLDS: readonly World[] = ["void", "end"];
 
 export type SoloProducerId =
   | "patch"
@@ -84,7 +97,19 @@ export type SoloProducerId =
   | "root"
   | "spring"
   | "hearth"
-  | "first";
+  | "first"
+  | "mote"
+  | "wisp"
+  | "veil"
+  | "nebula"
+  | "aeon"
+  | "fifth"
+  | "ember"
+  | "ward"
+  | "lull"
+  | "relic"
+  | "legion"
+  | "last";
 
 export interface SoloProducer {
   id: SoloProducerId;
@@ -138,6 +163,18 @@ export interface SoloProducer {
  * determined player busy for several real-world days before the ladder is
  * cleared. `solo.test.ts` is the check on this curve — retune here, run that.
  */
+/**
+ * The first rung of each taxed world, the rest of its ladder quoted against it.
+ * Far above the origin's top rung, because the site that arrives here has
+ * long since bought out every untaxed rung behind it; tuned so that site, from
+ * a first arrival to one with millions of seeds, takes about three weeks to
+ * clear the void and five or six more to stand up the Last.
+ */
+const VOID_COST = 6e34;
+const VOID_STEP = 5.5;
+const END_COST = 2.4e39;
+const END_STEP = 4;
+
 const SOLO_PRODUCER_SHAPES: readonly Shape<SoloProducer>[] = [
   {
     id: "patch",
@@ -476,6 +513,25 @@ const SOLO_PRODUCER_SHAPES: readonly Shape<SoloProducer>[] = [
     growth: 1.19,
     world: "origin",
   },
+
+  // --- Void, then end ------------------------------------------------------
+  //
+  // Steeper than anything before: a huge jump in from the origin, each rung
+  // 4-5.5x the price for 3x the output, and per-unit growth of 1.21 then 1.22,
+  // so a hundred of anything is most of a run. Prices here are also multiplied
+  // by `seedTax`; these literals are what a seedless first generation pays.
+  { id: "mote", baseRate: 7.5e24, baseCost: Y.of(VOID_COST), growth: 1.21, world: "void" },
+  { id: "wisp", baseRate: 2.25e25, baseCost: Y.of(VOID_COST * VOID_STEP), growth: 1.21, world: "void" },
+  { id: "veil", baseRate: 6.75e25, baseCost: Y.of(VOID_COST * VOID_STEP ** 2), growth: 1.21, world: "void", calmPerUnit: 0.0015 },
+  { id: "nebula", baseRate: 2e26, baseCost: Y.of(VOID_COST * VOID_STEP ** 3), growth: 1.21, world: "void", conditionScaled: true },
+  { id: "aeon", baseRate: 6e26, baseCost: Y.of(VOID_COST * VOID_STEP ** 4), growth: 1.21, world: "void", generationScaled: true },
+  { id: "fifth", baseRate: 1.8e27, baseCost: Y.of(VOID_COST * VOID_STEP ** 5), growth: 1.21, world: "void" },
+  { id: "ember", baseRate: 5.4e27, baseCost: Y.of(END_COST), growth: 1.22, world: "end" },
+  { id: "ward", baseRate: 1.6e28, baseCost: Y.of(END_COST * END_STEP), growth: 1.22, world: "end" },
+  { id: "lull", baseRate: 4.8e28, baseCost: Y.of(END_COST * END_STEP ** 2), growth: 1.22, world: "end", calmPerUnit: 0.001 },
+  { id: "relic", baseRate: 1.45e29, baseCost: Y.of(END_COST * END_STEP ** 3), growth: 1.22, world: "end", conditionScaled: true },
+  { id: "legion", baseRate: 4.3e29, baseCost: Y.of(END_COST * END_STEP ** 4), growth: 1.22, world: "end", generationScaled: true },
+  { id: "last", baseRate: 1.3e30, baseCost: Y.of(END_COST * END_STEP ** 5), growth: 1.22, world: "end" },
 ];
 
 export const SOLO_PRODUCERS: readonly SoloProducer[] = named(SOLO_PRODUCER_SHAPES, THEME.soloProducers, "producer");
@@ -780,6 +836,14 @@ const GLOBAL_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
     effect: { kind: "global_mult", factor: 2 },
     requires: { producer: "first", count: 25 },
   },
+  // The two taxed gates are taxed too. Each freezes the shop until it's bought (the
+  // gate sale screen), so they're priced to take hours, not days; the weeks are in the ladders.
+  { id: "before", cost: Y.of(1.6e34), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "first", count: 10 } },
+  { id: "void_charter", cost: fleetCost("veil", 25, 5), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "veil", count: 25 } },
+  { id: "fifth_form", cost: fleetCost("fifth", 25), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "fifth", count: 25 } },
+  { id: "ending", cost: Y.of(END_COST * 0.3), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "fifth", count: 10 } },
+  { id: "end_charter", cost: fleetCost("lull", 25, 5), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "lull", count: 25 } },
+  { id: "end_form", cost: fleetCost("last", 25), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "last", count: 25 } },
 ];
 
 const GLOBAL_UPGRADES: SoloUpgrade[] = [...named(GLOBAL_UPGRADE_SHAPES, THEME.soloGlobalUpgrades, "upgrade")];
@@ -823,7 +887,15 @@ export type LandId =
   | "origin_beds"
   | "origin_lining"
   | "origin_calm"
-  | "origin_reclaim";
+  | "origin_reclaim"
+  | "void_beds"
+  | "void_lining"
+  | "void_calm"
+  | "void_reclaim"
+  | "end_beds"
+  | "end_lining"
+  | "end_calm"
+  | "end_reclaim";
 
 export type LandRole =
   /** Cuts how many units a disaster knocks offline. */
@@ -968,6 +1040,15 @@ const LAND_SHAPES: readonly Shape<Land>[] = [
   { id: "origin_lining", role: "condition", perLevel: 0.12, baseCost: Y.of(2.993e26), growth: 1.9, world: "origin" },
   { id: "origin_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(5.7e26), growth: 2.1, world: "origin" },
   { id: "origin_reclaim", role: "payout", perLevel: 0.12, baseCost: Y.of(1.14e27), growth: 1.9, world: "origin" },
+  // Void and end: the same shares of the first rung, on a steeper climb, and taxed like the rest of those worlds.
+  { id: "void_beds", role: "breakage", perLevel: 0.12, baseCost: Y.of(VOID_COST * 0.67), growth: 2.2, world: "void" },
+  { id: "void_lining", role: "condition", perLevel: 0.12, baseCost: Y.of(VOID_COST * 1.05), growth: 2.2, world: "void" },
+  { id: "void_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(VOID_COST * 2), growth: 2.4, world: "void" },
+  { id: "void_reclaim", role: "payout", perLevel: 0.12, baseCost: Y.of(VOID_COST * 4), growth: 2.2, world: "void" },
+  { id: "end_beds", role: "breakage", perLevel: 0.12, baseCost: Y.of(END_COST * 0.67), growth: 2.5, world: "end" },
+  { id: "end_lining", role: "condition", perLevel: 0.12, baseCost: Y.of(END_COST * 1.05), growth: 2.5, world: "end" },
+  { id: "end_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(END_COST * 2), growth: 2.7, world: "end" },
+  { id: "end_reclaim", role: "payout", perLevel: 0.12, baseCost: Y.of(END_COST * 4), growth: 2.5, world: "end" },
 ];
 
 export const LANDS: readonly Land[] = named(LAND_SHAPES, THEME.lands, "land");

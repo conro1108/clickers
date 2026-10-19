@@ -24,10 +24,11 @@ export const ms = (n: number): Millis => n as Millis;
 export const seconds = (n: number): number => n * 1000;
 export const rate = (n: number): Rate => n as Rate;
 
-// Runs to 1e63: the fifth world's top rung, fully upgraded, is somewhere past 1e40.
+// Runs to 1e93: the seventh world's prices carry the seed tax, and that can reach past 1e60.
 const SUFFIXES = [
   "", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No",
-  "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod", "Vg",
+  "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod",
+  "Vg", "Uvg", "Dvg", "Tvg", "Qavg", "Qivg", "Sxvg", "Spvg", "Ocvg", "Novg", "Tg",
 ];
 
 /** Idle-game number formatting: 1234567 -> "1.23M". */

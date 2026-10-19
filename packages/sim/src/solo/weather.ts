@@ -165,6 +165,28 @@ const ORIGIN_KIND_SHAPES: readonly Shape<WeatherKind>[] = [
   { id: "jubilee", weight: 3, effect: { kind: "boon", seconds: 300 } },
 ];
 
+/** Void: harder than anything before it, and the heavy breaks come round more. */
+const VOID_KIND_SHAPES: readonly Shape<WeatherKind>[] = [
+  { id: "flicker", weight: 16, effect: { kind: "break", scope: "cheapest", share: 0.32 } },
+  { id: "tear", weight: 14, effect: { kind: "break", scope: "best", share: 0.3 } },
+  { id: "unbecoming", weight: 10, effect: { kind: "break", scope: "all", share: 0.22, condition: 0.07 } },
+  { id: "chill", weight: 16, effect: { kind: "condition", loss: 0.1 } },
+  { id: "silence", weight: 11, effect: { kind: "condition", loss: 0.18 } },
+  { id: "kindling", weight: 8, effect: { kind: "boon", seconds: 90 } },
+  { id: "genesis", weight: 2, effect: { kind: "boon", seconds: 300 } },
+];
+
+/** End: the worst table in the game. Everything wears out at the end. */
+const END_KIND_SHAPES: readonly Shape<WeatherKind>[] = [
+  { id: "fray", weight: 16, effect: { kind: "break", scope: "cheapest", share: 0.34 } },
+  { id: "rust", weight: 14, effect: { kind: "break", scope: "best", share: 0.32 } },
+  { id: "entropy", weight: 11, effect: { kind: "break", scope: "all", share: 0.24, condition: 0.08 } },
+  { id: "dusk", weight: 16, effect: { kind: "condition", loss: 0.11 } },
+  { id: "heat_death", weight: 12, effect: { kind: "condition", loss: 0.2 } },
+  { id: "afterglow", weight: 7, effect: { kind: "boon", seconds: 90 } },
+  { id: "reprise", weight: 2, effect: { kind: "boon", seconds: 300 } },
+];
+
 /** One table per world; the deepest open world's is the one that blows. */
 const KINDS_BY_WORLD: Record<World, readonly WeatherKind[]> = {
   outside: KINDS,
@@ -172,6 +194,8 @@ const KINDS_BY_WORLD: Record<World, readonly WeatherKind[]> = {
   beyond: BEYOND_KINDS,
   deep: named(DEEP_KIND_SHAPES, THEME.weather, "weather"),
   origin: named(ORIGIN_KIND_SHAPES, THEME.weather, "weather"),
+  void: named(VOID_KIND_SHAPES, THEME.weather, "weather"),
+  end: named(END_KIND_SHAPES, THEME.weather, "weather"),
 };
 
 function kindsFor(f: SiteState): readonly WeatherKind[] {

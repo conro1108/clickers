@@ -80,6 +80,32 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
       title: "The Return",
     },
   },
+  void: {
+    door: "Before",
+    where: "in the dark before",
+    shopSub: "Nothing has grown here yet. Out here, everything costs more for every seed you carry.",
+    culprit: "the dark",
+    threat: "a dark that shifts",
+    gateLine: "You have spent this whole run in the first field. Somebody planted it.",
+    cut: {
+      line: "The first potato came from somewhere",
+      call: "It is dark here, and it is not empty",
+      title: "Before",
+    },
+  },
+  end: {
+    door: "The last field",
+    where: "in the last field",
+    shopSub: "Where every potato ends up. Out here, everything costs more for every seed you carry.",
+    culprit: "the end",
+    threat: "an end that comes on slowly",
+    gateLine: "You have spent this whole run before the beginning. There is an end as well.",
+    cut: {
+      line: "Every field ends somewhere",
+      call: "This is where all of them end",
+      title: "The Last Furrow",
+    },
+  },
 };
 
 /** Whose weather it is: the deepest open world's. */

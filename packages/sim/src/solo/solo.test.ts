@@ -6,6 +6,9 @@ import {
   brokenCount,
   currentRate,
   conditionRestoreCost,
+  globalMultiplier,
+  producerCost,
+  seedTax,
   totalRepairCost,
   upkeepBill,
 } from "./economy.js";
@@ -153,6 +156,16 @@ describe("the worlds", () => {
     const next = mustApplySite(base, { type: "prestige", outside: true }, base.checkpointAt);
     expect(next.depth).toBe(0);
     expect(applySiteCommand(next, { type: "warp", to: "inside" }, next.checkpointAt).ok).toBe(false);
+  });
+
+  it("prices the taxed worlds against what seeds have bought, and nothing else", () => {
+    const plain: SiteState = { ...developedSite("tax"), depth: WORLDS.length - 1 };
+    const seeded: SiteState = { ...plain, heirlooms: 1e6 };
+    expect(producerCost(seeded, "patch")).toBe(producerCost(plain, "patch"));
+    expect(producerCost(seeded, "mote") / producerCost(plain, "mote")).toBeCloseTo(seedTax(seeded, "void"), 3);
+    // Most of what the seeds give back is charged back, but not all of it.
+    expect(seedTax(seeded, "void")).toBeLessThan(globalMultiplier(seeded) / globalMultiplier(plain));
+    expect(seedTax(seeded, "void")).toBeGreaterThan(Math.sqrt(globalMultiplier(seeded) / globalMultiplier(plain)));
   });
 });
 

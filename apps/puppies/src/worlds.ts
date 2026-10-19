@@ -80,6 +80,32 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
       waiting: "Under everything that was lost is the thing that was found.",
     },
   },
+  void: {
+    door: "The sky",
+    where: "up among the stars",
+    shop: "Before there were dogs. Up here, everything costs more for every paper you carry.",
+    culprit: "the dark",
+    against: "a sky that shifts",
+    arrival: {
+      line: "Before the first dog there was a dog in the sky",
+      call: "It is still up there, and it is shaking",
+      title: "Look Up",
+      waiting: "You have spent this whole run by the fire. Nobody has looked up yet.",
+    },
+  },
+  end: {
+    door: "The bridge",
+    where: "at the bridge",
+    shop: "Where every dog goes. Up here, everything costs more for every paper you carry.",
+    culprit: "the end",
+    against: "an end that comes on slowly",
+    arrival: {
+      line: "Every dog goes somewhere",
+      call: "There is a bridge, and they are all waiting on the other side",
+      title: "The Bridge",
+      waiting: "You have spent this whole run before the first dog. There is an after, too.",
+    },
+  },
 };
 
 /** The deepest world open: the one whose weather is blowing. */

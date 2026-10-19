@@ -56,10 +56,11 @@ function Convergence({
 }) {
   const ur = solo.SOLO_UPGRADE_BY_ID[solo.WORLD_GATE[world]]!;
   const line = WORLD_COPY[world].arrival?.waiting;
-  const affordable = Y.gte(budget, ur.cost);
-  const held = Math.max(0, Math.min(1, budget / ur.cost));
+  const price = solo.upgradeCost(mill, ur);
+  const affordable = Y.gte(budget, price);
+  const held = Math.max(0, Math.min(1, budget / price));
   const rate = solo.currentRate(mill);
-  const left = rate > 0 ? ((ur.cost - budget) / rate) * 1000 : Infinity;
+  const left = rate > 0 ? ((price - budget) / rate) * 1000 : Infinity;
 
   return (
     <div className="grave">
@@ -74,7 +75,7 @@ function Convergence({
         </div>
         <div className="grave-figures">
           <span>{format(budget)}</span>
-          <span>{format(ur.cost)}</span>
+          <span>{format(price)}</span>
         </div>
       </div>
 
@@ -181,8 +182,8 @@ export function GrowPanel({
             accent="row-upgrade"
             name={u.name}
             blurb={u.blurb}
-            cost={format(u.cost)}
-            affordable={Y.gte(budget, u.cost)}
+            cost={format(solo.upgradeCost(mill, u))}
+            affordable={Y.gte(budget, solo.upgradeCost(mill, u))}
             art={upgradePreview(mill, u)}
             onBuy={() => dispatch({ type: "buy_upgrade", upgrade: u.id })}
           />
@@ -370,6 +371,12 @@ export function LegacyPanel({
         mill after it produce more. Spent, they buy something permanent. Same choice as everything
         else here — one pile, competing uses.
       </p>
+      {mill.depth >= 5 && (
+        <p className="hint">
+          Past the first fire, prices rise with everything your papers and generations have bought
+          you. Holding more still helps up there, but only just.
+        </p>
+      )}
 
       {/* The only way back out of the puppy, and it's on the one screen where
           you're already deciding what the next generation inherits.

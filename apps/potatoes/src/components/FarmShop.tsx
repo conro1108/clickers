@@ -105,10 +105,11 @@ function Convergence({
   line: string;
 }) {
   const ur = solo.SOLO_UPGRADE_BY_ID[upgrade]!;
-  const affordable = Y.gte(budget, ur.cost);
-  const held = Math.max(0, Math.min(1, budget / ur.cost));
+  const price = solo.upgradeCost(farm, ur);
+  const affordable = Y.gte(budget, price);
+  const held = Math.max(0, Math.min(1, budget / price));
   const rate = solo.currentRate(farm);
-  const left = rate > 0 ? ((ur.cost - budget) / rate) * 1000 : Infinity;
+  const left = rate > 0 ? ((price - budget) / rate) * 1000 : Infinity;
 
   return (
     <div className="grave">
@@ -123,7 +124,7 @@ function Convergence({
         </div>
         <div className="grave-figures">
           <span>{format(budget)}</span>
-          <span>{format(ur.cost)}</span>
+          <span>{format(price)}</span>
         </div>
       </div>
 
@@ -240,8 +241,8 @@ export function GrowPanel({
             accent="row-upgrade"
             name={u.name}
             blurb={u.blurb}
-            cost={format(u.cost)}
-            affordable={Y.gte(budget, u.cost)}
+            cost={format(solo.upgradeCost(farm, u))}
+            affordable={Y.gte(budget, solo.upgradeCost(farm, u))}
             art={upgradePreview(farm, u)}
             onBuy={() => dispatch({ type: "buy_upgrade", upgrade: u.id })}
           />
@@ -423,6 +424,12 @@ export function LegacyPanel({
         farm after it produce more. Spent, they buy something permanent. Same choice as everything
         else here — one pile, competing uses.
       </p>
+      {farm.depth >= 5 && (
+        <p className="hint">
+          Past the first field, prices rise with everything your seeds and generations have bought
+          you. Holding more still helps out there, but only just.
+        </p>
+      )}
 
       {/* The only way back out of the potato, and it's on the one screen where
           you're already deciding what the next generation inherits.
@@ -454,7 +461,9 @@ export function LegacyPanel({
             shop. Go back out and the horizon opens — nothing past the skin
             {farm.depth >= 2 ? ", nothing past the eye" : ""}
             {farm.depth >= 3 ? ", none of the crystal" : ""}
-            {farm.depth >= 4 ? ", not the first field" : ""}, weather instead of {culprit(farm)}, and the
+            {farm.depth >= 4 ? ", not the first field" : ""}
+            {farm.depth >= 5 ? ", nothing from before it" : ""}
+            {farm.depth >= 6 ? ", not the last field" : ""}, weather instead of {culprit(farm)}, and the
             Convergence to reach all over again.
           </p>
           <div className="choices halves">

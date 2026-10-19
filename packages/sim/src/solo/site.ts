@@ -34,6 +34,7 @@ import {
   landCost,
   perkLevel,
   producerCost,
+  upgradeCost,
   repairCost,
   conditionRestoreCost,
   upkeepBill,
@@ -58,6 +59,8 @@ const ARRIVAL: Record<Exclude<World, "outside">, string> = {
   beyond: "it opened. you went through.",
   deep: "the floor gave. you went down.",
   origin: "you came out where you started. it is the first morning.",
+  void: "you went back before the first morning. there is nothing here yet.",
+  end: "you went on past the last of it. this is where everything goes.",
 };
 
 /**
@@ -362,7 +365,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       if (!upgrade) return fail("No such upgrade.");
       if (site.upgrades.includes(upgrade.id)) return fail("Already owned.");
       if (!isUnlocked(site, upgrade)) return fail("Not unlocked yet.");
-      if (!spend(upgrade.cost)) return fail("Not enough stock.");
+      if (!spend(upgradeCost(site, upgrade))) return fail("Not enough stock.");
       site = { ...site, upgrades: [...site.upgrades, upgrade.id] };
       note(`bought ${upgrade.name}.`, "neutral");
       // The Convergence. You acquire the first unit and discover you have

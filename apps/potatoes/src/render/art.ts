@@ -2204,6 +2204,363 @@ const FIRST_POTATO_4: Art = {
   palette: { k: K, g: "#7fc45a", l: "#f7e0a8", p: "#e0b070", d: "#b07f4a", w: "#fff4e0", y: "#ffe066" },
 };
 
+// --- Void: before the first field, the dark and what will grow in it ---
+
+/** A Star Eye: a point of light in the dark, and when you look close, an eye with a shoot coming. */
+export const STAR_EYE: Art = {
+  rows: [
+    "...w...",
+    "..wyw..",
+    ".wyyyw.",
+    "wyyeyyw",
+    ".wyyyw.",
+    "..wgw..",
+    "...g...",
+  ],
+  palette: { w: "#e8e0ff", y: "#fff4c0", e: "#7a3aa0", g: "#7fc45a" },
+};
+
+const STAR_EYE_4: Art = {
+  rows: [
+    "....w....",
+    "...wyw...",
+    "..wyyyw..",
+    ".wyyeyyw.",
+    "..wyyyw..",
+    "l..wgw..l",
+    "gl..g..lg",
+    ".gggggggg",
+  ],
+  palette: { w: "#e8e0ff", y: "#fff4c0", e: "#7a3aa0", g: "#5f9a40", l: "#9ccc6a" },
+};
+
+/** A Sower, hooded, with a sack of light over one shoulder. */
+export const SOWER: Art = {
+  rows: [
+    "..hhh..",
+    "..hfh..",
+    "..hhh..",
+    ".rrrrs.",
+    "rrrrrss",
+    "r.rrrss",
+    "..rrr..",
+    "..rrr..",
+    "..r.r..",
+    "..k.k..",
+  ],
+  palette: { k: K, h: "#3a2a5a", f: "#d9c0f0", r: "#4a3a7a", s: "#a08a5a" },
+};
+
+const SOWER_4: Art = {
+  rows: [
+    "..hhh..y",
+    "..hfh.y.",
+    "..hhhr..",
+    ".rrrrr..",
+    "rrrrrss.",
+    "r.rrrss.",
+    "..rrrss.",
+    "..rrr...",
+    "..r.r...",
+    "..k.k...",
+  ],
+  palette: { k: K, h: "#3a2a5a", f: "#d9c0f0", r: "#4a3a7a", s: "#a08a5a", y: "#fff4c0" },
+};
+
+/** Night Cloth on its rod: the dark, hemmed. */
+export const NIGHT_CLOTH: Art = {
+  rows: [
+    "kkkkkkkkkkk",
+    "cwcccccwccc",
+    "ccccwcccccw",
+    "cccccccwccc",
+    ".ccwcccccc.",
+    "..c.cc.cc..",
+  ],
+  palette: { k: "#7a5237", c: "#2a2050", w: "#e8e0ff" },
+};
+
+const NIGHT_CLOTH_4: Art = {
+  rows: [
+    "kykkkkkkkyk",
+    "cwcccccwccc",
+    "ccccwcccccw",
+    "cwcccccwccc",
+    "ccccwcccccw",
+    ".ccwcccccc.",
+    "..c.cc.cc..",
+  ],
+  palette: { k: "#7a5237", c: "#2a2050", w: "#e8e0ff", y: "#ffd166" },
+};
+
+/** A Seed Cloud: everything that will ever be planted, still dust. */
+export const SEED_CLOUD: Art = {
+  rows: [
+    "...ppp.....",
+    ".ppllpp.pp.",
+    "pplwllpppl.",
+    "plllllllpp.",
+    ".pplllwlpp.",
+    "..ppppppp..",
+    "....pp.....",
+  ],
+  palette: { p: "#6a4a9a", l: "#b890e0", w: "#fff4ff" },
+};
+
+const SEED_CLOUD_4: Art = {
+  rows: [
+    "...ppp.....",
+    ".ppllpp.pp.",
+    "pplwllpppl.",
+    "plllllllpp.",
+    ".pplllwlpp.",
+    "..ppppppp..",
+    "..s..s..s..",
+    ".s..s..s...",
+  ],
+  palette: { p: "#6a4a9a", l: "#b890e0", w: "#fff4ff", s: "#e0b070" },
+};
+
+/** An Ancestor Star, one point for every way it shines. */
+export const ANCESTOR_STAR: Art = {
+  rows: [
+    "....y....",
+    "....y....",
+    "...yly...",
+    "..ylwly..",
+    "yylwwwlyy",
+    "..ylwly..",
+    "...yly...",
+    "....y....",
+    "....y....",
+  ],
+  palette: { y: "#ffd166", l: "#fff0a0", w: "#ffffff" },
+};
+
+const ANCESTOR_STAR_4: Art = {
+  rows: [
+    "..r...r..",
+    ".r..y..r.",
+    "r..yly..r",
+    "..ylwly..",
+    "yylwwwlyy",
+    "..ylwly..",
+    "r..yly..r",
+    ".r..y..r.",
+    "..r...r..",
+  ],
+  palette: { y: "#ffd166", l: "#fff0a0", w: "#ffffff", r: "#c8a0e8" },
+};
+
+/** The Fifth Potato: potato-shaped, roughly, with its edges not settled yet. */
+export const FIFTH_POTATO: Art = {
+  rows: [
+    "...k.k.k...",
+    ".k.lllll.k.",
+    "..llwlllll.",
+    "klllllllldk",
+    ".llllelllld",
+    "klllllllldk",
+    "..lllllldd.",
+    ".k.dddddk..",
+    "...k.k.k...",
+  ],
+  palette: { k: "#7a6aa0", l: "#d8d0f0", w: "#ffffff", d: "#a898d0", e: "#7a3aa0" },
+};
+
+const FIFTH_POTATO_4: Art = {
+  rows: [
+    "....g.g....",
+    ".....g.....",
+    "...kkkkk...",
+    ".kkwllllkk.",
+    "kwlllllllck",
+    "kllllellllc",
+    "klllllllllc",
+    ".kkllllckk.",
+    "...kkkkk...",
+  ],
+  palette: { k: "#7a6aa0", w: "#ffffff", l: "#e8e0ff", c: "#a898d0", e: "#7a3aa0", g: "#7fc45a" },
+};
+
+// --- End: past the last harvest, where every potato goes ---
+
+/** An Ash Plot: grey ground, and something in it anyway. */
+export const ASH_PLOT: Art = {
+  rows: [
+    "..g...g..",
+    ".gyg.gyg.",
+    "..g...g..",
+    "kaaaaaaak",
+    "aasaaasaa",
+    ".aaaaaaa.",
+  ],
+  palette: { k: K, g: "#8a9a6a", y: "#c8b878", a: "#6a6060", s: "#8a8080" },
+};
+
+const ASH_PLOT_4: Art = {
+  rows: [
+    ".g.g.g.g.",
+    "gygygygyg",
+    ".g.g.g.g.",
+    "kaaaaaaak",
+    "aasaaasaa",
+    "aaaaaaaaa",
+    ".aaaaaaa.",
+  ],
+  palette: { k: K, g: "#8a9a6a", y: "#c8b878", a: "#6a6060", s: "#8a8080" },
+};
+
+/** A Gleaner, stooped, with a basket on the hip. */
+export const GLEANER: Art = {
+  rows: [
+    "..hh...",
+    ".hhff..",
+    "..ff...",
+    ".cccc..",
+    "cccccb.",
+    "c.ccbbb",
+    "..ccbbb",
+    "..c.c..",
+    "..c.c..",
+    "..k.k..",
+  ],
+  palette: { k: K, h: "#8a8a8a", f: "#c9a07a", c: "#5a5a6a", b: "#a08a5a" },
+};
+
+const GLEANER_4: Art = {
+  rows: [
+    "..hh...",
+    ".hhff..",
+    "..ff.pp",
+    ".ccccpp",
+    "cccccbb",
+    "c.ccbbb",
+    "..ccbbb",
+    "..c.c..",
+    "..c.c..",
+    "..k.k..",
+  ],
+  palette: { k: K, h: "#8a8a8a", f: "#c9a07a", c: "#5a5a6a", b: "#a08a5a", p: "#e0b070" },
+};
+
+/** A Vesper Bell in its frame. */
+export const VESPER_BELL: Art = {
+  rows: [
+    "...k...",
+    "..www..",
+    ".w...w.",
+    ".w.b.w.",
+    ".wbbbw.",
+    ".wbbbw.",
+    ".wbbbw.",
+    ".w.b.w.",
+    "ww...ww",
+    "w.....w",
+  ],
+  palette: { k: K, w: "#5e3e29", b: "#c9a24a" },
+};
+
+const VESPER_BELL_4: Art = {
+  rows: [
+    "...k...",
+    "..rrr..",
+    ".rrrrr.",
+    "rrrrrrr",
+    ".w.b.w.",
+    ".wbbbw.",
+    ".wbbbw.",
+    ".wbybw.",
+    ".w.b.w.",
+    "ww...ww",
+    "w.....w",
+  ],
+  palette: { k: K, w: "#5e3e29", b: "#c9a24a", r: "#7a3a3a", y: "#fff4c0" },
+};
+
+/** A Root Cellar: a turf mound with a door in it. */
+export const ROOT_CELLAR: Art = {
+  rows: [
+    "....ggg....",
+    "..ggmmmgg..",
+    ".gmmmmmmmg.",
+    "gmmmddddmmg",
+    "mmmmdkddmmm",
+    "mmmmddddmmm",
+    "sssssssssss",
+  ],
+  palette: { g: "#6a7a5a", m: "#7a6a5a", d: "#5e3e29", k: "#c9a24a", s: "#5a5050" },
+};
+
+const ROOT_CELLAR_4: Art = {
+  rows: [
+    "....ggg..y.",
+    "..ggmmmggk.",
+    ".gmmmmmmmg.",
+    "gmmmddddmmg",
+    "mmmmdlldmmm",
+    "mmmmdlldmmm",
+    "sssssssssss",
+  ],
+  palette: { g: "#6a7a5a", m: "#7a6a5a", d: "#5e3e29", k: "#c9a24a", s: "#5a5050", l: "#ffd890", y: "#fff4c0" },
+};
+
+/** The Long Table, with two sat down at it so far. */
+export const LONG_TABLE: Art = {
+  rows: [
+    "..h.....h....",
+    ".hfh...hfh...",
+    "..c..p..c....",
+    "ttttttttttttt",
+    ".l.........l.",
+    ".l.........l.",
+  ],
+  palette: { h: "#5a3a28", f: "#d9a77a", c: "#8a6a9a", p: "#e0b070", t: "#7a5237", l: "#5e3e29" },
+};
+
+const LONG_TABLE_4: Art = {
+  rows: [
+    "..y.......y..",
+    ".h..h..h..h..",
+    "hfhhfhhfhhfh.",
+    ".c..cp.c..c..",
+    "ttttttttttttt",
+    ".l.........l.",
+    ".l.........l.",
+  ],
+  palette: { h: "#5a3a28", f: "#d9a77a", c: "#8a6a9a", p: "#e0b070", t: "#7a5237", l: "#5e3e29", y: "#fff4c0" },
+};
+
+/** The Last Potato. Still warm. */
+export const LAST_POTATO: Art = {
+  rows: [
+    "...kkkkk...",
+    ".kkllppppk.",
+    "kllppppppdk",
+    "klpppppppdk",
+    "kppppppppdk",
+    "kpppppppddk",
+    ".kpppppddk.",
+    "..kkkkkkk..",
+  ],
+  palette: { k: K, l: "#fff0c0", p: "#ffb060", d: "#c07030" },
+};
+
+const LAST_POTATO_4: Art = {
+  rows: [
+    ".y...y...y.",
+    "..y.kkk.y..",
+    "...kllppk..",
+    ".kllpppppk.",
+    "klpppppppdk",
+    "kppppppppdk",
+    ".kpppppddk.",
+    "..kkkkkkk..",
+    "y....y....y",
+  ],
+  palette: { k: K, l: "#fff0c0", p: "#ffb060", d: "#c07030", y: "#fff4c0" },
+};
+
 /** Four marks per tier, indexed by how many of its three upgrades you own. See the marks note above. */
 export const PRODUCER_MARKS = {
   patch: [PLANT, PLANT_2, PLANT_3, PLANT_4],
@@ -2400,6 +2757,78 @@ export const PRODUCER_MARKS = {
     repaint(FOURTH_POTATO, { c: "#d0b0f8", d: "#9a6ad0" }),
     repaint(FOURTH_POTATO, { c: "#fff0a0", d: "#e0a040", k: "#c9a24a" }),
     FOURTH_POTATO_4,
+  ],
+  mote: [
+    STAR_EYE,
+    repaint(STAR_EYE, { y: "#d8e8ff", w: "#c8d8ff" }),
+    repaint(STAR_EYE, { y: "#ffd166", w: "#fff4c0" }),
+    STAR_EYE_4,
+  ],
+  wisp: [
+    SOWER,
+    repaint(SOWER, { r: "#3a4a8a", s: "#c9a24a" }),
+    repaint(SOWER, { r: "#6a4aa0", h: "#2a1a4a", s: "#ffd166" }),
+    SOWER_4,
+  ],
+  veil: [
+    NIGHT_CLOTH,
+    repaint(NIGHT_CLOTH, { c: "#1e2a50", w: "#d0e0ff" }),
+    repaint(NIGHT_CLOTH, { c: "#3a2060", k: "#a8792c" }),
+    NIGHT_CLOTH_4,
+  ],
+  nebula: [
+    SEED_CLOUD,
+    repaint(SEED_CLOUD, { p: "#4a6a9a", l: "#90c0e0" }),
+    repaint(SEED_CLOUD, { p: "#9a5a8a", l: "#f0b0d0" }),
+    SEED_CLOUD_4,
+  ],
+  aeon: [
+    ANCESTOR_STAR,
+    repaint(ANCESTOR_STAR, { y: "#ffb04a", l: "#ffe080" }),
+    repaint(ANCESTOR_STAR, { y: "#c8a0e8", l: "#f0e0ff" }),
+    ANCESTOR_STAR_4,
+  ],
+  fifth: [
+    FIFTH_POTATO,
+    repaint(FIFTH_POTATO, { l: "#e0d8f8", d: "#b8a8e0" }),
+    repaint(FIFTH_POTATO, { l: "#f0e8c0", d: "#d0b070" }),
+    FIFTH_POTATO_4,
+  ],
+  ember: [
+    ASH_PLOT,
+    repaint(ASH_PLOT, { g: "#7a9a5a", y: "#d8c878" }),
+    repaint(ASH_PLOT, { g: "#6aa348", a: "#7a6a60" }),
+    ASH_PLOT_4,
+  ],
+  ward: [
+    GLEANER,
+    repaint(GLEANER, { c: "#6a5a4a", b: "#c9a24a" }),
+    repaint(GLEANER, { c: "#4a4a7a", h: "#e0e0e0" }),
+    GLEANER_4,
+  ],
+  lull: [
+    VESPER_BELL,
+    repaint(VESPER_BELL, { b: "#d8b860", w: "#7a5237" }),
+    repaint(VESPER_BELL, { b: "#ffd166", w: "#a8792c" }),
+    VESPER_BELL_4,
+  ],
+  relic: [
+    ROOT_CELLAR,
+    repaint(ROOT_CELLAR, { g: "#7a8a5a", d: "#7a5237" }),
+    repaint(ROOT_CELLAR, { d: "#a8792c", k: "#fff4c0" }),
+    ROOT_CELLAR_4,
+  ],
+  legion: [
+    LONG_TABLE,
+    repaint(LONG_TABLE, { c: "#6a8a6a", t: "#8a6a47" }),
+    repaint(LONG_TABLE, { c: "#c9a24a", t: "#a8792c" }),
+    LONG_TABLE_4,
+  ],
+  last: [
+    LAST_POTATO,
+    repaint(LAST_POTATO, { p: "#ffc070", l: "#fff4d0" }),
+    repaint(LAST_POTATO, { p: "#ffd166", d: "#e0a040" }),
+    LAST_POTATO_4,
   ],
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 
