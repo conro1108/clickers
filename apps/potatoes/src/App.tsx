@@ -22,6 +22,7 @@ import { abandon, errorText, joinByCode, useLobby, useOnlineMatch, type MatchRow
 import { clockSkew, setClockSkew } from "./clock.js";
 import { AwayReport } from "./components/AwayReport.js";
 import { Damage } from "./components/Damage.js";
+import { CutFall } from "./components/CutFall.js";
 import { Farm } from "./components/Farm.js";
 import { FarmFeed } from "./components/FarmFeed.js";
 import { FarmScene, TitleScene, type FarmSceneHandle } from "./components/FarmScene.js";
@@ -683,26 +684,25 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         </div>
       )}
 
-      {/* And the thing they were warning about. The lights go out, the tuber is
-          out there in the dark, and then the camera goes at it and through the
-          skin — the only cut in the game that moves rather than fades, because
-          the reveal is a place and you have to be taken to it.
+      {/* And the thing they were warning about. The lights go out, and the
+          one thing out in the dark is what this world is the inside of — the
+          tuber, its eye, the glass under it — and you fall at it until one of
+          its pixels is wider than the screen. On the other side is the real
+          farm you've just bought, drawn full-screen and still settling, with
+          the words over it. Then the veil lifts and it's the same farm in the
+          app, so there's nothing to swap on the way out.
 
           It's over everything, including the shop it was bought from, and it
-          eats every input for its ten seconds. What it lifts on is the inside
-          of the potato: the purchase moves the farm there, so the canvas
-          underneath has already swapped to the other scene by the time the
-          words clear. The cut is the whole journey now — there's no second act
-          waiting on the canvas for it to get out of the way of. */}
+          eats every input for its ten seconds. */}
       {cut && (
         <div className="converge" role="presentation">
-          <div className="converge-skin" />
-          <div className="converge-flesh" />
-          {/* In the order they arrive. The sentence lands first, on the frame
-              you come through the skin and can see where you are — the card is
-              the name for what just happened to you, and naming it before it
-              happens is a chapter heading on a thing you haven't read. It's
-              also what's still up as the farm comes back underneath it. */}
+          <div className="converge-place">
+            <FarmScene farm={farm} hoard={budget} world={cut} onDig={() => {}} />
+          </div>
+          <CutFall world={cut} ms={CONVERGE_MS} />
+          {/* In the order they arrive: the sentence in the dark, the reveal on
+              the frame you can see where you are, and the card last, still up
+              as the farm comes back underneath it. */}
           <div className="converge-words">
             <p className="converge-line">{WORLD_COPY[cut].cut?.line}</p>
             <p className="converge-call">{WORLD_COPY[cut].cut?.call}</p>

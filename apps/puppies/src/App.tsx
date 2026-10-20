@@ -28,6 +28,7 @@ import { errorText, useLobby } from "@clickers/online";
 import { useOnlineMatch } from "@clickers/online";
 import { AwayReport } from "./components/AwayReport.js";
 import { Conditions } from "./components/Conditions.js";
+import { CutFall } from "./components/CutFall.js";
 import { Damage } from "./components/Damage.js";
 import { MillFeed } from "./components/MillFeed.js";
 import {
@@ -702,27 +703,25 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         </div>
       )}
 
-      {/* And the thing they were warning about. The lights go out, the
-          Ur-Chihuahua is out there in the dark, and then it turns around three
-          times and lies down — and the camera goes under with it, through the
-          hem and into the warm. The only cut in the game that moves rather than
-          fades, because the reveal is a place and you have to be taken to it.
+      {/* And the thing they were warning about. The lights go out, and the
+          one thing out in the dark is the dog this world is inside of — or its
+          ball, its fire, its star — and you fall at it until one of its pixels
+          is wider than the screen. On the other side is the real mill you've
+          just bought, drawn full-screen and still settling, with the words
+          over it. Then the veil lifts and it's the same mill in the app, so
+          there's nothing to swap on the way out.
 
           It's over everything, including the shop it was bought from, and it
-          eats every input for its ten seconds. What it lifts on is the inside
-          of the nest: the purchase moves the mill there, so the canvas
-          underneath has already swapped to the other scene by the time the
-          words clear. The cut is the whole journey now — there's no second act
-          waiting on the canvas for it to get out of the way of. */}
+          eats every input for its ten seconds. */}
       {crossing && arrival && (
-        <div className={`converge ${crossing === "inside" ? "" : crossing}`} role="presentation">
-          <div className="converge-dog" />
-          <div className="converge-warm" />
-          {/* In the order they arrive. The sentence lands first, on the frame
-              you come under the hem and can see where you are — the card is
-              the name for what just happened to you, and naming it before it
-              happens is a chapter heading on a thing you haven't read. It's
-              also what's still up as the mill comes back underneath it. */}
+        <div className="converge" role="presentation">
+          <div className="converge-place">
+            <MillScene mill={mill} hoard={budget} world={crossing} onWhistle={() => {}} />
+          </div>
+          <CutFall world={crossing} ms={CONVERGE_MS} />
+          {/* In the order they arrive: the sentence in the dark, the reveal on
+              the frame you can see where you are, and the card last, still up
+              as the mill comes back underneath it. */}
           <div className="converge-words">
             <p className="converge-line">{arrival.line}</p>
             <p className="converge-call">{arrival.call}</p>

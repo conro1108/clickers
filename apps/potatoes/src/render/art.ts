@@ -2833,3 +2833,229 @@ export const PRODUCER_MARKS = {
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 
 export type MarkedProducerId = keyof typeof PRODUCER_MARKS;
+
+// --- The arrival cuts: the one thing you fall toward before each world opens round you ---
+// Bigger than anything in a scene, because they get zoomed until a pixel is wider than the screen.
+
+/** The first potato, eyes and all, small in the dark. */
+export const CUT_POTATO: Art = {
+  rows: [
+    "..........kkkkkkk...........",
+    ".......kkkkkklkkkkkk........",
+    ".....kkkkllllllpppkkkk......",
+    "....kkkllllllppppppppkkk....",
+    "...kklldlllppppppppppppkk...",
+    "..kkllleepppppppppppppppkk..",
+    ".kkklllplppppppppppppdpppkk.",
+    ".kkllppppppppppppppppeeppkkk",
+    ".kkpppppppppppppdppppplppdkk",
+    ".kkpppppppppppppeepppppdddkk",
+    ".kkpppppppppppppplpppdddddkk",
+    ".kkppppppdpppppppppddddddkkk",
+    ".kkkpppppeeppppppddddddddkk.",
+    "..kkkppppplppppdddddddddkk..",
+    "...kkkpppppppdddddddddkkk...",
+    "....kkkkpppddddddddkkkkk....",
+    "......kkkkkkkkkkkkkkk.......",
+    "..........kkk...............",
+  ],
+  palette: { k: "#402e3a", p: "#c98b4b", l: "#e2b077", d: "#9a6a38", e: "#5a3418" },
+};
+
+/** The second potato with its eye shut. It opens as you get close. */
+export const CUT_EYE_SHUT: Art = {
+  rows: [
+    "..........kkkkkkk...........",
+    ".......kkkkkklkkkkkk........",
+    ".....kkkkllllllpppkkkk......",
+    "....kkkllllllppppppppkkk....",
+    "...kkleelllppppppppppppkk...",
+    "..kklllllpppppppppppppppkk..",
+    ".kkklllppppppppppppppppppkk.",
+    ".kkllppppppppppppppppppppkkk",
+    ".kkppppppppddddddppppppppdkk",
+    ".kkpppppppeeeeeeeepppppdddkk",
+    ".kkppppppppppppppppppdddddkk",
+    ".kkppppppppppppppppddddddkkk",
+    ".kkkpppppppppppppddddddddkk.",
+    "..kkkppppppppppddddddeedkk..",
+    "...kkkpppppppdddddddddkkk...",
+    "....kkkkpppddddddddkkkkk....",
+    "......kkkkkkkkkkkkkkk.......",
+    "..........kkk...............",
+  ],
+  palette: { k: "#402e3a", p: "#c98b4b", l: "#e2b077", d: "#9a6a38", e: "#5a3418", w: "#fff4d8", i: "#ffb840", n: "#2a1a10", h: "#ffffff" },
+};
+
+/** Opening. */
+export const CUT_EYE_WAKING: Art = {
+  rows: [
+    "..........kkkkkkk...........",
+    ".......kkkkkklkkkkkk........",
+    ".....kkkkllllllpppkkkk......",
+    "....kkkllllllppppppppkkk....",
+    "...kkleelllppppppppppppkk...",
+    "..kklllllpppppppppppppppkk..",
+    ".kkklllppppppppppppppppppkk.",
+    ".kkllppppppppppppppppppppkkk",
+    ".kkppppppppkkkkkkppppppppdkk",
+    ".kkpppppppkwwiiwwkpppppdddkk",
+    ".kkppppppppkkkkkkppppdddddkk",
+    ".kkppppppppppppppppddddddkkk",
+    ".kkkpppppppppppppddddddddkk.",
+    "..kkkppppppppppddddddeedkk..",
+    "...kkkpppppppdddddddddkkk...",
+    "....kkkkpppddddddddkkkkk....",
+    "......kkkkkkkkkkkkkkk.......",
+    "..........kkk...............",
+  ],
+  palette: { k: "#402e3a", p: "#c98b4b", l: "#e2b077", d: "#9a6a38", e: "#5a3418", w: "#fff4d8", i: "#ffb840", n: "#2a1a10", h: "#ffffff" },
+};
+
+/** Open. */
+export const CUT_EYE_OPEN: Art = {
+  rows: [
+    "..........kkkkkkk...........",
+    ".......kkkkkklkkkkkk........",
+    ".....kkkkllllllpppkkkk......",
+    "....kkkllllllppppppppkkk....",
+    "...kkleelllppppppppppppkk...",
+    "..kklllllpppppppppppppppkk..",
+    ".kkklllppppppppppppppppppkk.",
+    ".kkllpppppppkkkkpppppppppkkk",
+    ".kkpppppppkkwiihkkpppppppdkk",
+    ".kkppppppkwwinniwwkppppdddkk",
+    ".kkpppppppkkwiiwkkpppdddddkk",
+    ".kkpppppppppkkkkpppddddddkkk",
+    ".kkkpppppppppppppddddddddkk.",
+    "..kkkppppppppppddddddeedkk..",
+    "...kkkpppppppdddddddddkkk...",
+    "....kkkkpppddddddddkkkkk....",
+    "......kkkkkkkkkkkkkkk.......",
+    "..........kkk...............",
+  ],
+  palette: { k: "#402e3a", p: "#c98b4b", l: "#e2b077", d: "#9a6a38", e: "#5a3418", w: "#fff4d8", i: "#ffb840", n: "#2a1a10", h: "#ffffff" },
+};
+
+/** The starch gone to glass. */
+export const CUT_CRYSTAL: Art = {
+  rows: [
+    "......................",
+    "..........wl..........",
+    ".........cwll.........",
+    ".........cwllc........",
+    ".........cwllc.wl.....",
+    ".........cwllccwlc....",
+    ".....wl..cwllccwlc....",
+    "....cwlc.cwllccwlc....",
+    "....cwlc.cwllccwlc....",
+    "....cwlc.cwllccwlc....",
+    "....cwlc.cwllccwlccl..",
+    ".cl.cwlc.cwllccwlcclc.",
+    ".clccwlc.cwllccwlcclc.",
+    ".clccwlc.cwllccwlcclc.",
+    ".clccwlc.cwllccwlcclc.",
+    ".clccwlc.cwllccwlcclc.",
+    ".clccwlc.cwllccwlcclc.",
+    ".clccwlc.cwllccwlcclc.",
+    ".rrsrwsrrswrsrrwrrsrcs",
+    "..srrsrrsrrsrrsrrsrr..",
+    "rsrrsrrsrrsrrsrrsrrsrr",
+    "srrsrrsrrsrrsrrsrrsrrs",
+  ],
+  palette: { c: "#6a3aa0", l: "#9a6ad0", w: "#d0b0f8", r: "#3a3440", s: "#5a5060" },
+};
+
+/** The first potato, still in the ground, with its first shoot up. */
+export const CUT_FIRST_MORNING: Art = {
+  rows: [
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........vv...vv.........",
+    "...........vv.vv..........",
+    "...........vg.g...........",
+    ".............g............",
+    ".............g............",
+    ".............g............",
+    "...........kkkk...........",
+    ".......sskkkkkkkkss.......",
+    ".....smnmkkdpppkknmms.....",
+    "...ssmmmkkpeepppkknmmss...",
+    "..smnmmmmkkplppkkmmnmmms..",
+    ".smmmnmmmkkkkkkkkmmmnmmms.",
+    ".smmmmnmmmmkkkkmnmmmmnmms.",
+    "smnmmmmnmmmmnmmmmnmmmmnmms",
+  ],
+  palette: { k: "#402e3a", p: "#c98b4b", l: "#e2b077", d: "#9a6a38", e: "#5a3418", s: "#5a3a24", m: "#7a5030", n: "#6a4428", g: "#5aa040", v: "#8ad060" },
+};
+
+/** A seed of light in the dark before. */
+export const CUT_SEED: Art = {
+  rows: [
+    ".......z.......",
+    ".......y.......",
+    "..z....y....z..",
+    ".......y.......",
+    ".....yyyyy.....",
+    ".....ywwwy.....",
+    "....ywhwwwy....",
+    "zyyyywwwwwyyyyz",
+    "....ywwwwwy....",
+    ".....ywwwy.....",
+    ".....yyyyy.....",
+    ".......y.......",
+    "..z....y....z..",
+    ".......y.......",
+    ".......z.......",
+  ],
+  palette: { w: "#fff8e0", y: "#ffd166", z: "#c8c8ff", h: "#ffffff" },
+};
+
+/** The seed between twinkles. */
+export const CUT_SEED_DIM: Art = {
+  rows: [
+    "...............",
+    "...............",
+    ".......z.......",
+    ".......y.......",
+    "....zyyyyyz....",
+    ".....ywwwy.....",
+    "....ywhwwwy....",
+    "..zyywwwwwyyz..",
+    "....ywwwwwy....",
+    ".....ywwwy.....",
+    "....zyyyyyz....",
+    ".......y.......",
+    ".......z.......",
+    "...............",
+    "...............",
+  ],
+  palette: { w: "#fff8e0", y: "#ffd166", z: "#c8c8ff", h: "#ffffff" },
+};
+
+/** The last sun going down on the last furrow. */
+export const CUT_LAST_SUN: Art = {
+  rows: [
+    "................................",
+    "................................",
+    ".............cccccc.............",
+    "...........cccccccccc...........",
+    ".........ccccbbbbbbcccc.........",
+    "........cccbbbbbbbbbbccc........",
+    ".......cccbbbbbbbbbbbbccc.......",
+    ".......ccbbbbbaaaabbbbbcc.......",
+    ".........................kkk....",
+    "......ccbbbaaaaaaaaaabbbkpppk...",
+    ".............aaaaaa....kppppdk..",
+    "......ccbbbaaaaaaaaaabbbkkkkk...",
+    "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+    "gggggggggggggggggggggggggggggggg",
+    "fffsfffffffffffffffffffffffsffff",
+    "ggggggggggggggsggggggggggggggggg",
+    "fffffffffsffffffffffsfffffffffff",
+    "gggggggggggggggggggggggggggggggg",
+  ],
+  palette: { a: "#ff7040", b: "#d04030", c: "#8a2a2a", h: "#2a1a1a", f: "#4a4448", g: "#2e2a30", k: "#1a1214", p: "#3a2a2a", d: "#2a1e1e", s: "#8a8088" },
+};

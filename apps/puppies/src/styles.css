@@ -617,15 +617,16 @@ input {
   }
 }
 
-/* --- The Convergence ------------------------------------------------------ */
+/* --- The arrival cut -------------------------------------------------------- */
 
-/* The trip inside. Over everything — HUD, nav, the shop it was bought from —
-   and it takes every input with it for its ten seconds. Timings track
-   `CONVERGE_MS` in App.tsx; every layer runs on that same duration with
-   percentage offsets so the beats can't drift apart.
+/* Over everything — HUD, nav, the shop it was bought from — and it takes every
+   input with it for its ten seconds. Timings track `CONVERGE_MS` in App.tsx and
+   the fractions in render/crossing.ts; every layer runs on the same duration
+   with percentage offsets so the beats can't drift apart.
 
-   Fixed rather than absolute, because the omen's `.app`-relative box is the
-   mill screen and this is not a thing happening on the mill screen. */
+   Three layers: the world you're arriving in, drawn full-screen and hidden
+   until you're through; the fall toward the one thing in the dark, on its own
+   canvas; and the words. */
 .converge {
   position: fixed;
   inset: 0;
@@ -634,197 +635,24 @@ input {
   background: #06040a;
   animation: converge-veil 9600ms linear both;
 }
-/* The light of the thing you're falling toward, before it's big enough to be
-   anything. Kept on the backdrop rather than on the dog itself: a blurred
-   shadow scaled thirty times is a lot of pixels to ask a phone for. */
-.converge::before {
-  content: "";
+/* The real scene, still settling as you come out into it: it keeps opening out
+   for four seconds, so arriving reads as a place and not a picture swap. */
+.converge-place {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(255, 191, 122, 0.22), rgba(6, 4, 10, 0) 48%);
-  animation: converge-halo 9600ms ease-in both;
+  display: flex;
+  flex-direction: column;
+  animation: converge-place 9600ms cubic-bezier(0.16, 0.6, 0.24, 1) both;
 }
-
-/* The Ur-Chihuahua, out there in the dark and getting closer. An apple head
-   with two eyes on it, which is all it needs to be — for the four seconds it's
-   small enough to read as an object it's barely more than a lit speck, and by
-   the time it's big enough to inspect it has already turned over and taken you
-   under with it.
-
-   Square-ish in vmin rather than the old lopsided oval: a chihuahua head is
-   round, and the one silhouette cue that survives being a blurred shape at 5%
-   scale is *not being oblong*. */
-.converge-dog {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 38vmin;
-  height: 36vmin;
-  margin: -18vmin 0 0 -19vmin;
-  border-radius: 50% 50% 46% 46% / 54% 54% 46% 46%;
-  background: radial-gradient(70% 74% at 40% 30%, #e2b077 0%, #c98b4b 40%, #95602c 74%, #3d2415 100%);
-  will-change: transform;
-  animation: converge-dog 9600ms cubic-bezier(0.62, 0, 0.9, 0.4) both;
+.converge-place .scene {
+  cursor: default;
 }
-/* Two eyes, level and facing you, so the last thing that passes the camera on
-   the way in is an eye the size of the screen. Level is the whole difference:
-   the pair used to be staggered, and a staggered pair on a brown oval is a
-   potato. */
-.converge-dog::before,
-.converge-dog::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 40%, #2a1a10 0%, #46291a 62%, rgba(70, 41, 26, 0) 100%);
-  box-shadow: 0 -0.35vmin 0 rgba(214, 160, 106, 0.45);
-}
-.converge-dog::before {
-  left: 27%;
-  top: 40%;
-  width: 8%;
-  height: 9%;
-}
-.converge-dog::after {
-  left: 58%;
-  top: 40%;
-  width: 8%;
-  height: 9%;
-}
-
-/* Inside. Pale fleece lit from where you came under, going to the warm dark at
-   the edges, with the same rings of weave the hem has — this is the same place
-   the canvas is about to draw over the sky, seen from much closer. */
-.converge-warm {
+.converge-fall {
   position: absolute;
   inset: 0;
-  background:
-    repeating-radial-gradient(
-      circle at 50% 44%,
-      rgba(120, 96, 72, 0.15) 0 2px,
-      rgba(120, 96, 72, 0) 2px 26px
-    ),
-    radial-gradient(circle at 50% 44%, #f8f2e8 0%, #e6dccb 18%, #cdb488 45%, #7a4a48 76%, #241010 100%);
-  animation: converge-warm 9600ms cubic-bezier(0.16, 0.6, 0.24, 1) both;
-}
-/* The hem going past the lens. One frame's worth of white, which is what
-   turns a crossfade into a passage through something. */
-.converge-warm::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: #fff3d6;
-  animation: converge-flash 9600ms ease-out both;
-}
-
-/* The breach: the same fall, toward the Second Chihuahua asleep — eyes shut —
-   and out the other side into a night lawn under a moon instead of fleece. */
-.converge.beyond::before {
-  background: radial-gradient(circle at 50% 50%, rgba(200, 214, 244, 0.22), rgba(6, 4, 10, 0) 48%);
-}
-.converge.beyond .converge-dog::before,
-.converge.beyond .converge-dog::after {
-  height: 1.6%;
-  top: 45%;
-  border-radius: 0;
-  background: #2a1a10;
-}
-.converge.beyond .converge-warm {
-  background:
-    radial-gradient(circle at 72% 22%, #f4f0dc 0 9vmin, rgba(244, 240, 220, 0) 9.4vmin),
-    linear-gradient(#07071c 0%, #2a2452 58%, #3f6a5a 58.4%, #2c4a5a 100%);
-}
-.converge.beyond .converge-warm::before {
-  background: #e8eefc;
-}
-
-/* The deep: no face at all this time. A dropped ball, sinking ahead of you,
-   and you go down after it into dark water lit by the things that sank. */
-.converge.deep::before {
-  background: radial-gradient(circle at 50% 50%, rgba(110, 200, 220, 0.2), rgba(6, 4, 10, 0) 48%);
-}
-.converge.deep .converge-dog {
-  border-radius: 50%;
-  background: radial-gradient(60% 60% at 38% 32%, #f2e070 0%, #c9b03a 46%, #6a5a1c 80%, #1c1a10 100%);
-}
-.converge.deep .converge-dog::before,
-.converge.deep .converge-dog::after {
-  display: none;
-}
-.converge.deep .converge-warm {
-  background:
-    radial-gradient(circle at 30% 78%, rgba(130, 230, 210, 0.35) 0 6vmin, rgba(130, 230, 210, 0) 14vmin),
-    radial-gradient(circle at 74% 66%, rgba(240, 200, 120, 0.28) 0 4vmin, rgba(240, 200, 120, 0) 11vmin),
-    linear-gradient(#0a1830 0%, #0c2a40 55%, #12384a 100%);
-}
-.converge.deep .converge-warm::before {
-  background: #cfeff0;
-}
-
-/* The first fire: you fall toward a fire, and two eyes at the edge of it are
-   the last thing to pass the camera. Out into dawn and firelight. */
-.converge.origin::before {
-  background: radial-gradient(circle at 50% 50%, rgba(255, 150, 60, 0.3), rgba(6, 4, 10, 0) 48%);
-}
-.converge.origin .converge-dog {
-  background: radial-gradient(60% 64% at 50% 60%, #fff0b0 0%, #ffb040 34%, #c84a18 66%, #2a0e06 100%);
-}
-.converge.origin .converge-dog::before,
-.converge.origin .converge-dog::after {
-  top: 22%;
-  width: 6%;
-  height: 4%;
-  background: radial-gradient(circle, #fff4a0 0%, #e0b030 60%, rgba(224, 176, 48, 0) 100%);
-  box-shadow: none;
-}
-.converge.origin .converge-warm {
-  background:
-    radial-gradient(ellipse at 50% 92%, #ffb050 0 10vmin, rgba(255, 176, 80, 0) 34vmin),
-    linear-gradient(#2a2440 0%, #8a4a5a 44%, #e89a5a 64%, #3a2a1c 64.4%, #1c140e 100%);
-}
-.converge.origin .converge-warm::before {
-  background: #fff0d0;
-}
-
-/* Look up: you fall up, past the smoke, toward one star that is shaking. */
-.converge.void::before {
-  background: radial-gradient(circle at 50% 50%, rgba(255, 244, 192, 0.25), rgba(6, 4, 10, 0) 48%);
-}
-.converge.void .converge-dog {
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #fff4c0 22%, #ffd166 40%, #2a2458 72%, #04061a 100%);
-}
-.converge.void .converge-dog::before,
-.converge.void .converge-dog::after {
-  display: none;
-}
-.converge.void .converge-warm {
-  background:
-    radial-gradient(circle at 48% 34%, rgba(255, 244, 192, 0.5) 0 3vmin, rgba(255, 244, 192, 0) 12vmin),
-    linear-gradient(#04061a 0%, #10163a 60%, #2a2458 74%, #0e0c1c 74.4%, #0e0c1c 100%);
-}
-.converge.void .converge-warm::before {
-  background: #e8e8ff;
-}
-
-/* The bridge: you fall toward a rainbow and come out on the grass under it. */
-.converge.end::before {
-  background: radial-gradient(circle at 50% 50%, rgba(255, 216, 160, 0.3), rgba(6, 4, 10, 0) 48%);
-}
-.converge.end .converge-dog {
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 100%, transparent 0 34%, #9060c0 34% 39%, #5080e0 39% 44%, #60c060 44% 49%, #f0e060 49% 54%, #f0a040 54% 59%, #e05050 59% 64%, transparent 64%);
-}
-.converge.end .converge-dog::before,
-.converge.end .converge-dog::after {
-  display: none;
-}
-.converge.end .converge-warm {
-  background:
-    radial-gradient(ellipse at 50% 60%, rgba(255, 244, 192, 0.4) 0 8vmin, rgba(255, 244, 192, 0) 26vmin),
-    linear-gradient(#3a2a6a 0%, #c07aa8 33%, #ffd8a0 60%, #7ab858 60.4%, #3e7a34 100%);
-}
-.converge.end .converge-warm::before {
-  background: #fff4e0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
 }
 
 .converge-words {
@@ -835,40 +663,39 @@ input {
   padding: 0 26px;
   text-align: center;
 }
+/* A dark pool behind the words once there's a scene behind them, so the type
+   doesn't have to be a different colour for every world. */
+.converge-words::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 45% at 50% 50%, rgba(6, 4, 10, 0.6), rgba(6, 4, 10, 0) 100%);
+  animation: converge-pool 9600ms ease both;
+}
 /* All three in the same cell, so a line arriving doesn't shove the last one
    off its mark on the way out. */
 .converge-words > p {
   grid-area: 1 / 1;
+  position: relative;
   margin: 0;
   max-width: 22ch;
   text-wrap: balance;
   font-weight: 800;
   text-transform: uppercase;
+  color: #f6ecd8;
+  text-shadow:
+    0 2px 0 rgba(6, 4, 10, 0.7),
+    0 0 18px rgba(6, 4, 10, 0.9);
 }
 /* Said in the dark, on the way in. Held up out of the middle, because the
-   middle is where the dog is and a sentence across it makes the one object
-   on the screen look like a background. */
+   middle is where the thing you're falling at is. */
 .converge-line {
   align-self: start;
   padding-top: 16vh;
   font-size: 1rem;
   line-height: 1.4;
   letter-spacing: 0.1em;
-  color: #efe2cd;
-  text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
   animation: converge-line 9600ms ease both;
-}
-/* The card, and the only time the game names anything at itself. Last, and it
-   doesn't leave: the mill comes back up underneath it. */
-.converge-title {
-  font-size: clamp(1.7rem, 9vw, 2.7rem);
-  line-height: 1.1;
-  /* Indented by about the tracking it settles at, which otherwise hangs the
-     whole card a few pixels left of the middle. */
-  text-indent: 0.22em;
-  color: #4a2a17;
-  text-shadow: 0 0 8vmin rgba(255, 240, 200, 0.95);
-  animation: converge-title 9600ms ease-out both;
 }
 /* The reveal, on the frame you can first see where you are. */
 .converge-call {
@@ -876,17 +703,23 @@ input {
   line-height: 1.45;
   letter-spacing: 0.16em;
   text-indent: 0.16em;
-  color: #3b2412;
-  text-shadow: 0 0 6vmin rgba(255, 240, 200, 0.8);
   animation: converge-call 9600ms ease both;
+}
+/* The card, and the only time the game names anything at itself. Last, and it
+   doesn't leave: the scene comes back up underneath it. */
+.converge-title {
+  font-size: clamp(1.7rem, 9vw, 2.7rem);
+  line-height: 1.1;
+  /* Indented by about the tracking it settles at, which otherwise hangs the
+     whole card a few pixels left of the middle. */
+  text-indent: 0.22em;
+  animation: converge-title 9600ms ease-out both;
 }
 
 @keyframes converge-veil {
   0% {
     opacity: 0;
   }
-  /* 800ms to take the screen, and 800ms at the end to give it back — the mill
-     arriving under a ceiling that hasn't landed yet is the last beat. */
   8%,
   92% {
     opacity: 1;
@@ -895,48 +728,12 @@ input {
     opacity: 0;
   }
 }
-@keyframes converge-halo {
-  0% {
-    opacity: 0;
-  }
-  44% {
-    opacity: 1;
-  }
-  48%,
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes converge-dog {
-  0% {
-    opacity: 0;
-    transform: scale(0.05) rotate(-8deg);
-  }
-  /* A speck in the dark for a second and a half, then the fall — nearly all of
-     the distance is covered in the last quarter of it. */
-  8% {
-    opacity: 1;
-    transform: scale(0.1) rotate(-7deg);
-  }
-  44% {
-    opacity: 1;
-    transform: scale(24) rotate(4deg);
-  }
-  48%,
-  100% {
-    opacity: 0;
-    transform: scale(34) rotate(6deg);
-  }
-}
-@keyframes converge-warm {
+@keyframes converge-place {
   0%,
   42% {
     opacity: 0;
-    transform: scale(1.55);
+    transform: scale(1.4);
   }
-  /* Through, and then still moving: it keeps opening out for another four
-     seconds, so being inside reads as arriving somewhere rather than as a
-     picture that replaced the last one. */
   46% {
     opacity: 1;
     transform: scale(1.3);
@@ -946,17 +743,14 @@ input {
     transform: scale(1);
   }
 }
-@keyframes converge-flash {
+@keyframes converge-pool {
   0%,
-  41% {
+  44% {
     opacity: 0;
   }
-  45% {
-    opacity: 0.9;
-  }
-  54%,
+  50%,
   100% {
-    opacity: 0;
+    opacity: 1;
   }
 }
 @keyframes converge-line {
@@ -973,14 +767,13 @@ input {
     opacity: 0;
   }
 }
-/* Under the hem at 43%, and this is the first thing you read in there. */
 @keyframes converge-call {
   0%,
-  44% {
+  48% {
     opacity: 0;
   }
-  50%,
-  64% {
+  53%,
+  65% {
     opacity: 1;
   }
   70%,
@@ -988,17 +781,15 @@ input {
     opacity: 0;
   }
 }
-/* And the card, which opens out as it holds and is still holding when the veil
-   goes — the tracking grows a fifth of an em over the last two and a half
-   seconds, which is too slow to catch happening and impossible to miss having
-   happened. */
+/* The tracking grows a fifth of an em over the last two and a half seconds,
+   which is too slow to catch happening and impossible to miss having happened. */
 @keyframes converge-title {
   0%,
-  68% {
+  70% {
     opacity: 0;
     letter-spacing: 0.12em;
   }
-  76% {
+  77% {
     opacity: 1;
     letter-spacing: 0.22em;
   }
@@ -2023,20 +1814,18 @@ input {
     animation: none;
   }
 
-  /* The Convergence still takes the screen and still ends up inside the puppy,
-     because that's the run's one payoff and cutting it would be cutting the
-     ending. What goes is the flight: no rush toward the dog and no scaling on
-     the hem, so it's a lit place you arrive in rather than one you're thrown
-     at. Everything else is opacity, which is already safe. */
-  .converge-dog {
+  /* The cut still takes the screen and still lands you in the new world,
+     because that's the payoff. What goes is the flight: no fall at the thing
+     in the dark and no settling on the far side. Everything else is opacity. */
+  .converge-fall {
     display: none;
   }
-  .converge-warm {
-    animation-name: converge-warm-still;
+  .converge-place {
+    animation-name: converge-place-still;
   }
 }
 
-@keyframes converge-warm-still {
+@keyframes converge-place-still {
   0%,
   42% {
     opacity: 0;

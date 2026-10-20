@@ -2818,3 +2818,220 @@ export const PRODUCER_MARKS = {
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 
 export type MarkedProducerId = keyof typeof PRODUCER_MARKS;
+
+// --- The arrival cuts: the one thing you fall toward before each world opens round you ---
+// Bigger than anything in a scene, because they get zoomed until a pixel is wider than the screen.
+
+/** The Ur-Chihuahua, head-on. Ears, nose and tongue: a dog from a long way off, not a lumpy brown oval. */
+export const CUT_NEST_DOG: Art = {
+  rows: [
+    "kk....................kk",
+    "kik..................kik",
+    "kiik................kiik",
+    "kpiik..............kiipk",
+    ".kpiik............kiipk.",
+    ".kppiik.kkkkkkkk.kiippk.",
+    "..kppiikpppllpppkiippk..",
+    "..kpppppppllllpppppppk..",
+    "..kppppppppllppppppppk..",
+    ".kpppppppppllpppppppppk.",
+    ".kppkkkkppllllppkkkkppk.",
+    "kppkeweekpllllpkeweekppk",
+    "kppkeeeekpllllpkeeeekppk",
+    "kppkeeeekpllllpkeeeekppk",
+    ".kppkkkkplmmmmlpkkkkppk.",
+    ".kpppppplmnwnnmlppppppk.",
+    "..kpppplmmnnnnmmlppppk..",
+    "..kppplmmmmkkmmmmlpppk..",
+    "...kkpmmmkqqqqkmmmpkk...",
+    ".....kkkkkkkkkkkkkk.....",
+  ],
+  palette: { q: "#e86a7a", k: "#402e3a", p: "#c98b4b", l: "#e2b077", d: "#95602c", i: "#e89a9a", e: "#1c1218", w: "#ffffff", m: "#f2e3c8", n: "#2a1a1a" },
+};
+
+/** The same head asleep, which is the way into the dream. */
+export const CUT_DREAM_DOG: Art = {
+  rows: [
+    "kk....................kk",
+    "kik..................kik",
+    "kiik................kiik",
+    "kpiik..............kiipk",
+    ".kpiik............kiipk.",
+    ".kppiik.kkkkkkkk.kiippk.",
+    "..kppiikpppllpppkiippk..",
+    "..kpppppppllllpppppppk..",
+    "..kppppppppllppppppppk..",
+    ".kpppppppppllpppppppppk.",
+    ".kpppppppppllpppppppppk.",
+    "kpppppppppllllpppppppppk",
+    "kppkpppkppllllppkpppkppk",
+    "kpppkkkpppllllpppkkkpppk",
+    ".kpppppppplmmlppppppppk.",
+    ".kpppppplmnnnnmlppppppk.",
+    "..kpppplmmnnnnmmlppppk..",
+    "..kppplmmmmkkmmmmlpppk..",
+    "...kkpmmmkqqqqkmmmpkk...",
+    ".....kkkkkkkkkkkkkk.....",
+  ],
+  palette: { q: "#e86a7a", k: "#402e3a", p: "#c98b4b", l: "#e2b077", d: "#95602c", i: "#e89a9a", e: "#1c1218", w: "#ffffff", m: "#f2e3c8", n: "#2a1a1a" },
+};
+
+/** A ball going down, and you after it. */
+export const CUT_SUNK_BALL: Art = {
+  rows: [
+    "......b.........",
+    "........b..b....",
+    "....b...........",
+    "................",
+    ".....kkkkkk.....",
+    "...kkkggsgkkk...",
+    "..kkggggsgggkk..",
+    ".kkgwwgssggggkk.",
+    ".kgwwwwsggggggk.",
+    "kkgwwwssggggggkk",
+    "kgggwssggggggggk",
+    "kggsssggggggsssk",
+    "ksssggggggssshhk",
+    "kggggggggssghhhk",
+    "kkggggggssghhhkk",
+    ".kggggggsghhhhk.",
+    ".kkggggsshhhhkk.",
+    "..kkgggshhhhkk..",
+    "...kkkgshhkkk...",
+    ".....kkkkkk.....",
+  ],
+  palette: { k: "#3a4418", g: "#cfe04a", h: "#a8b82c", s: "#f4f4e0", w: "#eef8a0", b: "#a0d8e8" },
+};
+
+/** The first fire, and the eyes at the edge of it. */
+export const CUT_FIRE: Art = {
+  rows: [
+    "............................",
+    "............................",
+    "..........y........a....a...",
+    ".........yo........aaaaaa...",
+    "........yoo.y......aaaaaaa..",
+    "........yooyo.....aeaaaeaa..",
+    ".......yoorooy....aaaaaaaa..",
+    "......yoorrooy.....aaaaaa...",
+    "......yorrrroy......aaaa....",
+    "......yorrdrroy.............",
+    ".....yoorddrroy.............",
+    ".....yorrddrrooy............",
+    "....ssyorrrrroyss...........",
+    "...sttlllllllllltts.........",
+    "...sssssssssssssss..........",
+    "............................",
+  ],
+  palette: { y: "#fff0b0", o: "#ffb040", r: "#e05a18", d: "#8a2a10", s: "#4a3a34", t: "#7a6a5a", l: "#5a3018", a: "#1a1620", e: "#ffd166" },
+};
+
+/** The fire's other frame. */
+export const CUT_FIRE_FLICKER: Art = {
+  rows: [
+    "............................",
+    "...........y................",
+    "...........oy......a....a...",
+    "........y..ooy.....aaaaaa...",
+    ".......yo..yoy.....aaaaaaa..",
+    ".......yoyyoooy...aeaaaeaa..",
+    ".......yooroooy...aaaaaaaa..",
+    "......yoorrrooy....aaaaaa...",
+    "......yorrrrroy.....aaaa....",
+    ".....yoorrdrroy.............",
+    ".....yorrddrrooy............",
+    ".....yorrddrrroy............",
+    "....ssyorrrrroyss...........",
+    "...sttlllllllllltts.........",
+    "...sssssssssssssss..........",
+    "............................",
+  ],
+  palette: { y: "#fff0b0", o: "#ffb040", r: "#e05a18", d: "#8a2a10", s: "#4a3a34", t: "#7a6a5a", l: "#5a3018", a: "#1a1620", e: "#ffd166" },
+};
+
+/** The Dog Star, rays out. */
+export const CUT_DOG_STAR: Art = {
+  rows: [
+    ".....................",
+    ".....................",
+    "....z.....z.....z....",
+    "..........y..........",
+    "..........y..........",
+    "..........y..........",
+    ".......k..y..k.......",
+    "......kwk...kwk......",
+    "......kwwkkkwwk......",
+    "......kwwwwwwwk......",
+    "zyyyy.kwbwwwbwk.yyyyz",
+    ".....kwwwwwwwwwk.....",
+    "......kwwwnwwwk......",
+    ".......kwwwwwk.......",
+    "........kkkkk........",
+    "..........y..........",
+    "..........y..........",
+    "..........y..........",
+    "....z.....y.....z....",
+    "..........z..........",
+    ".....................",
+  ],
+  palette: { k: "#ffd166", w: "#fff4c0", b: "#2a2050", n: "#402e3a", y: "#fff4c0", z: "#ffffff" },
+};
+
+/** The Dog Star between twinkles. */
+export const CUT_DOG_STAR_DIM: Art = {
+  rows: [
+    ".....................",
+    ".....................",
+    ".....................",
+    ".....z.........z.....",
+    "..........z..........",
+    "..........y..........",
+    ".......k..y..k.......",
+    "......kwk...kwk......",
+    "......kwwkkkwwk......",
+    "......kwwwwwwwk......",
+    "..zyy.kwbwwwbwk.yyz..",
+    ".....kwwwwwwwwwk.....",
+    "......kwwwnwwwk......",
+    ".......kwwwwwk.......",
+    "........kkkkk........",
+    "..........y..........",
+    "..........y..........",
+    ".....z....z....z.....",
+    ".....................",
+    ".....................",
+    ".....................",
+  ],
+  palette: { k: "#ffd166", w: "#fff4c0", b: "#2a2050", n: "#402e3a", y: "#fff4c0", z: "#ffffff" },
+};
+
+/** The bridge, and the Last Dog at the top of it. */
+export const CUT_BRIDGE: Art = {
+  rows: [
+    "...................................",
+    "...............k...k...............",
+    "..............kek.kek..............",
+    "..............kwwwwwk..............",
+    "..............kwbwbwk..............",
+    "...............kwnwk...............",
+    "...............kk.kk...............",
+    "............rrrrrrrrrrr............",
+    "..........rrooooooooooorr..........",
+    "........rrooyyyyyyyyyyyoorr........",
+    ".......rooyygggggggggggyyoor.......",
+    ".....rrooygggbbbbbbbbbgggyoorr.....",
+    ".....royyggbbvvvvvvvvvbbggyyor.....",
+    "....royygbbvv.........vvbbgyyor....",
+    "...rooygbbv.............vbbgyoor...",
+    "...roygbbv...............vbbgyor...",
+    "..royggbv.................vbggyor..",
+    "..roygbv...................vbgyor..",
+    ".royggbv...................vbggyor.",
+    ".roygbv.....................vbgyor.",
+    ".roygbv.....................vbgyor.",
+    ".rccccc.....................cccccr.",
+    "ccccccccc.................ccccccccc",
+    "ccccccccccc.............ccccccccccc",
+  ],
+  palette: { r: "#e05050", o: "#f0a040", y: "#f0e060", g: "#60c060", b: "#2a2050", v: "#9060c0", k: "#8a5a3a", e: "#c08a5a", w: "#f0d8b0", n: "#402e3a", c: "#fff4e8" },
+};
