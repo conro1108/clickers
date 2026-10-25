@@ -61,6 +61,7 @@ export function parseSite(raw: string): SiteState | null {
     weatherIndex: Math.max(0, Math.floor(f.weatherIndex ?? 0)),
     nextWeatherAt: ms(f.nextWeatherAt ?? f.checkpointAt),
     depth,
+    reached: Math.max(depth, Number.isFinite(f.reached) ? Math.min(WORLDS.length - 1, Math.floor(f.reached as number)) : 0),
     world,
     heirlooms: Math.max(0, Math.floor(f.heirlooms ?? 0)),
     perks: remapKeys(f.perks),

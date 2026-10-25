@@ -161,6 +161,11 @@ const CONVERGE_MS = 9600;
 // When the canvas swaps to the inside farm. `converge-veil` is opaque from 8% to 92%; this sits inside that.
 const FOLD_SWAP_MS = Math.round(CONVERGE_MS * 0.3);
 
+// A walk between open worlds, or back into one this line has already been to: a dip to dark and out, not a cut.
+// The canvas swaps at the darkest frame. Kept in step with the `crossing` keyframes.
+const CROSS_MS = 700;
+const CROSS_SWAP_MS = Math.round(CROSS_MS * 0.45);
+
 // The short omen's line: same encouragement, worded closer each time. Only asked before the fold.
 function omenNudge(farm: solo.SiteState): string {
   const p = solo.convergenceProgress(farm);
@@ -376,7 +381,8 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     if (singularities <= had) return;
     // Past the fold it is not an omen either: the horizon has already arrived.
     if (folded.current) return;
-    const full = had === 0;
+    // The whole cut once ever; a later generation already knows what the sky is about to do.
+    const full = had === 0 && farm.reached === 0;
     setOmen({ kind: full ? "full" : "flash", n: omenId.current++, text: nudge.current });
     // Close the shop so the sky is seen; a cut behind a sheet is a cut nobody watched.
     setSheet(null);
@@ -390,18 +396,40 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   // Which farm the canvas draws while the trip holds it back. Null once swapped, and forever after.
   const [heldWorld, setHeldWorld] = useState<solo.World | null>(null);
   const wasDepth = useRef(farm.depth);
+  const wasReached = useRef(farm.reached);
+  // The short way between worlds: which one, and `n` to restart the dip when two land close together.
+  const [crossing, setCrossing] = useState<{ to: solo.World; n: number } | null>(null);
+  const crossId = useRef(0);
+  const crossTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => crossTimers.current.forEach(clearTimeout), []);
+  // `then` runs at the darkest frame — a warp, or the held farm letting go.
+  const cross = useCallback((to: solo.World, then: () => void) => {
+    crossTimers.current.forEach(clearTimeout);
+    setCrossing({ to, n: crossId.current++ });
+    crossTimers.current = [
+      setTimeout(then, CROSS_SWAP_MS),
+      setTimeout(() => setCrossing(null), CROSS_MS),
+    ];
+  }, []);
   // Layout effect: the purchase and the world it moves you to land in the same render, so a plain effect lets a frame through.
   useLayoutEffect(() => {
     const was = wasDepth.current;
+    const reached = wasReached.current;
     wasDepth.current = farm.depth;
+    wasReached.current = farm.reached;
     const arrived = solo.WORLDS[farm.depth];
     // Only one step down, and only if it took you with it: the dev lever opens worlds without walking you
     // through them, and a hand-down or a lever going the other way is not an arrival.
     if (farm.depth !== was + 1 || farm.world !== arrived || !WORLD_COPY[arrived].cut) return;
     setSheet(null);
+    setHeldWorld(solo.WORLDS[was]!);
+    // Somewhere an earlier generation has already been: the way back in, not the revelation.
+    if (farm.depth <= reached) {
+      cross(arrived, () => setHeldWorld(null));
+      return;
+    }
     setCut(arrived);
     // Stay in the world you bought it from until the dark has taken the screen.
-    setHeldWorld(solo.WORLDS[was]!);
     const swap = setTimeout(() => setHeldWorld(null), FOLD_SWAP_MS);
     const id = setTimeout(() => setCut(null), CONVERGE_MS);
     return () => {
@@ -428,10 +456,9 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
 
   const perDig = solo.clickYield(farm);
   const rate = solo.currentRate(farm);
-  // Repairs are per-world, so only this world's broken kit lights the dot. Soil is one number for both farms.
+  // Upkeep mends every world from wherever you stand, so any of them lights the dot.
   const needsAttention =
-    farm.condition < 1 ||
-    solo.producersIn(farm.world).some((p) => solo.brokenCount(farm, p.id) > 0);
+    farm.condition < 1 || solo.SOLO_PRODUCERS.some((p) => solo.brokenCount(farm, p.id) > 0);
   // Shown the moment a hand-down would pay anything, and then never taken away (also covers saves that predate `depth`).
   const showSeeds =
     farm.depth >= 1 || farm.heirlooms > 0 || farm.generation > 1 || solo.pendingHeirlooms(farm) > 0;
@@ -457,10 +484,15 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 700);
   }, [dig, farm]);
 
-  useSpaceToDig(onDig, report === null && sheet === null && omen === null && cut === null);
+  useSpaceToDig(onDig, report === null && sheet === null && omen === null && cut === null && crossing === null);
 
   const soilPct = Math.round(farm.condition * 100);
   const hold = useHold(useCallback(() => setSheet("back"), []));
+  // Keep where you're standing on screen when the strip is wider than the phone.
+  const strip = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    strip.current?.querySelector(".on")?.scrollIntoView({ inline: "nearest", block: "nearest" });
+  }, [farm.world, farm.depth]);
   const kitOnTheLand = solo.SOLO_PRODUCERS.reduce((n, p) => n + (farm.producers[p.id] ?? 0), 0);
 
   // The shop has emptied itself for the Ur-Potato; the bottom bar is where that announces itself.
@@ -505,6 +537,26 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         {/* The whole scene digs, which is not something a farm looks like it
             does. One sentence, once, and then never again. */}
         {!taught && <p className="tap-hint">Tap the farm to dig</p>}
+        {/* The worlds, top to bottom, on the farm rather than in a sheet:
+            where you're standing is part of the picture, and so is getting
+            somewhere else. A dot is a world with something broken in it. */}
+        {farm.depth >= 1 && (
+          <div className="world-strip" ref={strip}>
+            {solo.openWorlds(farm).map((to) => (
+              <button
+                key={to}
+                className={(heldWorld ?? farm.world) === to ? "on" : undefined}
+                disabled={farm.world === to || crossing !== null || cut !== null}
+                onClick={() => cross(to, () => dispatch({ type: "warp", to }))}
+              >
+                {WORLD_COPY[to].door}
+                {solo.producersIn(to).some((p) => solo.brokenCount(farm, p.id) > 0) && (
+                  <span className="world-dot" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </FarmScene>
 
       {/* The button is no longer the way you dig — the scene is. What's left is
@@ -597,31 +649,6 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
             </>
           }
         >
-          {/* Which farm you're standing on heads the sheet that's about a farm.
-              It used to be a lever in the back room, on the grounds that what it
-              should look like out front is a question about the whole post-fold
-              layout — but Upkeep is already the per-world screen. What you can
-              build and what's broken both change when you step across, so the
-              door belongs on top of them rather than three taps away with the
-              cheats. */}
-          {farm.depth >= 1 && (
-            <div className="choices world-door">
-              {solo.openWorlds(farm).map((to) => (
-                <button
-                  key={to}
-                  className={farm.world === to ? "on" : ""}
-                  // Disabled where you already are, rather than dispatching a warp the sim will refuse with an error banner.
-                  disabled={farm.world === to}
-                  onClick={() => {
-                    dispatch({ type: "warp", to });
-                    setSheet(null);
-                  }}
-                >
-                  {WORLD_COPY[to].door}
-                </button>
-              ))}
-            </div>
-          )}
           <Damage farm={farm} />
           <LandPanel farm={farm} budget={budget} dispatch={dispatch} />
           <h3 className="sheet-section">Field report</h3>
@@ -694,6 +721,12 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
 
           It's over everything, including the shop it was bought from, and it
           eats every input for its ten seconds. */}
+      {crossing && (
+        <div key={crossing.n} className="crossing" role="presentation">
+          <p>{WORLD_COPY[crossing.to].door}</p>
+        </div>
+      )}
+
       {cut && (
         <div className="converge" role="presentation">
           <div className="converge-place">

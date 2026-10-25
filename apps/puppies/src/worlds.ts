@@ -3,10 +3,8 @@
 import { solo } from "@clickers/sim";
 
 export interface WorldCopy {
-  /** On the Upkeep door. Short: up to five share a phone's width. */
+  /** On the world strip and the crossing card. */
   door: string;
-  /** "N things are broken {where}." */
-  where: string;
   /** The shop's subtitle while you stand here. */
   shop: string;
   /** What's doing the damage once this is the deepest world open — the weather is that world's. */
@@ -23,14 +21,12 @@ export interface WorldCopy {
 export const WORLD_COPY: Record<solo.World, WorldCopy> = {
   outside: {
     door: "The yard",
-    where: "out under the sky",
     shop: "More kit on the land, and the upgrades that make it worth more.",
     culprit: "the weather",
     against: "weather that lands",
   },
   inside: {
     door: "The nest",
-    where: "down inside the puppy",
     shop: "What there is to work down here, and what makes it work harder.",
     culprit: "the nest",
     against: "something that stirs",
@@ -43,7 +39,6 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
   },
   beyond: {
     door: "The dream",
-    where: "in the dream",
     shop: "What there is out here, while it's still dreaming.",
     culprit: "the dream",
     against: "a dream that twitches",
@@ -56,7 +51,6 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
   },
   deep: {
     door: "The deep",
-    where: "on the floor of the dream",
     shop: "Everything every dog ever lost ended up down here. Some of it still works.",
     culprit: "the deep",
     against: "something settling in the dark",
@@ -69,7 +63,6 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
   },
   origin: {
     door: "The fire",
-    where: "by the first fire",
     shop: "Before kennels, before names. A fire, and something at the edge of it.",
     culprit: "the wild",
     against: "a night with wolves in it",
@@ -82,7 +75,6 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
   },
   void: {
     door: "The sky",
-    where: "up among the stars",
     shop: "Before there were dogs. Up here, everything costs more for every paper you carry.",
     culprit: "the dark",
     against: "a sky that shifts",
@@ -95,7 +87,6 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
   },
   end: {
     door: "The bridge",
-    where: "at the bridge",
     shop: "Where every dog goes. Up here, everything costs more for every paper you carry.",
     culprit: "the end",
     against: "an end that comes on slowly",

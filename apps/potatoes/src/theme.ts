@@ -429,7 +429,7 @@ export const STRINGS: ThemeStrings = {
     night_shift: { name: "Night Shift", blurb: "+20% production per level while you're away." },
     core_tithe: { name: "Flesh Tithe", blurb: "The tuber pays rent. +40% output per level, forever." },
     dormancy: { name: "Induced Dormancy", blurb: "It stirs 10% less often per level." },
-    ur_yield: { name: "Ur-Yield", blurb: "Everything above the fold produces +100% per level." },
+    ur_yield: { name: "Ur-Yield", blurb: "Everything below the sky — every world but the first — produces +100% per level." },
   },
   weather: {
     vermin: { name: "Voles" },

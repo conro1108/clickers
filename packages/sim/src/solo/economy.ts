@@ -13,7 +13,6 @@ import {
   SOLO_PRODUCER_BY_ID,
   SOLO_REPAIR_COST_FRACTION,
   SOLO_UPGRADE_BY_ID,
-  producersIn,
   type LandId,
   type LandRole,
   type SoloProducerId,
@@ -208,7 +207,7 @@ export function isLandAvailable(f: SiteState, id: LandId): boolean {
 }
 
 export function isPerkAvailable(f: SiteState, id: keyof typeof PERK_BY_ID): boolean {
-  return f.depth >= 1 || !PERK_BY_ID[id].afterFold;
+  return f.reached >= 1 || !PERK_BY_ID[id].afterFold;
 }
 
 // --- Prices ---
@@ -255,11 +254,9 @@ export function totalRepairCost(f: SiteState): Yield {
   return Y.of(total);
 }
 
-/** Repairs in the current world plus condition. Order-independent: both are quoted off the clean rate. */
+/** Every repair plus condition. Order-independent: both are quoted off the clean rate. */
 export function upkeepBill(f: SiteState): Yield {
-  let total: number = conditionRestoreCost(f);
-  for (const prod of producersIn(f.world)) total += repairCost(f, prod.id);
-  return Y.of(total);
+  return Y.add(totalRepairCost(f), conditionRestoreCost(f));
 }
 
 /** Lost production over a fixed window, so the bill grows with the site. */

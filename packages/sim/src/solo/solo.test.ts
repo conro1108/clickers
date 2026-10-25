@@ -146,15 +146,12 @@ describe("the worlds", () => {
     expect(site.depth).toBe(WORLDS.length - 1);
   });
 
-  it("starts every generation outside, with the doors still open behind it", () => {
-    const base: SiteState = { ...worthHandingDown(developedSite("handdown")), depth: 3, world: "deep" };
-    const kept = mustApplySite(base, { type: "prestige" }, base.checkpointAt);
-    expect(kept.world).toBe("outside");
-    expect(kept.depth).toBe(3);
-    expect(applySiteCommand(kept, { type: "warp", to: "deep" }, kept.checkpointAt).ok).toBe(true);
-
-    const next = mustApplySite(base, { type: "prestige", outside: true }, base.checkpointAt);
+  it("closes every door on a hand-down, but remembers how far it got", () => {
+    const base: SiteState = { ...worthHandingDown(developedSite("handdown")), depth: 3, reached: 3, world: "deep" };
+    const next = mustApplySite(base, { type: "prestige" }, base.checkpointAt);
+    expect(next.world).toBe("outside");
     expect(next.depth).toBe(0);
+    expect(next.reached).toBe(3);
     expect(applySiteCommand(next, { type: "warp", to: "inside" }, next.checkpointAt).ok).toBe(false);
   });
 

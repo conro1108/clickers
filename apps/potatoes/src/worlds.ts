@@ -2,9 +2,8 @@
 import { solo } from "@clickers/sim";
 
 export interface WorldCopy {
-  /** The world-door button, and the "broken elsewhere" hint: "3 more things are broken {where}". */
+  /** The world-strip button, and the crossing card. */
   door: string;
-  where: string;
   /** Shop subtitle while you're standing here. */
   shopSub: string;
   /**
@@ -23,14 +22,12 @@ export interface WorldCopy {
 export const WORLD_COPY: Record<solo.World, WorldCopy> = {
   outside: {
     door: "Under the sky",
-    where: "out under the sky",
     shopSub: "More kit on the land, and the upgrades that make it worth more.",
     culprit: "the weather",
     threat: "weather that lands",
   },
   inside: {
     door: "Inside the potato",
-    where: "down inside the potato",
     shopSub: "What there is to work down here, and what makes it work harder.",
     culprit: "the tuber",
     threat: "something that stirs",
@@ -43,7 +40,6 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
   },
   beyond: {
     door: "Through the eye",
-    where: "through the eye",
     shopSub: "What grows on the inside of the inside, and what makes it grow harder.",
     culprit: "the sun",
     threat: "a sun that watches",
@@ -56,7 +52,6 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
   },
   deep: {
     door: "Down in the crystal",
-    where: "down in the crystal",
     shopSub: "What the starch turned into down here, and how to cut more of it.",
     culprit: "the stone",
     threat: "stone that shifts",
@@ -69,7 +64,6 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
   },
   origin: {
     door: "The first field",
-    where: "in the first field",
     shopSub: "The field before all the others, and what it grew first.",
     culprit: "the season",
     threat: "a season that turns",
@@ -82,7 +76,6 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
   },
   void: {
     door: "Before",
-    where: "in the dark before",
     shopSub: "Nothing has grown here yet. Out here, everything costs more for every seed you carry.",
     culprit: "the dark",
     threat: "a dark that shifts",
@@ -95,7 +88,6 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
   },
   end: {
     door: "The last field",
-    where: "in the last field",
     shopSub: "Where every potato ends up. Out here, everything costs more for every seed you carry.",
     culprit: "the end",
     threat: "an end that comes on slowly",

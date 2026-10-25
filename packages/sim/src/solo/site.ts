@@ -15,7 +15,6 @@ import {
   SOLO_PRODUCERS,
   SOLO_PRODUCER_BY_ID,
   SOLO_UPGRADE_BY_ID,
-  producersIn,
   type LandId,
   type SoloProducerId,
   type World,
@@ -112,6 +111,7 @@ export function createSite(opts: { seed: string; startedAt: Millis }): SiteState
     weatherIndex: 0,
     nextWeatherAt: opts.startedAt,
     depth: 0,
+    reached: 0,
     world: "outside",
     heirlooms: 0,
     perks: {},
@@ -320,7 +320,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       const depth = Math.max(0, Math.min(WORLDS.length - 1, Math.floor(cmd.depth)));
       if (depth === site.depth) return fail("It's already like that.");
       if (depth > site.depth) {
-        site = { ...site, depth };
+        site = { ...site, depth, reached: Math.max(site.reached, depth) };
         note(`dev: opened the way to ${WORLDS[depth]}.`, "neutral");
         break;
       }
@@ -375,12 +375,11 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       // ceiling: the fold ends with you standing on the inside site, with a
       // shop you have never seen. Coming back out is a thing you go and ask for.
       //
-      // Every later gate is the same move one world further. Only the gate of
-      // the *next* world opens anything; buying one again after a hand-down is
-      // just its multiplier.
+      // Every later gate is the same move one world further, and every
+      // generation walks through them again: a hand-down closes them all.
       const opens = WORLDS[site.depth + 1] as Exclude<World, "outside"> | undefined;
       if (opens && upgrade.id === WORLD_GATE[opens]) {
-        site = { ...site, depth: site.depth + 1, world: opens };
+        site = { ...site, depth: site.depth + 1, reached: Math.max(site.reached, site.depth + 1), world: opens };
         note(ARRIVAL[opens], "good");
       }
       break;
@@ -426,7 +425,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       const tiredCondition = site.condition < MAX_CONDITION;
       let mended = 0;
       const broken = { ...site.broken };
-      for (const prod of producersIn(site.world)) {
+      for (const prod of SOLO_PRODUCERS) {
         const n = brokenCount(site, prod.id);
         if (n <= 0) continue;
         mended += n;
@@ -470,10 +469,8 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
     case "prestige": {
       const earned = heirloomsFor(site.produced);
       if (earned <= 0) return fail("Nothing worth handing down yet.");
-      const out = cmd.outside === true && site.depth > 0;
-      site = resetForNextGeneration(site, earned, at, out);
+      site = resetForNextGeneration(site, earned, at);
       note(`handed the site down. +${earned} Heirloom.`, "good");
-      if (out) note("the horizon is open again.", "neutral");
       break;
     }
   }
@@ -484,21 +481,14 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
 /**
  * Everything a generation earns is wiped except the heirlooms and what they bought.
  * `lifetimeProduced` deliberately survives — it's the only number in the game
- * that never goes backwards — and so does `depth`, unless the site is being
- * handed down with the sky asked for.
- *
- * `outside` is the only way out of the core, and it's a door rather than a
- * consequence: it costs nothing, gives nothing, and hands the next generation a
- * world with a horizon in it and the Convergence to reach again. The four tiers
- * inside the core go out of reach with it, which is the price and is meant to
- * be — a run under the sky that kept the ceiling's kit would just be the folded
- * run with different weather.
+ * that never goes backwards — and so does `reached`. `depth` does not: every
+ * generation starts under the sky and buys its way back down through the gates,
+ * so the worlds are somewhere a run gets to rather than a menu it starts with.
  */
 function resetForNextGeneration(
   f: SiteState,
   earned: number,
   at: Millis,
-  outside = false,
 ): SiteState {
   const heirlooms = f.heirlooms + earned;
   const next: SiteState = {
@@ -512,20 +502,7 @@ function resetForNextGeneration(
     land: {},
     condition: MAX_CONDITION,
     weatherIndex: f.weatherIndex,
-    depth: outside ? 0 : f.depth,
-    /**
-     * Every generation starts outside, folded or not.
-     *
-     * Not where you were standing, which is what this did first and what soft-
-     * locks the save: a hand-down clears `producers`, and the cheapest row in
-     * the inside shop is most of a quadrillion stock. Landing there with an
-     * empty site means one unaffordable row, a click worth one unit, and no
-     * signal at all that the way out is a lever in the back room.
-     *
-     * Starting in the fields is also the better read. The inside is somewhere
-     * you got to; a site that hasn't been built yet hasn't got there yet, and
-     * the door is still open the moment you can afford to walk through it.
-     */
+    depth: 0,
     world: "outside",
     heirlooms,
     generation: f.generation + 1,

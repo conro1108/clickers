@@ -203,30 +203,14 @@ export function LandPanel({
   dispatch: (cmd: solo.SiteCommand) => void;
 }) {
   const conditionBill = solo.conditionRestoreCost(mill);
-  // Damage on this world only; the other mill's waits for you there.
-  const damaged = solo
-    .producersIn(mill.world)
-    .filter((p) => solo.brokenCount(mill, p.id) > 0);
-  // Every other open world, by name, so the hint can say where.
-  const elsewhere = solo
-    .openWorlds(mill)
-    .filter((w) => w !== mill.world)
-    .map((w) => ({
-      where: WORLD_COPY[w].where,
-      n: solo.producersIn(w).reduce((n, p) => n + solo.brokenCount(mill, p.id), 0),
-    }))
-    .filter((e) => e.n > 0);
+  // Every world's damage, mended from wherever you stand: walking down to fix something is a chore, not a choice.
+  const damaged = solo.SOLO_PRODUCERS.filter((p) => solo.brokenCount(mill, p.id) > 0);
 
   // Fix-all only when there is more than one thing to pay for.
   const bill = solo.upkeepBill(mill);
   const jobs = damaged.length + (conditionBill > 0 ? 1 : 0);
   const brokenHere = damaged.reduce((n, p) => n + solo.brokenCount(mill, p.id), 0);
-  // Not `brokenRate` — it counts the other mill's damage too, which nothing here can fix.
-  const backHere =
-    damaged.reduce(
-      (r, p) => r + solo.brokenCount(mill, p.id) * solo.producerRateEach(mill, p.id),
-      0,
-    ) + (conditionBill > 0 ? solo.conditionLossRate(mill) : 0);
+  const backHere = solo.brokenRate(mill) + solo.conditionLossRate(mill);
 
   return (
     <>
@@ -289,13 +273,6 @@ export function LandPanel({
         </>
       )}
 
-      {elsewhere.map(({ where, n }) => (
-        <p key={where} className="hint">
-          {n} more {n === 1 ? "thing is" : "things are"} broken {where}. You'll have to be standing
-          there to put {n === 1 ? "it" : "them"} right.
-        </p>
-      ))}
-
       <p className="hint">
         Buildings work whether you're here or not, which is the only kind of defence worth having
         against {WORLD_COPY[deepest(mill)].against} while the tab is
@@ -324,12 +301,6 @@ export function LandPanel({
   );
 }
 
-/** "the nest, the dream and the deep" — every open world past the yard, by door name. */
-function openPast(mill: solo.SiteState): string {
-  const names = solo.openWorlds(mill).slice(1).map((w) => WORLD_COPY[w].door.toLowerCase());
-  return names.length <= 1 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
-}
-
 export function LegacyPanel({
   mill,
   now,
@@ -341,8 +312,6 @@ export function LegacyPanel({
   pendingWhistles: number;
   dispatch: (cmd: solo.SiteCommand) => void;
 }) {
-  // Defaults to the world you are standing in.
-  const [outside, setOutside] = useState(false);
   const pending = solo.pendingHeirlooms(mill);
   const thisRun = solo.projectedProduced(mill, now);
   const multNow = 1 + solo.MULT_PER_UNSPENT_HEIRLOOM * mill.heirlooms;
@@ -378,22 +347,12 @@ export function LegacyPanel({
         </p>
       )}
 
-      {/* The only way back out of the puppy, and it's on the one screen where
-          you're already deciding what the next generation inherits.
-
-          The fold survives prestige because finding out you've always been
-          inside the puppy is a thing that should happen to you once. But
-          "once" turned into "once ever, on a save you keep for weeks" — the
-          best ten seconds in the game, locked behind a flag, with the world
-          you'd want to show someone gone for good. So: the horizon is part of
-          what you hand down. Keep the ceiling, or give the next generation a
-          sky and the climb back to it. */}
       {/* The tab used to be held until the fold so nobody could hand the mill
           down on the eve of the best thing in the game. It isn't any more, so
           the warning has to live somewhere — and a sentence is a better version
           of it than a locked door, because it tells you what you'd be giving up
           instead of pretending there's nothing there. */}
-      {mill.depth === 0 && (
+      {mill.reached === 0 && (
         <p className="hint">
           The shop still has an end you haven't reached. Nothing stops you handing this mill down
           first, but the run that gets all the way there is worth having once.
@@ -401,22 +360,10 @@ export function LegacyPanel({
       )}
 
       {mill.depth >= 1 && (
-        <>
-          <p className="hint">
-            You can hand down the sky as well. Every generation starts in the yard, but keep the
-            doors open and the next one can walk back through — {openPast(mill)} still there, with
-            their tiers in the shop. Close them and the horizon opens: nothing past the yard, weather
-            instead of {culprit(mill)}, and the Convergence to reach all over again.
-          </p>
-          <div className="choices halves">
-            <button className={outside ? "" : "on"} onClick={() => setOutside(false)}>
-              Keep the doors open
-            </button>
-            <button className={outside ? "on" : ""} onClick={() => setOutside(true)}>
-              Back under the sky
-            </button>
-          </div>
-        </>
+        <p className="hint">
+          Every door you've opened closes behind a hand-down. The next generation starts in the
+          yard and works its way back in — faster, for the papers.
+        </p>
       )}
 
       <div className="rows">
@@ -427,28 +374,19 @@ export function LegacyPanel({
             pending > 0
               ? `Clears everything this generation built. Output goes ×${multNow.toFixed(
                   2,
-                )} → ×${multAfter.toFixed(2)}.${
-                  mill.depth >= 1
-                    ? outside
-                      ? " Starts under an open sky; every door closes."
-                      : " Starts in the yard, with every door still open."
-                    : ""
-                }`
+                )} → ×${multAfter.toFixed(2)}.${mill.depth >= 1 ? " Every door closes." : ""}`
               : "Not worth doing yet — grow this generation further first."
           }
           cost={pending > 0 ? `+${pending}` : "—"}
           affordable={pending > 0}
           onBuy={() => {
-            const where =
-              mill.depth >= 1 && outside
-                ? " The next mill starts under an open sky, and everything past the yard goes with it."
-                : "";
+            const where = mill.depth >= 1 ? " Everything past the yard closes until you reach it again." : "";
             if (
               window.confirm(
                 `Hand the mill down? Everything this generation built is cleared.${where}`,
               )
             ) {
-              dispatch({ type: "prestige", outside });
+              dispatch({ type: "prestige" });
             }
           }}
         />

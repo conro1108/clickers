@@ -176,6 +176,11 @@ const CONVERGE_MS = 9600;
 // When the canvas swaps to the inside mill. `converge-veil` is opaque from 8% to 92%; this sits inside that.
 const FOLD_SWAP_MS = Math.round(CONVERGE_MS * 0.3);
 
+// A walk between open worlds, or back into one this line has already been to: a dip to dark and out, not a cut.
+// The canvas swaps at the darkest frame. Kept in step with the `walk` keyframes.
+const WALK_MS = 700;
+const WALK_SWAP_MS = Math.round(WALK_MS * 0.45);
+
 // The short omen's line: same encouragement, worded closer each time. Only asked before the fold.
 function omenNudge(mill: solo.SiteState): string {
   const p = solo.convergenceProgress(mill);
@@ -391,7 +396,8 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     if (singularities <= had) return;
     // Past the fold it is not an omen either: the horizon has already arrived.
     if (folded.current) return;
-    const full = had === 0;
+    // The whole cut once ever; a later generation already knows what the sky is about to do.
+    const full = had === 0 && mill.reached === 0;
     setOmen({ kind: full ? "full" : "flash", n: omenId.current++, text: nudge.current });
     // Close the shop so the sky is seen; a cut behind a sheet is a cut nobody watched.
     setSheet(null);
@@ -406,17 +412,39 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   // Which mill the canvas draws while the trip holds it back. Null once swapped, and forever after.
   const [heldWorld, setHeldWorld] = useState<solo.World | null>(null);
   const wasDepth = useRef(mill.depth);
+  const wasReached = useRef(mill.reached);
+  // The short way between worlds: which one, and `n` to restart the dip when two land close together.
+  const [walk, setWalk] = useState<{ to: solo.World; n: number } | null>(null);
+  const walkId = useRef(0);
+  const walkTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => walkTimers.current.forEach(clearTimeout), []);
+  // `then` runs at the darkest frame — a warp, or the held mill letting go.
+  const walkTo = useCallback((to: solo.World, then: () => void) => {
+    walkTimers.current.forEach(clearTimeout);
+    setWalk({ to, n: walkId.current++ });
+    walkTimers.current = [
+      setTimeout(then, WALK_SWAP_MS),
+      setTimeout(() => setWalk(null), WALK_MS),
+    ];
+  }, []);
   // Layout effect: the purchase and the world it moves you to land in the same render, so a plain effect lets a frame through.
   useLayoutEffect(() => {
     const was = wasDepth.current;
+    const reached = wasReached.current;
     wasDepth.current = mill.depth;
+    wasReached.current = mill.reached;
     const arrived = solo.WORLDS[mill.depth];
     // One world further, and standing in it: a gate was bought. The back-room lever opens without moving you, so no cut.
     if (mill.depth !== was + 1 || !arrived || mill.world !== arrived) return;
     setSheet(null);
-    setCrossing(arrived);
     // Stay in the world you left until the dark has taken the screen.
     setHeldWorld(solo.WORLDS[was] ?? "outside");
+    // Somewhere an earlier generation has already been: the way back in, not the revelation.
+    if (mill.depth <= reached) {
+      walkTo(arrived, () => setHeldWorld(null));
+      return;
+    }
+    setCrossing(arrived);
     const swap = setTimeout(() => setHeldWorld(null), FOLD_SWAP_MS);
     const id = setTimeout(() => setCrossing(null), CONVERGE_MS);
     return () => {
@@ -443,10 +471,9 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
 
   const perWhistle = solo.clickYield(mill);
   const rate = solo.currentRate(mill);
-  // Repairs are per-world, so only this world's broken kit lights the dot. Bedding is one number for both mills.
+  // Upkeep mends every world from wherever you stand, so any of them lights the dot.
   const needsAttention =
-    mill.condition < 1 ||
-    solo.producersIn(mill.world).some((p) => solo.brokenCount(mill, p.id) > 0);
+    mill.condition < 1 || solo.SOLO_PRODUCERS.some((p) => solo.brokenCount(mill, p.id) > 0);
   // Shown the moment a hand-down would pay anything, and then never taken away (also covers saves from before the fold had a flag).
   const showPapers =
     mill.depth >= 1 || mill.heirlooms > 0 || mill.generation > 1 || solo.pendingHeirlooms(mill) > 0;
@@ -472,10 +499,15 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 700);
   }, [whistle, mill]);
 
-  useSpaceToWhistle(onWhistle, report === null && sheet === null && omen === null && !converging);
+  useSpaceToWhistle(onWhistle, report === null && sheet === null && omen === null && !converging && walk === null);
 
   const beddingPct = Math.round(mill.condition * 100);
   const hold = useHold(useCallback(() => setSheet("back"), []));
+  // Keep where you're standing on screen when the strip is wider than the phone.
+  const strip = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    strip.current?.querySelector(".on")?.scrollIntoView({ inline: "nearest", block: "nearest" });
+  }, [mill.world, mill.depth]);
   const kitOnTheLand = solo.SOLO_PRODUCERS.reduce((n, p) => n + (mill.producers[p.id] ?? 0), 0);
 
   // The shop has emptied itself for the Ur-Chihuahua; the bottom bar is where that announces itself.
@@ -524,6 +556,26 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         {/* The whole scene whistles, which is not something a mill looks like it
             does. One sentence, once, and then never again. */}
         {!taught && <p className="tap-hint">Tap the mill to whistle</p>}
+        {/* The worlds, top to bottom, on the mill rather than in a sheet:
+            where you're standing is part of the picture, and so is getting
+            somewhere else. A dot is a world with something broken in it. */}
+        {mill.depth >= 1 && (
+          <div className="world-strip" ref={strip}>
+            {solo.openWorlds(mill).map((to) => (
+              <button
+                key={to}
+                className={(heldWorld ?? mill.world) === to ? "on" : undefined}
+                disabled={mill.world === to || walk !== null || converging}
+                onClick={() => walkTo(to, () => dispatch({ type: "warp", to }))}
+              >
+                {WORLD_COPY[to].door}
+                {solo.producersIn(to).some((p) => solo.brokenCount(mill, p.id) > 0) && (
+                  <span className="world-dot" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </MillScene>
 
       {/* The button is no longer the way you whistle — the scene is. What's left is
@@ -616,31 +668,6 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
             </>
           }
         >
-          {/* Which mill you're standing on heads the sheet that's about a mill.
-              It used to be a lever in the back room, on the grounds that what it
-              should look like out front is a question about the whole post-fold
-              layout — but Upkeep is already the per-world screen. What you can
-              build and what's broken both change when you step across, so the
-              door belongs on top of them rather than three taps away with the
-              cheats. */}
-          {mill.depth >= 1 && (
-            <div className="choices world-door">
-              {solo.openWorlds(mill).map((to) => (
-                <button
-                  key={to}
-                  className={mill.world === to ? "on" : ""}
-                  // Disabled where you already are, rather than dispatching a warp the sim will refuse with an error banner.
-                  disabled={mill.world === to}
-                  onClick={() => {
-                    dispatch({ type: "warp", to });
-                    setSheet(null);
-                  }}
-                >
-                  {WORLD_COPY[to].door}
-                </button>
-              ))}
-            </div>
-          )}
           <Damage mill={mill} />
           <LandPanel mill={mill} budget={budget} dispatch={dispatch} />
           <h3 className="sheet-section">Yard report</h3>
@@ -713,6 +740,12 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
 
           It's over everything, including the shop it was bought from, and it
           eats every input for its ten seconds. */}
+      {walk && (
+        <div key={walk.n} className="walk" role="presentation">
+          <p>{WORLD_COPY[walk.to].door}</p>
+        </div>
+      )}
+
       {crossing && arrival && (
         <div className="converge" role="presentation">
           <div className="converge-place">

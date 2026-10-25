@@ -27,11 +27,13 @@ export interface SiteState {
 
   // --- Persists across prestige resets ---
   /**
-   * How far in you've been: an index into `WORLDS`, and every world up to it is
-   * open. 0 is the yard alone; 1 is the old `converged`. Survives prestige
-   * unless `prestige.outside` puts it back to 0.
+   * How far in this run has got: an index into `WORLDS`, and every world up to
+   * it is open. 0 is the yard alone. Back to 0 on every hand-down — each
+   * generation buys its way through the gates again.
    */
   depth: number;
+  /** The deepest `depth` any generation has reached. Survives prestige; gates the late perks. */
+  reached: number;
   /** Which site you're standing on. Both run at once; this picks shop, land and picture only. */
   world: World;
   heirlooms: number;
@@ -57,11 +59,10 @@ export type SiteCommand =
   | { type: "buy_land"; land: LandId }
   | { type: "repair"; producer: SoloProducerId }
   | { type: "restore_condition" }
-  /** Every repair on the current world plus condition, all or nothing on purpose. */
+  /** Every repair in every open world plus condition, all or nothing on purpose. */
   | { type: "fix_all" }
   | { type: "buy_perk"; perk: PerkId }
-  /** `outside` closes every world but the first for the next generation; ignored if never folded. */
-  | { type: "prestige"; outside?: boolean }
+  | { type: "prestige" }
   /** A camera move, not a decision. Refused if never folded. */
   | { type: "warp"; to: World }
   /** Cheat: pays like clicks, every multiplier applies, and logs itself. */

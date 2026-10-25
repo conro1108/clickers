@@ -262,30 +262,14 @@ export function LandPanel({
   dispatch: (cmd: solo.SiteCommand) => void;
 }) {
   const conditionBill = solo.conditionRestoreCost(farm);
-  // Damage on this world only; the other farm's waits for you there.
-  const damaged = solo
-    .producersIn(farm.world)
-    .filter((p) => solo.brokenCount(farm, p.id) > 0);
-  // Every other open world, so the hint can say where.
-  const elsewhere = solo
-    .openWorlds(farm)
-    .filter((w) => w !== farm.world)
-    .map((w) => ({
-      world: w,
-      n: solo.producersIn(w).reduce((n, p) => n + solo.brokenCount(farm, p.id), 0),
-    }))
-    .filter((e) => e.n > 0);
+  // Every world's damage, mended from wherever you stand: walking down to fix something is a chore, not a choice.
+  const damaged = solo.SOLO_PRODUCERS.filter((p) => solo.brokenCount(farm, p.id) > 0);
 
   // Fix-all only when there is more than one thing to pay for.
   const bill = solo.upkeepBill(farm);
   const jobs = damaged.length + (conditionBill > 0 ? 1 : 0);
   const brokenHere = damaged.reduce((n, p) => n + solo.brokenCount(farm, p.id), 0);
-  // Not `brokenRate` — it counts the other farm's damage too, which nothing here can fix.
-  const backHere =
-    damaged.reduce(
-      (r, p) => r + solo.brokenCount(farm, p.id) * solo.producerRateEach(farm, p.id),
-      0,
-    ) + (conditionBill > 0 ? solo.conditionLossRate(farm) : 0);
+  const backHere = solo.brokenRate(farm) + solo.conditionLossRate(farm);
 
   return (
     <>
@@ -348,13 +332,6 @@ export function LandPanel({
         </>
       )}
 
-      {elsewhere.map(({ world, n }) => (
-        <p key={world} className="hint">
-          {n} more {n === 1 ? "thing is" : "things are"} broken {WORLD_COPY[world].where}. You'll have to be
-          standing there to put {n === 1 ? "it" : "them"} right.
-        </p>
-      ))}
-
       <p className="hint">
         Buildings work whether you're here or not, which is the only kind of defence worth having
         against {threat(farm)} while the tab is
@@ -394,8 +371,6 @@ export function LegacyPanel({
   pendingDigs: number;
   dispatch: (cmd: solo.SiteCommand) => void;
 }) {
-  // Defaults to the world you are standing in.
-  const [outside, setOutside] = useState(false);
   const pending = solo.pendingHeirlooms(farm);
   const thisRun = solo.projectedProduced(farm, now);
   const multNow = 1 + solo.MULT_PER_UNSPENT_HEIRLOOM * farm.heirlooms;
@@ -431,22 +406,12 @@ export function LegacyPanel({
         </p>
       )}
 
-      {/* The only way back out of the potato, and it's on the one screen where
-          you're already deciding what the next generation inherits.
-
-          The fold survives prestige because finding out you've always been
-          inside the potato is a thing that should happen to you once. But
-          "once" turned into "once ever, on a save you keep for weeks" — the
-          best ten seconds in the game, locked behind a flag, with the world
-          you'd want to show someone gone for good. So: the horizon is part of
-          what you hand down. Keep the ceiling, or give the next generation a
-          sky and the climb back to it. */}
       {/* The tab used to be held until the fold so nobody could hand the farm
           down on the eve of the best thing in the game. It isn't any more, so
           the warning has to live somewhere — and a sentence is a better version
           of it than a locked door, because it tells you what you'd be giving up
           instead of pretending there's nothing there. */}
-      {farm.depth === 0 && (
+      {farm.reached === 0 && (
         <p className="hint">
           The shop still has an end you haven't reached. Nothing stops you handing this farm down
           first, but the run that gets all the way there is worth having once.
@@ -454,27 +419,10 @@ export function LegacyPanel({
       )}
 
       {farm.depth >= 1 && (
-        <>
-          <p className="hint">
-            You can hand down the sky as well. Stay inside and the next generation starts out in the
-            yard with every door you've opened still open, and the tiers behind them already in the
-            shop. Go back out and the horizon opens — nothing past the skin
-            {farm.depth >= 2 ? ", nothing past the eye" : ""}
-            {farm.depth >= 3 ? ", none of the crystal" : ""}
-            {farm.depth >= 4 ? ", not the first field" : ""}
-            {farm.depth >= 5 ? ", nothing from before it" : ""}
-            {farm.depth >= 6 ? ", not the last field" : ""}, weather instead of {culprit(farm)}, and the
-            Convergence to reach all over again.
-          </p>
-          <div className="choices halves">
-            <button className={outside ? "" : "on"} onClick={() => setOutside(false)}>
-              Inside the potato
-            </button>
-            <button className={outside ? "on" : ""} onClick={() => setOutside(true)}>
-              Back under the sky
-            </button>
-          </div>
-        </>
+        <p className="hint">
+          Every door you've opened closes behind a hand-down. The next generation starts under the
+          sky and digs its way back in — faster, for the seeds.
+        </p>
       )}
 
       <div className="rows">
@@ -485,28 +433,19 @@ export function LegacyPanel({
             pending > 0
               ? `Clears everything this generation built. Output goes ×${multNow.toFixed(
                   2,
-                )} → ×${multAfter.toFixed(2)}.${
-                  farm.depth >= 1
-                    ? outside
-                      ? " Starts under the sky, every door closed."
-                      : " Starts in the yard, every door still open."
-                    : ""
-                }`
+                )} → ×${multAfter.toFixed(2)}.${farm.depth >= 1 ? " Every door closes." : ""}`
               : "Not worth doing yet — grow this generation further first."
           }
           cost={pending > 0 ? `+${pending}` : "—"}
           affordable={pending > 0}
           onBuy={() => {
-            const where =
-              farm.depth >= 1 && outside
-                ? " The next farm starts under the sky, and every world past it closes."
-                : "";
+            const where = farm.depth >= 1 ? " Every world past the sky closes until you reach it again." : "";
             if (
               window.confirm(
                 `Hand the farm down? Everything this generation built is cleared.${where}`,
               )
             ) {
-              dispatch({ type: "prestige", outside });
+              dispatch({ type: "prestige" });
             }
           }}
         />

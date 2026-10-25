@@ -1398,14 +1398,72 @@ input {
   font-variant-numeric: tabular-nums;
 }
 
-/* The door between the two farms, at the head of the Upkeep sheet. Sits above
-   the buildings rather than among them, because it changes what the rest of the
-   sheet is about. */
-.world-door {
+/* The worlds, across the top of the farm. Scrolls sideways once there are more
+   than fit; the one you're on is the filled one. */
+.world-strip {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 4px;
+  padding: 0 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  z-index: 2;
+}
+.world-strip::-webkit-scrollbar {
+  display: none;
+}
+.world-strip button {
+  position: relative;
+  flex-shrink: 0;
+  padding: 4px 9px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: rgba(247, 236, 216, 0.85);
+  color: var(--ink);
+  border: 2px solid var(--wood);
+  box-shadow: none;
+}
+.world-strip button.on,
+.world-strip button.on:disabled {
+  background: var(--wood);
+  color: var(--cream);
+  opacity: 1;
+}
+.world-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 7px;
+  height: 7px;
+  background: var(--blood);
+  border: 1px solid var(--cream);
+}
+
+/* A walk between worlds: down to dark, swap, back up. The name sits in the dark. */
+.crossing {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
   display: grid;
-  /* Up to five worlds; a phone fits two or three a row, and the rest wrap into equal cells. */
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
-  margin-bottom: 12px;
+  place-items: center;
+  background: #06040a;
+  animation: crossing 700ms ease-in-out both;
+}
+.crossing p {
+  margin: 0;
+  color: #f7ecd8;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+@keyframes crossing {
+  0% { opacity: 0; }
+  40%, 55% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* --- Status list --------------------------------------------------------- */
