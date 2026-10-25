@@ -340,7 +340,7 @@ export function LegacyPanel({
         mill after it produce more. Spent, they buy something permanent. Same choice as everything
         else here — one pile, competing uses.
       </p>
-      {mill.depth >= 5 && (
+      {mill.reached >= 5 && (
         <p className="hint">
           Past the first fire, prices rise with everything your papers and generations have bought
           you. Holding more still helps up there, but only just.

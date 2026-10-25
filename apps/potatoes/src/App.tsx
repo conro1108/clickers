@@ -397,6 +397,8 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const [heldWorld, setHeldWorld] = useState<solo.World | null>(null);
   const wasDepth = useRef(farm.depth);
   const wasReached = useRef(farm.reached);
+  // Where you stood when you bought the gate, which needn't be the deepest open world.
+  const wasWorld = useRef(farm.world);
   // The short way between worlds: which one, and `n` to restart the dip when two land close together.
   const [crossing, setCrossing] = useState<{ to: solo.World; n: number } | null>(null);
   const crossId = useRef(0);
@@ -417,12 +419,13 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     const reached = wasReached.current;
     wasDepth.current = farm.depth;
     wasReached.current = farm.reached;
+    const stood = wasWorld.current;
     const arrived = solo.WORLDS[farm.depth];
     // Only one step down, and only if it took you with it: the dev lever opens worlds without walking you
     // through them, and a hand-down or a lever going the other way is not an arrival.
     if (farm.depth !== was + 1 || farm.world !== arrived || !WORLD_COPY[arrived].cut) return;
     setSheet(null);
-    setHeldWorld(solo.WORLDS[was]!);
+    setHeldWorld(stood);
     // Somewhere an earlier generation has already been: the way back in, not the revelation.
     if (farm.depth <= reached) {
       cross(arrived, () => setHeldWorld(null));
@@ -435,8 +438,13 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     return () => {
       clearTimeout(id);
       clearTimeout(swap);
+      setHeldWorld(null);
     };
   }, [farm.depth]);
+  // After the effect above, so a gate purchase reads where you stood before it moved you.
+  useLayoutEffect(() => {
+    wasWorld.current = farm.world;
+  }, [farm.world]);
 
   // Close the shop on the first of a kind: those are the purchases that reveal (new lot, new stratum) rather than add.
   // Only the first — throwing you out on every plot would make the shop unusable.

@@ -399,7 +399,7 @@ export function LegacyPanel({
         farm after it produce more. Spent, they buy something permanent. Same choice as everything
         else here — one pile, competing uses.
       </p>
-      {farm.depth >= 5 && (
+      {farm.reached >= 5 && (
         <p className="hint">
           Past the first field, prices rise with everything your seeds and generations have bought
           you. Holding more still helps out there, but only just.

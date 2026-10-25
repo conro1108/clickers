@@ -413,6 +413,8 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const [heldWorld, setHeldWorld] = useState<solo.World | null>(null);
   const wasDepth = useRef(mill.depth);
   const wasReached = useRef(mill.reached);
+  // Where you stood when you bought the gate, which needn't be the deepest open world.
+  const wasWorld = useRef(mill.world);
   // The short way between worlds: which one, and `n` to restart the dip when two land close together.
   const [walk, setWalk] = useState<{ to: solo.World; n: number } | null>(null);
   const walkId = useRef(0);
@@ -433,12 +435,13 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     const reached = wasReached.current;
     wasDepth.current = mill.depth;
     wasReached.current = mill.reached;
+    const stood = wasWorld.current;
     const arrived = solo.WORLDS[mill.depth];
     // One world further, and standing in it: a gate was bought. The back-room lever opens without moving you, so no cut.
     if (mill.depth !== was + 1 || !arrived || mill.world !== arrived) return;
     setSheet(null);
     // Stay in the world you left until the dark has taken the screen.
-    setHeldWorld(solo.WORLDS[was] ?? "outside");
+    setHeldWorld(stood);
     // Somewhere an earlier generation has already been: the way back in, not the revelation.
     if (mill.depth <= reached) {
       walkTo(arrived, () => setHeldWorld(null));
@@ -450,8 +453,13 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     return () => {
       clearTimeout(id);
       clearTimeout(swap);
+      setHeldWorld(null);
     };
   }, [mill.depth]);
+  // After the effect above, so a gate purchase reads where you stood before it moved you.
+  useLayoutEffect(() => {
+    wasWorld.current = mill.world;
+  }, [mill.world]);
 
   // Close the shop on the first of a kind: those are the purchases that reveal (new lot, new stratum) rather than add.
   // Only the first — throwing you out on every pen would make the shop unusable.
