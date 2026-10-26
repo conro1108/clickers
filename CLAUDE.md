@@ -94,15 +94,7 @@ in each app's `.env` sets the `game` column that keeps the two lobbies apart.
 
 - The app shells are copies, not shared: `App.tsx`, the shop and the hooks
   exist once per game, so a behaviour fix there usually belongs in both.
-- `depth`, `reached` and `world` are three different things. `depth` is this
-  run and goes back to 0 on a hand-down, `reached` is the deepest any
-  generation got, `world` is only where you're looking. Key a hint off `depth`
-  and it vanishes after a hand-down; assume you stood in the deepest world and
-  the arrival cut holds the wrong picture.
-- The `dev_depth` lever opens worlds without walking you through them, so an
-  arrival has to check you actually moved, or the dev lever plays a cut.
-- A pending gate freezes the shop from the moment ten of the last rung stand.
-  Price a gate against that frozen rate, not a bought-out ladder, or a player
-  sits on a "Not yet" screen for days.
-- `OLD_IDS` in `persist.ts` maps retired ids onto new ones. Reusing a retired id
-  for new content quietly hands old saves something they never bought.
+- `depth` (this run, back to 0 on a hand-down), `reached` (deepest any
+  generation got) and `world` (where you're looking) are easy to mix up.
+- Reusing an id retired in `OLD_IDS` (`persist.ts`) hands old saves something
+  they never bought.
