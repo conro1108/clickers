@@ -11,7 +11,7 @@
 
 import type { solo } from "@clickers/sim";
 
-import { PRODUCER_MARKS, PUPPY_SPRITE, ZZZ } from "./art.js";
+import { PRODUCER_MARKS, PUPPY_SPRITE } from "./art.js";
 import {
   EMPTY_VIEW,
   SCENE_W,
@@ -21,7 +21,6 @@ import {
   mulberry32,
   rgba,
   shownCount,
-  yardLayout,
   type MillView,
 } from "./millScene.js";
 import { artCanvas, artTinted, type Art, type Sprite } from "./pixel.js";
@@ -55,8 +54,6 @@ const MILKY = "#3a3a70";
 const HILL = "#0e0c1c";
 const HILL_EDGE = "#2a2a4a";
 const STAR = "#e8e8ff";
-const BLANKET = "#5a3a6a";
-const BLANKET_EDGE = "#3a2448";
 const BROKEN_TINT = "#2e2c40";
 const COLD = "#06081a";
 
@@ -132,7 +129,6 @@ export class VoidScene {
   private herders: Herder[] = [];
   private leaps: Leap[] = [];
   private streaks: Streak[] = [];
-  private shown = -1;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -185,7 +181,6 @@ export class VoidScene {
       this.herders = [];
       this.leaps = [];
       this.streaks = [];
-      this.shown = Math.max(0, view.hoard);
     }
   }
 
@@ -299,7 +294,6 @@ export class VoidScene {
     this.drawStreaks();
     this.drawHill();
     this.drawHerders(t);
-    this.drawHoard(t);
     this.drawLeaps(now);
     this.drawCold();
   }
@@ -491,40 +485,6 @@ export class VoidScene {
       const y = top - s.h + 1 - bob + (isBroken ? 2 : 0);
       if (!isBroken && this.primed("wisp")) fillDisc(ctx, h.x, y + 4, 5, rgba(PRIME_GLOW.wisp, 0.16));
       ctx.drawImage(s.canvas, x, y);
-    }
-  }
-
-  /** The litter, asleep on a blanket on the near slope, the same count the yard would show. */
-  private drawHoard(t: number): void {
-    const target = Math.max(0, this.view.hoard);
-    if (this.shown < 0) this.shown = target;
-    this.shown += (target - this.shown) * (1 - Math.pow(0.06, this.dt));
-    const n = Math.min(18, yardLayout(this.shown).pack);
-    if (n <= 0) return;
-    const pup = artCanvas(PUPPY_SPRITE);
-    const z = artCanvas(ZZZ);
-    const perRow = 6;
-    const rows = Math.ceil(n / perRow);
-    const w = perRow * 7 + 6;
-    const x0 = 6;
-    const foot = Math.min(this.sh - 3, this.hill[x0 + (w >> 1)]! + 10);
-    const ctx = this.ctx;
-    ctx.fillStyle = BLANKET_EDGE;
-    ctx.fillRect(x0, foot - rows * 4 - 2, w, rows * 4 + 4);
-    ctx.fillStyle = BLANKET;
-    ctx.fillRect(x0 + 1, foot - rows * 4 - 1, w - 2, rows * 4 + 2);
-    for (let i = 0; i < n; i++) {
-      const row = Math.floor(i / perRow);
-      const col = i % perRow;
-      const x = x0 + 3 + col * 7 + (row % 2) * 3;
-      const y = foot - row * 4 - pup.h + 1;
-      const breath = Math.sin(t * 1.4 + i * 1.9) > 0.6 ? 1 : 0;
-      ctx.drawImage(pup.canvas, x, y - breath);
-      if (i % 7 === 3) {
-        ctx.globalAlpha = 0.5;
-        ctx.drawImage(z.canvas, x + 4, y - 6 - Math.round((t * 3 + i) % 4));
-        ctx.globalAlpha = 1;
-      }
     }
   }
 

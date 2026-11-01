@@ -16,12 +16,9 @@ import {
   SCENE_W,
   clamp,
   hashSeed,
-  heapSlots,
-  HEAP_CAP,
   mix,
   mulberry32,
   rgba,
-  yardLayout,
   type FarmView,
 } from "./farmScene.js";
 import { shownCount, territory } from "./insideScene.js";
@@ -91,7 +88,7 @@ interface Dug {
   born: number;
 }
 
-/** A potato on its way to the mound: drops off whatever made it, then rolls down the bowl to the pile. */
+/** A potato on its way: drops off whatever made it, then rolls away down the bowl. */
 interface Crop {
   x: number;
   y: number;
@@ -157,7 +154,6 @@ export class BeyondScene {
   private walkers: Walker[] = [];
   /** Where the sun is looking. Toward the last dig, drifting back to the field. */
   private look = { x: 0, y: 0 };
-  private shown = -1;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -199,7 +195,6 @@ export class BeyondScene {
       this.dug = [];
       this.crop = [];
       this.walkers = [];
-      this.shown = Math.max(0, view.hoard);
     }
     this.sawView = true;
   }
@@ -323,7 +318,6 @@ export class BeyondScene {
     this.drawTide(t);
     this.drawBeacons(t);
     this.drawEcho(t);
-    this.drawHoard();
     this.stepCrop();
     this.drawKin(t);
     this.drawDug(now);
@@ -573,23 +567,7 @@ export class BeyondScene {
     }
   }
 
-  /** The hoard: a mound at the front-left, the same heap the farm keeps, in the bottom of the bowl. */
-  private drawHoard(): void {
-    const target = Math.max(0, this.view.hoard);
-    if (this.shown < 0) this.shown = target;
-    this.shown += (target - this.shown) * (1 - Math.pow(0.06, this.dt));
-    const heap = Math.min(HEAP_CAP, Math.max(0, Math.round(yardLayout(this.shown).heap)));
-    const potato = artCanvas(POTATO_SPRITE);
-    const slots = heapSlots();
-    const foot = this.sh - 1;
-    for (let i = 0; i < heap; i++) {
-      const slot = slots[i];
-      if (!slot) break;
-      this.ctx.drawImage(potato.canvas, slot.x + 4, foot + slot.y);
-    }
-  }
-
-  /** Crop falls to the field, then rolls downhill and left into the mound. */
+  /** Crop falls to the field, then rolls away downhill and left. */
   private stepCrop(): void {
     const potato = artCanvas(POTATO_SPRITE);
     const ctx = this.ctx;
@@ -608,7 +586,7 @@ export class BeyondScene {
       }
       ctx.drawImage(potato.canvas, Math.round(c.x) - 3, Math.round(c.y) - potato.h);
     }
-    this.crop = this.crop.filter((c) => c.x > 30);
+    this.crop = this.crop.filter((c) => c.x > -8);
   }
 
   /** Kinfolk, walking the near lip and stopping to look at things. Broken ones stand where they stopped. */

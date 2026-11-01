@@ -16,12 +16,9 @@ import {
   SCENE_W,
   clamp,
   hashSeed,
-  heapSlots,
-  HEAP_CAP,
   mix,
   mulberry32,
   rgba,
-  yardLayout,
   type FarmView,
 } from "./farmScene.js";
 import { shownCount, territory } from "./insideScene.js";
@@ -132,7 +129,6 @@ export class VoidScene {
   private thrown: Thrown[] = [];
   private dust: { x: number; y: number; vy: number }[] = [];
   private dug: Dug[] = [];
-  private shown = -1;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -188,7 +184,6 @@ export class VoidScene {
       this.walkers = [];
       this.thrown = [];
       this.dug = [];
-      this.shown = Math.max(0, view.hoard);
     }
   }
 
@@ -208,7 +203,7 @@ export class VoidScene {
     this.ro?.disconnect();
   }
 
-  /** A dig: a potato of light comes up out of the furrow where you tapped and goes on the pile. */
+  /** A dig: a potato of light comes up out of the furrow where you tapped and goes. */
   dig(at?: { x: number; y: number }): void {
     if (this.dug.length > 12) return;
     const x = at ? clamp(Math.round(at.x), 3, SCENE_W - 8) : Math.round(40 + Math.random() * 100);
@@ -306,7 +301,6 @@ export class VoidScene {
     this.drawSowers(t);
     this.drawThrown();
     this.drawDust();
-    this.drawHoard();
     this.drawDug(now);
     this.drawCold();
   }
@@ -541,38 +535,16 @@ export class VoidScene {
     this.dust = this.dust.filter((d) => d.y < this.hz + 4);
   }
 
-  /** The pile, front left: the same heap the farm keeps, which out here is mostly light. */
-  private drawHoard(): void {
-    const target = Math.max(0, this.view.hoard);
-    if (this.shown < 0) this.shown = target;
-    this.shown += (target - this.shown) * (1 - Math.pow(0.06, this.dt));
-    const heap = Math.min(HEAP_CAP, Math.max(0, Math.round(yardLayout(this.shown).heap)));
-    const potato = artCanvas(POTATO_SPRITE);
-    const slots = heapSlots();
-    const foot = this.sh - 1;
-    if (heap > 0) fillDisc(this.ctx, 22, foot - 4, 14, rgba(SEED_LIGHT, 0.06));
-    for (let i = 0; i < heap; i++) {
-      const slot = slots[i];
-      if (!slot) break;
-      this.ctx.drawImage(potato.canvas, slot.x + 4, foot + slot.y);
-    }
-  }
-
   private drawDug(now: number): void {
     const ctx = this.ctx;
     const potato = artCanvas(POTATO_SPRITE);
-    const pile = { x: 18, y: this.sh - 10 };
     this.dug = this.dug.filter((d) => now - d.born < DUG_MS);
     for (const d of this.dug) {
       const age = (now - d.born) / DUG_MS;
       const lift = Math.round(Math.sin(Math.min(1, age * 3) * Math.PI * 0.5) * 7);
       const away = Math.max(0, (age - 0.35) / 0.65);
-      const e = away * away;
-      const x = Math.round(d.x + (pile.x - d.x) * e);
-      const y = Math.round(d.y - lift + (pile.y - d.y) * e - Math.sin(away * Math.PI) * 10);
-      fillDisc(ctx, x + 3, y + 2, 4, rgba(SEED_LIGHT, 0.25 * (1 - e)));
-      ctx.globalAlpha = 1 - e * 0.6;
-      ctx.drawImage(potato.canvas, x, y);
+      ctx.globalAlpha = 1 - away * away;
+      ctx.drawImage(potato.canvas, d.x, d.y - lift);
       ctx.globalAlpha = 1;
     }
   }

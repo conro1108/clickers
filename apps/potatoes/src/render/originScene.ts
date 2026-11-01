@@ -17,12 +17,9 @@ import {
   SCENE_W,
   clamp,
   hashSeed,
-  heapSlots,
-  HEAP_CAP,
   mix,
   mulberry32,
   rgba,
-  yardLayout,
   type FarmView,
 } from "./farmScene.js";
 import { shownCount, territory } from "./insideScene.js";
@@ -115,7 +112,7 @@ interface Dug {
   born: number;
 }
 
-/** A potato on its way to the pile: pops off a plant, lands, and rolls left. */
+/** A potato on its way: pops off a plant, lands, and rolls left. */
 interface Crop {
   x: number;
   y: number;
@@ -222,7 +219,6 @@ export class OriginScene {
   private smoke: Puff[] = [];
   private dew: (Spot & { age: number })[] = [];
   private flock: Flock | null = null;
-  private shown = -1;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -285,7 +281,6 @@ export class OriginScene {
       this.crop = [];
       this.walkers = [];
       this.smoke = [];
-      this.shown = Math.max(0, view.hoard);
     }
   }
 
@@ -305,7 +300,7 @@ export class OriginScene {
     this.ro?.disconnect();
   }
 
-  /** A dig: a potato comes up where you tapped, catches the light, and goes on the pile. */
+  /** A dig: a potato comes up where you tapped, catches the light, and goes. */
   dig(at?: { x: number; y: number }): void {
     if (this.dug.length > 12) return;
     const m = this.soilTop - this.hz;
@@ -474,7 +469,6 @@ export class OriginScene {
     this.drawDawn(t);
     this.drawElders(t);
     this.drawSoil(t);
-    this.drawHoard();
     this.stepCrop();
     this.drawDew();
     this.drawDug(now);
@@ -775,7 +769,7 @@ export class OriginScene {
     this.smoke = this.smoke.filter((p) => p.age < 4 && p.y > 0);
   }
 
-  /** Wild Patches, scattered the way nothing planted ever is. They drop their crop to roll to the pile. */
+  /** Wild Patches, scattered the way nothing planted ever is. They drop their crop to roll away. */
   private drawDawn(t: number): void {
     const { working, broken } = this.counts("dawn");
     const n = working + broken;
@@ -879,23 +873,7 @@ export class OriginScene {
     }
   }
 
-  /** The pile: the same heap the farm keeps, at the front left. */
-  private drawHoard(): void {
-    const target = Math.max(0, this.view.hoard);
-    if (this.shown < 0) this.shown = target;
-    this.shown += (target - this.shown) * (1 - Math.pow(0.06, this.dt));
-    const heap = Math.min(HEAP_CAP, Math.max(0, Math.round(yardLayout(this.shown).heap)));
-    const potato = artCanvas(POTATO_SPRITE);
-    const slots = heapSlots();
-    const foot = this.sh - 1;
-    for (let i = 0; i < heap; i++) {
-      const slot = slots[i];
-      if (!slot) break;
-      this.ctx.drawImage(potato.canvas, slot.x + 4, foot + slot.y);
-    }
-  }
-
-  /** Crop pops off a plant, lands, and rolls left to the pile. */
+  /** Crop pops off a plant, lands, and rolls away left. */
   private stepCrop(): void {
     const potato = artCanvas(POTATO_SPRITE);
     const ctx = this.ctx;
@@ -909,12 +887,11 @@ export class OriginScene {
         }
       } else {
         c.x -= 22 * this.dt;
-        // Downhill toward the pile at the front.
         c.y = Math.min(this.sh - 4, c.y + 6 * this.dt);
       }
       ctx.drawImage(potato.canvas, Math.round(c.x) - 3, Math.round(c.y) - potato.h);
     }
-    this.crop = this.crop.filter((c) => c.x > 24);
+    this.crop = this.crop.filter((c) => c.x > -8);
   }
 
   /** Dew catching the first light: little sparks on the grass that come and go. */
@@ -938,22 +915,17 @@ export class OriginScene {
     this.dew = this.dew.filter((d) => d.age < 0.6);
   }
 
-  /** A dug potato: up out of the ground into the light, then onto the pile at the front left. */
+  /** A dug potato: up out of the ground into the light, and gone. */
   private drawDug(now: number): void {
     const ctx = this.ctx;
     const potato = artCanvas(POTATO_SPRITE);
-    const pile = { x: 18, y: this.sh - 10 };
     this.dug = this.dug.filter((d) => now - d.born < DUG_MS);
     for (const d of this.dug) {
       const age = (now - d.born) / DUG_MS;
       const lift = Math.round(Math.sin(Math.min(1, age * 3) * Math.PI * 0.5) * 6);
       const away = Math.max(0, (age - 0.35) / 0.65);
-      const e = away * away;
-      const x = Math.round(d.x + (pile.x - d.x) * e);
-      // An arc: up, over, and down onto the pile.
-      const y = Math.round(d.y - lift + (pile.y - d.y) * e - Math.sin(away * Math.PI) * 10);
-      ctx.globalAlpha = 1 - e * 0.6;
-      ctx.drawImage(potato.canvas, x, y);
+      ctx.globalAlpha = 1 - away * away;
+      ctx.drawImage(potato.canvas, d.x, d.y - lift);
       ctx.globalAlpha = 1;
     }
   }

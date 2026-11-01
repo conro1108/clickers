@@ -17,12 +17,9 @@ import {
   SCENE_W,
   clamp,
   hashSeed,
-  heapSlots,
-  HEAP_CAP,
   mix,
   mulberry32,
   rgba,
-  yardLayout,
   type FarmView,
 } from "./farmScene.js";
 import { shownCount } from "./insideScene.js";
@@ -134,7 +131,7 @@ interface Ripple {
   age: number;
 }
 
-/** A potato on its way to the mound: falls, then rolls left to the pile. Into the lake, it sinks. */
+/** A potato on its way: falls, then rolls away left. Into the lake, it sinks. */
 interface Crop {
   x: number;
   y: number;
@@ -263,7 +260,6 @@ export class DeepScene {
   private shards: Shard[] = [];
   private dug: { x: number; y: number; age: number }[] = [];
   private walkers: Walker[] = [];
-  private shown = -1;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -296,7 +292,6 @@ export class DeepScene {
       this.crop = [];
       this.walkers = [];
       this.ripples = [];
-      this.shown = Math.max(0, view.hoard);
     }
     this.sawView = true;
   }
@@ -574,7 +569,6 @@ export class DeepScene {
     this.drawWater(t);
     this.drawFourth(t);
     this.drawGeodes(t);
-    this.drawHoard();
     this.stepCrop();
     this.drawDug();
 
@@ -864,23 +858,7 @@ export class DeepScene {
     }
   }
 
-  /** The hoard: the same heap the farm keeps, in the front-left corner of the cave floor. */
-  private drawHoard(): void {
-    const target = Math.max(0, this.view.hoard);
-    if (this.shown < 0) this.shown = target;
-    this.shown += (target - this.shown) * (1 - Math.pow(0.06, this.dt));
-    const heap = Math.min(HEAP_CAP, Math.max(0, Math.round(yardLayout(this.shown).heap)));
-    const potato = artCanvas(POTATO_SPRITE);
-    const slots = heapSlots();
-    const foot = this.sh - 1;
-    for (let i = 0; i < heap; i++) {
-      const slot = slots[i];
-      if (!slot) break;
-      this.ctx.drawImage(potato.canvas, slot.x + 4, foot + slot.y);
-    }
-  }
-
-  /** Crop falls to the floor and rolls left to the mound. Whatever finds the water sinks with a ring. */
+  /** Crop falls to the floor and rolls away left. Whatever finds the water sinks with a ring. */
   private stepCrop(): void {
     const potato = artCanvas(POTATO_SPRITE);
     const ctx = this.ctx;
@@ -899,7 +877,7 @@ export class DeepScene {
         this.ripple(Math.round(c.x), Math.round(c.y));
         return false;
       }
-      if (c.x < 34) return false;
+      if (c.x < -8) return false;
       ctx.drawImage(potato.canvas, Math.round(c.x) - 3, Math.round(c.y) - potato.h);
       return true;
     });

@@ -8,7 +8,7 @@
 
 import type { solo } from "@clickers/sim";
 
-import { PRODUCER_MARKS, PUPPY_SPRITE, ZZZ } from "./art.js";
+import { PRODUCER_MARKS, PUPPY_SPRITE } from "./art.js";
 import {
   EMPTY_VIEW,
   SCENE_W,
@@ -17,7 +17,6 @@ import {
   mix,
   rgba,
   shownCount,
-  yardLayout,
   type MillView,
 } from "./millScene.js";
 import { artCanvas, artTinted, type Art, type Sprite } from "./pixel.js";
@@ -66,8 +65,6 @@ const FROST = "#c8c0a8";
 const ROCK = "#3e3430";
 const ROCK_LIT = "#6a5a50";
 const ROCK_SEAM = "#2e2622";
-const HIDE = "#8a6a4a";
-const HIDE_EDGE = "#5a4030";
 const EYE = "#ffd166";
 
 const FIRELIGHT = "#ff9a4a";
@@ -120,7 +117,6 @@ const S_KEEP_D = 13;
 const S_KEEP_L = 14;
 const S_KEEP_S = 15;
 const S_WILD_X = 16;
-const S_PUP = 17;
 const S_BROKEN_K = 18;
 
 /** Per-rung salt for row placement, so two rows don't jitter in step. */
@@ -193,8 +189,6 @@ export class OriginScene {
   private smoke: Spark[] = [];
   private leaps: Leap[] = [];
   private keepers: Keeper[] = [];
-  /** Displayed hoard, chasing the real one so spending looks like spending. */
-  private shown = -1;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -229,7 +223,6 @@ export class OriginScene {
       this.smoke = [];
       this.leaps = [];
       this.keepers = [];
-      this.shown = Math.max(0, view.hoard);
       this.rebuild();
     }
     this.sawView = true;
@@ -457,7 +450,6 @@ export class OriginScene {
     this.drawFires(g, t);
     this.drawKeepers(g, t);
     this.drawDogs(g, t);
-    this.drawHoard(g, t);
     this.drawSmoke(nowMs);
     this.drawSparks(nowMs);
     this.drawLeaps(nowMs);
@@ -653,41 +645,6 @@ export class OriginScene {
       this.primeGlow("first", x, yy, art.w, art.h, t, i);
       this.glow(x + art.w / 2, yy + art.h / 2, 9, FIRELIGHT, 0.1);
       this.ctx.drawImage(art.canvas, x, yy);
-    }
-  }
-
-  /** The hoard: a litter asleep on a hide by the fire, the same count the yard would show. */
-  private drawHoard(g: Geometry, t: number): void {
-    const target = Math.max(0, this.view.hoard);
-    if (this.shown < 0) this.shown = target;
-    const k = 1 - Math.pow(0.06, this.dt);
-    this.shown += (target - this.shown) * k;
-    const n = Math.min(18, yardLayout(this.shown).pack);
-    if (n <= 0) return;
-    const pup = artCanvas(PUPPY_SPRITE);
-    const z = artCanvas(ZZZ);
-    const perRow = 6;
-    const rows = Math.ceil(n / perRow);
-    const hideW = perRow * 7 + 6;
-    const hideX = Math.round(SCENE_W * 0.47 - hideW / 2);
-    const hideY = Math.min(this.sh - 3, g.hz + Math.round(g.ground * 0.66) + 4);
-    const ctx = this.ctx;
-    ctx.fillStyle = HIDE_EDGE;
-    ctx.fillRect(hideX, hideY - rows * 4 - 2, hideW, rows * 4 + 4);
-    ctx.fillStyle = HIDE;
-    ctx.fillRect(hideX + 1, hideY - rows * 4 - 1, hideW - 2, rows * 4 + 2);
-    for (let i = 0; i < n; i++) {
-      const row = Math.floor(i / perRow);
-      const col = i % perRow;
-      const x = hideX + 3 + col * 7 + (row % 2) * 3 + Math.round((jit(this.seed, S_PUP, i) - 0.5) * 2);
-      const y = hideY - row * 4 - pup.h + 1;
-      const breath = Math.sin(t * 1.4 + i * 1.9) > 0.6 ? 1 : 0;
-      ctx.drawImage(pup.canvas, x, y - breath);
-      if (i % 7 === 3) {
-        ctx.globalAlpha = 0.5;
-        ctx.drawImage(z.canvas, x + 4, y - 6 - Math.round((t * 3 + i) % 4));
-        ctx.globalAlpha = 1;
-      }
     }
   }
 

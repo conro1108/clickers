@@ -17,12 +17,9 @@ import {
   SCENE_W,
   clamp,
   hashSeed,
-  heapSlots,
-  HEAP_CAP,
   mix,
   mulberry32,
   rgba,
-  yardLayout,
   type FarmView,
 } from "./farmScene.js";
 import { shownCount, territory } from "./insideScene.js";
@@ -137,7 +134,6 @@ export class EndScene {
   private flakes: { x: number; y: number; vx: number; vy: number }[] = [];
   private rings: { x: number; y: number; age: number }[] = [];
   private dug: Dug[] = [];
-  private shown = -1;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -184,7 +180,6 @@ export class EndScene {
       this.walkers = [];
       this.rings = [];
       this.dug = [];
-      this.shown = Math.max(0, view.hoard);
     }
   }
 
@@ -204,7 +199,7 @@ export class EndScene {
     this.ro?.disconnect();
   }
 
-  /** A dig: one more potato turned up out of the ash, onto the pile. */
+  /** A dig: one more potato turned up out of the ash. */
   dig(at?: { x: number; y: number }): void {
     if (this.dug.length > 12) return;
     const x = at ? clamp(Math.round(at.x), 3, SCENE_W - 8) : Math.round(40 + Math.random() * 100);
@@ -310,7 +305,6 @@ export class EndScene {
     this.drawPlots(t);
     this.drawGleaners(t);
     this.drawTables(t);
-    this.drawHoard();
     this.drawFlakes();
     this.drawDug(now);
   }
@@ -524,21 +518,6 @@ export class EndScene {
     }
   }
 
-  private drawHoard(): void {
-    const target = Math.max(0, this.view.hoard);
-    if (this.shown < 0) this.shown = target;
-    this.shown += (target - this.shown) * (1 - Math.pow(0.06, this.dt));
-    const heap = Math.min(HEAP_CAP, Math.max(0, Math.round(yardLayout(this.shown).heap)));
-    const potato = artCanvas(POTATO_SPRITE);
-    const slots = heapSlots();
-    const foot = this.sh - 1;
-    for (let i = 0; i < heap; i++) {
-      const slot = slots[i];
-      if (!slot) break;
-      this.ctx.drawImage(potato.canvas, slot.x + 4, foot + slot.y);
-    }
-  }
-
   /** Ash coming down, always, slowly, and blowing a little left. */
   private drawFlakes(): void {
     if (this.flakes.length < MAX_FLAKES && this.chance(6)) {
@@ -558,17 +537,13 @@ export class EndScene {
   private drawDug(now: number): void {
     const ctx = this.ctx;
     const potato = artCanvas(POTATO_SPRITE);
-    const pile = { x: 18, y: this.sh - 10 };
     this.dug = this.dug.filter((d) => now - d.born < DUG_MS);
     for (const d of this.dug) {
       const age = (now - d.born) / DUG_MS;
       const lift = Math.round(Math.sin(Math.min(1, age * 3) * Math.PI * 0.5) * 6);
       const away = Math.max(0, (age - 0.35) / 0.65);
-      const e = away * away;
-      const x = Math.round(d.x + (pile.x - d.x) * e);
-      const y = Math.round(d.y - lift + (pile.y - d.y) * e - Math.sin(away * Math.PI) * 10);
-      ctx.globalAlpha = 1 - e * 0.6;
-      ctx.drawImage(potato.canvas, x, y);
+      ctx.globalAlpha = 1 - away * away;
+      ctx.drawImage(potato.canvas, d.x, d.y - lift);
       ctx.globalAlpha = 1;
     }
   }

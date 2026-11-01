@@ -21,7 +21,6 @@ import {
   mulberry32,
   rgba,
   shownCount,
-  yardLayout,
   type MillView,
 } from "./millScene.js";
 import { artCanvas, artTinted, type Art, type Sprite } from "./pixel.js";
@@ -99,7 +98,6 @@ const R_ROWY = 4;
 const R_WALK = 5;
 const R_SWIM = 6;
 const R_FISH = 7;
-const R_HOARD = 8;
 const R_SHAFT = 9;
 
 interface Bubble {
@@ -172,8 +170,6 @@ export class DeepScene {
   private swimmers: Swimmer[] = [];
   private fish: Swimmer[] = [];
   private whistled: Whistled[] = [];
-  /** Displayed hoard, chasing the real one so spending looks like spending. */
-  private shown = -1;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -255,7 +251,6 @@ export class DeepScene {
       this.swimmers = [];
       this.fish = [];
       this.whistled = [];
-      this.shown = Math.max(0, view.hoard);
     }
     this.sawView = true;
   }
@@ -341,7 +336,6 @@ export class DeepScene {
     this.drawKennels(t);
     this.drawKith(t);
     this.drawBalls(t);
-    this.drawHoard(t);
     this.drawAnglers(t);
     this.drawBubbles();
     this.drawSnow(t, true);
@@ -635,28 +629,6 @@ export class DeepScene {
       },
       lift,
     );
-  }
-
-  /** The hoard: puppies asleep on the silt at the front, breathing out bubbles instead of Zs. */
-  private drawHoard(t: number): void {
-    const target = Math.max(0, this.view.hoard);
-    if (this.shown < 0) this.shown = target;
-    this.shown += (target - this.shown) * (1 - Math.pow(0.06, this.dt));
-    const n = Math.min(24, yardLayout(this.shown).pack);
-    if (n <= 0) return;
-    const pup = artCanvas(PUPPY_SPRITE);
-    const perRow = 8;
-    const y0 = this.sh - 2;
-    const span = Math.min(SCENE_W - 40, perRow * 9);
-    for (let i = 0; i < n; i++) {
-      const row = Math.floor(i / perRow);
-      const col = i % perRow;
-      const y = y0 - row * 4 - pup.h;
-      const x = Math.round(SCENE_W / 2 - span / 2 + col * (span / perRow) + (row % 2) * 4 + (this.r(R_HOARD, i) - 0.5) * 3);
-      const breath = Math.sin(t * 1.2 + i * 1.9) > 0.6 ? 1 : 0;
-      this.ctx.drawImage(pup.canvas, x, y - breath);
-      if (i % 5 === 2 && this.chance(0.35)) this.bubble(x + 2, y - 1, false);
-    }
   }
 
   /** Angler pups, cruising mid-water with their lights out in front. */

@@ -7,7 +7,7 @@
 
 import type { solo } from "@clickers/sim";
 
-import { PRODUCER_MARKS, PUPPY_SPRITE, ZZZ } from "./art.js";
+import { PRODUCER_MARKS, PUPPY_SPRITE } from "./art.js";
 import {
   EMPTY_VIEW,
   SCENE_W,
@@ -16,7 +16,6 @@ import {
   mix,
   rgba,
   shownCount,
-  yardLayout,
   type MillView,
 } from "./millScene.js";
 import { artCanvas, artTinted, type Art, type Sprite } from "./pixel.js";
@@ -137,8 +136,6 @@ export class BeyondScene {
   private walkers: Walker[] = [];
   private rings: Ring[] = [];
   private flies: Firefly[] = [];
-  /** Displayed hoard, chasing the real one so spending looks like spending. */
-  private shown = -1;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -172,7 +169,6 @@ export class BeyondScene {
       this.walkers = [];
       this.rings = [];
       this.flies = [];
-      this.shown = Math.max(0, view.hoard);
       this.placeStars();
     }
     this.sawView = true;
@@ -296,7 +292,6 @@ export class BeyondScene {
     this.drawBeacons(g, t);
     this.drawTides(g, t);
     this.drawKin(g, t);
-    this.drawHoard(g, t);
     this.drawRings(nowMs);
     this.drawFlies(g, t);
     ctx.restore();
@@ -577,37 +572,6 @@ export class BeyondScene {
       this.ctx.globalAlpha = 0.4;
       this.ctx.drawImage(dim.canvas, x, y);
       this.ctx.globalAlpha = 1;
-    }
-  }
-
-  /** The hoard: a heap of puppies asleep on the front lawn, the same count the yard would show. */
-  private drawHoard(g: { top: number; front: number }, t: number): void {
-    const target = Math.max(0, this.view.hoard);
-    if (this.shown < 0) this.shown = target;
-    const k = 1 - Math.pow(0.06, this.dt);
-    this.shown += (target - this.shown) * k;
-    const n = Math.min(24, yardLayout(this.shown).pack);
-    if (n <= 0) return;
-    const pup = artCanvas(PUPPY_SPRITE);
-    const z = artCanvas(ZZZ);
-    const perRow = 8;
-    const y0 = g.front - 2;
-    for (let i = 0; i < n; i++) {
-      const row = Math.floor(i / perRow);
-      const col = i % perRow;
-      const y = y0 - row * 4 - pup.h;
-      const [l, r] = this.edges(y0, g.top, g.front);
-      const span = Math.min(r - l - 20, perRow * 9);
-      const x = Math.round((l + r) / 2 - span / 2 + col * (span / perRow) + (row % 2) * 4 + (jitter(this.seed, "pp", i) - 0.5) * 3);
-      // Breathing: a pixel up and down, out of step with each other.
-      const breath = Math.sin(t * 1.4 + i * 1.9) > 0.6 ? 1 : 0;
-      this.ctx.drawImage(pup.canvas, x, y - breath);
-      if (i % 6 === 2) {
-        const zy = y - 6 - Math.round(((t * 3 + i) % 4));
-        this.ctx.globalAlpha = 0.55;
-        this.ctx.drawImage(z.canvas, x + 4, zy);
-        this.ctx.globalAlpha = 1;
-      }
     }
   }
 
