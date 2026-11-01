@@ -2,37 +2,18 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
   type PointerEvent,
 } from "react";
-import {
-  Y,
-  brokenRate,
-  format,
-  formatDuration,
-  opponentView,
-  rateAt,
-  clickGain,
-  clicksReady,
-  seconds,
-  slowMultiplier,
-  solo,
-  standings,
-} from "@clickers/sim";
+import { format, solo } from "@clickers/sim";
 
 import { clockSkew, setClockSkew } from "./clock.js";
-import { abandon, joinByCode, type MatchRow } from "@clickers/online";
-import { errorText, useLobby } from "@clickers/online";
-import { useOnlineMatch } from "@clickers/online";
 import { AwayReport } from "./components/AwayReport.js";
-import { Conditions } from "./components/Conditions.js";
 import { CutFall } from "./components/CutFall.js";
 import { Damage } from "./components/Damage.js";
 import { MillFeed } from "./components/MillFeed.js";
 import {
-  MatchScene,
   MillScene,
   TitleScene,
   type MillSceneHandle,
@@ -42,33 +23,12 @@ import {
   LandPanel,
   LegacyPanel,
 } from "./components/MillShop.js";
-import { Feed } from "./components/Feed.js";
-import { VersusLobby } from "./components/Lobby.js";
-import { Opponents } from "./components/Opponents.js";
 import { PxIcon } from "./components/PxIcon.js";
 import { Sheet } from "./components/Sheet.js";
-import { DefendPanel, GrowPanel, SabotagePanel } from "./components/Shop.js";
 import { hasSavedMill, useMill } from "./useMill.js";
 import { WORLD_COPY, culprit } from "./worlds.js";
-import { BOTS, useMatch, type MatchRuntime, type MatchSetup } from "./useMatch.js";
 
-// `greedy` is left out: it is a control group for the balance harness, not an opponent.
-const BOT_ROSTER = ([
-  "chill",
-  "scrappy",
-  "nasty",
-  "mean",
-  "vicious",
-  "ruthless",
-  "merciless",
-  "tyrant",
-] as const).map((id) => ({
-  id,
-  name: BOTS[id]?.name ?? id,
-  blurb: BOTS[id]?.blurb ?? "",
-}));
-
-type Screen = { kind: "home" } | { kind: "puppies" } | { kind: "versus" };
+type Screen = { kind: "home" } | { kind: "puppies" };
 
 // Space always whistles; without the blur it would re-fire the last-clicked shop button.
 function useSpaceToWhistle(whistle: () => void, enabled = true) {
@@ -200,17 +160,15 @@ function formatSkew(msAhead: number): string {
   return [d ? `${d}d` : "", h || !d ? `${h}h` : ""].filter(Boolean).join(" ");
 }
 
-// The back room: the parked versus prototype plus dev levers. Reached only by holding the HUD puppy.
+// The back room: dev levers. Reached only by holding the HUD puppy.
 // A lever earns a place only if it reaches a state you cannot otherwise get to in under a minute.
 function BackRoom({
   mill,
-  onVersus,
   onTitle,
   onAbandon,
   dispatch,
 }: {
   mill: solo.SiteState;
-  onVersus: () => void;
   onTitle: () => void;
   onAbandon: () => void;
   dispatch: (cmd: solo.SiteCommand) => void;
@@ -327,17 +285,6 @@ function BackRoom({
             </button>
           ))}
         </div>
-      </section>
-
-      <section>
-        <h3>Versus a bot</h3>
-        <p className="muted small">
-          The older head-to-head prototype: two mills, one clock, and upgrades that reach across the
-          table. Parked, but it still runs.
-        </p>
-        <button className="ghost" onClick={onVersus}>
-          Open the lobby
-        </button>
       </section>
 
       <section>
@@ -698,7 +645,6 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         <Sheet title="The back room" sub="Levers, not gameplay." onClose={() => setSheet(null)}>
           <BackRoom
             mill={mill}
-            onVersus={() => onGo({ kind: "versus" })}
             onTitle={() => onGo({ kind: "home" })}
             onAbandon={() => {
               abandon();
@@ -774,379 +720,8 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   );
 }
 
-// --- Versus (the older prototype) ---
-
-/** The sheets of a match, in the order they sit on the bar. */
-type MatchSheet = "match" | "defend" | "sabotage" | "shop";
-
-// A match on the homestead's shell: the mill is the picture, clock and bank pinned over it, everything else a sheet.
-function Match({
-  runtime,
-  onExit,
-  onRematch,
-}: {
-  runtime: MatchRuntime;
-  onExit: () => void;
-  /** Absent online, where a rematch is a fresh challenge rather than a reset. */
-  onRematch?: () => void;
-}) {
-  const { state, now, me, pendingClicks, over, error, click, dispatch } = runtime;
-  const [sheet, setSheet] = useState<MatchSheet | null>(null);
-  const sceneRef = useRef<MillSceneHandle>(null);
-  const [pops, setPops] = useState<{ id: number; text: string }[]>([]);
-  const popId = useRef(0);
-
-  const table = standings(state, now);
-  const opponentIds = state.order.filter((id) => id !== me.id);
-  const opponents = opponentIds.map((id) => state.players[id]!);
-  // Unflushed clicks count (`dispatch` banks them first). `clickGain`, not `clickYield`: a drained bucket makes a tap worth less.
-  const budget = useMemo(
-    () => Y.add(me.stock, clickGain(me, now, pendingClicks)),
-    [me, now, pendingClicks],
-  );
-  const yourScore = table.find((s) => s.player.id === me.id)?.score ?? 0;
-  // The rival's figures go on the HUD: every spend turns on "are they out-producing me". Same `opponentView`, same fog rule.
-  const rival = useMemo(() => {
-    const views = opponentIds.map((id) => opponentView(state, id, now));
-    return views.sort((a, b) => b.count - a.count)[0];
-  }, [state, now, opponentIds]);
-  const bestRival = rival?.count ?? 0;
-  const timeLeft = state.startedAt + state.config.durationMs - now;
-  const perClick = clickGain(me, now, pendingClicks + 1) - clickGain(me, now, pendingClicks);
-  // Whistling faster than puppies can come; said out loud so the dropping yield does not read as a bug.
-  const winded = clicksReady(me, now) - pendingClicks < 1;
-  const rate = rateAt(me, now);
-  const slow = slowMultiplier(me, now);
-  const broken = brokenRate(me) > 0;
-
-  const onWhistle = useCallback(
-    (at?: { x: number; y: number }) => {
-      if (over) return;
-      click();
-      sceneRef.current?.whistle(at);
-      const id = popId.current++;
-      setPops((p) => [...p.slice(-6), { id, text: `+${format(perClick)}` }]);
-      setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 700);
-    },
-    [click, me, over],
-  );
-  useSpaceToWhistle(onWhistle, !over && sheet === null);
-
-  // Your share of the two scores as a bar, so losing is visibly under half.
-  const share = yourScore + bestRival > 0 ? yourScore / (yourScore + bestRival) : 0.5;
-
-  return (
-    <div className="app mill-app">
-      <header className="hud">
-        <div className="hud-bank">
-          <PxIcon name="puppy" size={28} />
-          <div>
-            <div className="hud-value">{format(budget)}</div>
-            <div className="hud-label">to spend</div>
-          </div>
-        </div>
-        {/* The one thing this game has that the homestead doesn't, and the
-            reason every decision in it is made under pressure. */}
-        <div className={`hud-clock ${timeLeft < seconds(30) ? "urgent" : ""}`}>
-          {formatDuration(timeLeft)}
-        </div>
-        <div className="hud-side">
-          <div className={`hud-rate ${slow < 1 ? "hurt" : ""}`}>{format(rate)}/s</div>
-          {/* Sits exactly where the homestead's bedding meter does, and reads
-              the same way: a bar you want full, with the number beside it. */}
-          <div className="bedding lead" title="Your score against the best of them">
-            <div className="bedding-track">
-              <div
-                className={`bedding-fill ${share < 0.5 ? "low" : ""}`}
-                style={{ width: `${Math.round(share * 100)}%` }}
-              />
-            </div>
-            <span className={share < 0.5 ? "hurt" : "muted"}>
-              {yourScore >= bestRival ? "+" : "−"}
-              {format(Math.abs(yourScore - bestRival))}
-            </span>
-          </div>
-          {rival && (
-            <div className="hud-rival" title={`${rival.name}'s count and rate`}>
-              <span className="hud-rival-name">{rival.name}</span>
-              <span>{format(rival.count)}</span>
-              <span className="hud-rival-rate">{format(rival.rate)}/s</span>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {error && <div className="error">{error}</div>}
-
-      <MatchScene ref={sceneRef} me={me} hoard={budget} onWhistle={onWhistle}>
-        <Conditions me={me} now={now} />
-      </MatchScene>
-
-      <div className="whistlebar">
-        <button
-          className={`whistle ${winded ? "winded" : ""}`}
-          onClick={() => onWhistle()}
-          disabled={over}
-        >
-          <PxIcon name="puppy" size={14} />
-          <span className="whistle-label">{winded ? "Winded" : "Whistle"}</span>
-          <span className="whistle-yield">+{format(perClick)}</span>
-        </button>
-        <div className="pops" aria-hidden>
-          {pops.map((p) => (
-            <span key={p.id} className="pop">
-              {p.text}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <nav className="nav">
-        {([
-          { id: "match", label: "Match", icon: "clipboard" },
-          { id: "sabotage", label: "Sabotage", icon: "cloud" },
-          { id: "defend", label: "Defend", icon: "shield" },
-          { id: "shop", label: "Shop", icon: "basket" },
-        ] as const).map((item) => (
-          <button
-            key={item.id}
-            className={item.id === "defend" && broken ? "alert" : undefined}
-            onClick={() => setSheet(item.id)}
-          >
-            <PxIcon name={item.icon} size={20} />
-            <span>{item.label}</span>
-            {item.id === "defend" && broken && <span className="nav-dot" />}
-          </button>
-        ))}
-      </nav>
-
-      {sheet === "shop" && (
-        <Sheet
-          title="Shop"
-          sub="More kit in the yard, and the upgrades that make it worth more."
-          onClose={() => setSheet(null)}
-          foot={
-            <>
-              <span className="muted">To spend</span>
-              <strong>{format(budget)}</strong>
-            </>
-          }
-        >
-          <GrowPanel me={me} budget={budget} dispatch={dispatch} />
-        </Sheet>
-      )}
-      {sheet === "sabotage" && (
-        <Sheet
-          title="Sabotage"
-          sub="Reach across the table. Everything here is a puppy you didn't grow with."
-          onClose={() => setSheet(null)}
-          foot={
-            <>
-              <span className="muted">To spend</span>
-              <strong>{format(budget)}</strong>
-            </>
-          }
-        >
-          <SabotagePanel me={me} budget={budget} opponents={opponents} dispatch={dispatch} />
-        </Sheet>
-      )}
-      {sheet === "defend" && (
-        <Sheet
-          title="Defend"
-          sub="What they broke, what it costs, and what stops it next time."
-          onClose={() => setSheet(null)}
-          foot={
-            <>
-              <span className="muted">To spend</span>
-              <strong>{format(budget)}</strong>
-            </>
-          }
-        >
-          <DefendPanel me={me} now={now} budget={budget} dispatch={dispatch} />
-        </Sheet>
-      )}
-      {/* The match itself: where everyone stands, what wins it, what's happened
-          — and the way out, which is the only place it needs to be. A Leave
-          button pinned to the bar all match is a button you press by accident. */}
-      {sheet === "match" && (
-        <Sheet
-          title="The match"
-          sub={`${formatDuration(Math.max(0, timeLeft))} left · ${
-            state.config.scoring === "on_hand" ? "biggest pile wins" : "most raised wins"
-          }`}
-          onClose={() => setSheet(null)}
-        >
-          <Opponents state={state} now={now} ids={opponentIds} yourScore={yourScore} />
-          <h3 className="sheet-section">Yard report</h3>
-          <Feed state={state} />
-          <div className="choices">
-            <button className="ghost" onClick={onExit}>
-              Leave the match
-            </button>
-          </div>
-        </Sheet>
-      )}
-
-      {over && (
-        <div className="overlay">
-          <div className="result">
-            <h2>{table[0]?.player.id === me.id ? "You win." : `${table[0]?.player.name} wins.`}</h2>
-            <ol className="final">
-              {table.map((s) => (
-                <li key={s.player.id}>
-                  <span>{s.player.name}</span>
-                  <strong>{format(s.score)}</strong>
-                </li>
-              ))}
-            </ol>
-            <div className="result-actions">
-              {onRematch && (
-                <button className="start" onClick={onRematch}>
-                  Rematch
-                </button>
-              )}
-              <button className={onRematch ? "ghost" : "start"} onClick={onExit}>
-                {onRematch ? "Change setup" : "Back to the lobby"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** A match against the local bot loop. */
-function BotMatch({ setup, onExit }: { setup: MatchSetup; onExit: () => void }) {
-  const runtime = useMatch(setup);
-  return <Match runtime={runtime} onExit={onExit} onRematch={runtime.restart} />;
-}
-
-// A match against a person, folded out of the command log. Same screen as the bot, plus a pre-log wait and a non-clock ending.
-function OnlineMatch({
-  row,
-  meId,
-  onExit,
-}: {
-  row: MatchRow;
-  meId: string;
-  onExit: (row: MatchRow) => void;
-}) {
-  const runtime = useOnlineMatch(row, meId);
-  if (!runtime.ready) {
-    return (
-      <div className="lobby">
-        <h1>
-          Yield, <span>Inc.</span>
-        </h1>
-        <p className="tagline">Catching up on the match…</p>
-        {runtime.error && <div className="error">{runtime.error}</div>}
-        <TitleScene />
-        <div className="home-aside">
-          <button className="ghost" onClick={() => onExit(row)}>
-            Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-  return <Match runtime={runtime} onExit={() => onExit(row)} />;
-}
-
-// The versus mode, and the only place the app talks to the network. Sign-in lives here so solo players never get a user made.
-function Versus({ onLeave, invite }: { onLeave: () => void; invite?: string | null }) {
-  const lobby = useLobby();
-  const [inMatch, setInMatch] = useState<
-    { kind: "bot"; setup: MatchSetup } | { kind: "online"; row: MatchRow } | null
-  >(null);
-
-  // An invite link walks itself in: anonymous sign-in has happened by the time `me` exists, and the code is spent on arrival.
-  const walkedIn = useRef(false);
-  useEffect(() => {
-    if (walkedIn.current || !invite || !lobby.me) return;
-    walkedIn.current = true;
-    // A join code is good once; scrub it from the address bar so a refresh does not error.
-    window.history.replaceState(null, "", window.location.pathname);
-    void joinByCode(invite).then(
-      (row) => setInMatch({ kind: "online", row }),
-      // A dead link lands in the lobby holding the reason.
-      (e) => lobby.setError(errorText(e)),
-    );
-  }, [invite, lobby.me, lobby.setError]);
-
-  // A challenge accepted at the other end starts a match you never pressed a button for.
-  useEffect(() => {
-    if (!inMatch && lobby.live?.status === "active") {
-      setInMatch({ kind: "online", row: lobby.live });
-    }
-  }, [inMatch, lobby.live]);
-
-  if (inMatch?.kind === "bot") {
-    return (
-      <BotMatch
-        key={`${inMatch.setup.durationMs}-${inMatch.setup.botProfile}-${inMatch.setup.scoring}`}
-        setup={inMatch.setup}
-        onExit={() => setInMatch(null)}
-      />
-    );
-  }
-  if (inMatch?.kind === "online" && lobby.me) {
-    return (
-      <OnlineMatch
-        key={inMatch.row.id}
-        row={inMatch.row}
-        meId={lobby.me.id}
-        onExit={(row) => {
-          // Leaving a live match is forfeiting it; saying so stops the lobby walking you back in.
-          void abandon(row.id);
-          setInMatch(null);
-          lobby.refresh();
-        }}
-      />
-    );
-  }
-
-  return (
-    <VersusLobby
-      lobby={lobby}
-      bots={BOT_ROSTER}
-      botProfile={BOT_ROSTER[0]!.id}
-      onBot={(profile, terms) =>
-        setInMatch({
-          kind: "bot",
-          setup: {
-            playerName: lobby.me?.displayName ?? "You",
-            durationMs: terms.durationMs,
-            botProfile: profile as MatchSetup["botProfile"],
-            scoring: terms.scoring,
-          },
-        })
-      }
-      onEnter={(row) => setInMatch({ kind: "online", row })}
-      onBack={onLeave}
-    />
-  );
-}
-
-// The invite link, read once at boot. Query param, not a path: no router, and `/play/ABCD` would 404 cold.
-function inviteCode(): string | null {
-  const code = new URLSearchParams(window.location.search).get("join");
-  return code ? code.trim().toUpperCase() : null;
-}
-
 export function App() {
-  const [invite] = useState(inviteCode);
-  // An invite outranks both the mill and the splash: they came to play a specific person.
-  const [screen, setScreen] = useState<Screen>(() =>
-    invite ? { kind: "versus" } : hasSavedMill() ? { kind: "puppies" } : { kind: "home" },
-  );
+  const [screen, setScreen] = useState<Screen>(() => (hasSavedMill() ? { kind: "puppies" } : { kind: "home" }));
 
-  switch (screen.kind) {
-    case "puppies":
-      return <Homefarm onGo={setScreen} />;
-    case "versus":
-      return <Versus invite={invite} onLeave={() => setScreen({ kind: "puppies" })} />;
-    default:
-      return <Home onGo={setScreen} />;
-  }
+  return screen.kind === "puppies" ? <Homefarm onGo={setScreen} /> : <Home onGo={setScreen} />;
 }

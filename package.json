@@ -15,11 +15,7 @@
     "build:puppies": "npm run build -w @clickers/puppies",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p packages/sim --noEmit && tsc -p apps/potatoes --noEmit && tsc -p apps/puppies --noEmit",
-    "db:push": "node db/push.mjs db/schema.sql",
-    "db:verify": "node db/verify.mjs",
-    "test:online": "vite-node --config apps/puppies/vite.config.ts tools/two-players.mts --",
-    "test:online:potatoes": "vite-node --config apps/potatoes/vite.config.ts tools/two-players.mts -- game=potatoes"
+    "typecheck": "tsc -p packages/sim --noEmit && tsc -p apps/potatoes --noEmit && tsc -p apps/puppies --noEmit"
   },
   "devDependencies": {
     "playwright-core": "^1.62.1",

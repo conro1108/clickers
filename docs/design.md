@@ -7,69 +7,16 @@ says otherwise. Numbers live in code, not here.
 ## Thesis
 
 A clicker gets a second axis once something is actively taking production
-away: every purchase becomes "grow" vs "hold onto what I've got". Versus mode
-supplies that pressure with an opponent; solo supplies it with weather. The
-thesis is the thing to protect; multiplayer is one expression of it.
+away: every purchase becomes "grow" vs "hold onto what I've got". Weather
+supplies that pressure. The thesis is the thing to protect.
 
-Non-goal: base-building depth. The upgrade tree must stay legible mid-match.
+Non-goal: base-building depth. The upgrade tree must stay legible.
 
-## Versus (the original head-to-head)
-
-Free-for-all, everyone starts from zero, timer, most resource wins. Three
-upgrade flavours — production, sabotage, defense — competing for one currency.
-Playable against bots or a real person (join code / challenge by handle); lives
-behind the back-room menu, solo is the front door.
-
-Decisions:
-
-- **Fog of war:** an opponent exposes count and production rate, nothing else.
-  Enforced in `opponentView()`, not the UI.
-- **No knockouts.** Sabotage is tempo loss, never elimination. Slows floor and
-  breakage caps exist for this reason.
-- **Defense is partial.** Attacks and shields both have strength; a strong
-  shield fully blocking a weak attack is fine, but never guaranteed.
-- **Real-time, no cooldowns.** Pacing comes from resource contention. Note it
-  did *not* self-pace for bots; `bot.ts` caps the share of the pile one swing
-  may spend.
-- **Sabotage is mostly persistent damage** (broken units until repaired), not
-  timed rate cuts — temporary cuts let the victim recover for free, so early
-  attacks were always a self-own. Timed slows remain as the exception.
-- **Sabotage is priced against the target's clean (undamaged) rate.** Flat
-  prices made hitting the leader return many times what growing did; pricing
-  off damaged rate would make each hit cheaper and snowball toward a knockout.
-- **Scoring rule is undecided.** Held-at-buzzer flattens the endgame into
-  "stop buying"; lifetime-produced keeps spending free and sabotage relevant.
-  Both implemented; produced is the default until played enough.
-- **Clicks are rate-limited by a token bucket** at roughly thumb speed, with
-  overflow taps worth a fraction. Without it a 20 tap/s macro finished hundreds
-  of times ahead; with it mashing is worth ~2x. Applies to bots too.
-- **Sit-down first; slow burn not ruled out.** The command log has no turn
-  counter and no assumption anyone is watching, so a slow-burn match is the
-  same log plus checkpoint compaction. What's unbuilt is the design: what
-  sabotage does to someone asleep. Solo's answer (buildings, not shields)
-  should transfer.
-
-Balance principles (harness in `balance.ts`, reference human in `reference.ts`):
-
-- Grade difficulty on **margin**, not win rate — the economy is exponential, so
-  wins read 15/0 or 0/15 however close the lines are.
-- Grade against a reference human, not a `chill` bot; aggressive rungs look
-  weaker against a punching bag.
-- Neither pure growth nor sabotage may strictly dominate (`nasty` vs `greedy`).
-- Sabotage should be a wash early and a good buy late — a gradient, never a
-  cliff.
-- Bots must spend the pile down per turn and save for better tiers (`thrift`),
-  or difficulty comes out backwards (slower bot = bigger pile = better tiers).
-
-Open: repair is an instant click at a fraction of rebuild cost, making damage a
-pure tax. Repair costing *time* is the next lever if getting hit should feel
-worse.
-
-## Solo (the front door)
+## The homestead
 
 One site you keep, growing while away, with prestige under it.
 
-- **Weather is sabotage with nobody behind it.** Deterministic schedule keyed on
+- **Weather is deterministic.** Schedule keyed on
   `(seed, weatherIndex)`; events land at instants the state already knows, so a
   week offline resolves exactly and a save can't be reloaded for better luck.
 - **Nothing expires.** Broken kit and condition only recover by spending, so
@@ -79,7 +26,8 @@ One site you keep, growing while away, with prestige under it.
   lands with the tab closed. They stack with diminishing returns and never
   reach zero exposure. Weather must cost enough that mitigation pays for itself
   (at ~7% it didn't) and boons must be small (one good year outweighed every
-  storm and made mitigation pointless).
+  storm and made mitigation pointless). Only the deepest open world's buildings
+  count, so every world asks for its own defences.
 - **Repairs are priced against the production they restore**, not the cost
   curve. Off the working count breakage became a coupon; off the owned count
   it became unpayable and insurance a money printer.

@@ -147,10 +147,6 @@ button.danger {
   color: var(--blood);
   border-color: var(--blood);
 }
-button.wide {
-  width: 100%;
-  margin-top: 14px;
-}
 button.start {
   background: var(--accent);
   border-color: var(--wood-dark);
@@ -218,54 +214,10 @@ input {
 .home-note {
   margin: 0;
 }
-.home-aside {
-  margin-top: auto;
-  padding-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 0.85rem;
-}
-.field > span {
-  font-weight: 700;
-  color: var(--wood-dark);
-}
 .choices {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-/* Two halves of one decision — which world the next generation gets — so they
-   sit side by side and the same size rather than wrapping into a staircase. */
-.choices.halves {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  margin-bottom: 14px;
-}
-
-
-/* Eight opponents don't fit a row. A grid keeps the ladder readable as a
-   ladder: two columns, easiest top-left, hardest bottom-right. */
-.choices.roster {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-.choices.roster button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: flex-start;
-}
-.roster-rung {
-  font-variant-numeric: tabular-nums;
-  opacity: 0.5;
-  font-size: 0.72em;
 }
 
 /* A live diorama, not a hero image — same scene the game runs, sized down. */
@@ -829,11 +781,6 @@ input {
   text-transform: uppercase;
   font-weight: 800;
 }
-/* Whistling faster than the puppies can come. Said out loud, because a yield
-   that quietly drops reads as the game being broken rather than as a rule. */
-.whistle.winded {
-  background: var(--wood);
-}
 .whistle-yield {
   font-weight: 700;
   opacity: 0.85;
@@ -1355,12 +1302,6 @@ input {
 .row-maxed.row-locked {
   opacity: 1;
 }
-/* Versus only. The one shelf where what you're buying happens to somebody else,
-   so it gets the sky's colour rather than the yard's. */
-.row-attack {
-  border-color: #6d5a8f;
-  background: #f1ecf7;
-}
 
 /* One bill for the whole mill. It keeps the repair rows' colour, because it is
    those rows — but it's the answer to all of them rather than another item in
@@ -1609,83 +1550,6 @@ input {
   gap: 8px;
 }
 
-/* --- Who you are, and who wants a race ----------------------------------- */
-
-.identity {
-  border: 2px solid var(--wood);
-  border-radius: 12px;
-  background: var(--cream-3);
-  padding: 9px 11px;
-}
-.identity-row {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.identity-handle {
-  font-weight: 800;
-  color: var(--wood-dark);
-}
-.identity-tag {
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: var(--leaf);
-  color: #fff8ec;
-}
-/* Not a warning. Playing as a guest is a perfectly good way to play — it's only
-   the one thing it can't do that's worth naming, and the panel says which. */
-.identity-tag.guest {
-  background: var(--cream-2);
-  color: var(--ink-soft);
-}
-.identity-row .small-btn {
-  margin-left: auto;
-}
-.small-btn {
-  padding: 4px 10px;
-  font-size: 0.75rem;
-  border-radius: 8px;
-}
-.identity-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 2px solid var(--cream-2);
-}
-
-.challenge-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.challenge {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 9px 11px;
-  border: 2px solid var(--accent);
-  border-radius: 12px;
-  background: var(--cream-3);
-}
-.challenge-who {
-  font-weight: 700;
-  color: var(--wood-dark);
-  font-size: 0.88rem;
-}
-.challenge-actions {
-  display: flex;
-  gap: 6px;
-}
-
 /* The code, while you're holding it up. Big enough to read off a screen from
    across a table, which is the entire user interface of this feature. */
 .waiting {
@@ -1694,167 +1558,6 @@ input {
   border-radius: 12px;
   padding: 14px;
   background: var(--cream-3);
-}
-.waiting-code {
-  font-size: 2.4rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  color: var(--wood-dark);
-  line-height: 1.1;
-}
-
-/* --- Versus (the older prototype, on the same shell) --------------------- */
-
-/* The clock, which is the one thing the head-to-head has that the homestead
-   doesn't. Centre of the HUD, between what you can spend and where you stand,
-   because it's the number that makes both of them urgent. */
-.hud-clock {
-  font-weight: 800;
-  font-size: 1.35rem;
-  color: var(--wood-dark);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-.hud-clock.urgent {
-  color: var(--blood);
-  animation: clock-tick 1s steps(2, end) infinite;
-}
-@keyframes clock-tick {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.55;
-  }
-}
-
-/* Where you stand, in the slot the bedding meter has out on the homestead —
-   same bar, same place, and full is still the good end of it. */
-.lead .bedding-track {
-  width: 54px;
-}
-.lead span {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Who you're racing, in full, under the bar that says by how much. */
-.hud-rival {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  font-size: 0.62rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--muted);
-}
-.hud-rival-name {
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  max-width: 8ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.hud-rival span:nth-child(2) {
-  font-weight: 700;
-  color: var(--ink);
-}
-
-/* What's currently being done to you, over the mill it's being done to. Top
-   right, clear of the pack and clear of the hoard, and gone entirely when
-   nothing is wrong. */
-.conditions {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  left: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  justify-content: flex-end;
-  pointer-events: none;
-}
-.chip {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  padding: 3px 8px;
-  border: 2px solid var(--wood);
-  border-radius: 999px;
-  background: var(--cream-3);
-  box-shadow: var(--panel-shadow);
-  font-size: 0.68rem;
-}
-.chip-slow {
-  border-color: var(--blood);
-  background: #fdeee9;
-}
-
-.opp-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.opp {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px 10px;
-  align-items: baseline;
-  padding: 9px 11px;
-  border: 2px solid var(--wood);
-  border-radius: 12px;
-  background: var(--cream-3);
-  font-size: 0.85rem;
-}
-.opp-name {
-  font-weight: 800;
-  color: var(--wood-dark);
-}
-.opp-figures {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  font-variant-numeric: tabular-nums;
-}
-.opp-count {
-  font-weight: 700;
-}
-.opp-rate {
-  font-size: 0.72rem;
-  color: var(--ink-soft);
-}
-.opp-delta {
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-.opp-delta.ahead {
-  color: var(--leaf);
-}
-.opp-delta.behind {
-  color: var(--blood);
-}
-.fog {
-  font-size: 0.7rem;
-  color: var(--ink-soft);
-  margin: 8px 0 0;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.chip-name {
-  font-weight: 700;
-}
-.chip-detail,
-.chip-timer {
-  color: var(--ink-soft);
 }
 
 @media (prefers-reduced-motion: reduce) {

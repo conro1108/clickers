@@ -7,9 +7,9 @@ import {
   type PointerEventHandler,
   type ReactNode,
 } from "react";
-import { PRODUCERS, solo, type PlayerState, type Yield } from "@clickers/sim";
+import { solo, type Yield } from "@clickers/sim";
 
-import { matchMark, producerMark } from "../marks.js";
+import { producerMark } from "../marks.js";
 import { EMPTY_VIEW, MillScene as Scene, type MillView } from "../render/millScene.js";
 import { InsideScene } from "../render/insideScene.js";
 import { BeyondScene } from "../render/beyondScene.js";
@@ -130,37 +130,6 @@ export const MillScene = forwardRef<MillSceneHandle, {
         world={world}
         onPointerDown={(e) => whistleAt(e, onWhistle)}
       />
-      {children}
-    </div>
-  );
-});
-
-/** The same picture, for the head-to-head prototype. */
-export const MatchScene = forwardRef<MillSceneHandle, {
-  me: PlayerState;
-  hoard: Yield;
-  onWhistle: (at?: { x: number; y: number }) => void;
-  children?: ReactNode;
-}>(function MatchScene({ me, hoard, onWhistle, children }, ref) {
-  const view = useMemo<MillView>(() => {
-    const working: MillView["working"] = {};
-    const broken: MillView["broken"] = {};
-    const marks: MillView["marks"] = {};
-    for (const prod of PRODUCERS) {
-      const owned = me.producers[prod.id] ?? 0;
-      const dead = Math.min(me.broken[prod.id] ?? 0, owned);
-      if (owned - dead > 0) working[prod.id] = owned - dead;
-      if (dead > 0) broken[prod.id] = dead;
-      const level = matchMark(me.upgrades, prod.id);
-      if (level > 0) marks[prod.id] = level;
-    }
-    // Seeded off the player rather than the match, so a rematch is the same yard laid out the same way — it's your mill both times.
-    return { ...EMPTY_VIEW, working, broken, marks, hoard, seed: me.id };
-  }, [me, hoard]);
-
-  return (
-    <div className="stage">
-      <SceneCanvas ref={ref} view={view} onPointerDown={(e) => whistleAt(e, onWhistle)} />
       {children}
     </div>
   );

@@ -3,54 +3,6 @@
 import type { ThemeStrings } from "@clickers/sim";
 
 export const STRINGS: ThemeStrings = {
-  producers: {
-    patch: {
-      name: "Potato Plot",
-      blurb: "A patch of dirt. It does what dirt does.",
-      hurt: "trampled",
-      mend: "Turn over",
-    },
-    hand: { name: "Farmhand", blurb: "Pays for themselves. Eventually.", hurt: "maimed", mend: "Patch up" },
-    rig: {
-      name: "Irrigation Rig",
-      blurb: "Water, on purpose, at the right time.",
-      hurt: "burst",
-      mend: "Repair",
-    },
-    hauler: { name: "Tractor", blurb: "Diesel-powered crop math.", hurt: "broken", mend: "Repair" },
-    machine: { name: "Combine Harvester", blurb: "Eats a field for breakfast.", hurt: "jammed", mend: "Unjam" },
-    lab: {
-      name: "Tuber Lab",
-      blurb: "The potatoes are asking questions now.",
-      hurt: "contaminated",
-      mend: "Decontaminate",
-    },
-  },
-  upgrades: {
-    tool_1: { name: "Sharpened Spade", blurb: "Digging, but with intent. Clicks x3." },
-    tool_2: { name: "Two-Handed Spade", blurb: "Both hands. Clicks x5." },
-    tool_3: { name: "Ceremonial Gold Spade", blurb: "Impractical. Effective. Clicks x8." },
-    mult_patch: { name: "Raised Beds", blurb: "Plots produce twice as much." },
-    mult_hand: { name: "Overtime Pay", blurb: "Farmhands produce twice as much." },
-    boost_1: { name: "Fertilizer", blurb: "All producers +50%." },
-    mult_rig: { name: "Drip Lines", blurb: "Irrigation rigs produce twice as much." },
-    boost_2: { name: "Crop Rotation", blurb: "All producers +50%." },
-    mult_hauler: { name: "Turbo Diesel", blurb: "Tractors produce twice as much." },
-    boost_3: { name: "GMO Seed Stock", blurb: "All producers x2. Don't read the label." },
-  },
-  attacks: {
-    vermin: { name: "Moles", blurb: "Chews through their cheap stuff. Stays chewed." },
-    disease: { name: "Potato Blight", blurb: "Rots a chunk of their best producer. Needs repairing." },
-    swelter: { name: "Drought", blurb: "-55% output for 40s. Passes on its own." },
-    rot: { name: "Ruined Soil", blurb: "Wrecks half their best producer." },
-    sweep: { name: "Locust Swarm", blurb: "Takes a slice of everything they own. Repair bills for days." },
-  },
-  defenses: {
-    ward: { name: "Scarecrow", blurb: "Absorbs 60 power for 90s." },
-    fence: { name: "Electric Fence", blurb: "Absorbs 200 power for 2m." },
-    shelter: { name: "Greenhouse", blurb: "Absorbs 550 power for 2m30s." },
-    insurance: { name: "Crop Insurance", blurb: "Absorbs 1400 power for 3m." },
-  },
   soloProducers: {
     patch: {
       name: "Potato Plot",

@@ -43,7 +43,7 @@ import { PERK_BY_ID, headStartStock, perkCost, heirloomsFor } from "./prestige.j
 import type { SiteCommand, SiteLogEntry, SiteResult, SiteState } from "./state.js";
 import { fireWeather, scheduleNext, type WeatherEvent } from "./weather.js";
 
-/** Clamp on batched clicks, matching the versus mode's flush window. */
+/** Clamp on batched clicks. */
 export const MAX_CLICKS_PER_FLUSH = 25;
 
 /** The purchase that folds the horizon: the first gate, opening `inside`. */
@@ -247,9 +247,8 @@ function fail(reason: string): SiteResult {
 }
 
 /**
- * Pure: the same (site, command, time) always gives the same result. Same
- * contract as the versus `applyCommand`, so this can move behind a server later
- * without touching any game logic.
+ * Pure: the same (site, command, time) always gives the same result, so this
+ * can move behind a server later without touching any game logic.
  */
 export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): SiteResult {
   // A clock that went backwards is `advance`'s problem and it deals with it by

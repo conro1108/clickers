@@ -69,41 +69,7 @@ export const ICONS = {
     palette: { k: K, b: "#b07c42", l: "#d6a86a" },
   },
 
-  shield: {
-    rows: [
-      "kkkkkkkkkkkk",
-      "kggggggggggk",
-      "kgglggggggkk",
-      "kggllgggggk.",
-      "kgggggggggk.",
-      ".kggggggggk.",
-      ".kgggggggk..",
-      "..kggggggk..",
-      "..kgggggk...",
-      "...kgggk....",
-      "....kgk.....",
-      ".....k......",
-    ],
-    palette: { k: K, g: "#5f9c46", l: "#8cc35f" },
-  },
 
-  clipboard: {
-    rows: [
-      "....kkkkk...",
-      "..kkkccckkk.",
-      "..kpppppppk.",
-      "..kplllllpk.",
-      "..kpppppppk.",
-      "..kplllllpk.",
-      "..kpppppppk.",
-      "..kplllllpk.",
-      "..kpppppppk.",
-      "..kpppppppk.",
-      "..kkkkkkkkk.",
-      "............",
-    ],
-    palette: { k: K, p: "#fdf3e0", c: "#c9a96a", l: "#c9b896" },
-  },
 
   house: {
     rows: [
@@ -160,23 +126,6 @@ export const ICONS = {
     palette: { k: K, m: METAL.m },
   },
 
-  cloud: {
-    rows: [
-      "............",
-      "............",
-      "....kkkk....",
-      "..kkcccckk..",
-      ".kcccccccck.",
-      "kcccccccccck",
-      "kcccccccccck",
-      ".kkcccccckk.",
-      "...kkkkkk...",
-      "............",
-      "............",
-      "............",
-    ],
-    palette: { k: K, c: "#dfe7ee" },
-  },
 } satisfies Record<string, Art>;
 
 export type IconName = keyof typeof ICONS;

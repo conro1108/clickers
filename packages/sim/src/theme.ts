@@ -15,10 +15,6 @@ export interface ProducerNamed extends Named {
 }
 
 export interface ThemeStrings {
-  producers: Record<string, ProducerNamed>;
-  upgrades: Record<string, Named>;
-  attacks: Record<string, Named>;
-  defenses: Record<string, Named>;
   soloProducers: Record<string, ProducerNamed>;
   soloClickUpgrades: Record<string, Named>;
   soloGlobalUpgrades: Record<string, Named>;

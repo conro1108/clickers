@@ -1,6 +1,6 @@
 import { solo, type Millis } from "@clickers/sim";
 
-/** Wall-clock-ish, since a homestead has no match clock to count against. */
+/** Wall-clock-ish. */
 function ago(at: Millis, now: Millis): string {
   const s = Math.max(0, Math.round((now - at) / 1000));
   if (s < 60) return `${s}s`;

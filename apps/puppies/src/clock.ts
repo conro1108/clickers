@@ -1,13 +1,6 @@
 import { ms, type Millis } from "@clickers/sim";
 
-// Single source of "now"; the server-time offset lands here so nothing else has to change.
-let offset = 0;
-
-export function setServerOffset(deltaMs: number): void {
-  offset = deltaMs;
-}
-
-// Dev-only forward skew, separate from the server offset. Persisted so a reload does not undo a jump mid-test.
+// Single source of "now". Dev-only forward skew, persisted so a reload does not undo a jump mid-test.
 const SKEW_KEY = "puppy-mill:dev-skew";
 
 let skew = readSkew();
@@ -36,5 +29,5 @@ export function setClockSkew(next: number): void {
 }
 
 export function nowMs(): Millis {
-  return ms(Date.now() + offset + skew);
+  return ms(Date.now() + skew);
 }

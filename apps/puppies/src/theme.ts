@@ -3,59 +3,6 @@
 import type { ThemeStrings } from "@clickers/sim";
 
 export const STRINGS: ThemeStrings = {
-  producers: {
-    patch: {
-      name: "Puppy Pen",
-      blurb: "A square of yard with a fence round it. Nature does the rest.",
-      hurt: "trampled",
-      mend: "Re-peg",
-    },
-    hand: {
-      name: "Kennel Hand",
-      blurb: "Pays for themselves. Eventually.",
-      hurt: "worn out",
-      mend: "Talk round",
-    },
-    rig: { name: "Heat Lamp", blurb: "Warmth, on purpose, at the right time.", hurt: "blown", mend: "Re-bulb" },
-    hauler: { name: "Transport Van", blurb: "Diesel-powered puppy logistics.", hurt: "broken", mend: "Repair" },
-    machine: {
-      name: "Grooming Rig",
-      blurb: "Fluffs a hundred an hour. Do not stand in front of it.",
-      hurt: "jammed",
-      mend: "Unjam",
-    },
-    lab: {
-      name: "Genetics Lab",
-      blurb: "The chihuahuas are asking questions now.",
-      hurt: "contaminated",
-      mend: "Decontaminate",
-    },
-  },
-  upgrades: {
-    tool_1: { name: "Silver Whistle", blurb: "Whistling, but with intent. Clicks x3." },
-    tool_2: { name: "Two-Tone Whistle", blurb: "Both fingers. Clicks x5." },
-    tool_3: { name: "Ceremonial Gold Whistle", blurb: "Impractical. Effective. Clicks x8." },
-    mult_patch: { name: "Straw Bedding", blurb: "Pens produce twice as much." },
-    mult_hand: { name: "Overtime Pay", blurb: "Kennel Hands produce twice as much." },
-    boost_1: { name: "Better Kibble", blurb: "All producers +50%." },
-    mult_rig: { name: "Ceramic Bulbs", blurb: "Heat lamps produce twice as much." },
-    boost_2: { name: "Rest Rotation", blurb: "All producers +50%." },
-    mult_hauler: { name: "Turbo Diesel", blurb: "Vans produce twice as much." },
-    boost_3: { name: "Designer Genes", blurb: "All producers x2. Don't read the label." },
-  },
-  attacks: {
-    vermin: { name: "Foxes", blurb: "Goes through their cheap stuff. Stays gone through." },
-    disease: { name: "Kennel Cough", blurb: "Runs through a chunk of their best producer. Needs seeing to." },
-    swelter: { name: "Heatwave", blurb: "-55% output for 40s. Passes on its own." },
-    rot: { name: "Ruined Bedding", blurb: "Wrecks half their best producer." },
-    sweep: { name: "Surprise Inspection", blurb: "Takes a slice of everything they own. Paperwork for days." },
-  },
-  defenses: {
-    ward: { name: "Guard Dog", blurb: "Absorbs 60 power for 90s." },
-    fence: { name: "Electric Fence", blurb: "Absorbs 200 power for 2m." },
-    shelter: { name: "Quarantine Barn", blurb: "Absorbs 550 power for 2m30s." },
-    insurance: { name: "Kennel Insurance", blurb: "Absorbs 1400 power for 3m." },
-  },
   soloProducers: {
     patch: {
       name: "Puppy Pen",

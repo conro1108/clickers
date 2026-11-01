@@ -1,4 +1,4 @@
-// Deterministic PRNG keyed on matchSeed + eventIndex. Nothing in the sim may call Math.random().
+// Deterministic PRNG keyed on seed + eventIndex. Nothing in the sim may call Math.random().
 
 function hash(seed: string): number {
   let h = 2166136261 >>> 0;
@@ -23,8 +23,8 @@ export interface Rng {
   range(lo: number, hi: number): number;
 }
 
-export function rngFor(matchSeed: string, eventIndex: number): Rng {
-  const next = mulberry32(hash(`${matchSeed}:${eventIndex}`));
+export function rngFor(seed: string, eventIndex: number): Rng {
+  const next = mulberry32(hash(`${seed}:${eventIndex}`));
   return {
     next,
     range: (lo, hi) => lo + next() * (hi - lo),

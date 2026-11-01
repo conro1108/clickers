@@ -16,23 +16,16 @@ A clicker gets a second axis once something is actively taking your production
 away: every purchase becomes "grow" vs. "hold onto what I've got." Here that
 pressure is **weather** — storms land while the tab is closed, damage is
 permanent until repaired, and defense is buildings you buy, not shields you
-time. The front door of each game is a persistent solo homestead with a
-prestige loop; head-to-head versus mode (bots, or a real person by join code)
-is parked in the back room, fully working.
+time. Each game is a persistent homestead with a prestige loop.
 
 ## How it's built
 
 There is **no tick loop**. Game state is a pure function of
-`(checkpoint, elapsed, rate, active effects)` — client and server both
-integrate forward to "now" on demand, which is what makes offline progression
-free and a request/response backend viable. Multiplayer is an append-only
-command log in Postgres; no game state ever lives in a database column, so
-two sabotages landing at once can't corrupt anything. (Details in
-`docs/STACK.md` and `docs/multiplayer.md`.)
+`(checkpoint, elapsed, rate)`, integrated forward to "now" on demand, which is
+what makes offline progression free. (Details in `docs/STACK.md`.)
 
 - `packages/sim` — the whole simulation as pure TypeScript, zero I/O, shared
-  by both games and both sides of the wire. A handful of regression tests live here.
-- `packages/online` — the Supabase command-log client.
+  by both games. A handful of regression tests live here.
 - `apps/potatoes`, `apps/puppies` — React + Vite skins over the same sim.
 
 ## Run it

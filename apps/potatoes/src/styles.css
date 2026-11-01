@@ -146,10 +146,6 @@ button.danger {
   color: var(--blood);
   border-color: var(--blood);
 }
-button.wide {
-  width: 100%;
-  margin-top: 14px;
-}
 button.start {
   background: var(--accent);
   border-color: var(--wood-dark);
@@ -198,8 +194,7 @@ input {
   flex-direction: column;
   gap: 14px;
 }
-.lobby h1,
-.brand {
+.lobby h1 {
   font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--wood-dark);
@@ -209,8 +204,7 @@ input {
   margin: 0;
   line-height: 1.1;
 }
-.lobby h1 span,
-.brand span {
+.lobby h1 span {
   color: var(--accent);
 }
 .tagline {
@@ -221,35 +215,10 @@ input {
 .home-note {
   margin: 0;
 }
-.home-aside {
-  margin-top: auto;
-  padding-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 0.85rem;
-}
-.field > span {
-  font-weight: 700;
-  color: var(--wood-dark);
-}
 .choices {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-/* Two halves of one decision — which world the next generation gets — so they
-   sit side by side and the same size rather than wrapping into a staircase. */
-.choices.halves {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  margin-bottom: 14px;
 }
 
 /* A live diorama, not a hero image — same scene the game runs, sized down. */
@@ -1479,29 +1448,6 @@ input {
 
 /* --- Status list --------------------------------------------------------- */
 
-.stats {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin: 0 0 14px;
-}
-.stats > div {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 7px 0;
-  border-bottom: 1px dashed rgba(138, 111, 87, 0.4);
-  font-size: 0.88rem;
-}
-.stats dt {
-  font-weight: 700;
-  color: var(--wood-dark);
-}
-.stats dd {
-  margin: 0;
-  font-variant-numeric: tabular-nums;
-}
-
 .damage {
   border: 2px solid var(--blood);
   background: #fdeee9;
@@ -1594,201 +1540,6 @@ input {
   gap: 8px;
 }
 
-/* --- Versus (the older prototype, same skin) ----------------------------- */
-
-.topbar {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  background: var(--cream);
-  border-bottom: 3px solid var(--wood);
-  font-size: 0.8rem;
-}
-.brand {
-  font-size: 0.9rem;
-}
-.clock {
-  font-weight: 800;
-  font-size: 1.1rem;
-  color: var(--wood-dark);
-  font-variant-numeric: tabular-nums;
-}
-.clock.urgent {
-  color: var(--blood);
-}
-.topbar-bank {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-.topbar-bank-value {
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-.topbar-bank-label {
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-.topbar-right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-/* The scoring rule is a lobby decision you can't change mid-match, and on a
-   phone-width topbar it's the first thing that should give up its room. */
-.rule {
-  display: none;
-}
-
-.grid {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
-  background: var(--cream);
-}
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.panel {
-  background: var(--cream-3);
-  border: 2px solid var(--wood);
-  border-radius: 14px;
-  padding: 12px;
-  box-shadow: var(--panel-shadow);
-}
-.panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.panel-head h2 {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--wood-dark);
-}
-.tabs {
-  gap: 6px;
-}
-.tabs button {
-  flex: 1;
-  padding: 6px 4px;
-  font-size: 0.8rem;
-  position: relative;
-}
-.tab-alert {
-  position: absolute;
-  top: 3px;
-  right: 4px;
-  width: 6px;
-  height: 6px;
-  background: var(--blood);
-}
-.shop-foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 2px solid var(--cream-2);
-  padding-top: 9px;
-  font-size: 0.85rem;
-}
-
-.tally {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-.bank-value {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--wood-dark);
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-.bank-label,
-.tally-score-label {
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ink-soft);
-}
-.tally-score {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-.tally-score-value {
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
-.dig-layout {
-  margin: 10px 0;
-}
-.dig-emoji {
-  font-size: 1.2rem;
-}
-
-.opp-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.opp {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 8px;
-  align-items: baseline;
-  font-size: 0.82rem;
-}
-.opp-name {
-  font-weight: 700;
-}
-.opp-count,
-.opp-rate {
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-soft);
-}
-.fog {
-  font-size: 0.7rem;
-  color: var(--ink-soft);
-  margin: 8px 0 0;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.chip-name {
-  font-weight: 700;
-}
-.chip-detail,
-.chip-timer {
-  color: var(--ink-soft);
-  font-size: 0.72rem;
-}
-.stat-note {
-  font-size: 0.7rem;
-  color: var(--ink-soft);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .pop,
   .nav button.alert .pxicon,
@@ -1829,112 +1580,4 @@ input {
   100% {
     opacity: 1;
   }
-}
-
-/* ---------------------------------------------------------------------------
-   The lobby: who you are, and who wants a race.
-
-   Same rules as the puppy game, because it's the same screen — but every colour
-   in here is a variable this file already defines for itself, so it comes out
-   in wood and leaf rather than cream and pink.
-   --------------------------------------------------------------------------- */
-
-/* Eight opponents don't fit a row. A grid keeps the ladder readable as a
-   ladder: two columns, easiest top-left, hardest bottom-right. */
-.choices.roster {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-.choices.roster button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: flex-start;
-}
-.roster-rung {
-  font-variant-numeric: tabular-nums;
-  opacity: 0.5;
-  font-size: 0.72em;
-}
-/* --- Who you are, and who wants a race ----------------------------------- */
-
-.identity {
-  border: 2px solid var(--wood);
-  border-radius: 12px;
-  background: var(--cream-3);
-  padding: 9px 11px;
-}
-.identity-row {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.identity-handle {
-  font-weight: 800;
-  color: var(--wood-dark);
-}
-.identity-tag {
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: var(--leaf);
-  color: #fff8ec;
-}
-/* Not a warning. Playing as a guest is a perfectly good way to play — it's only
-   the one thing it can't do that's worth naming, and the panel says which. */
-.identity-tag.guest {
-  background: var(--cream-2);
-  color: var(--ink-soft);
-}
-.identity-row .small-btn {
-  margin-left: auto;
-}
-.small-btn {
-  padding: 4px 10px;
-  font-size: 0.75rem;
-  border-radius: 8px;
-}
-.identity-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 2px solid var(--cream-2);
-}
-.challenge-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.challenge {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 9px 11px;
-  border: 2px solid var(--accent);
-  border-radius: 12px;
-  background: var(--cream-3);
-}
-.challenge-who {
-  font-weight: 700;
-  color: var(--wood-dark);
-  font-size: 0.88rem;
-}
-.challenge-actions {
-  display: flex;
-  gap: 6px;
-}
-.waiting-code {
-  font-size: 2.4rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  color: var(--wood-dark);
-  line-height: 1.1;
 }

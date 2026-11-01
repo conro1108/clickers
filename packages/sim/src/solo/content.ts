@@ -1,10 +1,6 @@
 /**
- * Content for the solo homestead — a site you keep, not a match you finish.
- *
- * Deliberately separate from the versus content set. That ladder is tuned so a
- * five-minute match can climb the whole thing; this one is tuned for a run that
- * goes for days and gets reset on purpose. Sharing one table would mean every
- * balance change to either mode silently retunes the other.
+ * Content for the homestead: a site you keep, tuned for a run that goes for days
+ * and gets reset on purpose.
  */
 
 import { Y, type Yield } from "../numbers.js";
@@ -865,10 +861,8 @@ export const SOLO_UPGRADE_BY_ID: Record<string, SoloUpgrade> = Object.fromEntrie
 // ---------------------------------------------------------------------------
 // Land — permanent infrastructure against the weather.
 //
-// The versus mode's defenses are timed absorb pools, which is the right shape
-// for a five-minute fight you're watching. It's the wrong shape here: most
-// weather lands while the tab is closed, so a shield with a 90-second window
-// would protect nothing. These are levelled buildings that just keep working.
+// Most weather lands while the tab is closed, so anything timed would protect
+// nothing. These are levelled buildings that just keep working.
 //
 // Only the deepest open world's four count (`landsFor`). They cover the whole
 // site, because that world's weather hits the whole site, but they do nothing

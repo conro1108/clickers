@@ -19,10 +19,6 @@ const tierWords = new Proxy({} as Record<string, readonly [string, string, strin
 });
 
 export const STRINGS: ThemeStrings = {
-  producers: producerWords,
-  upgrades: words,
-  attacks: words,
-  defenses: words,
   soloProducers: producerWords,
   soloClickUpgrades: words,
   soloGlobalUpgrades: words,

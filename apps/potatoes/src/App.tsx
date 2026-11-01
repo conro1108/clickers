@@ -2,58 +2,25 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
   type PointerEvent,
 } from "react";
-import {
-  Y,
-  clickGain,
-  format,
-  formatDuration,
-  seconds,
-  solo,
-  standings,
-} from "@clickers/sim";
-
-import { abandon, errorText, joinByCode, useLobby, useOnlineMatch, type MatchRow } from "@clickers/online";
+import { format, solo } from "@clickers/sim";
 
 import { clockSkew, setClockSkew } from "./clock.js";
 import { AwayReport } from "./components/AwayReport.js";
 import { Damage } from "./components/Damage.js";
 import { CutFall } from "./components/CutFall.js";
-import { Farm } from "./components/Farm.js";
 import { FarmFeed } from "./components/FarmFeed.js";
 import { FarmScene, TitleScene, type FarmSceneHandle } from "./components/FarmScene.js";
 import { GrowPanel, LandPanel, LegacyPanel } from "./components/FarmShop.js";
-import { Feed } from "./components/Feed.js";
-import { Opponents } from "./components/Opponents.js";
 import { PxIcon } from "./components/PxIcon.js";
 import { Sheet } from "./components/Sheet.js";
-import { VersusLobby } from "./components/Lobby.js";
-import { Shop } from "./components/Shop.js";
 import { hasSavedFarm, useFarm } from "./useFarm.js";
 import { culprit, WORLD_COPY } from "./worlds.js";
-import { BOTS, useMatch, type MatchRuntime, type MatchSetup } from "./useMatch.js";
 
-// `greedy` is left out: it is a control group for the balance harness, not an opponent.
-const BOT_ROSTER = ([
-  "chill",
-  "scrappy",
-  "nasty",
-  "mean",
-  "vicious",
-  "ruthless",
-  "merciless",
-  "tyrant",
-] as const).map((id) => ({
-  id,
-  name: BOTS[id]?.name ?? id,
-  blurb: BOTS[id]?.blurb ?? "",
-}));
-
-type Screen = { kind: "home" } | { kind: "farm" } | { kind: "versus" };
+type Screen = { kind: "home" } | { kind: "farm" };
 
 // Space always digs; without the blur it would re-fire the last-clicked shop button.
 function useSpaceToDig(dig: () => void, enabled = true) {
@@ -185,17 +152,15 @@ function formatSkew(msAhead: number): string {
   return [d ? `${d}d` : "", h || !d ? `${h}h` : ""].filter(Boolean).join(" ");
 }
 
-// The back room: the parked versus prototype plus dev levers. Reached only by holding the HUD potato.
+// The back room: dev levers. Reached only by holding the HUD potato.
 // A lever earns a place only if it reaches a state you cannot otherwise get to in under a minute.
 function BackRoom({
   farm,
-  onVersus,
   onTitle,
   onAbandon,
   dispatch,
 }: {
   farm: solo.SiteState;
-  onVersus: () => void;
   onTitle: () => void;
   onAbandon: () => void;
   dispatch: (cmd: solo.SiteCommand) => void;
@@ -312,17 +277,6 @@ function BackRoom({
             </button>
           ))}
         </div>
-      </section>
-
-      <section>
-        <h3>Versus a bot</h3>
-        <p className="muted small">
-          The older head-to-head prototype: two farms, one clock, and upgrades that reach across the
-          table. Parked, but it still runs.
-        </p>
-        <button className="ghost" onClick={onVersus}>
-          Open the lobby
-        </button>
       </section>
 
       <section>
@@ -679,7 +633,6 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         <Sheet title="The back room" sub="Levers, not gameplay." onClose={() => setSheet(null)}>
           <BackRoom
             farm={farm}
-            onVersus={() => onGo({ kind: "versus" })}
             onTitle={() => onGo({ kind: "home" })}
             onAbandon={() => {
               abandon();
@@ -755,236 +708,8 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   );
 }
 
-// --- Versus (the older prototype) ---
-
-function Match({
-  runtime,
-  onExit,
-  onRematch,
-}: {
-  runtime: MatchRuntime;
-  onExit: () => void;
-  /** Absent online, where a rematch is a fresh challenge rather than a reset. */
-  onRematch?: () => void;
-}) {
-  const { state, now, me, pendingClicks, over, error, click, dispatch } = runtime;
-  useSpaceToDig(click);
-
-  const table = standings(state, now);
-  const opponentIds = state.order.filter((id) => id !== me.id);
-  const opponents = opponentIds.map((id) => state.players[id]!);
-  // Unflushed clicks count (`dispatch` banks them first). `clickGain`, not `clickYield`: a drained bucket makes a dig worth less.
-  const budget = useMemo(
-    () => Y.add(me.stock, clickGain(me, now, pendingClicks)),
-    [me, now, pendingClicks],
-  );
-  const yourScore = table.find((s) => s.player.id === me.id)?.score ?? 0;
-  const timeLeft = state.startedAt + state.config.durationMs - now;
-
-  return (
-    <div className="app">
-      {/* Pinned, because the two numbers you actually play against — the clock
-          and what's in the bank — are otherwise scrolled off the moment you go
-          shopping, which is exactly when you need them. */}
-      <header className="topbar">
-        <div className="brand">
-          Yield, <span>Inc.</span>
-        </div>
-        <div className={`clock ${timeLeft < seconds(30) ? "urgent" : ""}`}>
-          {formatDuration(timeLeft)}
-        </div>
-        <div className="topbar-bank">
-          <span className="topbar-bank-value">{format(budget)}</span>
-          <span className="topbar-bank-label">to spend</span>
-        </div>
-        <div className="topbar-right">
-          <span className="muted rule">
-            {state.config.scoring === "on_hand" ? "biggest pile wins" : "most harvested wins"}
-          </span>
-          <button className="ghost" onClick={onExit}>
-            Leave
-          </button>
-        </div>
-      </header>
-
-      {error && <div className="error">{error}</div>}
-
-      <main className="grid">
-        <Farm
-          state={state}
-          me={me}
-          now={now}
-          pendingClicks={pendingClicks}
-          onClick={click}
-          disabled={over}
-        />
-        <Shop me={me} now={now} budget={budget} opponents={opponents} dispatch={dispatch} />
-        <div className="sidebar">
-          <Opponents state={state} now={now} ids={opponentIds} yourScore={yourScore} />
-          <Feed state={state} />
-        </div>
-      </main>
-
-      {over && (
-        <div className="overlay">
-          <div className="result">
-            <h2>{table[0]?.player.id === me.id ? "You win." : `${table[0]?.player.name} wins.`}</h2>
-            <ol className="final">
-              {table.map((s) => (
-                <li key={s.player.id}>
-                  <span>{s.player.name}</span>
-                  <strong>{format(s.score)}</strong>
-                </li>
-              ))}
-            </ol>
-            <div className="result-actions">
-              {onRematch && (
-                <button className="start" onClick={onRematch}>
-                  Rematch
-                </button>
-              )}
-              <button className="ghost" onClick={onExit}>
-                {onRematch ? "Change setup" : "Back to the lobby"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** A match against the local bot loop. */
-function BotMatch({ setup, onExit }: { setup: MatchSetup; onExit: () => void }) {
-  const runtime = useMatch(setup);
-  return <Match runtime={runtime} onExit={onExit} onRematch={runtime.restart} />;
-}
-
-// A match against a person, folded out of the command log. Same screen as the bot, plus a pre-log wait and a non-clock ending.
-function OnlineMatch({
-  row,
-  meId,
-  onExit,
-}: {
-  row: MatchRow;
-  meId: string;
-  onExit: (row: MatchRow) => void;
-}) {
-  const runtime = useOnlineMatch(row, meId);
-  if (!runtime.ready) {
-    return (
-      <div className="lobby">
-        <h1>
-          Yield, <span>Inc.</span>
-        </h1>
-        <p className="tagline">Catching up on the match…</p>
-        {runtime.error && <div className="error">{runtime.error}</div>}
-        <TitleScene />
-        <div className="home-aside">
-          <button className="ghost" onClick={() => onExit(row)}>
-            Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-  return <Match runtime={runtime} onExit={() => onExit(row)} />;
-}
-
-// The versus mode, and the only place the app talks to the network. Sign-in lives here so solo players never get a user made.
-function Versus({ onLeave, invite }: { onLeave: () => void; invite?: string | null }) {
-  const lobby = useLobby();
-  const [inMatch, setInMatch] = useState<
-    { kind: "bot"; setup: MatchSetup } | { kind: "online"; row: MatchRow } | null
-  >(null);
-
-  // An invite link walks itself in: anonymous sign-in has happened by the time `me` exists, and the code is spent on arrival.
-  const walkedIn = useRef(false);
-  useEffect(() => {
-    if (walkedIn.current || !invite || !lobby.me) return;
-    walkedIn.current = true;
-    // A join code is good once; scrub it from the address bar so a refresh does not error.
-    window.history.replaceState(null, "", window.location.pathname);
-    void joinByCode(invite).then(
-      (row) => setInMatch({ kind: "online", row }),
-      // A dead link lands in the lobby holding the reason.
-      (e) => lobby.setError(errorText(e)),
-    );
-  }, [invite, lobby.me, lobby.setError]);
-
-  // A challenge accepted at the other end starts a match you never pressed a button for.
-  useEffect(() => {
-    if (!inMatch && lobby.live?.status === "active") {
-      setInMatch({ kind: "online", row: lobby.live });
-    }
-  }, [inMatch, lobby.live]);
-
-  if (inMatch?.kind === "bot") {
-    return (
-      <BotMatch
-        key={`${inMatch.setup.durationMs}-${inMatch.setup.botProfile}-${inMatch.setup.scoring}`}
-        setup={inMatch.setup}
-        onExit={() => setInMatch(null)}
-      />
-    );
-  }
-  if (inMatch?.kind === "online" && lobby.me) {
-    return (
-      <OnlineMatch
-        key={inMatch.row.id}
-        row={inMatch.row}
-        meId={lobby.me.id}
-        onExit={(row) => {
-          // Leaving a live match is forfeiting it; saying so stops the lobby walking you back in.
-          void abandon(row.id);
-          setInMatch(null);
-          lobby.refresh();
-        }}
-      />
-    );
-  }
-
-  return (
-    <VersusLobby
-      lobby={lobby}
-      bots={BOT_ROSTER}
-      botProfile={BOT_ROSTER[0]!.id}
-      onBot={(profile, terms) =>
-        setInMatch({
-          kind: "bot",
-          setup: {
-            playerName: lobby.me?.displayName ?? "You",
-            durationMs: terms.durationMs,
-            botProfile: profile as MatchSetup["botProfile"],
-            scoring: terms.scoring,
-          },
-        })
-      }
-      onEnter={(row) => setInMatch({ kind: "online", row })}
-      onBack={onLeave}
-    />
-  );
-}
-
-// The invite link, read once at boot. Query param, not a path: no router, and `/play/ABCD` would 404 cold.
-function inviteCode(): string | null {
-  const code = new URLSearchParams(window.location.search).get("join");
-  return code ? code.trim().toUpperCase() : null;
-}
-
 export function App() {
-  const [invite] = useState(inviteCode);
-  // An invite outranks both the farm and the splash: they came to play a specific person.
-  const [screen, setScreen] = useState<Screen>(() =>
-    invite ? { kind: "versus" } : hasSavedFarm() ? { kind: "farm" } : { kind: "home" },
-  );
+  const [screen, setScreen] = useState<Screen>(() => (hasSavedFarm() ? { kind: "farm" } : { kind: "home" }));
 
-  switch (screen.kind) {
-    case "farm":
-      return <Homefarm onGo={setScreen} />;
-    case "versus":
-      return <Versus invite={invite} onLeave={() => setScreen({ kind: "farm" })} />;
-    default:
-      return <Home onGo={setScreen} />;
-  }
+  return screen.kind === "farm" ? <Homefarm onGo={setScreen} /> : <Home onGo={setScreen} />;
 }

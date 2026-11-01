@@ -1,11 +1,8 @@
 /**
- * Weather — sabotage with nobody behind it.
- *
- * The versus mode's attacks and this are the same idea from opposite ends: your
- * site keeps getting knocked around, and staying productive means budgeting for
- * it. The difference is that nothing here is aimed at you and nothing here
- * expires. Every hit is permanent until you pay to undo it, which is what makes
- * a site you leave alone for a week a site that needs work when you get back.
+ * Weather: your site keeps getting knocked around, and staying productive means
+ * budgeting for it. Nothing here is aimed at you and nothing here expires. Every
+ * hit is permanent until you pay to undo it, which is what makes a site you leave
+ * alone for a week a site that needs work when you get back.
  *
  * Events are a deterministic function of `(seed, weatherIndex)`, and each one
  * lands at a time the state already knows (`nextWeatherAt`). That's what lets an

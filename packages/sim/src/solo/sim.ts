@@ -1,4 +1,4 @@
-// A headless rival for tuning solo, as balance.ts is for versus. Competent, not optimal.
+// A headless player for tuning. Competent, not optimal.
 
 import { Y, ms, seconds, type Millis, type Yield, type Rate } from "../numbers.js";
 import { SOLO_PRODUCERS, SOLO_UPGRADES, type SoloProducerId } from "./content.js";
