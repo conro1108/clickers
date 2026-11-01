@@ -1318,6 +1318,17 @@ input {
   border-color: var(--leaf);
   background: #f0f7e6;
 }
+/* What you actually have, as opposed to the blurb's flavour. */
+.row-effect {
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #3f7a2c;
+}
+/* Maxed is the best a row can be, so it doesn't dim like one you can't afford. */
+.row-maxed.row-locked {
+  opacity: 1;
+}
 
 /* One bill for the whole farm. It keeps the repair rows' colour, because it is
    those rows — but it's the answer to all of them rather than another item in

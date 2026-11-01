@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { ms, seconds } from "../numbers.js";
-import { MAX_CONDITION, MIN_CONDITION, SOLO_PRODUCERS, WORLD_GATE, WORLDS, type World } from "./content.js";
+import { MAX_CONDITION, MAX_MITIGATION, MIN_CONDITION, SOLO_PRODUCERS, WORLD_GATE, WORLDS, type World } from "./content.js";
 import {
   brokenCount,
   currentRate,
   conditionRestoreCost,
   globalMultiplier,
+  mitigation,
   producerCost,
   seedTax,
   totalRepairCost,
@@ -144,6 +145,18 @@ describe("the worlds", () => {
       expect(applySiteCommand(site, buy, site.checkpointAt).ok).toBe(true);
     }
     expect(site.depth).toBe(WORLDS.length - 1);
+  });
+
+  it("defends with the deepest world's buildings only, and stops selling them at the cap", () => {
+    const outside: SiteState = { ...developedSite("land"), stock: 1e40 as never, land: { windbreak: 13 } };
+    expect(mitigation(outside, "breakage")).toBe(MAX_MITIGATION);
+    expect(applySiteCommand(outside, { type: "buy_land", land: "windbreak" }, outside.checkpointAt).ok).toBe(false);
+
+    const inside: SiteState = { ...outside, depth: 1, world: "outside" };
+    expect(mitigation(inside, "breakage")).toBe(0);
+    expect(applySiteCommand(inside, { type: "buy_land", land: "windbreak" }, inside.checkpointAt).ok).toBe(false);
+    const built = mustApplySite(inside, { type: "buy_land", land: "inner_beds" }, inside.checkpointAt);
+    expect(mitigation(built, "breakage")).toBeGreaterThan(0);
   });
 
   it("closes every door on a hand-down, but remembers how far it got", () => {

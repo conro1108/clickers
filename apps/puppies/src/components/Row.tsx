@@ -3,6 +3,7 @@ import { artUrl, type Art } from "../render/pixel.js";
 export function Row({
   name,
   blurb,
+  effect,
   cost,
   meta,
   affordable,
@@ -13,6 +14,7 @@ export function Row({
 }: {
   name: string;
   blurb: string;
+  effect?: string;
   cost: string;
   meta?: string;
   affordable: boolean;
@@ -38,6 +40,7 @@ export function Row({
           {best && <span className="row-best" title="Best rate per puppy" aria-label="best value" />}
         </span>
         <span className="row-blurb">{blurb}</span>
+        {effect && <span className="row-effect">{effect}</span>}
       </span>
       <span className="row-right">
         <span className="row-cost">{cost}</span>

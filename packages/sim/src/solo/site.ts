@@ -26,6 +26,7 @@ import {
   clickYield,
   currentRate,
   isLandAvailable,
+  isLandMaxed,
   isPerkAvailable,
   isProducerAvailable,
   isUnlocked,
@@ -381,6 +382,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       if (opens && upgrade.id === WORLD_GATE[opens]) {
         site = { ...site, depth: site.depth + 1, reached: Math.max(site.reached, site.depth + 1), world: opens };
         note(ARRIVAL[opens], "good");
+        note("nothing you built reaches this far. upkeep has what does.", "bad");
       }
       break;
     }
@@ -388,7 +390,8 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
     case "buy_land": {
       const land = LAND_BY_ID[cmd.land];
       if (!land) return fail("No such building.");
-      if (!isLandAvailable(site, land.id)) return fail("Nothing to build that against yet.");
+      if (!isLandAvailable(site, land.id)) return fail("That doesn't stand against anything here.");
+      if (isLandMaxed(site, land.id)) return fail("That's as far as it goes.");
       const cost = landCost(site, land.id);
       if (!spend(cost)) return fail("Not enough stock.");
       const level = (site.land[land.id] ?? 0) + 1;

@@ -174,6 +174,8 @@ const VOID_COST = 6e34;
 const VOID_STEP = 5.5;
 const END_COST = 2.4e39;
 const END_STEP = 4;
+const VOID_LAND = VOID_COST / 40_000;
+const END_LAND = END_COST / 40_000;
 
 const SOLO_PRODUCER_SHAPES: readonly Shape<SoloProducer>[] = [
   {
@@ -867,6 +869,11 @@ export const SOLO_UPGRADE_BY_ID: Record<string, SoloUpgrade> = Object.fromEntrie
 // for a five-minute fight you're watching. It's the wrong shape here: most
 // weather lands while the tab is closed, so a shield with a 90-second window
 // would protect nothing. These are levelled buildings that just keep working.
+//
+// Only the deepest open world's four count (`landsFor`). They cover the whole
+// site, because that world's weather hits the whole site, but they do nothing
+// for the next world's: otherwise a few million in windbreaks caps the game and
+// every deeper building is dead on arrival.
 // ---------------------------------------------------------------------------
 
 export type LandId =
@@ -923,9 +930,8 @@ export interface Land {
   baseCost: Yield;
   growth: number;
   /**
-   * Which site it defends. The `inside` set is only buildable once the world has
-   * folded, and it's what the inside's Upkeep panel sells instead of the four
-   * that are about a sky.
+   * Which world's weather it stands against. It counts, and is sold, only while
+   * that's the deepest open world; see `landsFor`.
    */
   world: World;
 }
@@ -1042,20 +1048,21 @@ const LAND_SHAPES: readonly Shape<Land>[] = [
   { id: "origin_lining", role: "condition", perLevel: 0.12, baseCost: Y.of(2.993e26), growth: 1.9, world: "origin" },
   { id: "origin_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(5.7e26), growth: 2.1, world: "origin" },
   { id: "origin_reclaim", role: "payout", perLevel: 0.12, baseCost: Y.of(1.14e27), growth: 1.9, world: "origin" },
-  // Void and end: the same shares of the first rung, on a steeper climb, and taxed like the rest of those worlds.
-  { id: "void_beds", role: "breakage", perLevel: 0.12, baseCost: Y.of(VOID_COST * 0.67), growth: 2.2, world: "void" },
-  { id: "void_lining", role: "condition", perLevel: 0.12, baseCost: Y.of(VOID_COST * 1.05), growth: 2.2, world: "void" },
-  { id: "void_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(VOID_COST * 2), growth: 2.4, world: "void" },
-  { id: "void_reclaim", role: "payout", perLevel: 0.12, baseCost: Y.of(VOID_COST * 4), growth: 2.2, world: "void" },
-  { id: "end_beds", role: "breakage", perLevel: 0.12, baseCost: Y.of(END_COST * 0.67), growth: 2.5, world: "end" },
-  { id: "end_lining", role: "condition", perLevel: 0.12, baseCost: Y.of(END_COST * 1.05), growth: 2.5, world: "end" },
-  { id: "end_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(END_COST * 2), growth: 2.7, world: "end" },
-  { id: "end_reclaim", role: "payout", perLevel: 0.12, baseCost: Y.of(END_COST * 4), growth: 2.5, world: "end" },
+  // Void and end open on a first rung that takes days, so these are priced off what you earn on arrival, not off
+  // that rung: a building that took days too would leave the world undefended for all of them. Steeper, and taxed.
+  { id: "void_beds", role: "breakage", perLevel: 0.12, baseCost: Y.of(VOID_LAND * 0.67), growth: 2.2, world: "void" },
+  { id: "void_lining", role: "condition", perLevel: 0.12, baseCost: Y.of(VOID_LAND * 1.05), growth: 2.2, world: "void" },
+  { id: "void_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(VOID_LAND * 2), growth: 2.4, world: "void" },
+  { id: "void_reclaim", role: "payout", perLevel: 0.12, baseCost: Y.of(VOID_LAND * 4), growth: 2.2, world: "void" },
+  { id: "end_beds", role: "breakage", perLevel: 0.12, baseCost: Y.of(END_LAND * 0.67), growth: 2.5, world: "end" },
+  { id: "end_lining", role: "condition", perLevel: 0.12, baseCost: Y.of(END_LAND * 1.05), growth: 2.5, world: "end" },
+  { id: "end_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(END_LAND * 2), growth: 2.7, world: "end" },
+  { id: "end_reclaim", role: "payout", perLevel: 0.12, baseCost: Y.of(END_LAND * 4), growth: 2.5, world: "end" },
 ];
 
 export const LANDS: readonly Land[] = named(LAND_SHAPES, THEME.lands, "land");
 
-/** The buildings that defend one site or the other. */
+/** One world's four buildings. */
 export function landsIn(world: World): readonly Land[] {
   return LANDS.filter((l) => l.world === world);
 }

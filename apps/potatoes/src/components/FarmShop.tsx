@@ -31,6 +31,7 @@ function saveQty(qty: BuyQty): void {
 function Row({
   name,
   blurb,
+  effect,
   cost,
   meta,
   affordable,
@@ -42,6 +43,7 @@ function Row({
   name: string;
   blurb: string;
   cost: string;
+  effect?: string;
   meta?: string;
   affordable: boolean;
   onBuy: () => void;
@@ -68,6 +70,7 @@ function Row({
           )}
         </span>
         <span className="row-blurb">{blurb}</span>
+        {effect && <span className="row-effect">{effect}</span>}
       </span>
       <span className="row-right">
         <span className="row-cost">{cost}</span>
@@ -252,6 +255,21 @@ export function GrowPanel({
   );
 }
 
+/** What a protection is doing right now, in the terms the weather hurts you in. */
+function landEffect(farm: solo.SiteState, role: solo.LandRole): string {
+  const pct = Math.round(solo.mitigation(farm, role) * 100);
+  switch (role) {
+    case "breakage":
+      return `${pct}% less kit broken · never more than ${Math.round(solo.brokenCeiling(farm) * 100)}% down`;
+    case "condition":
+      return `${pct}% less soil lost · never below ${Math.round(solo.conditionFloor(farm) * 100)}%`;
+    case "frequency":
+      return `Comes ${pct}% less often`;
+    case "payout":
+      return `Pays back ${pct}% of every bill`;
+  }
+}
+
 export function LandPanel({
   farm,
   budget,
@@ -335,22 +353,30 @@ export function LandPanel({
       <p className="hint">
         Buildings work whether you're here or not, which is the only kind of defence worth having
         against {threat(farm)} while the tab is
-        closed. They never stop it outright.
+        closed. They never stop it outright: {Math.round(solo.MAX_MITIGATION * 100)}% is as far as
+        any of them goes.
       </p>
+      {farm.depth >= 1 && (
+        <p className="hint">
+          These four cover everything you own, in every world. Whatever you built further back does
+          nothing against {culprit(farm)}.
+        </p>
+      )}
       <div className="rows">
-        {solo.landsIn(farm.world).filter((land) => solo.isLandAvailable(farm, land.id)).map((land) => {
+        {solo.landsFor(farm).map((land) => {
           const level = solo.landLevel(farm, land.id);
           const cost = solo.landCost(farm, land.id);
-          const now = solo.mitigation(farm, land.role);
+          const maxed = solo.isLandMaxed(farm, land.id);
           return (
             <Row
               key={land.id}
-              accent="row-defend"
+              accent={`row-defend ${maxed ? "row-maxed" : ""}`}
               name={`${land.name}${level ? ` ×${level}` : ""}`}
               blurb={land.blurb}
-              cost={format(cost)}
-              meta={`${Math.round(now * 100)}% now`}
-              affordable={Y.gte(budget, cost)}
+              effect={landEffect(farm, land.role)}
+              cost={maxed ? "Maxed" : format(cost)}
+              meta={maxed ? undefined : `next ${Math.round(solo.mitigationAfter(farm, land.id) * 100)}%`}
+              affordable={!maxed && Y.gte(budget, cost)}
               onBuy={() => dispatch({ type: "buy_land", land: land.id })}
             />
           );

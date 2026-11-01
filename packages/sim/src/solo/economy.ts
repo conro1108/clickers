@@ -3,7 +3,7 @@
 import { Y, rate as asRate, type Yield, type Rate } from "../numbers.js";
 import {
   LAND_BY_ID,
-  LANDS,
+  landsIn,
   MAX_MITIGATION,
   MIN_CONDITION,
   REPAIR_SECONDS,
@@ -13,6 +13,7 @@ import {
   SOLO_PRODUCER_BY_ID,
   SOLO_REPAIR_COST_FRACTION,
   SOLO_UPGRADE_BY_ID,
+  type Land,
   type LandId,
   type LandRole,
   type SoloProducerId,
@@ -165,10 +166,15 @@ export function clickYield(f: SiteState): Yield {
 
 // --- Weather mitigation ---
 
+/** The buildings that count: the deepest open world's, the same world whose weather is blowing. */
+export function landsFor(f: SiteState): readonly Land[] {
+  return landsIn(WORLDS[f.depth] ?? "outside");
+}
+
 /** 0..MAX_MITIGATION; levels compound with diminishing returns. */
 export function mitigation(f: SiteState, role: LandRole): number {
   let through = 1;
-  for (const land of LANDS) {
+  for (const land of landsFor(f)) {
     if (land.role !== role) continue;
     through *= Math.pow(1 - land.perLevel, landLevel(f, land.id));
   }
@@ -184,6 +190,12 @@ export function mitigation(f: SiteState, role: LandRole): number {
     through *= Math.pow(1 - 0.1, perkLevel(f, "dormancy"));
   }
   return Math.min(MAX_MITIGATION, 1 - through);
+}
+
+/** What `role` would read after one more level of `id`. */
+export function mitigationAfter(f: SiteState, id: LandId): number {
+  const next = { ...f, land: { ...f.land, [id]: landLevel(f, id) + 1 } };
+  return mitigation(next, LAND_BY_ID[id].role);
 }
 
 // --- What a site is allowed to own --- enforced here, not just in the shop, against hand-edited saves
@@ -203,7 +215,12 @@ export function isProducerAvailable(f: SiteState, id: SoloProducerId): boolean {
 }
 
 export function isLandAvailable(f: SiteState, id: LandId): boolean {
-  return isWorldOpen(f, LAND_BY_ID[id].world);
+  return landsFor(f).includes(LAND_BY_ID[id]);
+}
+
+/** Past this, another level would buy nothing, so it isn't for sale. */
+export function isLandMaxed(f: SiteState, id: LandId): boolean {
+  return mitigation(f, LAND_BY_ID[id].role) >= MAX_MITIGATION;
 }
 
 export function isPerkAvailable(f: SiteState, id: keyof typeof PERK_BY_ID): boolean {

@@ -1,15 +1,16 @@
 // A headless rival for tuning solo, as balance.ts is for versus. Competent, not optimal.
 
 import { Y, ms, seconds, type Millis, type Yield, type Rate } from "../numbers.js";
-import { LANDS, SOLO_PRODUCERS, SOLO_UPGRADES, type SoloProducerId } from "./content.js";
+import { SOLO_PRODUCERS, SOLO_UPGRADES, type SoloProducerId } from "./content.js";
 import {
   brokenCount,
   currentRate,
-  isLandAvailable,
+  isLandMaxed,
   isProducerAvailable,
   isUnlocked,
   landCost,
   landLevel,
+  landsFor,
   producerCost,
   producerMultiplier,
   producerRateEach,
@@ -91,8 +92,8 @@ export function rivalTurn(f: SiteState, style: RivalStyle): SiteCommand[] {
   }
 
   if (style.landBudget > 0) {
-    for (const land of LANDS) {
-      if (!isLandAvailable(f, land.id)) continue;
+    for (const land of landsFor(f)) {
+      if (isLandMaxed(f, land.id)) continue;
       const cost = landCost(f, land.id);
       // keeps the buildings roughly in step
       if (landLevel(f, land.id) > 8) continue;

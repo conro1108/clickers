@@ -447,10 +447,10 @@ function takeCondition(f: SiteState, want: number): number {
  * poplars still gets knocked about by a storm, and still needs someone to come
  * and put it right — it just can't be dismantled while you're not looking.
  */
-function brokenCeiling(f: SiteState): number {
+export function brokenCeiling(f: SiteState): number {
   return SOLO_MAX_BROKEN_SHARE * (1 - mitigation(f, "breakage"));
 }
 
-function conditionFloor(f: SiteState): number {
+export function conditionFloor(f: SiteState): number {
   return MAX_CONDITION - (MAX_CONDITION - MIN_CONDITION) * (1 - mitigation(f, "condition"));
 }

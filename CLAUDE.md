@@ -98,3 +98,6 @@ in each app's `.env` sets the `game` column that keeps the two lobbies apart.
   generation got) and `world` (where you're looking) are easy to mix up.
 - Reusing an id retired in `OLD_IDS` (`persist.ts`) hands old saves something
   they never bought.
+- Only the deepest open world's four buildings count (`landsFor`), so a site's
+  defences drop to its perks at every gate. Pricing a world's buildings so the
+  first level isn't cheap on arrival leaves that world undefended.
