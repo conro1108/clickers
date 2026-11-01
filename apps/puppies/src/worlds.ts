@@ -97,6 +97,42 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
       waiting: "You have spent this whole run before the first dog. There is an after, too.",
     },
   },
+  after: {
+    door: "The far side",
+    shop: "Past the bridge, and it's a park. Nothing here is priced for one lifetime.",
+    culprit: "the park",
+    against: "a park with squirrels in it",
+    arrival: {
+      line: "Nobody ever asked what was on the far side",
+      call: "It is a park, and every gate is open",
+      title: "The Far Side",
+      waiting: "You have spent this whole run at the bridge. One lifetime won't get you far past it.",
+    },
+  },
+  above: {
+    door: "The walk",
+    shop: "Uphill, and a long way. Nothing here is priced for one lifetime.",
+    culprit: "the hill",
+    against: "a hill with weather on it",
+    arrival: {
+      line: "There is a gate at the top of the park",
+      call: "Somebody is whistling, a long way off, and it is for you",
+      title: "The Long Walk",
+      waiting: "You have spent this whole run off the lead. It will take more than one lifetime to reach the top gate.",
+    },
+  },
+  home: {
+    door: "The porch",
+    shop: "The top of the hill. Nothing here is priced for one lifetime.",
+    culprit: "the house",
+    against: "a house with a vacuum in it",
+    arrival: {
+      line: "There is a light on",
+      call: "Somebody has been saying your name the whole time",
+      title: "Home",
+      waiting: "You have spent this whole run walking. No one lifetime has ever made it up that hill.",
+    },
+  },
 };
 
 /** The deepest world open: the one whose weather is blowing. */

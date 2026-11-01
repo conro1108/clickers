@@ -14,9 +14,12 @@ import {
   CUT_EYE_WAKING,
   CUT_FIRST_MORNING,
   CUT_LAST_SUN,
+  CUT_PLATE,
   CUT_POTATO,
   CUT_SEED,
   CUT_SEED_DIM,
+  CUT_SPROUT,
+  CUT_WINDOW,
 } from "./art.js";
 import { artCanvas, type Art } from "./pixel.js";
 
@@ -40,6 +43,9 @@ export const SUBJECTS: Record<Exclude<solo.World, "outside">, Subject> = {
   origin: { frames: [CUT_FIRST_MORNING], focus: { x: 12, y: 13 }, glow: "255, 190, 120", flash: "#fff0d0" },
   void: { frames: [CUT_SEED, CUT_SEED_DIM], fps: 3, focus: { x: 7, y: 7 }, glow: "255, 230, 170", flash: "#f0f0ff", shake: true },
   end: { frames: [CUT_LAST_SUN], focus: { x: 15, y: 8 }, glow: "255, 110, 64", flash: "#ffe0d0" },
+  after: { frames: [CUT_SPROUT], focus: { x: 15, y: 11 }, glow: "255, 150, 74", flash: "#ffe8c0" },
+  above: { frames: [CUT_WINDOW], focus: { x: 16, y: 8 }, glow: "255, 224, 160", flash: "#fff4d8" },
+  home: { frames: [CUT_PLATE], focus: { x: 16, y: 8 }, glow: "255, 240, 220", flash: "#fffaf0" },
 };
 
 // Fractions of the cut. Kept in step with the `converge-*` keyframes in styles.css.

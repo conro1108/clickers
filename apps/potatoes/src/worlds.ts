@@ -98,6 +98,42 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
       title: "The Last Furrow",
     },
   },
+  after: {
+    door: "Under the ash",
+    shopSub: "What everything turns into. Nothing down here is priced for one lifetime.",
+    culprit: "the rot",
+    threat: "a heap that shifts",
+    gateLine: "You have spent this whole run at the end. Something under it is eating. One lifetime won't get you far down there.",
+    cut: {
+      line: "Nothing that ends stays ended",
+      call: "It is warm under the ash, and it is moving",
+      title: "The Heap",
+    },
+  },
+  above: {
+    door: "The kitchen",
+    shopSub: "Where the peelings come from. Nothing in here is priced for one lifetime.",
+    culprit: "the cook",
+    threat: "a cook with a temper",
+    gateLine: "You have spent this whole run in a heap round the back of a house. It will take more than one lifetime to reach the step.",
+    cut: {
+      line: "The heap is round the back of a house",
+      call: "There is a light on, and a knife going",
+      title: "The Kitchen",
+    },
+  },
+  home: {
+    door: "The table",
+    shopSub: "Where all of it has been going. Nothing out here is priced for one lifetime.",
+    culprit: "the guests",
+    threat: "a table that turns",
+    gateLine: "You have spent this whole run in the kitchen. Every plate goes through that door, and no lifetime has ever followed one.",
+    cut: {
+      line: "Somebody ordered this",
+      call: "They have been sitting down the whole time",
+      title: "Dinner",
+    },
+  },
 };
 
 /** Whose weather it is: the deepest open world's. */

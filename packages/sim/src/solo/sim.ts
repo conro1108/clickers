@@ -1,7 +1,7 @@
 // A headless player for tuning. Competent, not optimal.
 
 import { Y, ms, seconds, type Millis, type Yield, type Rate } from "../numbers.js";
-import { SOLO_PRODUCERS, SOLO_UPGRADES, type SoloProducerId } from "./content.js";
+import { SOLO_PRODUCERS, SOLO_UPGRADES, WORLD_GATE, type SoloProducerId, type World } from "./content.js";
 import {
   brokenCount,
   currentRate,
@@ -17,8 +17,10 @@ import {
   repairCost,
   conditionRestoreCost,
   upgradeCost,
+  upkeepBill,
 } from "./economy.js";
-import { advance, applySiteCommand, createSite } from "./site.js";
+import { PERKS, headStartStock, perkCost } from "./prestige.js";
+import { advance, applySiteCommand, createSite, gatePending, mustApplySite } from "./site.js";
 import type { SiteCommand, SiteState } from "./state.js";
 
 export interface RivalStyle {
@@ -291,4 +293,63 @@ export function simulateCadence(opts: {
   site = advance(site, ms(end), true).site;
   note(end);
   return { site, firstOwned, convergedAt, convergedRate, elapsedMs: end, playedMs };
+}
+
+// --- The long game: how far a line gets, by how many seeds it arrives with ---
+
+export interface PushResult {
+  /** Days from the hand-down to each world opening; absent if it never did. */
+  opened: Partial<Record<World, number>>;
+  site: SiteState;
+}
+
+/**
+ * One generation played to a horizon by a saver who checks in every `tickHours`: fixes what's
+ * broken, takes every upgrade, then buys whichever rung has the best payback counting the wait.
+ * Starts with perks bought out of `seeds`. `tools/pace.mts` is the table of these.
+ */
+export function simulatePush(opts: { seeds: number; generation: number; days: number; tickHours?: number; seed?: string }): PushResult {
+  const tick = seconds((opts.tickHours ?? 4) * 3_600);
+  let site: SiteState = { ...createSite({ seed: opts.seed ?? "push", startedAt: ms(0) }), heirlooms: opts.seeds, generation: opts.generation, reached: 1 };
+  for (const perk of PERKS) {
+    while ((site.perks[perk.id] ?? 0) < perk.maxLevel && perkCost(perk, site.perks[perk.id] ?? 0) < site.heirlooms * 0.05) {
+      site = mustApplySite(site, { type: "buy_perk", perk: perk.id }, ms(0));
+    }
+  }
+  site = { ...site, stock: headStartStock(site.perks.head_start ?? 0) };
+
+  const opened: PushResult["opened"] = {};
+  const buy = (cmd: SiteCommand, t: Millis): boolean => {
+    const res = applySiteCommand(site, cmd, t);
+    if (res.ok) site = res.site;
+    return res.ok;
+  };
+
+  for (let t = ms(0); t < opts.days * DAY_MS; t = ms(t + tick)) {
+    site = advance(site, t, true).site;
+    buy({ type: "click", count: 25 }, t);
+    for (let spent = 0; spent < 4_000; spent++) {
+      if (upkeepBill(site) > 0 && upkeepBill(site) <= site.stock * 0.5 && buy({ type: "fix_all" }, t)) continue;
+      const pending = gatePending(site);
+      if (pending) {
+        if (!buy({ type: "buy_upgrade", upgrade: WORLD_GATE[pending] }, t)) break;
+        opened[pending] = t / DAY_MS;
+        continue;
+      }
+      const upgrade = SOLO_UPGRADES.find((u) => !site.upgrades.includes(u.id) && isUnlocked(site, u) && !Object.values(WORLD_GATE).includes(u.id) && upgradeCost(site, u) <= site.stock);
+      if (upgrade && buy({ type: "buy_upgrade", upgrade: upgrade.id }, t)) continue;
+      const land = landsFor(site).find((l) => !isLandMaxed(site, l.id) && landLevel(site, l.id) < 6 && landCost(site, l.id) <= site.stock * 0.1);
+      if (land && buy({ type: "buy_land", land: land.id }, t)) continue;
+      const rate = Math.max(1, currentRate(site));
+      let pick: { id: SoloProducerId; score: number } | null = null;
+      for (const prod of SOLO_PRODUCERS) {
+        if (!isProducerAvailable(site, prod.id)) continue;
+        const cost = producerCost(site, prod.id, 1);
+        const score = cost / producerRateEach(site, prod.id) + Math.max(0, cost - site.stock) / rate;
+        if (!pick || score < pick.score) pick = { id: prod.id, score };
+      }
+      if (!pick || !buy({ type: "buy_producer", producer: pick.id, qty: 1 }, t)) break;
+    }
+  }
+  return { opened, site };
 }

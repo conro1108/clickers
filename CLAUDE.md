@@ -32,12 +32,14 @@ the monorepo is that retuning a rung is one edit.
 | Heirlooms and perks | `packages/sim/src/solo/prestige.ts` |
 | Save/load, old-id migrations | `packages/sim/src/solo/persist.ts` |
 | Headless player for tuning | `packages/sim/src/solo/sim.ts` |
+| How long the long game takes | `tools/pace.mts` |
 | Screens, the homestead, door strip, arrival cuts, dev back room | `apps/<game>/src/App.tsx` |
 | Per-world words: door, shop subtitle, gate line, cut | `apps/<game>/src/worlds.ts` |
 | Game loop, autosave | `apps/<game>/src/useFarm.ts` / `useMill.ts` |
 | Shop, gate sale screen, upkeep, seeds | `components/FarmShop.tsx` / `MillShop.tsx` |
 | The outside world's picture | `render/farmScene.ts` / `millScene.ts` |
-| The other worlds' pictures | `render/<world>Scene.ts` (inside, beyond, deep, origin, void, end) |
+| The other worlds' pictures | `render/<world>Scene.ts` (inside, beyond, deep, origin, void, end; past that heap/kitchen/table, park/walk/porch) |
+| What those last three share | `render/longScene.ts` |
 | Which scene draws | `components/FarmScene.tsx` / `MillScene.tsx` |
 | The fall half of an arrival cut | `render/crossing.ts`, `components/CutFall.tsx` |
 | Sprites and icons | `render/art.ts` (char grids), `render/pixel.ts` |
@@ -48,7 +50,9 @@ Worlds are `WORLDS` in `solo/content.ts`, one depth: `SiteState.depth` indexes
 it, and everything up to it is open and producing. Each world past the first
 opens with the gate upgrade `WORLD_GATE` names, bought at the bottom of the
 ladder before it. `void` and `end` are `TAXED_WORLDS`, priced against your
-seeds. Adding a world is engine content, a `worlds.ts` entry and a scene per app.
+seeds. `after`, `above` and `home` are `LONG_WAY`: untaxed and priced for a line
+that has stacked hand-downs. Adding a world is engine content, a `worlds.ts` entry
+and a scene per app.
 
 ## Theming
 

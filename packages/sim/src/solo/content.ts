@@ -22,15 +22,16 @@ import { named, THEME, type Shape } from "../theme.js";
  * at the bottom of the ladder before it (see `WORLD_GATE`): a fresh ladder,
  * its own land, its own picture, and everything behind you keeps producing.
  * `void` and `end` do too, but they're priced against your seeds — see
- * `TAXED_WORLDS`.
+ * `TAXED_WORLDS`. `after`, `above` and `home` aren't: they're priced for a line
+ * that has been stacking hand-downs — see `LONG_WAY`.
  */
-export type World = "outside" | "inside" | "beyond" | "deep" | "origin" | "void" | "end";
+export type World = "outside" | "inside" | "beyond" | "deep" | "origin" | "void" | "end" | "after" | "above" | "home";
 
 /**
  * Every world in the order you reach them. `SiteState.depth` is an index into
  * this: everything up to and including it is open.
  */
-export const WORLDS: readonly World[] = ["outside", "inside", "beyond", "deep", "origin", "void", "end"];
+export const WORLDS: readonly World[] = ["outside", "inside", "beyond", "deep", "origin", "void", "end", "after", "above", "home"];
 
 /**
  * The upgrade that opens each world, bought in the world before it. Each is
@@ -44,10 +45,13 @@ export const WORLD_GATE: Record<Exclude<World, "outside">, string> = {
   origin: "return",
   void: "before",
   end: "ending",
+  after: "afterward",
+  above: "upstairs",
+  home: "homecoming",
 };
 
 /**
- * The worlds past the origin, where everything — and the gate in — costs more
+ * The void and the end, where everything — and the gate in — costs more
  * the more your seeds have bought you (`economy.seedTax`). Elsewhere seeds
  * compound without limit, so a long prestige track clears any fixed price in an
  * afternoon; here they're worth a tenth of the power they are anywhere else,
@@ -105,7 +109,25 @@ export type SoloProducerId =
   | "lull"
   | "relic"
   | "legion"
-  | "last";
+  | "last"
+  | "loam"
+  | "drone"
+  | "moss"
+  | "mire"
+  | "kinship"
+  | "sixth"
+  | "flame"
+  | "servant"
+  | "lid"
+  | "broth"
+  | "heirs"
+  | "seventh"
+  | "crumb"
+  | "guest"
+  | "grace"
+  | "feast"
+  | "house"
+  | "whole";
 
 export interface SoloProducer {
   id: SoloProducerId;
@@ -172,6 +194,36 @@ const END_COST = 2.4e39;
 const END_STEP = 4;
 const VOID_LAND = VOID_COST / 40_000;
 const END_LAND = END_COST / 40_000;
+
+/**
+ * The three worlds past the end, one ladder each: first rung's price and output, the gate in, the
+ * climb. No seed tax, so a rung's payback is inversely proportional to the seeds behind it: a wall
+ * for a short line, a slog for a long one. Gates are cheap on purpose, since a pending one freezes
+ * the shop; the wall is the first rung, which you can see and not reach. `tools/pace.mts` measures it.
+ */
+const LONG_WAY = {
+  after: { ids: ["loam", "drone", "moss", "mire", "kinship", "sixth"] as SoloProducerId[], cost: 3e57, rate: 1e36, gate: 3e54, growth: 1.23 },
+  above: { ids: ["flame", "servant", "lid", "broth", "heirs", "seventh"] as SoloProducerId[], cost: 1e69, rate: 1e40, gate: 1e65, growth: 1.24 },
+  home: { ids: ["crumb", "guest", "grace", "feast", "house", "whole"] as SoloProducerId[], cost: 1e77, rate: 1e44, gate: 1e73, growth: 1.25 },
+};
+type LongWorld = keyof typeof LONG_WAY;
+
+const LONG_STEP = 5.5;
+
+/** Each of those ladders has the void's shape, rung for rung: price x5.5, output x3, third calms, fourth wants condition, fifth counts generations. */
+function longRungs(world: LongWorld): Shape<SoloProducer>[] {
+  const { ids, cost, rate, growth } = LONG_WAY[world];
+  return ids.map((id, i) => ({
+    id,
+    world,
+    growth,
+    baseRate: rate * 3 ** i,
+    baseCost: Y.of(cost * LONG_STEP ** i),
+    ...(i === 2 && { calmPerUnit: 0.001 }),
+    ...(i === 3 && { conditionScaled: true }),
+    ...(i === 4 && { generationScaled: true }),
+  }));
+}
 
 const SOLO_PRODUCER_SHAPES: readonly Shape<SoloProducer>[] = [
   {
@@ -530,6 +582,9 @@ const SOLO_PRODUCER_SHAPES: readonly Shape<SoloProducer>[] = [
   { id: "relic", baseRate: 1.45e29, baseCost: Y.of(END_COST * END_STEP ** 3), growth: 1.22, world: "end", conditionScaled: true },
   { id: "legion", baseRate: 4.3e29, baseCost: Y.of(END_COST * END_STEP ** 4), growth: 1.22, world: "end", generationScaled: true },
   { id: "last", baseRate: 1.3e30, baseCost: Y.of(END_COST * END_STEP ** 5), growth: 1.22, world: "end" },
+  ...longRungs("after"),
+  ...longRungs("above"),
+  ...longRungs("home"),
 ];
 
 export const SOLO_PRODUCERS: readonly SoloProducer[] = named(SOLO_PRODUCER_SHAPES, THEME.soloProducers, "producer");
@@ -678,6 +733,19 @@ const CLICK_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
 ];
 
 const CLICK_UPGRADES: SoloUpgrade[] = [...named(CLICK_UPGRADE_SHAPES, THEME.soloClickUpgrades, "upgrade")];
+
+/** A long world's three globals: the gate into it, on ten of the rung before, then a charter and a form as everywhere else. */
+function longGlobals(world: LongWorld, before: SoloProducerId, charter: string, form: string): Shape<SoloUpgrade>[] {
+  const double = { kind: "global_mult", factor: 2 } as const;
+  const { ids } = LONG_WAY[world];
+  const calm = ids[2]!;
+  const top = ids[5]!;
+  return [
+    { id: WORLD_GATE[world], cost: Y.of(LONG_WAY[world].gate), effect: double, requires: { producer: before, count: 10 } },
+    { id: charter, cost: fleetCost(calm, 25, 5), effect: double, requires: { producer: calm, count: 25 } },
+    { id: form, cost: fleetCost(top, 25), effect: double, requires: { producer: top, count: 25 } },
+  ];
+}
 
 /**
  * Global multipliers deliberately kept modest, and deliberately **dear**.
@@ -844,6 +912,9 @@ const GLOBAL_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
   { id: "ending", cost: Y.of(END_COST * 0.3), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "fifth", count: 10 } },
   { id: "end_charter", cost: fleetCost("lull", 25, 5), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "lull", count: 25 } },
   { id: "end_form", cost: fleetCost("last", 25), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "last", count: 25 } },
+  ...longGlobals("after", "last", "after_charter", "after_form"),
+  ...longGlobals("above", "sixth", "above_charter", "above_form"),
+  ...longGlobals("home", "seventh", "home_charter", "home_form"),
 ];
 
 const GLOBAL_UPGRADES: SoloUpgrade[] = [...named(GLOBAL_UPGRADE_SHAPES, THEME.soloGlobalUpgrades, "upgrade")];
@@ -898,7 +969,8 @@ export type LandId =
   | "end_beds"
   | "end_lining"
   | "end_calm"
-  | "end_reclaim";
+  | "end_reclaim"
+  | `${LongWorld}_${"beds" | "lining" | "calm" | "reclaim"}`;
 
 export type LandRole =
   /** Cuts how many units a disaster knocks offline. */
@@ -928,6 +1000,17 @@ export interface Land {
    * that's the deepest open world; see `landsFor`.
    */
   world: World;
+}
+
+/** The same four again, off the first rung like the end's, so they're cheap on arrival. */
+function longLands(world: LongWorld): Shape<Land>[] {
+  const price = LONG_WAY[world].cost / 40_000;
+  return [
+    { id: `${world}_beds`, role: "breakage", perLevel: 0.12, baseCost: Y.of(price * 0.67), growth: 2.5, world },
+    { id: `${world}_lining`, role: "condition", perLevel: 0.12, baseCost: Y.of(price * 1.05), growth: 2.5, world },
+    { id: `${world}_calm`, role: "frequency", perLevel: 0.08, baseCost: Y.of(price * 2), growth: 2.7, world },
+    { id: `${world}_reclaim`, role: "payout", perLevel: 0.12, baseCost: Y.of(price * 4), growth: 2.5, world },
+  ];
 }
 
 const LAND_SHAPES: readonly Shape<Land>[] = [
@@ -1052,6 +1135,9 @@ const LAND_SHAPES: readonly Shape<Land>[] = [
   { id: "end_lining", role: "condition", perLevel: 0.12, baseCost: Y.of(END_LAND * 1.05), growth: 2.5, world: "end" },
   { id: "end_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(END_LAND * 2), growth: 2.7, world: "end" },
   { id: "end_reclaim", role: "payout", perLevel: 0.12, baseCost: Y.of(END_LAND * 4), growth: 2.5, world: "end" },
+  ...longLands("after"),
+  ...longLands("above"),
+  ...longLands("home"),
 ];
 
 export const LANDS: readonly Land[] = named(LAND_SHAPES, THEME.lands, "land");

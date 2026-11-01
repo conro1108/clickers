@@ -24,11 +24,12 @@ export const ms = (n: number): Millis => n as Millis;
 export const seconds = (n: number): number => n * 1000;
 export const rate = (n: number): Rate => n as Rate;
 
-// Runs to 1e93: the seventh world's prices carry the seed tax, and that can reach past 1e60.
+// Runs to 1e123: the top of the last ladder is past 1e90 before anything's been bought.
 const SUFFIXES = [
   "", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No",
   "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ocd", "Nod",
-  "Vg", "Uvg", "Dvg", "Tvg", "Qavg", "Qivg", "Sxvg", "Spvg", "Ocvg", "Novg", "Tg",
+  "Vg", "Uvg", "Dvg", "Tvg", "Qavg", "Qivg", "Sxvg", "Spvg", "Ocvg", "Novg",
+  "Tg", "Utg", "Dtg", "Ttg", "Qatg", "Qitg", "Sxtg", "Sptg", "Octg", "Notg", "Qag",
 ];
 
 /** Idle-game number formatting: 1234567 -> "1.23M". */

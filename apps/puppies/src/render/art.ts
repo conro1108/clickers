@@ -2497,6 +2497,345 @@ const LAST_DOG_4: Art = {
   palette: { k: "#8a5a3a", e: "#c08a5a", w: "#f0d8b0", b: "#2a2050", n: K, y: "#fff4c0" },
 };
 
+/** The hundredth-unit mark for the worlds past the end: the same thing, grown a new top, in a new paint. */
+function grown(art: Art, top: readonly string[], paint: Readonly<Record<string, string>>): Art {
+  const w = art.rows[0]!.length;
+  const pad = (row: string) => row.padStart(row.length + ((w - row.length) >> 1), ".").padEnd(w, ".");
+  return { rows: [...top.map(pad), ...art.rows], palette: { ...art.palette, ...paint } };
+}
+
+// --- After: the far side ---
+/** A gate in a park fence, standing open, and it stays that way. */
+export const OPEN_GATE: Art = {
+  rows: [
+    "kk..........kk.....",
+    "kwk........kwk.....",
+    "kwkkkkkkkkkkwk.kkk.",
+    "kwkwwwwwwwwkwkkwwk.",
+    "kwk.k..k...kwkwk.k.",
+    "kwk.k..k...kwkk.wk.",
+    "kwkkkkkkkkkkwk.wkk.",
+    "kwkwwwwwwwwkwkwk...",
+    "kwk........kwkk....",
+    "kwk........kwk.....",
+    "gggggggggggggggggg.",
+    ".ggllgggggllggggg..",
+  ],
+  palette: { k: "#402e3a", w: "#f7ecd8", g: "#6aa348", l: "#a4d868" },
+};
+const OPEN_GATE_4 = grown(OPEN_GATE, ["..f.......f..", ".fyf.....fyf."], { f: "#ffb0d0", y: "#ffd166" });
+/** Somebody who is not going to get tired. */
+export const PARK_THROWER: Art = {
+  rows: [
+    ".....kkkk...r.",
+    "....khhhhk.k..",
+    "....kffffk.k..",
+    "....kffffkk...",
+    ".....kffk.k...",
+    "...kkbbbbkk...",
+    "..kbbbbbbk....",
+    ".kffkbbbbk....",
+    ".kk.kbbbbk....",
+    "....kbbbbk....",
+    "....kpppk.....",
+    "....kpkpk.....",
+    "....kkkkk.....",
+  ],
+  palette: { k: "#402e3a", r: "#c8e048", h: "#6a4a30", f: "#e2b090", b: "#c04a4a", p: "#3a4a6a" },
+};
+const PARK_THROWER_4 = grown(PARK_THROWER, ["....y...y..", ".....yyy..."], { y: "#ffd166" });
+/** Everybody ends up under it. */
+export const SHADE_TREE: Art = {
+  rows: [
+    ".....kkkkkkkk.....",
+    "...kkggggllgggkk..",
+    "..kgggllgggggllgk.",
+    ".kgggggggggggggggk",
+    "kgglgggggllggggggk",
+    "kggggggggggggglggk",
+    ".kgggllgggggggggk.",
+    "..kkggggggggggkk..",
+    "....kkkkttkkkk....",
+    ".......ktdk.......",
+    ".......ktdk.......",
+    ".......ktdk.......",
+    "......kttddk......",
+    "ssssssssssssssssss",
+  ],
+  palette: { k: "#402e3a", g: "#4e8f4a", l: "#7ab858", t: "#7a5237", d: "#5a3a24", s: "#3e7a34" },
+};
+const SHADE_TREE_4 = grown(SHADE_TREE, [".p...p...p...p.", "..p.p.p.p.p.p.."], { p: "#ffb0d0" });
+/** Cold, shallow, and full of grass. */
+export const PADDLING_POOL: Art = {
+  rows: [
+    "....kkkkkkkkkkkk....",
+    "..kkwwwwwwwwwwwwkk..",
+    ".kwwbbbbbbbbbbbbwwk.",
+    "kwwblbbbbgbbblbbbwwk",
+    "kwbbbbbblbbbbbbbbbwk",
+    "kwwbbgbbbbbblbbbbwwk",
+    ".kwwbbbbbbbbbbbbwwk.",
+    "..kkwwwwwwwwwwwwkk..",
+    "....kkkkkkkkkkkk....",
+  ],
+  palette: { k: "#402e3a", w: "#f0a0b0", b: "#7ac8e8", l: "#d0f0ff", g: "#6aa348" },
+};
+const PADDLING_POOL_4 = grown(PADDLING_POOL, [".....y.....y.....", "....yyy...yyy...."], { y: "#ffffff" });
+/** Nose to tail, with the next one along. */
+export const SNIFF_DOG: Art = {
+  rows: [
+    "...............t",
+    "..kk.........kt.",
+    ".kbbk.......kbk.",
+    "kbbbbkkkkkkkkbk.",
+    "nbbebbbbbbbbbbk.",
+    "kkbbbbbbbbbbbbk.",
+    "..kkbbbbbbbbbk..",
+    "...kbk.kbk.kbk..",
+    "...kk...k...kk..",
+  ],
+  palette: { k: "#402e3a", b: "#c98b4b", e: "#2a1a12", n: "#2a1a12", t: "#a8703a" },
+};
+const SNIFF_DOG_4 = grown(SNIFF_DOG, ["..f.......", ".fff......"], { f: "#ffd166" });
+/** Flat on its side in the sun, not shaking. */
+export const SIXTH_CHIHUAHUA: Art = {
+  rows: [
+    "kk...kk...............",
+    "kbk.kbk...............",
+    "kbbkbbk..kkkkkkkkkk...",
+    "kbbbbbbkkbbbbbbbbbbk..",
+    "kbebbebkbbbbbbbbbbbbk.",
+    "kbbbbbbbbbbbbbbbbbbbbk",
+    ".knnbbkbbbbbbbbbbbbbbk",
+    "..kkkkkkkkkkkkkkkkkkk.",
+  ],
+  palette: { k: "#402e3a", b: "#e8c8a0", e: "#2a1a12", n: "#6a4a3a" },
+};
+const SIXTH_CHIHUAHUA_4 = grown(SIXTH_CHIHUAHUA, [".y.....y.....y.", "..y...y.y...y.."], { y: "#ffd166" });
+// --- Above: the walk ---
+/** An old waymark, thick with messages. */
+export const GOOD_POST: Art = {
+  rows: [
+    "...kkkkk...",
+    "..kwwwwwk..",
+    "..kwyyywk..",
+    "..kwwwwwk..",
+    "...kkkkk...",
+    "....ktk....",
+    "....ktk....",
+    "....ktk....",
+    "....kdk....",
+    "..g.ktk.g..",
+    ".gg.kdk.gg.",
+    "kkkkkkkkkkk",
+  ],
+  palette: { k: "#402e3a", w: "#c8c0a8", y: "#ffd166", t: "#7a6a50", d: "#5a4a38", g: "#3e6a4a" },
+};
+const GOOD_POST_4 = grown(GOOD_POST, ["...yyy...", "..y...y..", "...yyy..."], { y: "#fff4c0" });
+/** Hood up, hands in pockets, torch on. */
+export const NIGHT_WALKER: Art = {
+  rows: [
+    "....kkkk....",
+    "...khhhhk...",
+    "..khhffhhk..",
+    "..khhffhhk..",
+    "...khhhhk...",
+    "..kccccccky.",
+    ".kccccccckyy",
+    ".kccccccck.y",
+    ".kccccccck..",
+    "..kccccck...",
+    "..kpppppk...",
+    "..kpkkkpk...",
+    "..kbk.kbk...",
+    "..kkk.kkk...",
+  ],
+  palette: { k: "#402e3a", h: "#3a4a6a", f: "#e2b090", c: "#4a5a7a", y: "#ffe8a0", p: "#2a2a3a", b: "#5a3a24" },
+};
+const NIGHT_WALKER_4 = grown(NIGHT_WALKER, ["....yyyy....", "...y....y..."], { y: "#ffd166" });
+/** You have to stop and be lifted over. */
+export const STILE: Art = {
+  rows: [
+    "kk............kk",
+    "kwk..........kwk",
+    "kwkkkkkkkkkkkkwk",
+    "kwkwwwwwwwwwwkwk",
+    "kwk.kk..kk...kwk",
+    "kwkkkkkkkkkkkkwk",
+    "kwkwwwwwwwwwwkwk",
+    "kwk....kk....kwk",
+    "kwk..kkkkkk..kwk",
+    "kwk..kwwwwk..kwk",
+    "kwk..kkkkkk..kwk",
+    "kkk..........kkk",
+  ],
+  palette: { k: "#402e3a", w: "#8a7a60" },
+};
+const STILE_4 = grown(STILE, ["..y........y..", ".yyy......yyy."], { y: "#ffd166" });
+/** Cold water over stones, and a stone to stand on. */
+export const STREAM: Art = {
+  rows: [
+    ".....ssss...........",
+    "...bbssssbbbbbbbb...",
+    ".bbbbbbbbbblbbbsssb.",
+    "bbbbbbbblbbbbbbsssbl",
+    "bbsssbbbbbbbbbbbbbbb",
+    "bbsssbbblbbbbbbbblbb",
+    ".bbbbbbbbbbbbssbbbb.",
+    "...bbblbbbbbbssbb...",
+  ],
+  palette: { b: "#3a6ac0", l: "#a8d8f0", s: "#7a7a80" },
+};
+const STREAM_4 = grown(STREAM, ["....l.......l....", "...lll.....lll..."], { l: "#a8d8f0" });
+/** Every generation went up this way. */
+export const PAW_PRINTS: Art = {
+  rows: [
+    "....pp.pp....",
+    "...p.pp.p....",
+    "....ppppp....",
+    "...ppppppp...",
+    ".....ppp.....",
+    ".............",
+    ".pp.pp.......",
+    "p.pp.p.......",
+    ".ppppp.......",
+    "ppppppp......",
+    "..ppp........",
+  ],
+  palette: { p: "#d8d0c8" },
+};
+const PAW_PRINTS_4 = grown(PAW_PRINTS, ["...p.p...", "..ppppp.."], { p: "#fff4c0" });
+/** Inside somebody’s coat, head out, supervising. */
+export const SEVENTH_CHIHUAHUA: Art = {
+  rows: [
+    "......kk..kk......",
+    "......kbkkbk......",
+    "......kbbbbk......",
+    "......kebbek......",
+    "......kbnnbk......",
+    ".....kkkbbkkk.....",
+    "...kkccccccccckk..",
+    "..kcccccccccccck..",
+    ".kcccckccckcccck..",
+    ".kcccccccccccccck.",
+    ".kcccccccccccccck.",
+    ".kffkcccccccckffk.",
+    ".kkkkcccccccck.kk.",
+    "....kccccccck.....",
+  ],
+  palette: { k: "#402e3a", b: "#e8c8a0", e: "#2a1a12", n: "#6a4a3a", c: "#a8703a", f: "#e2b090" },
+};
+const SEVENTH_CHIHUAHUA_4 = grown(SEVENTH_CHIHUAHUA, [".y..y..y.", "..y.y.y.."], { y: "#ffd166" });
+// --- Home: the porch ---
+/** WELCOME, mostly worn off. */
+export const DOORMAT: Art = {
+  rows: [
+    "kkkkkkkkkkkkkkkkkkkkkk",
+    "kbbbbbbbbbbbbbbbbbbbbk",
+    "kbdbdbddbdbbbdbdbdddbk",
+    "kbdbdbdbbdbbbdbdbdbbbk",
+    "kbdddbddbdddbdddbdddbk",
+    "kbbbbbbbbbbbbbbbbbbbbk",
+    "kkkkkkkkkkkkkkkkkkkkkk",
+  ],
+  palette: { k: "#402e3a", b: "#a88a58", d: "#6a5030" },
+};
+const DOORMAT_4 = grown(DOORMAT, [".s.s.s.s.s.s.s.s.s.s.", ".s.s.s.s.s.s.s.s.s.s."], { s: "#a88a58" });
+/** Sat very upright, deciding about you. */
+export const HOUSE_CAT: Art = {
+  rows: [
+    "kk...kk......",
+    "kbk.kbk......",
+    "kbbkbbk......",
+    "kbbbbbk......",
+    "kebbbek....kk",
+    "kbbpbbk...kbk",
+    ".kbbbk....kbk",
+    ".kbbbbk...kbk",
+    "kbbbbbbk..kbk",
+    "kbbbbbbbk.kbk",
+    "kbbbbbbbbkkbk",
+    "kbbbbbbbbbbk.",
+    "kkkkkkkkkkk..",
+  ],
+  palette: { k: "#402e3a", b: "#6a6a78", e: "#c8e048", p: "#ffb0b0" },
+};
+const HOUSE_CAT_4 = grown(HOUSE_CAT, [".y...y.......", ".yyyyy......."], { y: "#ffd166" });
+/** Somebody left it on. */
+export const LEFT_ON_LIGHT: Art = {
+  rows: [
+    "...kkkkkkk...",
+    "..ksssssssk..",
+    "...kkkkkkk...",
+    "...kyyyyyk...",
+    "...kywwwyk...",
+    "...kywwwyk...",
+    "...kyyyyyk...",
+    "...kkkkkkk...",
+    ".....kkk.....",
+  ],
+  palette: { k: "#402e3a", s: "#5a5a68", y: "#ffd166", w: "#fff8e0" },
+};
+const LEFT_ON_LIGHT_4 = grown(LEFT_ON_LIGHT, ["..s...s...s..", "...s..s..s..."], { s: "#fff4c0" });
+/** Your name is on the side of it. */
+export const FULL_BOWL: Art = {
+  rows: [
+    "...ffffffffffff...",
+    "..fffbffffbffffk..",
+    "kkkkkkkkkkkkkkkkkk",
+    "kssssssssssssssssk",
+    ".ksllssnnnnnsssk..",
+    ".kslsssssssssssk..",
+    "..kkkkkkkkkkkkk...",
+  ],
+  palette: { k: "#402e3a", f: "#a8703a", b: "#7a4a24", s: "#c04a4a", l: "#f09090", n: "#fff0d8" },
+};
+const FULL_BOWL_4 = grown(FULL_BOWL, ["...b...b...b...", "..bbb.bbb.bbb.."], { b: "#e8d0b0" });
+/** Pencil marks going up a door frame, all of them dogs. */
+export const HEIGHT_CHART: Art = {
+  rows: [
+    "kwwwwwwk",
+    "kwppwwwk",
+    "kwwwwwwk",
+    "kwwppwwk",
+    "kwwwwwwk",
+    "kwpppwwk",
+    "kwwwwwwk",
+    "kwppwwwk",
+    "kwwwwwwk",
+    "kwwpppwk",
+    "kwwwwwwk",
+    "kwppwwwk",
+    "kwwwwwwk",
+    "kwpwwwwk",
+    "kwwwwwwk",
+  ],
+  palette: { k: "#402e3a", w: "#f0e4cc", p: "#5a5a68" },
+};
+const HEIGHT_CHART_4 = grown(HEIGHT_CHART, [".y..y.", ".yyyy."], { y: "#ffd166" });
+/** You. */
+export const GOOD_DOG: Art = {
+  rows: [
+    "..kk.........",
+    ".kbbk...kk...",
+    "kbbbbk.kbbk..",
+    "kbdbbkkbbbk..",
+    "kbdbbbbbbdbk.",
+    ".kbbbbbbbdbk.",
+    ".kbebbbbebk..",
+    ".kbbbnnbbbk..",
+    "..kbbbbbbk...",
+    "...kkppkk....",
+    "..kbbbbbbk.kk",
+    ".kbbbbbbbbkbk",
+    ".kbbbbbbbbbk.",
+    ".kbkbbbbkbk..",
+    ".kk.kkkk.kk..",
+  ],
+  palette: { k: "#402e3a", b: "#c98b4b", d: "#8a5a30", e: "#2a1a12", n: "#2a1a12", p: "#c04a4a" },
+};
+const GOOD_DOG_4 = grown(GOOD_DOG, ["....y.y.y....", "...y..y..y..."], { y: "#fff4c0" });
+
 export const PRODUCER_MARKS = {
   patch: [CAGE, CAGE_2, CAGE_3, CAGE_4],
   hand: [
@@ -2764,6 +3103,114 @@ export const PRODUCER_MARKS = {
     repaint(LAST_DOG, { k: "#c9a24a", e: "#ffd166", w: "#fff4d8" }),
     LAST_DOG_4,
   ],
+  loam: [
+    OPEN_GATE,
+    repaint(OPEN_GATE, { w: "#e8d0a0", g: "#7ab858" }),
+    repaint(OPEN_GATE, { w: "#ffd166", g: "#8ad868", l: "#e8ffb0" }),
+    OPEN_GATE_4,
+  ],
+  drone: [
+    PARK_THROWER,
+    repaint(PARK_THROWER, { b: "#4a8ac0" }),
+    repaint(PARK_THROWER, { b: "#ffd166", h: "#a8792c" }),
+    PARK_THROWER_4,
+  ],
+  moss: [
+    SHADE_TREE,
+    repaint(SHADE_TREE, { g: "#6a9a3a", l: "#a8c858" }),
+    repaint(SHADE_TREE, { g: "#c9a24a", l: "#ffd166" }),
+    SHADE_TREE_4,
+  ],
+  mire: [
+    PADDLING_POOL,
+    repaint(PADDLING_POOL, { w: "#a0c0f0", b: "#6ad0d8" }),
+    repaint(PADDLING_POOL, { w: "#ffd166", b: "#a8e8f0", l: "#ffffff" }),
+    PADDLING_POOL_4,
+  ],
+  kinship: [
+    SNIFF_DOG,
+    repaint(SNIFF_DOG, { b: "#8a6a4a" }),
+    repaint(SNIFF_DOG, { b: "#e0d0b0", t: "#c8b890" }),
+    SNIFF_DOG_4,
+  ],
+  sixth: [
+    SIXTH_CHIHUAHUA,
+    repaint(SIXTH_CHIHUAHUA, { b: "#d8b890" }),
+    repaint(SIXTH_CHIHUAHUA, { b: "#fff0c0", e: "#402e3a" }),
+    SIXTH_CHIHUAHUA_4,
+  ],
+  flame: [
+    GOOD_POST,
+    repaint(GOOD_POST, { w: "#d8d0c0", y: "#ffb04a" }),
+    repaint(GOOD_POST, { w: "#ffd166", y: "#ffffff", t: "#a8792c" }),
+    GOOD_POST_4,
+  ],
+  servant: [
+    NIGHT_WALKER,
+    repaint(NIGHT_WALKER, { c: "#6a4a4a", h: "#5a3a3a" }),
+    repaint(NIGHT_WALKER, { c: "#a8792c", h: "#c9a24a" }),
+    NIGHT_WALKER_4,
+  ],
+  lid: [
+    STILE,
+    repaint(STILE, { w: "#7a8a60" }),
+    repaint(STILE, { w: "#c9a24a" }),
+    STILE_4,
+  ],
+  broth: [
+    STREAM,
+    repaint(STREAM, { b: "#3a8ab0" }),
+    repaint(STREAM, { b: "#6ac8e0", l: "#ffffff", s: "#c9a24a" }),
+    STREAM_4,
+  ],
+  heirs: [
+    PAW_PRINTS,
+    repaint(PAW_PRINTS, { p: "#a8c0d8" }),
+    repaint(PAW_PRINTS, { p: "#ffd166" }),
+    PAW_PRINTS_4,
+  ],
+  seventh: [
+    SEVENTH_CHIHUAHUA,
+    repaint(SEVENTH_CHIHUAHUA, { c: "#4a6a8a" }),
+    repaint(SEVENTH_CHIHUAHUA, { c: "#c04a4a", b: "#fff0c0" }),
+    SEVENTH_CHIHUAHUA_4,
+  ],
+  crumb: [
+    DOORMAT,
+    repaint(DOORMAT, { b: "#b0705a", d: "#7a4030" }),
+    repaint(DOORMAT, { b: "#c9a24a", d: "#fff4c0" }),
+    DOORMAT_4,
+  ],
+  guest: [
+    HOUSE_CAT,
+    repaint(HOUSE_CAT, { b: "#c88a3a" }),
+    repaint(HOUSE_CAT, { b: "#2a2a34", e: "#ffd166" }),
+    HOUSE_CAT_4,
+  ],
+  grace: [
+    LEFT_ON_LIGHT,
+    repaint(LEFT_ON_LIGHT, { y: "#ffc04a" }),
+    repaint(LEFT_ON_LIGHT, { y: "#fff4c0", s: "#c9a24a" }),
+    LEFT_ON_LIGHT_4,
+  ],
+  feast: [
+    FULL_BOWL,
+    repaint(FULL_BOWL, { s: "#4a8ac0", l: "#90c0f0" }),
+    repaint(FULL_BOWL, { s: "#ffd166", l: "#fff4c0", n: "#a8792c" }),
+    FULL_BOWL_4,
+  ],
+  house: [
+    HEIGHT_CHART,
+    repaint(HEIGHT_CHART, { w: "#e0e8f0" }),
+    repaint(HEIGHT_CHART, { w: "#fff4d0", p: "#a8792c" }),
+    HEIGHT_CHART_4,
+  ],
+  whole: [
+    GOOD_DOG,
+    repaint(GOOD_DOG, { b: "#d8a868", p: "#4a8ac0" }),
+    repaint(GOOD_DOG, { b: "#ecc488", p: "#ffd166" }),
+    GOOD_DOG_4,
+  ],
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 
 export type MarkedProducerId = keyof typeof PRODUCER_MARKS;
@@ -2983,4 +3430,71 @@ export const CUT_BRIDGE: Art = {
     "ccccccccccc.............ccccccccccc",
   ],
   palette: { r: "#e05050", o: "#f0a040", y: "#f0e060", g: "#60c060", b: "#2a2050", v: "#9060c0", k: "#8a5a3a", e: "#c08a5a", w: "#f0d8b0", n: "#402e3a", c: "#fff4e8" },
+};
+
+/** An open gate in the dark, and grass through it. */
+export const CUT_PARK_GATE: Art = {
+  rows: [
+    "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+    "kkkkkkkwwkkkkkkkkkkkkwwkkkkkkkkk",
+    "kkkkkkwwwwkkkkkkkkkkwwwwkkkkkkkk",
+    "kkkkkkkwwkyyyyyyyyyykwwkkkkkkkkk",
+    "kkkkkkkwwkyyyyyyyyyykwwkkkwwkkkk",
+    "kkkkkkkwwkyyysssyyyykwwkwwkkkkkk",
+    "kkkkkkkwwkyyyssssyyykwwwkkkkkkkk",
+    "kkkkkkkwwkyyyyyyyyyykwwkkwwkkkkk",
+    "kkkkkkkwwkggggggggggkwwwwkkkkkkk",
+    "kkkkkkkwwkgggllggggglwwkkkkkkkkk",
+    "kkkkkkkwwggggggggllggwwkkkkkkkkk",
+    "kkkkkgggggggggggggggggggggkkkkkk",
+    "kkkgggggllgggggggggggggggggggkkk",
+    "kggggggggggggggggggllgggggggggkk",
+  ],
+  palette: { k: "#1a1a2a", w: "#f7ecd8", y: "#ffd890", s: "#fff4c0", g: "#5a9a4a", l: "#a4d868" },
+};
+
+/** A hill at night, and one light at the top of it. */
+export const CUT_FAR_LIGHT: Art = {
+  rows: [
+    "................................",
+    ".....s..............s...........",
+    ".............ww...........s.....",
+    "............wwww................",
+    ".s..........wwww.........s......",
+    ".............ww.................",
+    "...............kk...............",
+    "......s.......kyyk..............",
+    "..............kkkk..............",
+    "............hhhhhhhh............",
+    ".........hhhhhhhhhhhhhh.........",
+    ".......hhhhhhhhhhhhhhhhhh.......",
+    "....hhhhhhhhhhhhhhhhhhhhhhhh....",
+    ".hhhhhhhhhhhhhhhhhhhhhhhhhhhhhh.",
+  ],
+  palette: { s: "#c8c8ff", w: "#e8e8d0", k: "#3a3040", y: "#ffd166", h: "#2a3a5a" },
+};
+
+/** A front door, and the light on. */
+export const CUT_FRONT_DOOR: Art = {
+  rows: [
+    "kkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkyyyykkkkkkkkkkkk",
+    "kkkkkkkkkkkkwwwwkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+    "kkkkkkkbbbbbbbbbbbbbbkkkkkkk",
+    "kkkkkkkbddddddddddddbkkkkkkk",
+    "kkkkkkkbddddddddddddbkkkkkkk",
+    "kkkkkkkbddddddddddddbkkkkkkk",
+    "kkkkkkkbddyyyyyyyyddbkkkkkkk",
+    "kkkkkkkbddyyyyyyyyddbkkkkkkk",
+    "kkkkkkkbddyyyyyyyyddbkkkkkkk",
+    "kkkkkkkbddddddddddddbkkkkkkk",
+    "kkkkkkkbdddddddddddwbkkkkkkk",
+    "kkkkkkkbddddddddddddbkkkkkkk",
+    "kkkkkkkbddddddddddddbkkkkkkk",
+    "kkkkkkkbddddddddddddbkkkkkkk",
+    "kkkkkmmmmmmmmmmmmmmmmmmkkkkk",
+    "kkkssssssssssssssssssssssskk",
+  ],
+  palette: { k: "#1a1a2e", y: "#ffd890", w: "#fff8e0", b: "#f0e4cc", d: "#7a2a2a", m: "#a88a58", s: "#6a6070" },
 };

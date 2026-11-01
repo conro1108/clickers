@@ -17,6 +17,9 @@ import { OriginScene } from "../render/originScene.js";
 import { VoidScene } from "../render/voidScene.js";
 import { EndScene } from "../render/endScene.js";
 import { InsideScene } from "../render/insideScene.js";
+import { HeapScene } from "../render/heapScene.js";
+import { KitchenScene } from "../render/kitchenScene.js";
+import { TableScene } from "../render/tableScene.js";
 
 export interface FarmSceneHandle {
   /** Turn a potato up out of the ground. Somewhere in the field if unplaced. */
@@ -40,6 +43,9 @@ const SCENES: Record<solo.World, new (canvas: HTMLCanvasElement) => SceneLike> =
   origin: OriginScene,
   void: VoidScene,
   end: EndScene,
+  after: HeapScene,
+  above: KitchenScene,
+  home: TableScene,
 };
 
 /** The canvas and its rAF loop. React only ever hands it a view. */

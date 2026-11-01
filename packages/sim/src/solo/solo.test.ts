@@ -131,7 +131,7 @@ describe("prestige", () => {
 
 describe("the worlds", () => {
   it("opens each world with the gate at the bottom of the one before, and not before", () => {
-    let site: SiteState = { ...developedSite("gates"), stock: 1e40 as never };
+    let site: SiteState = { ...developedSite("gates"), stock: 1e120 as never };
     for (const world of WORLDS.slice(1)) {
       const rung = SOLO_PRODUCERS.find((p) => p.world === world)!;
       const buy = { type: "buy_producer", producer: rung.id, qty: 1 } as const;
@@ -176,6 +176,15 @@ describe("the worlds", () => {
     // Most of what the seeds give back is charged back, but not all of it.
     expect(seedTax(seeded, "void")).toBeLessThan(globalMultiplier(seeded) / globalMultiplier(plain));
     expect(seedTax(seeded, "void")).toBeGreaterThan(Math.sqrt(globalMultiplier(seeded) / globalMultiplier(plain)));
+  });
+});
+
+describe("the long way", () => {
+  it("rewards seeds in full past the end, where the void and the end charge them back", () => {
+    const plain: SiteState = { ...developedSite("long"), depth: WORLDS.length - 1 };
+    const seeded: SiteState = { ...plain, heirlooms: 1e12 };
+    expect(producerCost(seeded, "loam")).toBe(producerCost(plain, "loam"));
+    expect(producerCost(seeded, "ember")).toBeGreaterThan(producerCost(plain, "ember") * 1e9);
   });
 });
 

@@ -61,6 +61,9 @@ const ARRIVAL: Record<Exclude<World, "outside">, string> = {
   origin: "you came out where you started. it is the first morning.",
   void: "you went back before the first morning. there is nothing here yet.",
   end: "you went on past the last of it. this is where everything goes.",
+  after: "you went on past the end. it is warm here.",
+  above: "you went on up. somebody is working.",
+  home: "you came in. everyone is here.",
 };
 
 /**

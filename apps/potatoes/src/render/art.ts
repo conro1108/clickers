@@ -2561,6 +2561,337 @@ const LAST_POTATO_4: Art = {
   palette: { k: K, l: "#fff0c0", p: "#ffb060", d: "#c07030", y: "#fff4c0" },
 };
 
+/** The hundredth-unit mark for the worlds past the end: the same thing, grown a new top, in a new paint. */
+function grown(art: Art, top: readonly string[], paint: Readonly<Record<string, string>>): Art {
+  const w = art.rows[0]!.length;
+  const pad = (row: string) => row.padStart(row.length + ((w - row.length) >> 1), ".").padEnd(w, ".");
+  return { rows: [...top.map(pad), ...art.rows], palette: { ...art.palette, ...paint } };
+}
+
+// --- After: under the ash ---
+/** A trench of everything, going back to dirt, and steaming. */
+export const ROT_BED: Art = {
+  rows: [
+    "......t..t..t.......",
+    ".....kkkkkkkkk......",
+    "...kknnbbnnnbnkk....",
+    "..knnbonngnnonnnk...",
+    ".knnngnnbnnnnbgnnk..",
+    "knbnnnonnnnbnnnnonk.",
+    "kkkkkkkkkkkkkkkkkkkk",
+    "wwwwwwwwwwwwwwwwwwww",
+    "wdwwwdwwwwdwwwdwwwwd",
+  ],
+  palette: { k: "#402e3a", n: "#4a3424", b: "#6a4a30", o: "#c98b4b", g: "#6a8a3a", t: "#c8b8a0", w: "#7a5430", d: "#4e3620" },
+};
+const ROT_BED_4 = grown(ROT_BED, ["...tt..tt...", "..g..gg..g..", ".gggggggggg."], { t: "#e8e0d0", g: "#7fc45a" });
+/** One of the gang, mid-mouthful. */
+export const WORM: Art = {
+  rows: [
+    "......kkkk.........",
+    "....kkppppkk.......",
+    "...kppllllppk...kk.",
+    "..kppllkkllppk.kppk",
+    ".kppkk....kpppkpllk",
+    "kpek........kppplk.",
+    "kppk.........kkkk..",
+    ".kk................",
+  ],
+  palette: { k: "#402e3a", p: "#e0a0a0", l: "#f4c8c0", e: "#402e3a" },
+};
+const WORM_4 = grown(WORM, ["...y.......", "..yyy......"], { y: "#ffd166" });
+/** Sacking hung up to keep the heat in, dripping. */
+export const WET_SACK: Art = {
+  rows: [
+    "kkkkkkkkkkkkkkkk",
+    "kssrssssrssssrsk",
+    "ksrssssrssssrssk",
+    "kssssrssssrssssk",
+    "ksrssssrssssrssk",
+    "kssrsssssrssssk.",
+    ".ksssrskksssrk..",
+    "..kssk...kssk...",
+    "...kk.....kk....",
+    "....d......d....",
+  ],
+  palette: { k: "#402e3a", s: "#8a7a5a", r: "#6a5c42", d: "#8ad0e8" },
+};
+const WET_SACK_4 = grown(WET_SACK, ["..g..g.g..g...", ".gggggggggggg."], { g: "#6aa348" });
+/** Toadstools in a ring, faintly lit from inside. */
+export const FAIRY_RING: Art = {
+  rows: [
+    ".....kkkk..........",
+    "....krrrrk.....kk..",
+    "...krwrrwrk...krrk.",
+    "...kkkkkkkk..krwrrk",
+    ".....kcck....kkkkkk",
+    ".kk..kcck......kck.",
+    "krrk.kcck..kk..kck.",
+    "kkkk.kcck.krrk.kck.",
+    ".kk..kcck.kkkk.kck.",
+    ".kk..kcck..kk..kck.",
+  ],
+  palette: { k: "#402e3a", r: "#c04a4a", w: "#f7e8d0", c: "#e8d8c0" },
+};
+const FAIRY_RING_4 = grown(FAIRY_RING, [".....llll.....", "....l....l...."], { l: "#a8fff0" });
+/** Where the white threads meet, a knot of everything handed down. */
+export const THREAD_KNOT: Art = {
+  rows: [
+    "t.......t.....t",
+    ".t.....t.....t.",
+    "..t...t..t..t..",
+    "...t.ttttt.t...",
+    "....tttwttt....",
+    "tt.ttwwwwwtt.tt",
+    "...ttwwwwwtt...",
+    "....tttwttt....",
+    "...t.ttttt.t...",
+    "..t...t.t...t..",
+    ".t....t..t...t.",
+  ],
+  palette: { t: "#d8e8d0", w: "#ffffff" },
+};
+const THREAD_KNOT_4 = grown(THREAD_KNOT, [".y...y...y.", "..y..y..y.."], { y: "#fff4c0" });
+/** The last one gone soft, sprouting from every eye. */
+export const SIXTH_POTATO: Art = {
+  rows: [
+    "....g......g........",
+    "....gg....gg....g...",
+    ".....g...gg....gg...",
+    ".....gg..g....gg....",
+    "....kkkkkkkkkkgk....",
+    "..kkpplppppppddkk...",
+    ".kpplppwpppdppddpk..",
+    "kpplpppppppppppddk..",
+    "kppwpppdppppwpppdk..",
+    "kpppppppppdpppppdk..",
+    ".kppdpppppppppddk...",
+    "..kkpppdddpddddk....",
+    "....kkkkkkkkkkk.....",
+  ],
+  palette: { k: "#402e3a", p: "#b08a58", l: "#d0b078", d: "#806038", g: "#e8e0c0", w: "#5a4028" },
+};
+const SIXTH_POTATO_4 = grown(SIXTH_POTATO, ["...gg...gg...gg...", "..g..g.g..g.g..g..", "..g....g....g....."], { g: "#c8f0a0" });
+// --- Above: the kitchen ---
+/** A ring on the range, burning small and blue. */
+export const GAS_RING: Art = {
+  rows: [
+    "...f..f..f..f...",
+    "..fbffbffbffbf..",
+    ".fbbffbbffbbffb.",
+    "kkkkkkkkkkkkkkkk",
+    "kiikiikiikiikiik",
+    ".kkkkkkkkkkkkkk.",
+    "..kssssssssssk..",
+  ],
+  palette: { k: "#402e3a", f: "#8ac8ff", b: "#3a6ae0", i: "#3a3a44", s: "#5a5a68" },
+};
+const GAS_RING_4 = grown(GAS_RING, ["..w...w...w...", ".www.www.www..", "..w...w...w..."], { w: "#ffffff" });
+/** A hand in an apron, peeling, not looking up. */
+export const SCULLION: Art = {
+  rows: [
+    "....kkkk....",
+    "...khhhhk...",
+    "...kffffk...",
+    "...kffffk...",
+    "....kffk....",
+    "..kkaaaakk..",
+    ".kaaaaaaaak.",
+    "kffkaaaakffk",
+    "kk.kaaaak.kk",
+    "...kaaaak...",
+    "...kkkkkk...",
+    "...kbkkbk...",
+    "...kk..kk...",
+  ],
+  palette: { k: "#402e3a", h: "#f4f0e4", f: "#e2b090", a: "#d8d8d0", b: "#3a3040" },
+};
+const SCULLION_4 = grown(SCULLION, ["...hhhh...", "..hhhhhh..", "..hhhhhh.."], { h: "#ffffff" });
+/** A lid, held down, rattling a bit. */
+export const POT_LID: Art = {
+  rows: [
+    ".......kk.......",
+    "......kggk......",
+    "......kkkk......",
+    "....kkssssskk...",
+    "..kksslssssssk..",
+    ".kslssssssssssk.",
+    "kslsssssssssssdk",
+    "kkkkkkkkkkkkkkkk",
+  ],
+  palette: { k: "#402e3a", g: "#2e2a30", s: "#b8bcc8", l: "#f0f4ff", d: "#7a7e8a" },
+};
+const POT_LID_4 = grown(POT_LID, [".....yy.....", "....y..y....", ".....yy....."], { y: "#d0d4e0" });
+/** Forty years of stock, never emptied. */
+export const STOCKPOT: Art = {
+  rows: [
+    "...kkkkkkkkkkkk...",
+    "..kbybybbybybybk..",
+    "kkksssssssssssskkk",
+    "k.kslssssssssdsk.k",
+    "kkkslssssssssdskkk",
+    "..kslssssssssdsk..",
+    "..kslssssssssdsk..",
+    "..kslssssssssdsk..",
+    "..kssssssssssdsk..",
+    "...kkkkkkkkkkkk...",
+  ],
+  palette: { k: "#402e3a", b: "#b87a3a", y: "#e8c060", s: "#9aa0ac", l: "#e0e8f0", d: "#6a7080" },
+};
+const STOCKPOT_4 = grown(STOCKPOT, ["...st...ts...", "..s...t...s..", "...ts...st..."], { s: "#ffffff", t: "#d8d8e8" });
+/** Fat with slips of paper and grease. */
+export const RECIPE_BOOK: Art = {
+  rows: [
+    "....p..p...p....",
+    ".kkkpkkpkkkpkkk.",
+    "kcccccckkcccccck",
+    "kcwwwwckkcwwwwck",
+    "kcwiiwckkcwiiwck",
+    "kcwwwwckkcwwwwck",
+    "kcwiiwckkcwiiwck",
+    "kcwwwwckkcwwwwck",
+    "kcwiiwckkcwiiwck",
+    "kcccccckkcccccck",
+    ".kkkkkkkkkkkkkk.",
+  ],
+  palette: { k: "#402e3a", p: "#f0d060", c: "#7a2a2a", w: "#f4ecd8", i: "#8a7a6a" },
+};
+const RECIPE_BOOK_4 = grown(RECIPE_BOOK, ["..w.w.w.w..", ".wwwwwwwww."], { w: "#f4ecd8" });
+/** Peeled, pale and wet, and sitting very still. */
+export const SEVENTH_POTATO: Art = {
+  rows: [
+    ".....kkkkkkkkk......",
+    "...kkwwwwwlllwkk....",
+    "..kwwlllwwwwwlllk...",
+    ".kwlllwwwwwwwwlllk..",
+    "kwlllwwwwwwwwwwwllk.",
+    "kwllwwwwlwwwwwwwllk.",
+    "kwlwwwwwwwwwwlwwwlk.",
+    "kwlwwlwwwwwwwwwwllk.",
+    ".kwlwwwwwwwwwwwllk..",
+    "..kkwlllwwwwlllkk...",
+    "....kkkkkkkkkkk.....",
+  ],
+  palette: { k: "#402e3a", w: "#f7ecc8", l: "#e0cc98" },
+};
+const SEVENTH_POTATO_4 = grown(SEVENTH_POTATO, ["....ss...ss...ss....", ".....ss...ss.ss....."], { s: "#e8e8f0" });
+// --- Home: the table ---
+/** Knife, fork, spoon, and a very clean plate. */
+export const PLACE_SETTING: Art = {
+  rows: [
+    "f.f.kkkkkkkkkkk.ss.s",
+    "f.fkwwwwwwwwwwwkss.s",
+    "fffkwppppppppwwkss.s",
+    ".f.kwpwwwwwwpwwk.s.s",
+    ".f.kwpwwwwwwpwwk.s.s",
+    ".f.kwppppppppwwk.s.s",
+    ".f..kkkkkkkkkkk..s.s",
+  ],
+  palette: { k: "#402e3a", f: "#d8dce8", s: "#b8bcc8", w: "#fff8ec", p: "#7a90b8" },
+};
+const PLACE_SETTING_4 = grown(PLACE_SETTING, ["...y.......y...", "..yyy.....yyy.."], { y: "#ffd166" });
+/** Upright, gloved, and carrying something under a dome. */
+export const WAITER: Art = {
+  rows: [
+    "...kkkkkkkk.",
+    "..kssssssssk",
+    "..klssssssdk",
+    ".kkkkkkkkkkk",
+    ".....kww....",
+    "....kffk....",
+    "....kffk....",
+    "...kbbbbk...",
+    "..kbbwwbbk..",
+    "..kbbwwbkww.",
+    "..kbbbbbk...",
+    "...kbbbbk...",
+    "...kbbbbk...",
+    "...kbkkbk...",
+    "...kk..kk...",
+  ],
+  palette: { k: "#402e3a", s: "#c8ccd8", l: "#f4f8ff", d: "#8a8e9a", w: "#ffffff", f: "#e2b090", b: "#2a2a3a" },
+};
+const WAITER_4 = grown(WAITER, ["......yyy...", ".....y...y.."], { y: "#ffd166" });
+/** A tall candle in a silver stick. */
+export const CANDLE: Art = {
+  rows: [
+    "....f....",
+    "...fyf...",
+    "...fyf...",
+    "....w....",
+    "...kww...",
+    "...kww...",
+    "...kww...",
+    "...kww...",
+    "...kww...",
+    "...kwd...",
+    "...kwd...",
+    "..kssss..",
+    "...kss...",
+    "...kss...",
+    "..kssss..",
+    ".kssssss.",
+  ],
+  palette: { k: "#402e3a", f: "#ffb04a", y: "#fff4c0", w: "#f7ecd8", d: "#d8c8a8", s: "#b8bcc8" },
+};
+const CANDLE_4 = grown(CANDLE, ["f...f...f", "y...y...y", "s...s...s", "sssssssss"], { f: "#ffb04a", y: "#fff4c0", s: "#ffd166" });
+/** It all comes down to this. */
+export const GRAVY_BOAT: Art = {
+  rows: [
+    ".........bb........",
+    "kk.....kkkkkkkkkkk.",
+    ".kk..kkgggggggggkk.",
+    "..kkkgggggggggggk.k",
+    "...kssssssssssskk.k",
+    "...kslsssssssdsk.k.",
+    "....kslssssssdkkk..",
+    ".....kkssssskk.....",
+    ".......kssk........",
+    ".....kkkkkkkk......",
+  ],
+  palette: { k: "#402e3a", b: "#c98b4b", g: "#8a5430", s: "#e8e8f0", l: "#ffffff", d: "#a0a4b0" },
+};
+const GRAVY_BOAT_4 = grown(GRAVY_BOAT, [".....s....s....", "......s..s....."], { s: "#e8e8f0" });
+/** One of every generation you farmed, in oils, looking down at the food. */
+export const PORTRAIT: Art = {
+  rows: [
+    "kkkkkkkkkkkkkkkkkk",
+    "kyyyyyyyyyyyyyyyyk",
+    "kyddddddddddddddyk",
+    "kyddddkkkkkkddddyk",
+    "kydddkhhhhhhkdddyk",
+    "kydddkffffffkdddyk",
+    "kydddkfeffefkdddyk",
+    "kydddkffffffkdddyk",
+    "kyddddkffffkddddyk",
+    "kydddbbbbbbbbdddyk",
+    "kyddbbbbbbbbbbddyk",
+    "kyddbbbbbbbbbbddyk",
+    "kyyyyyyyyyyyyyyyyk",
+    "kkkkkkkkkkkkkkkkkk",
+  ],
+  palette: { k: "#402e3a", y: "#a8792c", d: "#2a2438", f: "#d8b090", b: "#4a2a3a", h: "#3a2a20", e: "#2a1a22" },
+};
+const PORTRAIT_4 = grown(PORTRAIT, ["....y..y..y....", "...yyyyyyyyy...", ".....y...y....."], { y: "#ffd166" });
+/** One potato, on one plate. */
+export const DINNER: Art = {
+  rows: [
+    "........kkkkkk..........",
+    "......kkppplppkk........",
+    ".....kpplleplllpk.......",
+    ".....kpllppppllpk.......",
+    ".....kpppppppppdk.......",
+    "......kkppppddkk........",
+    "..kkkkkkkkkkkkkkkkkkkk..",
+    ".kwwwwwwwwwwwwwwwwwwwwk.",
+    "kwbbbbbbbbbbbbbbbbbbbbwk",
+    ".kwwwwwwwwwwwwwwwwwwwwk.",
+    "..kkkkkkkkkkkkkkkkkkkk..",
+  ],
+  palette: { k: "#402e3a", p: "#d09858", l: "#ecc488", d: "#a06c38", e: "#5a3418", w: "#fff8ec", b: "#7a90b8" },
+};
+const DINNER_4 = grown(DINNER, ["........yy...yy.........", ".......y..y.y..y........", ".........y....y........."], { y: "#fff4c0" });
+
 /** Four marks per tier, indexed by how many of its three upgrades you own. See the marks note above. */
 export const PRODUCER_MARKS = {
   patch: [PLANT, PLANT_2, PLANT_3, PLANT_4],
@@ -2830,6 +3161,114 @@ export const PRODUCER_MARKS = {
     repaint(LAST_POTATO, { p: "#ffd166", d: "#e0a040" }),
     LAST_POTATO_4,
   ],
+  loam: [
+    ROT_BED,
+    repaint(ROT_BED, { o: "#d8a860", g: "#7aa048" }),
+    repaint(ROT_BED, { n: "#3a3a2a", g: "#a4e884", o: "#ffd166" }),
+    ROT_BED_4,
+  ],
+  drone: [
+    WORM,
+    repaint(WORM, { p: "#c88a8a", l: "#e8b8b0" }),
+    repaint(WORM, { p: "#f0c060", l: "#fff0b0" }),
+    WORM_4,
+  ],
+  moss: [
+    WET_SACK,
+    repaint(WET_SACK, { s: "#7a8a5a", r: "#5a6a42" }),
+    repaint(WET_SACK, { s: "#5a8a5a", r: "#3a6a42", d: "#a8e8f0" }),
+    WET_SACK_4,
+  ],
+  mire: [
+    FAIRY_RING,
+    repaint(FAIRY_RING, { r: "#a060c0" }),
+    repaint(FAIRY_RING, { r: "#40c0a8", c: "#c8fff0", w: "#ffffff" }),
+    FAIRY_RING_4,
+  ],
+  kinship: [
+    THREAD_KNOT,
+    repaint(THREAD_KNOT, { t: "#c8e8e0" }),
+    repaint(THREAD_KNOT, { t: "#a8f0d8", w: "#fff4c0" }),
+    THREAD_KNOT_4,
+  ],
+  sixth: [
+    SIXTH_POTATO,
+    repaint(SIXTH_POTATO, { p: "#a89058" }),
+    repaint(SIXTH_POTATO, { g: "#c8f0a0", p: "#c8a060", l: "#f0d090" }),
+    SIXTH_POTATO_4,
+  ],
+  flame: [
+    GAS_RING,
+    repaint(GAS_RING, { f: "#a8e0ff", b: "#5a8af0" }),
+    repaint(GAS_RING, { f: "#ffd166", b: "#ff7a3a" }),
+    GAS_RING_4,
+  ],
+  servant: [
+    SCULLION,
+    repaint(SCULLION, { a: "#c8c8e0" }),
+    repaint(SCULLION, { a: "#f0e0a0", h: "#ffd166" }),
+    SCULLION_4,
+  ],
+  lid: [
+    POT_LID,
+    repaint(POT_LID, { s: "#c08a5a", l: "#f0c8a0", d: "#7a4a2a" }),
+    repaint(POT_LID, { s: "#a06a4a", l: "#e0a878", d: "#5a3020" }),
+    POT_LID_4,
+  ],
+  broth: [
+    STOCKPOT,
+    repaint(STOCKPOT, { b: "#c8903a", y: "#ffd166" }),
+    repaint(STOCKPOT, { b: "#e0a040", y: "#fff4c0", s: "#c9a24a", l: "#fff0b0", d: "#8a6a2a" }),
+    STOCKPOT_4,
+  ],
+  heirs: [
+    RECIPE_BOOK,
+    repaint(RECIPE_BOOK, { c: "#2a4a7a" }),
+    repaint(RECIPE_BOOK, { c: "#c9a24a", p: "#fff4c0" }),
+    RECIPE_BOOK_4,
+  ],
+  seventh: [
+    SEVENTH_POTATO,
+    repaint(SEVENTH_POTATO, { w: "#fff4d8", l: "#f0dca8" }),
+    repaint(SEVENTH_POTATO, { w: "#ffd98a", l: "#e0a040" }),
+    SEVENTH_POTATO_4,
+  ],
+  crumb: [
+    PLACE_SETTING,
+    repaint(PLACE_SETTING, { p: "#b87a7a" }),
+    repaint(PLACE_SETTING, { p: "#c9a24a", f: "#ffd166", s: "#e0a040" }),
+    PLACE_SETTING_4,
+  ],
+  guest: [
+    WAITER,
+    repaint(WAITER, { b: "#3a2a4a" }),
+    repaint(WAITER, { b: "#6a2a3a", s: "#ffd166", l: "#fff4c0", d: "#c9a24a" }),
+    WAITER_4,
+  ],
+  grace: [
+    CANDLE,
+    repaint(CANDLE, { s: "#c9a24a" }),
+    repaint(CANDLE, { s: "#ffd166", w: "#fff4c0" }),
+    CANDLE_4,
+  ],
+  feast: [
+    GRAVY_BOAT,
+    repaint(GRAVY_BOAT, { s: "#d8c8a8" }),
+    repaint(GRAVY_BOAT, { s: "#ffd166", l: "#fff4c0", d: "#c9a24a" }),
+    GRAVY_BOAT_4,
+  ],
+  house: [
+    PORTRAIT,
+    repaint(PORTRAIT, { y: "#c9a24a", d: "#3a2a30" }),
+    repaint(PORTRAIT, { y: "#ffd166", b: "#6a2a4a" }),
+    PORTRAIT_4,
+  ],
+  whole: [
+    DINNER,
+    repaint(DINNER, { b: "#b87a7a", p: "#c88a4a" }),
+    repaint(DINNER, { b: "#c9a24a", p: "#e8a848", l: "#ffd98a" }),
+    DINNER_4,
+  ],
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 
 export type MarkedProducerId = keyof typeof PRODUCER_MARKS;
@@ -3058,4 +3497,74 @@ export const CUT_LAST_SUN: Art = {
     "gggggggggggggggggggggggggggggggg",
   ],
   palette: { a: "#ff7040", b: "#d04030", c: "#8a2a2a", h: "#2a1a1a", f: "#4a4448", g: "#2e2a30", k: "#1a1214", p: "#3a2a2a", d: "#2a1e1e", s: "#8a8088" },
+};
+
+/** A sprouting eye in warm black dirt. */
+export const CUT_SPROUT: Art = {
+  rows: [
+    "..........t..........t..........",
+    "...........t........t...........",
+    "...t........t......t.........t..",
+    "....t........t....t.........t...",
+    ".....t...g....t..t....g....t....",
+    "......t.ggg....tt....ggg..t.....",
+    "........ggg....tt....ggg........",
+    ".........g.....tt.....g.........",
+    ".........gg..kkkkkk..gg.........",
+    "..........ggkkppppkkgg..........",
+    "...........kpplllppk............",
+    "..........kpplleelppk...........",
+    "..........kpplleelppk...........",
+    "...........kppllllpk............",
+    "............kkppppkk............",
+    "..............kkkk..............",
+    "................................",
+  ],
+  palette: { t: "#d8e8d0", g: "#c8f0a0", k: "#2a1a12", p: "#8a6a48", l: "#b09068", e: "#ff9a4a" },
+};
+
+/** A kitchen window at night, seen from the heap. */
+export const CUT_WINDOW: Art = {
+  rows: [
+    "kkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+    "kkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+    "kkkkkbbbbbbbbbbbbbbbbbbkkkkk",
+    "kkkkkbyyyyyybyyyyyyyybbkkkkk",
+    "kkkkkbyyyyyybyyyyyyyybbkkkkk",
+    "kkkkkbyyyyyybyyyddyyybbkkkkk",
+    "kkkkkbyyyyyybyyyddyyybbkkkkk",
+    "kkkkkbbbbbbbbbbbddbbbbbkkkkk",
+    "kkkkkbyyyyyybyyyddyyybbkkkkk",
+    "kkkkkbyyyyyybyyddddyybbkkkkk",
+    "kkkkkbyyyyyybyyyddyyybbkkkkk",
+    "kkkkkbyyyyyybyyyyyyyybbkkkkk",
+    "kkkkkbbbbbbbbbbbbbbbbbbkkkkk",
+    "kkkbbbbbbbbbbbbbbbbbbbbbbkkk",
+    "kkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+  ],
+  palette: { k: "#1e1a24", b: "#4a3424", y: "#ffe0a0", d: "#6a4a30" },
+};
+
+/** The plate, from above, and the fork. */
+export const CUT_PLATE: Art = {
+  rows: [
+    ".............kkkkkkkk.............",
+    ".........kkkkwwwwwwwwkkkk.........",
+    ".......kkwwwwwwwwwwwwwwwwkk.......",
+    ".....kkwwwbbbbbbbbbbbbbbwwwkk.....",
+    "....kwwwbbwwwwwwwwwwwwwwbbwwwk....",
+    "...kwwbbwwwwwwppppppwwwwwwbbwwk...",
+    "...kwwbwwwwwppllllpppwwwwwwbwwk...",
+    "...kwbwwwwwpplleelpppdwwwwwwbwk...",
+    "...kwbwwwwwpplllllppddwwwwwwbwk...",
+    "...kwbwwwwwwppppppddddwwwwwwbwk...",
+    "...kwwbwwwwwwwppddddwwwwwwwbwwk...",
+    "...kwwbbwwwwwwwwwwwwwwwwwwbbwwk...",
+    "....kwwwbbwwwwwwwwwwwwwwbbwwwk....",
+    ".....kkwwwbbbbbbbbbbbbbbwwwkk.....",
+    ".......kkwwwwwwwwwwwwwwwwkk.......",
+    ".........kkkkwwwwwwwwkkkk.........",
+    ".............kkkkkkkk.............",
+  ],
+  palette: { k: "#2a1a22", w: "#fff8ec", b: "#7a90b8", p: "#d09858", l: "#ecc488", d: "#a06c38", e: "#5a3418" },
 };

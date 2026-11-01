@@ -184,6 +184,17 @@ const END_KIND_SHAPES: readonly Shape<WeatherKind>[] = [
   { id: "reprise", weight: 2, effect: { kind: "boon", seconds: 300 } },
 ];
 
+/** Past the end the shape stays; the bites are the end's, a little deeper each world, and the good days rarer. */
+const longKinds = (world: string, step: number, good: number): Shape<WeatherKind>[] => [
+  { id: `${world}_seep`, weight: 16, effect: { kind: "break", scope: "cheapest", share: 0.34 + step } },
+  { id: `${world}_bite`, weight: 14, effect: { kind: "break", scope: "best", share: 0.32 + step } },
+  { id: `${world}_slump`, weight: 11, effect: { kind: "break", scope: "all", share: 0.24 + step, condition: 0.08 } },
+  { id: `${world}_damp`, weight: 16, effect: { kind: "condition", loss: 0.11 + step } },
+  { id: `${world}_sour`, weight: 12, effect: { kind: "condition", loss: 0.2 + step } },
+  { id: `${world}_gift`, weight: good, effect: { kind: "boon", seconds: 90 } },
+  { id: `${world}_grace`, weight: 2, effect: { kind: "boon", seconds: 300 } },
+];
+
 /** One table per world; the deepest open world's is the one that blows. */
 const KINDS_BY_WORLD: Record<World, readonly WeatherKind[]> = {
   outside: KINDS,
@@ -193,6 +204,9 @@ const KINDS_BY_WORLD: Record<World, readonly WeatherKind[]> = {
   origin: named(ORIGIN_KIND_SHAPES, THEME.weather, "weather"),
   void: named(VOID_KIND_SHAPES, THEME.weather, "weather"),
   end: named(END_KIND_SHAPES, THEME.weather, "weather"),
+  after: named(longKinds("after", 0.01, 7), THEME.weather, "weather"),
+  above: named(longKinds("above", 0.02, 6), THEME.weather, "weather"),
+  home: named(longKinds("home", 0.03, 5), THEME.weather, "weather"),
 };
 
 function kindsFor(f: SiteState): readonly WeatherKind[] {

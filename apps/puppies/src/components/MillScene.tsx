@@ -17,6 +17,9 @@ import { DeepScene } from "../render/deepScene.js";
 import { OriginScene } from "../render/originScene.js";
 import { VoidScene } from "../render/voidScene.js";
 import { EndScene } from "../render/endScene.js";
+import { ParkScene } from "../render/parkScene.js";
+import { WalkScene } from "../render/walkScene.js";
+import { PorchScene } from "../render/porchScene.js";
 
 export interface MillSceneHandle {
   whistle(at?: { x: number; y: number }): void;
@@ -38,6 +41,9 @@ const SCENES: Record<solo.World, new (canvas: HTMLCanvasElement) => SceneLike> =
   origin: OriginScene,
   void: VoidScene,
   end: EndScene,
+  after: ParkScene,
+  above: WalkScene,
+  home: PorchScene,
 };
 
 /** The canvas and its rAF loop. React only ever hands it a view. */

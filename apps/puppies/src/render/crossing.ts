@@ -12,9 +12,12 @@ import {
   CUT_DOG_STAR,
   CUT_DOG_STAR_DIM,
   CUT_DREAM_DOG,
+  CUT_FAR_LIGHT,
   CUT_FIRE,
   CUT_FIRE_FLICKER,
+  CUT_FRONT_DOOR,
   CUT_NEST_DOG,
+  CUT_PARK_GATE,
   CUT_SUNK_BALL,
 } from "./art.js";
 import { artCanvas, type Art } from "./pixel.js";
@@ -39,6 +42,9 @@ export const SUBJECTS: Record<Exclude<solo.World, "outside">, Subject> = {
   origin: { frames: [CUT_FIRE, CUT_FIRE_FLICKER], fps: 5, focus: { x: 22, y: 5 }, glow: "255, 150, 60", flash: "#fff0d0" },
   void: { frames: [CUT_DOG_STAR, CUT_DOG_STAR_DIM], fps: 3, focus: { x: 10, y: 10 }, glow: "255, 244, 192", flash: "#e8e8ff", shake: true },
   end: { frames: [CUT_BRIDGE], focus: { x: 17, y: 4 }, glow: "255, 216, 160", flash: "#fff4e0" },
+  after: { frames: [CUT_PARK_GATE], focus: { x: 15, y: 6 }, glow: "255, 216, 144", flash: "#fff8e0" },
+  above: { frames: [CUT_FAR_LIGHT], focus: { x: 16, y: 7 }, glow: "255, 209, 102", flash: "#fff4d0" },
+  home: { frames: [CUT_FRONT_DOOR], focus: { x: 14, y: 9 }, glow: "255, 216, 144", flash: "#fffaf0" },
 };
 
 // Fractions of the cut. Kept in step with the `converge-*` keyframes in styles.css.
