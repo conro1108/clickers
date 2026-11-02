@@ -65,18 +65,23 @@ export const SEED_TAX_EXPONENT = 0.95;
 
 /**
  * The price multiplier on anything in a taxed world: everything a site has
- * inherited — seeds held, seeds spent on output perks, and the square root of
- * the generation for the rungs that scale with it — to `SEED_TAX_EXPONENT`.
- * The root because only some rungs scale with generation; taxed in full, a
- * long line of hand-downs came out *slower* than a short one.
+ * inherited — seeds held, seeds spent on output perks, and the root of
+ * `generationBonus` — to `SEED_TAX_EXPONENT`. The root because only some rungs
+ * scale with generation; taxed in full, a long line of hand-downs came out
+ * *slower* than a short one.
  *
  * 1 for a seedless first generation, and 1 everywhere outside `TAXED_WORLDS`.
  * It only moves on a hand-down or a perk, so the offline model is untouched.
  */
 export function seedTax(f: SiteState, world: World): number {
   if (!TAXED_WORLDS.includes(world)) return 1;
-  const inherited = heirloomMultiplier(f) * (1 + perkLevel(f, "ur_yield")) * Math.sqrt(Math.max(1, f.generation));
+  const inherited = heirloomMultiplier(f) * (1 + perkLevel(f, "ur_yield")) * Math.sqrt(generationBonus(f));
   return Math.pow(inherited, SEED_TAX_EXPONENT);
+}
+
+/** What a generation-scaled rung is worth over a plain one. A root, or the rung soon outruns the whole ladder above and below it. */
+export function generationBonus(f: SiteState): number {
+  return Math.sqrt(Math.max(1, f.generation));
 }
 
 /** Before condition. */
@@ -86,7 +91,7 @@ export function producerMultiplier(f: SiteState, id: SoloProducerId): number {
   for (const u of ownedUpgrades(f)) {
     if (u.effect.kind === "producer_mult" && u.effect.producer === id) m *= u.effect.factor;
   }
-  if (prod.generationScaled) m *= f.generation;
+  if (prod.generationScaled) m *= generationBonus(f);
   if (prod.world !== "outside") m *= 1 + perkLevel(f, "ur_yield");
   return m;
 }

@@ -160,7 +160,7 @@ export interface SoloProducer {
    * rests on.
    */
   conditionScaled?: boolean;
-  /** Rate scales with `generation`. Every site you handed down is still working. */
+  /** Rate scales with `generationBonus`. Every site you handed down is still working. */
   generationScaled?: boolean;
   /**
    * Stretches the gap between weather events, per unit owned, on the same
@@ -202,9 +202,9 @@ const END_LAND = END_COST / 40_000;
  * the shop; the wall is the first rung, which you can see and not reach. `tools/pace.mts` measures it.
  */
 const LONG_WAY = {
-  after: { ids: ["loam", "drone", "moss", "mire", "kinship", "sixth"] as SoloProducerId[], cost: 3e57, rate: 1e36, gate: 3e54, growth: 1.23 },
-  above: { ids: ["flame", "servant", "lid", "broth", "heirs", "seventh"] as SoloProducerId[], cost: 1e69, rate: 1e40, gate: 1e65, growth: 1.24 },
-  home: { ids: ["crumb", "guest", "grace", "feast", "house", "whole"] as SoloProducerId[], cost: 1e77, rate: 1e44, gate: 1e73, growth: 1.25 },
+  after: { ids: ["loam", "drone", "moss", "mire", "kinship", "sixth"] as SoloProducerId[], cost: 1.5e57, rate: 1e36, gate: 1.5e54, growth: 1.23 },
+  above: { ids: ["flame", "servant", "lid", "broth", "heirs", "seventh"] as SoloProducerId[], cost: 2e68, rate: 1e40, gate: 2e64, growth: 1.24 },
+  home: { ids: ["crumb", "guest", "grace", "feast", "house", "whole"] as SoloProducerId[], cost: 5e76, rate: 1e44, gate: 5e72, growth: 1.25 },
 };
 type LongWorld = keyof typeof LONG_WAY;
 
