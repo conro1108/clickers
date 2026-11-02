@@ -5,7 +5,7 @@ import { producerArt, upgradePreview } from "../marks.js";
 import { Row } from "./Row.js";
 import { WORLD_COPY, culprit, deepest } from "../worlds.js";
 
-type BuyQty = 1 | 10 | "max";
+type BuyQty = 1 | 10 | 50;
 
 // Buy size is a preference, not mill state: kept beside the save so it survives a hand-down.
 const QTY_KEY = "puppy-mill:buy-qty";
@@ -14,7 +14,7 @@ function loadQty(): BuyQty {
   try {
     const raw = localStorage.getItem(QTY_KEY);
     if (raw === "10") return 10;
-    if (raw === "max") return "max";
+    if (raw === "50") return 50;
   } catch {
     // A blocked localStorage just means the toggle forgets. Harmless.
   }
@@ -123,7 +123,7 @@ export function GrowPanel({
 
   const shelf = ladder.flatMap((prod, i) => {
     const owned = mill.producers[prod.id] ?? 0;
-    const n = qty === "max" ? Math.max(1, solo.affordableCount(mill, prod.id, budget)) : qty;
+    const n = qty;
     const cost = solo.producerCost(mill, prod.id, n);
     // Quote the rate as the mill stands, tired bedding and all, not the clean rate.
     const each = solo.producerRateEach(mill, prod.id);
@@ -152,9 +152,9 @@ export function GrowPanel({
     <>
       <div className="qty-toggle">
         <span className="muted">Buy</span>
-        {([1, 10, "max"] as BuyQty[]).map((q) => (
+        {([1, 10, 50] as BuyQty[]).map((q) => (
           <button key={String(q)} className={qty === q ? "on" : ""} onClick={() => setQty(q)}>
-            {q === "max" ? "max" : `x${q}`}
+            {`x${q}`}
           </button>
         ))}
       </div>
@@ -166,7 +166,6 @@ export function GrowPanel({
             name={`${prod.name}${owned ? ` ×${owned}` : ""}${broken ? ` (${broken} ${prod.hurt})` : ""}`}
             blurb={`${prod.blurb} +${format(each * n)}/s`}
             cost={format(cost)}
-            meta={qty === "max" ? `buy ${n}` : undefined}
             affordable={Y.gte(budget, cost)}
             best={prod.id === best}
             art={producerArt(mill, prod.id)}
