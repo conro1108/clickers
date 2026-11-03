@@ -338,8 +338,9 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     // The whole cut once ever; a later generation already knows what the sky is about to do.
     const full = had === 0 && farm.reached === 0;
     setOmen({ kind: full ? "full" : "flash", n: omenId.current++, text: nudge.current });
-    // Close the shop so the sky is seen; a cut behind a sheet is a cut nobody watched.
-    setSheet(null);
+    // Close the shop so the sky is seen; a cut behind a sheet is a cut nobody watched. A later generation
+    // has watched it, and is buying them by the ten.
+    if (farm.reached === 0) setSheet(null);
     const id = setTimeout(() => setOmen(null), full ? OMEN_MS : OMEN_FLASH_MS);
     return () => clearTimeout(id);
   }, [singularities]);
@@ -409,9 +410,12 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const hadKinds = useRef(kinds);
   useEffect(() => {
     const had = new Set(hadKinds.current.split(",").filter(Boolean));
-    const arrived = kinds.split(",").filter((id) => id && !had.has(id));
+    // Only in worlds no generation has got past: everywhere shallower, an earlier one has already seen it all.
+    const arrived = kinds
+      .split(",")
+      .filter((id) => id && !had.has(id))
+      .filter((id) => solo.WORLDS.indexOf(solo.SOLO_PRODUCER_BY_ID[id as solo.SoloProducerId].world) >= farm.reached);
     hadKinds.current = kinds;
-    // A hand-down takes them all away; everything bought on the way back up is a reveal again.
     if (arrived.length === 0) return;
     setSheet(null);
   }, [kinds]);

@@ -7,7 +7,7 @@ import { artUrl } from "../render/pixel.js";
 import { Row } from "./Row.js";
 import { WORLD_COPY, culprit, deepest } from "../worlds.js";
 
-type BuyQty = 1 | 10 | 50;
+type BuyQty = 1 | 10 | 50 | 100;
 
 // Buy size is a preference, not mill state: kept beside the save so it survives a hand-down.
 const QTY_KEY = "puppy-mill:buy-qty";
@@ -17,6 +17,7 @@ function loadQty(): BuyQty {
     const raw = localStorage.getItem(QTY_KEY);
     if (raw === "10") return 10;
     if (raw === "50") return 50;
+    if (raw === "100") return 100;
   } catch {
     // A blocked localStorage just means the toggle forgets. Harmless.
   }
@@ -157,7 +158,7 @@ export function GrowPanel({
     <>
       <div className="qty-toggle">
         <span className="muted">Buy</span>
-        {([1, 10, 50] as BuyQty[]).map((q) => (
+        {([1, 10, 50, 100] as BuyQty[]).map((q) => (
           <button key={String(q)} className={qty === q ? "on" : ""} onClick={() => setQty(q)}>
             {`x${q}`}
           </button>
