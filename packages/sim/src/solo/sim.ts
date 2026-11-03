@@ -1,7 +1,7 @@
 // A headless player for tuning. Competent, not optimal.
 
 import { Y, ms, seconds, type Millis, type Yield, type Rate } from "../numbers.js";
-import { SOLO_PRODUCERS, SOLO_UPGRADES, WORLD_GATE, type SoloProducerId, type World } from "./content.js";
+import { SOLO_PRODUCERS, SOLO_PRODUCER_BY_ID, SOLO_UPGRADES, WORLD_GATE, type SoloProducerId, type World } from "./content.js";
 import {
   brokenCount,
   currentRate,
@@ -298,8 +298,8 @@ export function simulateCadence(opts: {
 // --- The long game: how far a line gets, by how many seeds it arrives with ---
 
 export interface PushResult {
-  /** Days from the hand-down to each world opening; absent if it never did. */
-  opened: Partial<Record<World, number>>;
+  /** Days from the hand-down to each world's first rung standing (not its gate, which is cheap); absent if it never did. */
+  reached: Partial<Record<World, number>>;
   site: SiteState;
 }
 
@@ -318,7 +318,7 @@ export function simulatePush(opts: { seeds: number; generation: number; days: nu
   }
   site = { ...site, stock: headStartStock(site.perks.head_start ?? 0) };
 
-  const opened: PushResult["opened"] = {};
+  const reached: PushResult["reached"] = {};
   const buy = (cmd: SiteCommand, t: Millis): boolean => {
     const res = applySiteCommand(site, cmd, t);
     if (res.ok) site = res.site;
@@ -333,7 +333,6 @@ export function simulatePush(opts: { seeds: number; generation: number; days: nu
       const pending = gatePending(site);
       if (pending) {
         if (!buy({ type: "buy_upgrade", upgrade: WORLD_GATE[pending] }, t)) break;
-        opened[pending] = t / DAY_MS;
         continue;
       }
       const upgrade = SOLO_UPGRADES.find((u) => !site.upgrades.includes(u.id) && isUnlocked(site, u) && !Object.values(WORLD_GATE).includes(u.id) && upgradeCost(site, u) <= site.stock);
@@ -349,7 +348,9 @@ export function simulatePush(opts: { seeds: number; generation: number; days: nu
         if (!pick || score < pick.score) pick = { id: prod.id, score };
       }
       if (!pick || !buy({ type: "buy_producer", producer: pick.id, qty: 1 }, t)) break;
+      const world = SOLO_PRODUCER_BY_ID[pick.id].world;
+      reached[world] ??= t / DAY_MS;
     }
   }
-  return { opened, site };
+  return { reached, site };
 }

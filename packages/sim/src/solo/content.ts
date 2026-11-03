@@ -183,15 +183,16 @@ const VOID_LAND = VOID_COST / 40_000;
 const END_LAND = END_COST / 40_000;
 
 /**
- * The three worlds past the end, one ladder each: first rung's price and output, the gate in, the
- * climb. A rung's payback is inversely proportional to the seeds behind it: a wall for a short
- * line, a slog for a longer one, a day's walk once the line has outgrown it. Gates are cheap on purpose, since a pending one freezes
- * the shop; the wall is the first rung, which you can see and not reach. `tools/pace.mts` measures it.
+ * The three worlds past the end, one ladder each: the rung whose ten open it, first rung's price
+ * and output, the climb. A rung's payback is inversely proportional to the seeds behind it: a wall
+ * for a short line, a slog for a longer one, a day's walk once the line has outgrown it. The wall
+ * is the first rung, which you can see and not reach; the gate in is priced off the ten that
+ * unlock it, since a pending gate freezes the shop. `tools/pace.mts` measures it.
  */
 const LONG_WAY = {
-  after: { ids: ["loam", "drone", "moss", "mire", "kinship", "sixth"] as SoloProducerId[], cost: 5e57, rate: 1e36, gate: 5e54, growth: 1.23 },
-  above: { ids: ["flame", "servant", "lid", "broth", "heirs", "seventh"] as SoloProducerId[], cost: 6e68, rate: 1e40, gate: 6e64, growth: 1.24 },
-  home: { ids: ["crumb", "guest", "grace", "feast", "house", "whole"] as SoloProducerId[], cost: 5e77, rate: 1e44, gate: 5e73, growth: 1.25 },
+  after: { ids: ["loam", "drone", "moss", "mire", "kinship", "sixth"] as SoloProducerId[], before: "last" as SoloProducerId, cost: 5e57, rate: 1e36, growth: 1.23 },
+  above: { ids: ["flame", "servant", "lid", "broth", "heirs", "seventh"] as SoloProducerId[], before: "sixth" as SoloProducerId, cost: 6e68, rate: 1e40, growth: 1.24 },
+  home: { ids: ["crumb", "guest", "grace", "feast", "house", "whole"] as SoloProducerId[], before: "seventh" as SoloProducerId, cost: 1.5e76, rate: 1e44, growth: 1.25 },
 };
 type LongWorld = keyof typeof LONG_WAY;
 
@@ -720,14 +721,14 @@ const CLICK_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
 
 const CLICK_UPGRADES: SoloUpgrade[] = [...named(CLICK_UPGRADE_SHAPES, THEME.soloClickUpgrades, "upgrade")];
 
-/** A long world's three globals: the gate into it, on ten of the rung before, then a charter and a form as everywhere else. */
-function longGlobals(world: LongWorld, before: SoloProducerId, charter: string, form: string): Shape<SoloUpgrade>[] {
+/** A long world's three globals: the gate into it, on ten of the rung before and about what they cost, then a charter and a form as everywhere else. */
+function longGlobals(world: LongWorld, charter: string, form: string): Shape<SoloUpgrade>[] {
   const double = { kind: "global_mult", factor: 2 } as const;
-  const { ids } = LONG_WAY[world];
+  const { ids, before } = LONG_WAY[world];
   const calm = ids[2]!;
   const top = ids[5]!;
   return [
-    { id: WORLD_GATE[world], cost: Y.of(LONG_WAY[world].gate), effect: double, requires: { producer: before, count: 10 } },
+    { id: WORLD_GATE[world], cost: fleetCost(before, 10), effect: double, requires: { producer: before, count: 10 } },
     { id: charter, cost: fleetCost(calm, 25, 5), effect: double, requires: { producer: calm, count: 25 } },
     { id: form, cost: fleetCost(top, 25), effect: double, requires: { producer: top, count: 25 } },
   ];
@@ -898,9 +899,9 @@ const GLOBAL_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
   { id: "ending", cost: Y.of(END_COST * 0.3), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "fifth", count: 10 } },
   { id: "end_charter", cost: fleetCost("lull", 25, 5), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "lull", count: 25 } },
   { id: "end_form", cost: fleetCost("last", 25), effect: { kind: "global_mult", factor: 2 }, requires: { producer: "last", count: 25 } },
-  ...longGlobals("after", "last", "after_charter", "after_form"),
-  ...longGlobals("above", "sixth", "above_charter", "above_form"),
-  ...longGlobals("home", "seventh", "home_charter", "home_form"),
+  ...longGlobals("after", "after_charter", "after_form"),
+  ...longGlobals("above", "above_charter", "above_form"),
+  ...longGlobals("home", "home_charter", "home_form"),
 ];
 
 const GLOBAL_UPGRADES: SoloUpgrade[] = [...named(GLOBAL_UPGRADE_SHAPES, THEME.soloGlobalUpgrades, "upgrade")];
@@ -988,9 +989,9 @@ export interface Land {
   world: World;
 }
 
-/** The same four again, off the first rung like the end's, so they're cheap on arrival. */
+/** The same four again, off the gate rather than the first rung, so they're cheap for whoever can just afford it. */
 function longLands(world: LongWorld): Shape<Land>[] {
-  const price = LONG_WAY[world].cost / 40_000;
+  const price = fleetCost(LONG_WAY[world].before, 10) / 10_000;
   return [
     { id: `${world}_beds`, role: "breakage", perLevel: 0.12, baseCost: Y.of(price * 0.67), growth: 2.5, world },
     { id: `${world}_lining`, role: "condition", perLevel: 0.12, baseCost: Y.of(price * 1.05), growth: 2.5, world },

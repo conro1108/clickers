@@ -1037,42 +1037,21 @@ input {
   gap: 14px;
   padding: 20px 0 calc(24px + env(safe-area-inset-bottom));
 }
-/* The thing itself, out there. Same lopsided blob the Convergence falls into,
-   at rest and breathing — a player who buys this is about to watch it fill the
-   screen, and this is the first time they see it at all.
-
-   Darker than the one in the fold, and by a lot. That one is lit because you're
-   falling into it; this one is a long way off in the dark with the same amber
-   behind it as the sky has been carrying, and at full brightness it stops being
-   an object out there and turns into a bread roll on a shelf. */
+/* The thing itself, out there: one dog asleep a long way off in the dark,
+   with the same amber behind it as the sky has been carrying. Dimmed hard;
+   at full brightness it's a sticker, not something you'd cross a gate for. */
 .grave-mark {
-  position: relative;
   flex-shrink: 0;
   width: 104px;
-  height: 78px;
-  border-radius: 50% 50% 46% 46% / 54% 54% 46% 46%;
-  background: radial-gradient(70% 74% at 40% 30%, #7d5433 0%, #5c3b23 42%, #3a2415 74%, #1c110a 100%);
-  box-shadow: 0 0 54px 14px rgba(255, 176, 84, 0.16), inset -10px -12px 22px rgba(0, 0, 0, 0.55);
+  height: 64px;
+  image-rendering: pixelated;
+  filter: brightness(0.55) drop-shadow(0 0 22px rgba(255, 176, 84, 0.28));
   animation: grave-breathe 6.5s ease-in-out infinite;
-}
-/* One eye, low and off to the side. The fold's dog has the pair, and
-   the pair is what makes this one a face: two dark dots at eye height on a blob
-   is a cartoon no matter how the rest of it is lit. */
-.grave-mark::before {
-  content: "";
-  position: absolute;
-  left: 29%;
-  top: 56%;
-  width: 7%;
-  height: 9%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 40%, #150c07 0%, #2d1a10 62%, rgba(45, 26, 16, 0) 100%);
-  box-shadow: 0 -1px 0 rgba(214, 160, 106, 0.22);
 }
 @keyframes grave-breathe {
   50% {
     transform: scale(1.045);
-    box-shadow: 0 0 80px 24px rgba(255, 176, 84, 0.34);
+    filter: brightness(0.62) drop-shadow(0 0 34px rgba(255, 176, 84, 0.44));
   }
 }
 .grave-name {

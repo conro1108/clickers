@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Y, format, solo, type Millis, type Yield } from "@clickers/sim";
 
 import { producerArt, upgradePreview } from "../marks.js";
+import { PACK_POSES, POSE } from "../render/art.js";
+import { artUrl } from "../render/pixel.js";
 import { Row } from "./Row.js";
 import { WORLD_COPY, culprit, deepest } from "../worlds.js";
 
@@ -39,6 +41,9 @@ function waitText(msLeft: number): string {
   return `about ${hours}h${rest ? ` ${rest}m` : ""} away`;
 }
 
+/** What's on the far side of every gate: one dog, darkest coat, asleep. */
+const SLEEPER = PACK_POSES[2]![0]![POSE.sleep]!;
+
 /** Where each world is, as a phrase that finishes "broken …". */
 // The single-item end-of-run sheet: no cream, price as a fill bar, button does not say Buy.
 // Says nothing about what it does on purpose — see the blurb note in content.ts.
@@ -64,7 +69,7 @@ function Convergence({
 
   return (
     <div className="grave">
-      <div className="grave-mark" aria-hidden />
+      <img className="grave-mark" src={artUrl(SLEEPER)} alt="" />
       <h3 className="grave-name">{ur.name}</h3>
       <p className="grave-blurb">{ur.blurb}</p>
       {line && <p className="grave-line">{line}</p>}
