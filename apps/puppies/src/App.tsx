@@ -471,7 +471,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const kitOnTheLand = solo.SOLO_PRODUCERS.reduce((n, p) => n + (mill.producers[p.id] ?? 0), 0);
 
   // The shop has emptied itself for the Ur-Chihuahua; the bottom bar is where that announces itself.
-  const lastPurchase = solo.gatePending(mill) !== null;
+  const gateWaiting = solo.gatePending(mill) !== null;
   const arrival = crossing ? WORLD_COPY[crossing].arrival : undefined;
 
   return (
@@ -563,7 +563,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
             className={
               [
                 item.id === "upkeep" && needsAttention ? "alert" : "",
-                item.id === "shop" && lastPurchase ? "waiting" : "",
+                item.id === "shop" && gateWaiting ? "waiting" : "",
               ]
                 .filter(Boolean)
                 .join(" ") || undefined
@@ -577,31 +577,19 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         ))}
       </nav>
 
-      {/* Past the threshold the shop isn't a shop any more, and the frame around
-          it has to go too — a dark sheet with one thing in it still reads as a
-          catalogue if it's captioned "More kit on the land" and footed with a
-          running total of what you have to spend. There's nothing to compare
-          and nothing to budget: the only number that matters is on the bar. */}
       {sheet === "shop" && (
         <Sheet
-          tone={lastPurchase ? "grave" : undefined}
-          title={lastPurchase ? "Nothing left to sell you" : "Shop"}
-          sub={
-            lastPurchase
-              ? "What's below was never stock."
-              : WORLD_COPY[mill.world].shop
-          }
+          title="Shop"
+          sub={WORLD_COPY[mill.world].shop}
           onClose={() => setSheet(null)}
           foot={
-            lastPurchase ? undefined : (
-              <>
-                {/* The one number off the old ledger that had nowhere else to
-                    go. It reads as a footnote to a catalogue rather than a
-                    stat: what you've bought, under what you can spend. */}
-                <span className="muted">{kitOnTheLand} on the land</span>
-                <strong>{format(budget)}</strong>
-              </>
-            )
+            <>
+              {/* The one number off the old ledger that had nowhere else to
+                  go. It reads as a footnote to a catalogue rather than a
+                  stat: what you've bought, under what you can spend. */}
+              <span className="muted">{kitOnTheLand} on the land</span>
+              <strong>{format(budget)}</strong>
+            </>
           }
         >
           <MillGrowPanel mill={mill} budget={budget} dispatch={dispatch} />

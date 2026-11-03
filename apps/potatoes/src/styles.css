@@ -997,32 +997,20 @@ input {
 
 /* --- The shop, once there's one thing left in it -------------------------- */
 
-/* Everything in this block exists to stop the last purchase of the run from
-   looking like shopping. The palette is the omens' — #06040a, the Singularity's
-   purple, the same amber the sky calls in — so the sheet reads as the thing
-   that's been staining the horizon for the last three days rather than as a
-   tab of the shop with the lights off. */
-.overlay-grave {
-  background: rgba(6, 4, 10, 0.88);
-}
-.sheet-grave {
+/* The gate, waiting at the foot of the shop. A patch of the omens' dark — #0b0810,
+   the same amber the sky calls in — set into the cream, so it reads as the thing
+   that's been staining the horizon rather than one more row to buy. */
+.gate-card {
+  margin-top: 18px;
+  padding: 0 16px;
   background: #0b0810;
-  border-top-color: #ffcf90;
+  border: 2px solid #ffcf90;
+  border-radius: 14px;
   color: #d9cdbb;
+  box-shadow: 0 0 24px rgba(255, 176, 84, 0.25);
 }
-.sheet-grave h2 {
-  color: #ffcf90;
-  font-size: 0.92rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  text-shadow: 0 0 20px rgba(255, 176, 84, 0.35);
-}
-.sheet-grave .sheet-sub {
-  color: #8c7f9a;
-}
-.sheet-grave .sheet-close {
-  background: #1a1326;
-  color: #cbbfd6;
+.gate-card .grave {
+  padding-bottom: 20px;
 }
 
 .grave {

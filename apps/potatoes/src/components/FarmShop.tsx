@@ -92,7 +92,7 @@ function waitText(msLeft: number): string {
   return `about ${hours}h${rest ? ` ${rest}m` : ""} away`;
 }
 
-// The single-item end-of-run sheet: no cream, price as a fill bar, button does not say Buy.
+// The gate, at the foot of the shop: no cream, price as a fill bar, button does not say Buy.
 // Says nothing about what it does on purpose — see the blurb note in content.ts.
 function Convergence({
   farm,
@@ -159,25 +159,15 @@ export function GrowPanel({
     setQtyRaw(next);
   };
 
-  // Once ten of the last rung stand, everything else leaves the board: buying another would push the gate out.
-  // The Ur-Potato first, then the same again at the bottom of every world after it.
+  // Once ten of the last rung stand, the gate waits at the bottom of the shop until you take it, so a
+  // world can be cleared before you leave it. The Ur-Potato first, then the same at every world after.
   const gate = solo.gatePending(farm);
-  if (gate) {
-    return (
-      <Convergence
-        farm={farm}
-        budget={budget}
-        dispatch={dispatch}
-        upgrade={solo.WORLD_GATE[gate]}
-        line={WORLD_COPY[gate].gateLine ?? ""}
-      />
-    );
-  }
+  const gates: readonly string[] = Object.values(solo.WORLD_GATE);
 
   // One shop per world; warping is how you change it.
   const ladder = solo.producersIn(farm.world);
   const upgrades = solo.SOLO_UPGRADES.filter((u) => {
-    if (farm.upgrades.includes(u.id) || !solo.isUnlocked(farm, u)) return false;
+    if (farm.upgrades.includes(u.id) || !solo.isUnlocked(farm, u) || gates.includes(u.id)) return false;
     // Tier upgrades belong to their rung's world; dig tools and globals lift both and are sold in both.
     const effect = u.effect;
     if (effect.kind !== "producer_mult") return true;
@@ -251,6 +241,18 @@ export function GrowPanel({
           />
         ))}
       </div>
+
+      {gate && (
+        <div className="gate-card">
+          <Convergence
+            farm={farm}
+            budget={budget}
+            dispatch={dispatch}
+            upgrade={solo.WORLD_GATE[gate]}
+            line={WORLD_COPY[gate].gateLine ?? ""}
+          />
+        </div>
+      )}
     </>
   );
 }

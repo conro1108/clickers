@@ -46,7 +46,7 @@ function waitText(msLeft: number): string {
 const SLEEPER = PACK_POSES[2]![0]![POSE.sleep]!;
 
 /** Where each world is, as a phrase that finishes "broken …". */
-// The single-item end-of-run sheet: no cream, price as a fill bar, button does not say Buy.
+// The gate, at the foot of the shop: no cream, price as a fill bar, button does not say Buy.
 // Says nothing about what it does on purpose — see the blurb note in content.ts.
 function Convergence({
   mill,
@@ -112,15 +112,15 @@ export function GrowPanel({
     setQtyRaw(next);
   };
 
-  // Once the tenth of a world's last rung stands, everything else leaves the board: buying another would
-  // push the gate out. Ten Singularities and the Ur-Chihuahua first, then the same at the bottom of every world.
+  // Once the tenth of a world's last rung stands, the gate waits at the bottom of the shop until you take it,
+  // so a world can be cleared before you leave it. The Ur-Chihuahua first, then the same at every world after.
   const gate = solo.gatePending(mill);
-  if (gate) return <Convergence mill={mill} budget={budget} dispatch={dispatch} world={gate} />;
+  const gates: readonly string[] = Object.values(solo.WORLD_GATE);
 
   // One shop per world; warping is how you change it.
   const ladder = solo.producersIn(mill.world);
   const upgrades = solo.SOLO_UPGRADES.filter((u) => {
-    if (mill.upgrades.includes(u.id) || !solo.isUnlocked(mill, u)) return false;
+    if (mill.upgrades.includes(u.id) || !solo.isUnlocked(mill, u) || gates.includes(u.id)) return false;
     // Tier upgrades belong to their rung's world; whistle tools and globals lift both and are sold in both.
     const effect = u.effect;
     if (effect.kind !== "producer_mult") return true;
@@ -194,6 +194,12 @@ export function GrowPanel({
           />
         ))}
       </div>
+
+      {gate && (
+        <div className="gate-card">
+          <Convergence mill={mill} budget={budget} dispatch={dispatch} world={gate} />
+        </div>
+      )}
     </>
   );
 }
