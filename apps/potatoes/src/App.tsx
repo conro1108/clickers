@@ -379,13 +379,14 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     // Only one step down, and only if it took you with it: the dev lever opens worlds without walking you
     // through them, and a hand-down or a lever going the other way is not an arrival.
     if (farm.depth !== was + 1 || farm.world !== arrived || !WORLD_COPY[arrived].cut) return;
-    setSheet(null);
     setHeldWorld(stood);
-    // Somewhere an earlier generation has already been: the way back in, not the revelation.
+    // Somewhere an earlier generation has already been: the way back in, not the revelation. The dip draws over
+    // the shop, which stays open on the new world's ladder.
     if (farm.depth <= reached) {
       cross(arrived, () => setHeldWorld(null));
       return;
     }
+    setSheet(null);
     setCut(arrived);
     // Stay in the world you bought it from until the dark has taken the screen.
     const swap = setTimeout(() => setHeldWorld(null), FOLD_SWAP_MS);

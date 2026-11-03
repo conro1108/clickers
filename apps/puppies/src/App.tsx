@@ -387,14 +387,15 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     const arrived = solo.WORLDS[mill.depth];
     // One world further, and standing in it: a gate was bought. The back-room lever opens without moving you, so no cut.
     if (mill.depth !== was + 1 || !arrived || mill.world !== arrived) return;
-    setSheet(null);
     // Stay in the world you left until the dark has taken the screen.
     setHeldWorld(stood);
-    // Somewhere an earlier generation has already been: the way back in, not the revelation.
+    // Somewhere an earlier generation has already been: the way back in, not the revelation. The walk draws over
+    // the shop, which stays open on the new world's ladder.
     if (mill.depth <= reached) {
       walkTo(arrived, () => setHeldWorld(null));
       return;
     }
+    setSheet(null);
     setCrossing(arrived);
     const swap = setTimeout(() => setHeldWorld(null), FOLD_SWAP_MS);
     const id = setTimeout(() => setCrossing(null), CONVERGE_MS);
