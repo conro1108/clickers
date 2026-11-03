@@ -614,6 +614,8 @@ export interface SoloUpgrade {
   effect: SoloUpgradeEffect;
   /** Hidden until the player owns this many of the producer. */
   requires?: { producer: SoloProducerId; count: number };
+  /** Bought by itself, out of stock, by any purchase of its producer that finds it reached and affordable. */
+  auto?: true;
 }
 
 /**
@@ -645,7 +647,8 @@ function fleetCost(id: SoloProducerId, count: number, share = 1): Yield {
  * spreading, so the reward is allowed to be loud — and it's the only upgrade in
  * the game that changes the silhouette of the thing rather than its paint.
  *
- * All three are priced against the fleet you must already own.
+ * All three are priced against the fleet you must already own, and buy themselves: the purchase that
+ * reaches the count pays for it if there's stock, and if not it waits in the shop.
  */
 function tierUpgrades(): SoloUpgrade[] {
   const out: SoloUpgrade[] = [];
@@ -660,6 +663,7 @@ function tierUpgrades(): SoloUpgrade[] {
       cost: fleetCost(prod.id, 10),
       effect: { kind: "producer_mult", producer: prod.id, factor: 2 },
       requires: { producer: prod.id, count: 10 },
+      auto: true,
     });
     out.push({
       id: `${prod.id}_x2b`,
@@ -668,6 +672,7 @@ function tierUpgrades(): SoloUpgrade[] {
       cost: fleetCost(prod.id, 50, 0.4),
       effect: { kind: "producer_mult", producer: prod.id, factor: 1.5 },
       requires: { producer: prod.id, count: 50 },
+      auto: true,
     });
     out.push({
       id: `${prod.id}_x2c`,
@@ -676,6 +681,7 @@ function tierUpgrades(): SoloUpgrade[] {
       cost: fleetCost(prod.id, 100, 1.2),
       effect: { kind: "producer_mult", producer: prod.id, factor: 2 },
       requires: { producer: prod.id, count: 100 },
+      auto: true,
     });
   }
   return out;

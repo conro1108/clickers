@@ -13,6 +13,7 @@ import {
   SOLO_PRODUCER_BY_ID,
   SOLO_REPAIR_COST_FRACTION,
   SOLO_UPGRADE_BY_ID,
+  SOLO_UPGRADES,
   type Land,
   type LandId,
   type LandRole,
@@ -260,6 +261,11 @@ export function affordableCount(f: SiteState, id: SoloProducerId, budget: Yield)
 export function isUnlocked(f: SiteState, u: SoloUpgrade): boolean {
   if (!u.requires) return true;
   return (f.producers[u.requires.producer] ?? 0) >= u.requires.count;
+}
+
+/** A producer's `auto` upgrades its count has reached and the site doesn't hold yet, cheapest first. */
+export function autoUpgradesFor(f: SiteState, id: SoloProducerId): SoloUpgrade[] {
+  return SOLO_UPGRADES.filter((u) => u.auto && u.requires?.producer === id && !f.upgrades.includes(u.id) && isUnlocked(f, u));
 }
 
 export { MIN_CONDITION };

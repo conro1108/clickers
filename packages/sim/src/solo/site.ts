@@ -30,6 +30,7 @@ import {
   isPerkAvailable,
   isProducerAvailable,
   isUnlocked,
+  autoUpgradesFor,
   isWorldOpen,
   landCost,
   perkLevel,
@@ -359,6 +360,12 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       // that way — this is the exception because nothing else told you.
       if (had === 0 && producer.id === CONVERGENCE_GATE_PRODUCER) {
         note("the first `singularity` is running. the horizon looks wrong.", "neutral");
+      }
+      // Its tier upgrades buy themselves if there's stock left; the rest wait in the shop.
+      for (const u of autoUpgradesFor(site, producer.id)) {
+        if (!spend(upgradeCost(site, u))) break;
+        site = { ...site, upgrades: [...site.upgrades, u.id] };
+        note(`bought ${u.name}.`, "neutral");
       }
       break;
     }
