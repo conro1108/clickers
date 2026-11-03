@@ -21,9 +21,8 @@ import { named, THEME, type Shape } from "../theme.js";
  * `beyond`, `deep` and `origin` follow the same rules, each opened by a gate
  * at the bottom of the ladder before it (see `WORLD_GATE`): a fresh ladder,
  * its own land, its own picture, and everything behind you keeps producing.
- * `void` and `end` do too, but they're priced against your seeds — see
- * `TAXED_WORLDS`. `after`, `above` and `home` aren't: they're priced for a line
- * that has been stacking hand-downs — see `LONG_WAY`.
+ * So do `void`, `end`, `after`, `above` and `home`, each first rung priced past what a
+ * run can earn without the seeds of the generations before it — see `LONG_WAY`.
  */
 export type World = "outside" | "inside" | "beyond" | "deep" | "origin" | "void" | "end" | "after" | "above" | "home";
 
@@ -49,15 +48,6 @@ export const WORLD_GATE: Record<Exclude<World, "outside">, string> = {
   above: "upstairs",
   home: "homecoming",
 };
-
-/**
- * The void and the end, where everything — and the gate in — costs more
- * the more your seeds have bought you (`economy.seedTax`). Elsewhere seeds
- * compound without limit, so a long prestige track clears any fixed price in an
- * afternoon; here they're worth a tenth of the power they are anywhere else,
- * and what sets the pace is the ladder.
- */
-export const TAXED_WORLDS: readonly World[] = ["void", "end"];
 
 export type SoloProducerId =
   | "patch"
@@ -182,11 +172,8 @@ export interface SoloProducer {
  * cleared. `solo.test.ts` is the check on this curve — retune here, run that.
  */
 /**
- * The first rung of each taxed world, the rest of its ladder quoted against it.
- * Far above the origin's top rung, because the site that arrives here has
- * long since bought out every untaxed rung behind it; tuned so that site, from
- * a first arrival to one with millions of seeds, takes about three weeks to
- * clear the void and five or six more to stand up the Last.
+ * The first rung of the void and the end, the rest of each ladder quoted against it. The void is
+ * a first generation's wall; the end is the second's. Past that, seeds clear both in a day.
  */
 const VOID_COST = 6e34;
 const VOID_STEP = 5.5;
@@ -197,14 +184,14 @@ const END_LAND = END_COST / 40_000;
 
 /**
  * The three worlds past the end, one ladder each: first rung's price and output, the gate in, the
- * climb. No seed tax, so a rung's payback is inversely proportional to the seeds behind it: a wall
- * for a short line, a slog for a long one. Gates are cheap on purpose, since a pending one freezes
+ * climb. A rung's payback is inversely proportional to the seeds behind it: a wall for a short
+ * line, a slog for a longer one, a day's walk once the line has outgrown it. Gates are cheap on purpose, since a pending one freezes
  * the shop; the wall is the first rung, which you can see and not reach. `tools/pace.mts` measures it.
  */
 const LONG_WAY = {
-  after: { ids: ["loam", "drone", "moss", "mire", "kinship", "sixth"] as SoloProducerId[], cost: 1.5e57, rate: 1e36, gate: 1.5e54, growth: 1.23 },
-  above: { ids: ["flame", "servant", "lid", "broth", "heirs", "seventh"] as SoloProducerId[], cost: 2e68, rate: 1e40, gate: 2e64, growth: 1.24 },
-  home: { ids: ["crumb", "guest", "grace", "feast", "house", "whole"] as SoloProducerId[], cost: 5e76, rate: 1e44, gate: 5e72, growth: 1.25 },
+  after: { ids: ["loam", "drone", "moss", "mire", "kinship", "sixth"] as SoloProducerId[], cost: 5e57, rate: 1e36, gate: 5e54, growth: 1.23 },
+  above: { ids: ["flame", "servant", "lid", "broth", "heirs", "seventh"] as SoloProducerId[], cost: 6e68, rate: 1e40, gate: 6e64, growth: 1.24 },
+  home: { ids: ["crumb", "guest", "grace", "feast", "house", "whole"] as SoloProducerId[], cost: 5e77, rate: 1e44, gate: 5e73, growth: 1.25 },
 };
 type LongWorld = keyof typeof LONG_WAY;
 
@@ -568,8 +555,7 @@ const SOLO_PRODUCER_SHAPES: readonly Shape<SoloProducer>[] = [
   //
   // Steeper than anything before: a huge jump in from the origin, each rung
   // 4-5.5x the price for 3x the output, and per-unit growth of 1.21 then 1.22,
-  // so a hundred of anything is most of a run. Prices here are also multiplied
-  // by `seedTax`; these literals are what a seedless first generation pays.
+  // so a hundred of anything is most of a run.
   { id: "mote", baseRate: 7.5e24, baseCost: Y.of(VOID_COST), growth: 1.21, world: "void" },
   { id: "wisp", baseRate: 2.25e25, baseCost: Y.of(VOID_COST * VOID_STEP), growth: 1.21, world: "void" },
   { id: "veil", baseRate: 6.75e25, baseCost: Y.of(VOID_COST * VOID_STEP ** 2), growth: 1.21, world: "void", calmPerUnit: 0.0015 },
@@ -902,7 +888,7 @@ const GLOBAL_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
     effect: { kind: "global_mult", factor: 2 },
     requires: { producer: "first", count: 25 },
   },
-  // The two taxed gates are taxed too. Each freezes the shop until it's bought (the
+  // Each of these two gates freezes the shop until it's bought (the
   // gate sale screen), from the moment the tenth of the last rung stands — before the
   // site can buy out the rungs below it — so they're priced to take hours from that
   // frozen rate, not days; the weeks are in the ladders.
@@ -1126,7 +1112,7 @@ const LAND_SHAPES: readonly Shape<Land>[] = [
   { id: "origin_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(5.7e26), growth: 2.1, world: "origin" },
   { id: "origin_reclaim", role: "payout", perLevel: 0.12, baseCost: Y.of(1.14e27), growth: 1.9, world: "origin" },
   // Void and end open on a first rung that takes days, so these are priced off what you earn on arrival, not off
-  // that rung: a building that took days too would leave the world undefended for all of them. Steeper, and taxed.
+  // that rung: a building that took days too would leave the world undefended for all of them. Steeper.
   { id: "void_beds", role: "breakage", perLevel: 0.12, baseCost: Y.of(VOID_LAND * 0.67), growth: 2.2, world: "void" },
   { id: "void_lining", role: "condition", perLevel: 0.12, baseCost: Y.of(VOID_LAND * 1.05), growth: 2.2, world: "void" },
   { id: "void_calm", role: "frequency", perLevel: 0.08, baseCost: Y.of(VOID_LAND * 2), growth: 2.4, world: "void" },

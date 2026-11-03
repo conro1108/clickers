@@ -26,7 +26,7 @@ the monorepo is that retuning a rung is one edit.
 | Seeded randomness | `packages/sim/src/rng.ts` |
 | Theme seam, `named()` | `packages/sim/src/theme.ts` (tests use `reference-theme.ts`) |
 | Worlds, their order, gates, rungs, lands, upgrades | `packages/sim/src/solo/content.ts` |
-| Rates, prices, seed tax | `packages/sim/src/solo/economy.ts` |
+| Rates, prices | `packages/sim/src/solo/economy.ts` |
 | Time, commands, whether a gate is pending (`advance`, `applySiteCommand`, `gatePending`) | `packages/sim/src/solo/site.ts`, types in `state.ts` |
 | Weather | `packages/sim/src/solo/weather.ts` |
 | Heirlooms and perks | `packages/sim/src/solo/prestige.ts` |
@@ -49,9 +49,9 @@ the monorepo is that retuning a rung is one edit.
 Worlds are `WORLDS` in `solo/content.ts`, one depth: `SiteState.depth` indexes
 it, and everything up to it is open and producing. Each world past the first
 opens with the gate upgrade `WORLD_GATE` names, bought at the bottom of the
-ladder before it. `void` and `end` are `TAXED_WORLDS`, priced against your
-seeds. `after`, `above` and `home` are `LONG_WAY`: untaxed and priced for a line
-that has stacked hand-downs. Adding a world is engine content, a `worlds.ts` entry
+ladder before it. From the void on, each world's first rung is priced past
+what a run earns without enough seeds behind it, so which generation reaches
+which world is set by price alone (`tools/pace.mts`). Adding a world is engine content, a `worlds.ts` entry
 and a scene per app.
 
 ## Theming

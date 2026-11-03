@@ -6,10 +6,7 @@ import {
   brokenCount,
   currentRate,
   conditionRestoreCost,
-  globalMultiplier,
   mitigation,
-  producerCost,
-  seedTax,
   totalRepairCost,
   upkeepBill,
 } from "./economy.js";
@@ -166,25 +163,6 @@ describe("the worlds", () => {
     expect(next.depth).toBe(0);
     expect(next.reached).toBe(3);
     expect(applySiteCommand(next, { type: "warp", to: "inside" }, next.checkpointAt).ok).toBe(false);
-  });
-
-  it("prices the taxed worlds against what seeds have bought, and nothing else", () => {
-    const plain: SiteState = { ...developedSite("tax"), depth: WORLDS.length - 1 };
-    const seeded: SiteState = { ...plain, heirlooms: 1e6 };
-    expect(producerCost(seeded, "patch")).toBe(producerCost(plain, "patch"));
-    expect(producerCost(seeded, "mote") / producerCost(plain, "mote")).toBeCloseTo(seedTax(seeded, "void"), 3);
-    // Most of what the seeds give back is charged back, but not all of it.
-    expect(seedTax(seeded, "void")).toBeLessThan(globalMultiplier(seeded) / globalMultiplier(plain));
-    expect(seedTax(seeded, "void")).toBeGreaterThan(Math.sqrt(globalMultiplier(seeded) / globalMultiplier(plain)));
-  });
-});
-
-describe("the long way", () => {
-  it("rewards seeds in full past the end, where the void and the end charge them back", () => {
-    const plain: SiteState = { ...developedSite("long"), depth: WORLDS.length - 1 };
-    const seeded: SiteState = { ...plain, heirlooms: 1e12 };
-    expect(producerCost(seeded, "loam")).toBe(producerCost(plain, "loam"));
-    expect(producerCost(seeded, "ember")).toBeGreaterThan(producerCost(plain, "ember") * 1e9);
   });
 });
 

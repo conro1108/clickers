@@ -15,7 +15,7 @@ const generations = Number(args.generations ?? 30);
 let seeds = 0;
 for (let generation = 1; generation <= generations; generation++) {
   const { site, opened } = solo.simulatePush({ seeds, generation, days, tickHours: 6 });
-  const doors = Object.entries(opened).slice(5).map(([w, d]) => `${w} ${d!.toFixed(0)}`).join(", ");
+  const doors = Object.entries(opened).slice(4).map(([w, d]) => `${w} ${d!.toFixed(0)}`).join(", ");
   const rungs = ["sixth", "seventh", "whole"].map((id) => site.producers[id as solo.SoloProducerId] ?? 0).join("/");
   console.log(`gen ${generation} day ${generation * days}: ${seeds.toExponential(1)} seeds, ${site.world} (${doors}), tops ${rungs}`);
   seeds += solo.heirloomsFor(site.produced);
