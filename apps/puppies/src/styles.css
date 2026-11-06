@@ -18,10 +18,6 @@
   --ink-soft: #6f6580;
   --accent: #e0507a;
   --gold: #d8a33a;
-  --coin: #f5c95a;
-  --coin-shade: #d8a33a;
-  --coin-edge: #6b4a1a;
-  --coin-ink: #35293f;
   --leaf: #3f9d8a;
   --blood: #c0392f;
   --panel-shadow: 0 4px 0 rgba(53, 41, 63, 0.28);
@@ -1573,24 +1569,32 @@ input {
   }
 }
 
-/* A tier coin from `format`: the number in it is how many ×1000s. */
+/* A tier coin from `format` (render/coin.ts). Sized in whole steps of its 13px art (19.5px is three
+   device pixels per art pixel on retina, 26px four); anything between smears the digits. Centred on
+   the numerals' cap height, and the negative margin keeps it from pushing lines apart. */
 .coin {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.15em;
-  height: 1.15em;
-  margin-left: 0.12em;
-  padding: 0 0.18em;
-  border-radius: 999px;
-  border: 1px solid var(--coin-edge);
-  background: var(--coin);
-  box-shadow: inset 0 -0.12em 0 var(--coin-shade);
-  color: var(--coin-ink);
-  font-size: 0.78em;
-  font-weight: 800;
-  line-height: 1;
-  vertical-align: 0.08em;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.04em;
+  width: 19.5px;
+  height: 19.5px;
+  margin: -4px 0 -4px 1px;
+  vertical-align: calc(0.35em - 5.75px); /* bottom margin edge sits on the baseline */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.coin-word {
+  white-space: nowrap;
+}
+/* Small print gets the 1x coin: smaller digits, but it sits in the line like a letter. */
+.row-blurb .coin,
+.feed-text .coin,
+.muted .coin {
+  width: 13px;
+  height: 13px;
+  margin: 0 0 0 1px;
+  vertical-align: calc(0.35em - 6.5px);
+}
+.hud-value .coin {
+  width: 26px;
+  height: 26px;
+  margin-left: 2px;
+  vertical-align: calc(0.35em - 9px);
 }
