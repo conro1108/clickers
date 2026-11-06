@@ -22,7 +22,7 @@ the monorepo is that retuning a rung is one edit.
 
 | Want to change… | File |
 | --- | --- |
-| Number formatting, suffixes, the `Yield` brand | `packages/sim/src/numbers.ts` |
+| Number formatting, tier coins, the `Yield` brand | `packages/sim/src/numbers.ts` (drawn by `components/Coin.tsx`) |
 | Seeded randomness | `packages/sim/src/rng.ts` |
 | Theme seam, `named()` | `packages/sim/src/theme.ts` (tests use `reference-theme.ts`) |
 | Worlds, their order, gates, rungs, lands, upgrades | `packages/sim/src/solo/content.ts` |

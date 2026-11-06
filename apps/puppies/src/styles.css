@@ -18,6 +18,10 @@
   --ink-soft: #6f6580;
   --accent: #e0507a;
   --gold: #d8a33a;
+  --coin: #f5c95a;
+  --coin-shade: #d8a33a;
+  --coin-edge: #6b4a1a;
+  --coin-ink: #35293f;
   --leaf: #3f9d8a;
   --blood: #c0392f;
   --panel-shadow: 0 4px 0 rgba(53, 41, 63, 0.28);
@@ -1567,4 +1571,26 @@ input {
   100% {
     opacity: 1;
   }
+}
+
+/* A tier coin from `format`: the number in it is how many ×1000s. */
+.coin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15em;
+  height: 1.15em;
+  margin-left: 0.12em;
+  padding: 0 0.18em;
+  border-radius: 999px;
+  border: 1px solid var(--coin-edge);
+  background: var(--coin);
+  box-shadow: inset 0 -0.12em 0 var(--coin-shade);
+  color: var(--coin-ink);
+  font-size: 0.78em;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: 0.08em;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
 }

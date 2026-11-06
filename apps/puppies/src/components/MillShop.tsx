@@ -6,6 +6,7 @@ import { PACK_POSES, POSE } from "../render/art.js";
 import { artUrl } from "../render/pixel.js";
 import { Row } from "./Row.js";
 import { WORLD_COPY, culprit, deepest } from "../worlds.js";
+import { Num } from "./Coin.js";
 
 type BuyQty = 1 | 10 | 50 | 100;
 
@@ -80,8 +81,8 @@ function Convergence({
           <div className="grave-fill" style={{ width: `${held * 100}%` }} />
         </div>
         <div className="grave-figures">
-          <span>{format(budget)}</span>
-          <span>{format(price)}</span>
+          <span><Num n={budget} /></span>
+          <span><Num n={price} /></span>
         </div>
       </div>
 
@@ -364,8 +365,8 @@ export function LegacyPanel({
             the game that never goes backwards, and it's the one that makes a
             hand-down feel like it added up to something. */}
         <div className="muted small legacy-runs">
-          <div>This run {format(Y.add(thisRun, Y.mul(solo.clickYield(mill), pendingWhistles)))}</div>
-          <div>Lifetime {format(mill.lifetimeProduced)}</div>
+          <div>This run <Num n={Y.add(thisRun, Y.mul(solo.clickYield(mill), pendingWhistles))} /></div>
+          <div>Lifetime <Num n={mill.lifetimeProduced} /></div>
         </div>
       </div>
 

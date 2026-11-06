@@ -19,6 +19,7 @@ import { PxIcon } from "./components/PxIcon.js";
 import { Sheet } from "./components/Sheet.js";
 import { hasSavedFarm, useFarm } from "./useFarm.js";
 import { culprit, WORLD_COPY } from "./worlds.js";
+import { Num, Coins } from "./components/Coin.js";
 
 type Screen = { kind: "home" } | { kind: "farm" };
 
@@ -474,12 +475,12 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         <div className="hud-bank" {...hold}>
           <PxIcon name="potato" size={22} />
           <div>
-            <div className="hud-value">{format(budget)}</div>
+            <div className="hud-value"><Num n={budget} /></div>
             <div className="hud-label">in the yard</div>
           </div>
         </div>
         <div className="hud-side">
-          <div className="hud-rate">{format(rate)}/s</div>
+          <div className="hud-rate"><Num n={rate} />/s</div>
           <div className="soil" title="Soil health">
             <div className="soil-track">
               <div
@@ -533,12 +534,12 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         <button className="click" onClick={() => onDig()}>
           <PxIcon name="potato" size={16} />
           <span className="dig-label">Dig</span>
-          <span className="dig-yield">+{format(perDig)}</span>
+          <span className="dig-yield">+<Num n={perDig} /></span>
         </button>
         <div className="pops" aria-hidden>
           {pops.map((p) => (
             <span key={p.id} className="pop">
-              {p.text}
+              <Coins text={p.text} />
             </span>
           ))}
         </div>
@@ -576,7 +577,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
                   go. It reads as a footnote to a catalogue rather than a
                   stat: what you've bought, under what you can spend. */}
               <span className="muted">{kitOnTheLand} on the land</span>
-              <strong>{format(budget)}</strong>
+              <strong><Num n={budget} /></strong>
             </>
           }
         >
@@ -600,7 +601,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           foot={
             <>
               <span className="muted">To spend</span>
-              <strong>{format(budget)}</strong>
+              <strong><Num n={budget} /></strong>
             </>
           }
         >

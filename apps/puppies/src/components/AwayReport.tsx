@@ -1,4 +1,5 @@
-import { format, solo } from "@clickers/sim";
+import { solo } from "@clickers/sim";
+import { Num } from "./Coin.js";
 
 function describeAway(msAway: number): string {
   const minutes = Math.round(msAway / 60_000);
@@ -37,12 +38,12 @@ export function AwayReport({
         <ol className="final">
           <li>
             <span>Raised</span>
-            <strong>{format(report.earned)}</strong>
+            <strong><Num n={report.earned} /></strong>
           </li>
           {report.gained > 0 && (
             <li>
               <span>Good years and payouts</span>
-              <strong>{format(report.gained)}</strong>
+              <strong><Num n={report.gained} /></strong>
             </li>
           )}
           {report.brokeTotal > 0 && (

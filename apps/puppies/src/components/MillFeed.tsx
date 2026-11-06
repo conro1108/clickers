@@ -1,4 +1,5 @@
 import { solo, type Millis } from "@clickers/sim";
+import { Coins } from "./Coin.js";
 
 /** Wall-clock-ish. */
 function ago(at: Millis, now: Millis): string {
@@ -17,7 +18,7 @@ export function MillFeed({ mill, now }: { mill: solo.SiteState; now: Millis }) {
       {entries.map((e) => (
         <li key={e.index} className={`feed-item feed-${e.tone}`}>
           <span className="feed-time">{ago(e.at, now)}</span>
-          <span className="feed-text">{e.text}</span>
+          <span className="feed-text"><Coins text={e.text} /></span>
         </li>
       ))}
     </ul>

@@ -4,6 +4,7 @@ import { Y, format, solo, type Millis, type Yield } from "@clickers/sim";
 import { producerArt, upgradePreview } from "../marks.js";
 import { artUrl, type Art } from "../render/pixel.js";
 import { culprit, threat, WORLD_COPY } from "../worlds.js";
+import { Num, Coins } from "./Coin.js";
 
 type BuyQty = 1 | 10 | 50 | 100;
 
@@ -70,11 +71,11 @@ function Row({
             <span className="row-best" title="Best rate per potato" aria-label="best value" />
           )}
         </span>
-        <span className="row-blurb">{blurb}</span>
+        <span className="row-blurb"><Coins text={blurb} /></span>
         {effect && <span className="row-effect">{effect}</span>}
       </span>
       <span className="row-right">
-        <span className="row-cost">{cost}</span>
+        <span className="row-cost"><Coins text={cost} /></span>
         {meta && <span className="row-meta">{meta}</span>}
       </span>
     </button>
@@ -127,8 +128,8 @@ function Convergence({
           <div className="grave-fill" style={{ width: `${held * 100}%` }} />
         </div>
         <div className="grave-figures">
-          <span>{format(budget)}</span>
-          <span>{format(price)}</span>
+          <span><Num n={budget} /></span>
+          <span><Num n={price} /></span>
         </div>
       </div>
 
@@ -417,8 +418,8 @@ export function LegacyPanel({
             the game that never goes backwards, and it's the one that makes a
             hand-down feel like it added up to something. */}
         <div className="muted small legacy-runs">
-          <div>This run {format(Y.add(thisRun, Y.mul(solo.clickYield(farm), pendingDigs)))}</div>
-          <div>Lifetime {format(farm.lifetimeProduced)}</div>
+          <div>This run <Num n={Y.add(thisRun, Y.mul(solo.clickYield(farm), pendingDigs))} /></div>
+          <div>Lifetime <Num n={farm.lifetimeProduced} /></div>
         </div>
       </div>
 

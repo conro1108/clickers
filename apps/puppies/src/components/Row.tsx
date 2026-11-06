@@ -1,4 +1,5 @@
 import { artUrl, type Art } from "../render/pixel.js";
+import { Coins } from "./Coin.js";
 
 export function Row({
   name,
@@ -39,11 +40,11 @@ export function Row({
           {name}
           {best && <span className="row-best" title="Best rate per puppy" aria-label="best value" />}
         </span>
-        <span className="row-blurb">{blurb}</span>
+        <span className="row-blurb"><Coins text={blurb} /></span>
         {effect && <span className="row-effect">{effect}</span>}
       </span>
       <span className="row-right">
-        <span className="row-cost">{cost}</span>
+        <span className="row-cost"><Coins text={cost} /></span>
         {meta && <span className="row-meta">{meta}</span>}
       </span>
     </button>

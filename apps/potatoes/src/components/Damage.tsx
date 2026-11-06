@@ -1,6 +1,7 @@
-import { format, solo } from "@clickers/sim";
+import { solo } from "@clickers/sim";
 
 import { culprit } from "../worlds.js";
+import { Num } from "./Coin.js";
 
 export function Damage({ farm }: { farm: solo.SiteState }) {
   const rate = solo.currentRate(farm);
@@ -21,13 +22,13 @@ export function Damage({ farm }: { farm: solo.SiteState }) {
         {lostToBreak > 0 && (
           <div>
             <span className="hurt">−{breakPct}% production</span> damage ·{" "}
-            <span className="muted">{format(solo.totalRepairCost(farm))} to fix</span>
+            <span className="muted"><Num n={solo.totalRepairCost(farm)} /> to fix</span>
           </div>
         )}
         {lostToSoil > 0 && (
           <div>
             <span className="hurt">−{soilPct}% production</span> tired soil ·{" "}
-            <span className="muted">{format(solo.conditionRestoreCost(farm))} to put right</span>
+            <span className="muted"><Num n={solo.conditionRestoreCost(farm)} /> to put right</span>
           </div>
         )}
       </div>
