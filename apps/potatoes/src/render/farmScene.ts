@@ -50,17 +50,6 @@ const MIN_SKY = 20;
 /** The shared outline ink, for the bits of the scene drawn as rects not art. */
 const INK = "#402e3a";
 
-/**
- * The flesh, at its two extremes.
- *
- * All that's left of it out here is the stain that creeps across the sky as the
- * Convergence gets close — the ceiling itself is somewhere else now, and this
- * has to be the exact colour of it or the omen is promising the wrong thing.
- * `insideScene.ts` keeps its own copy of both, because that's where the flesh
- * actually lives.
- */
-const FLESH_LIT = "#ecd9a6";
-const FLESH_DEEP = "#7d5330";
 
 const GRASS = "#6aa348";
 const GRASS_DARK = "#5b8f3d";
@@ -522,10 +511,10 @@ const PORTER_TIP = 300;
 /**
  * The tiers this scene draws, which is the outside farm and only that.
  *
- * Everything inside the potato has its own picture — see `insideScene.ts`. So
- * does the ceiling that used to come down over this one: the Convergence opens
- * a second place rather than repainting this one, and a farm you can walk back
- * out to is a farm with its sky still in it.
+ * Every world past the farm gate has its own picture, on `LongScene` — the store,
+ * the factory and on down to the heap. Buying the store opens a second place
+ * rather than repainting this one, and a farm you can walk back out to is a farm
+ * with its sky still in it.
  */
 type OutsideId = Extract<
   solo.SoloProducerId,
@@ -2077,56 +2066,42 @@ export class FarmScene {
       }
     }
 
-    this.drawBleed(horizon, t);
   }
 
   /**
-   * The flesh, showing through early.
+   * The store down the road, coming into view.
    *
-   * From the first Tuber Singularity the top of the sky starts taking on the
-   * colour of the thing on the other side of it, deepening with every one you
-   * buy until the Ur-Potato is affordable and it's unmistakable. It's over the
-   * clouds and the sun rather than under them, because it isn't weather — it's
-   * the far side of something, and the things in front of it should be stained
-   * by it too.
-   *
-   * This is the only build-up the fold gets. Without it you buy a rung, nothing
-   * acknowledges it, and nine purchases later the world folds with no warning
-   * that it was ever going to. It clears the moment the fold lands: what's
-   * bleeding through arrives, and this sky goes back to being a sky.
+   * From the first Tuber Singularity a big shed starts showing on the far hills, plainer with every one
+   * you buy, until the gate that buys it is affordable. It's the only build-up that gate gets: without
+   * it you buy a rung, nothing acknowledges it, and nine purchases later the harvest goes somewhere
+   * with no warning there was anywhere to go. Gone once you own it — it's a world of its own then.
    */
-  private drawBleed(horizon: number, t: number): void {
+  private drawBleed(ground: number, t: number): void {
     const looming = clamp(this.view.looming, 0, 1);
     if (looming <= 0) return;
     const ctx = this.ctx;
-    // A slow breath on top of the level, so it reads as something alive on the
-    // other side rather than as a filter someone left on.
-    const pulse = 0.88 + 0.12 * Math.sin(t * 0.42);
-    // Front-loaded rather than linear, let alone squared. The whole point is
-    // that the *first* Tuber Singularity changes something you can see — on a
-    // curve that only gets going in the back half, one of them is a tenth of
-    // the way to a wash nobody would notice, which is the same as nothing.
-    const strength = Math.pow(looming, 0.55) * pulse;
-
-    const grad = ctx.createLinearGradient(0, 0, 0, horizon);
-    grad.addColorStop(0, rgba(FLESH_LIT, 0.62 * strength));
-    grad.addColorStop(0.5, rgba(FLESH_DEEP, 0.2 * strength));
-    grad.addColorStop(1, rgba(FLESH_DEEP, 0));
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, SCENE_W, horizon);
-
-    // And once it's close, the first hint of the vascular ring — the one piece
-    // of structure the ceiling has, arriving before the ceiling does.
-    if (looming > 0.55) {
-      ctx.globalAlpha = 0.16 * (looming - 0.55) / 0.45;
-      ctx.fillStyle = FLESH_DEEP;
-      const base = Math.round(horizon * 0.3);
-      for (let x = 0; x < SCENE_W; x++) {
-        ctx.fillRect(x, base + Math.round(2.5 * Math.sin(x / 23) + 1.5 * Math.sin(x / 7 + 2)), 1, 1);
-      }
-      ctx.globalAlpha = 1;
+    const w = 34;
+    const h = 11;
+    const x = SCENE_W - w - 18;
+    const y = ground - h + 3;
+    ctx.globalAlpha = 0.25 + 0.75 * Math.pow(looming, 0.6);
+    // A long shed with a curved tin roof, in the haze colour of the far hills.
+    ctx.fillStyle = "#8f9a86";
+    ctx.fillRect(x, y + 4, w, h - 4);
+    for (let i = 0; i < w; i++) {
+      const lift = Math.round(4 * Math.sin((i / (w - 1)) * Math.PI));
+      ctx.fillRect(x + i, y + 4 - lift, 1, lift);
     }
+    ctx.fillStyle = "#6f7a68";
+    ctx.fillRect(x + 13, y + 6, 8, h - 6);
+    // A light on at the door once it's close: somebody's in there, waiting for the lorries.
+    if (looming > 0.6 && Math.sin(t * 1.3) > -0.6) {
+      ctx.fillStyle = "#ffe08a";
+      ctx.fillRect(x + 16, y + 4, 2, 1);
+    }
+    ctx.globalAlpha = 1;
   }
+
 
   /**
    * The far half of the property: three ridges and the deep end of every lot
@@ -2154,6 +2129,8 @@ export class FarmScene {
         ctx.fillStyle = colors[i]!;
         ctx.fillRect(x, horizon - h, 1, h);
       }
+      // The store stands on the farthest ridge, behind everything that's built.
+      if (i === 0) this.drawBleed(horizon - ridgeAt(ridge, SCENE_W - 35, scale), t);
       // Layer i is the row standing on ridge i, so each ridge goes up under its
       // own row and in front of the row above it.
       this.drawLotLayer(lots, i, phase, t);

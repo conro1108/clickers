@@ -8,17 +8,14 @@
 import type { solo } from "@clickers/sim";
 
 import {
-  CUT_CRYSTAL,
-  CUT_EYE_OPEN,
-  CUT_EYE_SHUT,
-  CUT_EYE_WAKING,
-  CUT_FIRST_MORNING,
-  CUT_LAST_SUN,
+  CUT_BASKET,
+  CUT_DOOR,
+  CUT_LORRY,
+  CUT_PACKET,
   CUT_PLATE,
   CUT_POTATO,
-  CUT_SEED,
-  CUT_SEED_DIM,
   CUT_SPROUT,
+  CUT_TAG,
   CUT_WINDOW,
 } from "./art.js";
 import { artCanvas, type Art } from "./pixel.js";
@@ -38,14 +35,14 @@ export interface Subject {
 
 export const SUBJECTS: Record<Exclude<solo.World, "outside">, Subject> = {
   inside: { frames: [CUT_POTATO], focus: { x: 16, y: 9 }, glow: "255, 200, 140", flash: "#fff0d8" },
-  beyond: { frames: [CUT_EYE_SHUT, CUT_EYE_WAKING, CUT_EYE_OPEN], focus: { x: 13, y: 9 }, glow: "255, 210, 110", flash: "#fff6d0" },
-  deep: { frames: [CUT_CRYSTAL], focus: { x: 11, y: 9 }, glow: "190, 150, 248", flash: "#f4ecff" },
-  origin: { frames: [CUT_FIRST_MORNING], focus: { x: 12, y: 13 }, glow: "255, 190, 120", flash: "#fff0d0" },
-  void: { frames: [CUT_SEED, CUT_SEED_DIM], fps: 3, focus: { x: 7, y: 7 }, glow: "255, 230, 170", flash: "#f0f0ff", shake: true },
-  end: { frames: [CUT_LAST_SUN], focus: { x: 15, y: 8 }, glow: "255, 110, 64", flash: "#ffe0d0" },
-  after: { frames: [CUT_SPROUT], focus: { x: 15, y: 11 }, glow: "255, 150, 74", flash: "#ffe8c0" },
-  above: { frames: [CUT_WINDOW], focus: { x: 16, y: 8 }, glow: "255, 224, 160", flash: "#fff4d8" },
-  home: { frames: [CUT_PLATE], focus: { x: 16, y: 8 }, glow: "255, 240, 220", flash: "#fffaf0" },
+  beyond: { frames: [CUT_PACKET], focus: { x: 11, y: 11 }, glow: "255, 120, 100", flash: "#fff0e0" },
+  deep: { frames: [CUT_LORRY], focus: { x: 5, y: 10 }, glow: "255, 240, 170", flash: "#fffbe0" },
+  origin: { frames: [CUT_TAG], focus: { x: 16, y: 7 }, glow: "255, 210, 160", flash: "#fff4e0" },
+  void: { frames: [CUT_BASKET], focus: { x: 14, y: 10 }, glow: "255, 140, 140", flash: "#ffffff" },
+  end: { frames: [CUT_DOOR], focus: { x: 10, y: 28 }, glow: "255, 230, 170", flash: "#fff8e0" },
+  after: { frames: [CUT_WINDOW], focus: { x: 16, y: 8 }, glow: "255, 224, 160", flash: "#fff4d8" },
+  above: { frames: [CUT_PLATE], focus: { x: 16, y: 8 }, glow: "255, 240, 220", flash: "#fffaf0" },
+  home: { frames: [CUT_SPROUT], focus: { x: 15, y: 11 }, glow: "255, 150, 74", flash: "#ffe8c0" },
 };
 
 // Fractions of the cut. Kept in step with the `converge-*` keyframes in styles.css.

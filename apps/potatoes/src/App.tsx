@@ -18,7 +18,7 @@ import { GrowPanel, LandPanel, LegacyPanel } from "./components/FarmShop.js";
 import { PxIcon } from "./components/PxIcon.js";
 import { Sheet } from "./components/Sheet.js";
 import { hasSavedFarm, useFarm } from "./useFarm.js";
-import { culprit, WORLD_COPY } from "./worlds.js";
+import { culprit, kept, WORLD_COPY } from "./worlds.js";
 import { Num, Coins } from "./components/Coin.js";
 
 type Screen = { kind: "home" } | { kind: "farm" };
@@ -72,10 +72,10 @@ function Home({ onGo }: { onGo: (screen: Screen) => void }) {
   return (
     <div className="lobby">
       <h1>
-        Yield, <span>Inc.</span>
+        Small <span>Potatoes</span>
       </h1>
       <p className="tagline">
-        Grow potatoes. The weather will have opinions about that.
+        Grow potatoes. Then follow them all the way.
       </p>
 
       {/* Somebody's farm, running. A title screen for a game about a place
@@ -456,11 +456,6 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
 
   const soilPct = Math.round(farm.condition * 100);
   const hold = useHold(useCallback(() => setSheet("back"), []));
-  // Keep where you're standing on screen when the strip is wider than the phone.
-  const strip = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    strip.current?.querySelector(".on")?.scrollIntoView({ inline: "nearest", block: "nearest" });
-  }, [farm.world, farm.depth]);
   const kitOnTheLand = solo.SOLO_PRODUCERS.reduce((n, p) => n + (farm.producers[p.id] ?? 0), 0);
 
   // The shop has emptied itself for the Ur-Potato; the bottom bar is where that announces itself.
@@ -476,19 +471,19 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           <PxIcon name="potato" size={22} />
           <div>
             <div className="hud-value"><Num n={budget} /></div>
-            <div className="hud-label">in the yard</div>
+            <div className="hud-label">{WORLD_COPY[heldWorld ?? farm.world].held}</div>
           </div>
         </div>
         <div className="hud-side">
           <div className="hud-rate"><Num n={rate} />/s</div>
-          <div className="soil" title="Soil health">
+          <div className="soil" title="Condition">
             <div className="soil-track">
               <div
                 className={`soil-fill ${farm.condition < 0.75 ? "low" : ""}`}
                 style={{ width: `${soilPct}%` }}
               />
             </div>
-            <span className={farm.condition < 1 ? "hurt" : "muted"}>soil {soilPct}%</span>
+            <span className={farm.condition < 1 ? "hurt" : "muted"}>{kept(farm)} {soilPct}%</span>
           </div>
         </div>
       </header>
@@ -505,24 +500,31 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         {/* The whole scene digs, which is not something a farm looks like it
             does. One sentence, once, and then never again. */}
         {!taught && <p className="tap-hint">Tap the farm to dig</p>}
-        {/* The worlds, top to bottom, on the farm rather than in a sheet:
-            where you're standing is part of the picture, and so is getting
-            somewhere else. A dot is a world with something broken in it. */}
+        {/* The whole journey as a gauge, on the scene rather than in a sheet: one pip per world, the ones
+            not reached yet hollow, so how far along the potato you are is part of the picture. The name
+            is whichever you're looking at. A red corner is a world with something broken in it. */}
         {farm.depth >= 1 && (
-          <div className="world-strip" ref={strip}>
-            {solo.openWorlds(farm).map((to) => (
-              <button
-                key={to}
-                className={(heldWorld ?? farm.world) === to ? "on" : undefined}
-                disabled={farm.world === to || crossing !== null || cut !== null}
-                onClick={() => cross(to, () => dispatch({ type: "warp", to }))}
-              >
-                {WORLD_COPY[to].door}
-                {solo.producersIn(to).some((p) => solo.brokenCount(farm, p.id) > 0) && (
-                  <span className="world-dot" />
-                )}
-              </button>
-            ))}
+          <div className="world-strip">
+            <span className="world-name">{WORLD_COPY[heldWorld ?? farm.world].door}</span>
+            <div className="world-pips">
+              {solo.WORLDS.map((to, i) => {
+                const open = i <= farm.depth;
+                const here = (heldWorld ?? farm.world) === to;
+                return (
+                  <button
+                    key={to}
+                    aria-label={open ? WORLD_COPY[to].door : "Not yet"}
+                    className={here ? "on" : open ? "open" : "shut"}
+                    disabled={!open || farm.world === to || crossing !== null || cut !== null}
+                    onClick={() => cross(to, () => dispatch({ type: "warp", to }))}
+                  >
+                    {open && solo.producersIn(to).some((p) => solo.brokenCount(farm, p.id) > 0) && (
+                      <span className="world-dot" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
       </FarmScene>
@@ -533,7 +535,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
       <div className="digbar">
         <button className="click" onClick={() => onDig()}>
           <PxIcon name="potato" size={16} />
-          <span className="dig-label">Dig</span>
+          <span className="dig-label">{WORLD_COPY[heldWorld ?? farm.world].verb}</span>
           <span className="dig-yield">+<Num n={perDig} /></span>
         </button>
         <div className="pops" aria-hidden>
@@ -657,7 +659,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         >
           {omen.kind === "full" ? (
             <>
-              <p className="omen-line">The horizon isn't where you left it</p>
+              <p className="omen-line">The harvest has nowhere left to go</p>
               <p className="omen-call">Keep going</p>
             </>
           ) : (

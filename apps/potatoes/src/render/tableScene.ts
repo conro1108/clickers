@@ -1,5 +1,5 @@
 /**
- * Home: the table. A dark dining room, a long white cloth running away to the far end, a chair down
+ * The table (engine world `above`). A dark dining room, a long white cloth running away to the far end, a chair down
  * there and somebody sitting in it who has been sitting there the whole time. Place Settings go down
  * both sides, Candles along the middle, the Family Portraits hang on the wall and look at the food,
  * Waiters come in through the swing door, and in front of you, on one plate, is Dinner. The fork
@@ -9,7 +9,7 @@
 import { LongScene, fillDisc, type Spot } from "./longScene.js";
 import { SCENE_W, clamp, mix, rgba } from "./farmScene.js";
 
-type TableId = "crumb" | "guest" | "grace" | "feast" | "house" | "whole";
+type TableId = "flame" | "servant" | "lid" | "broth" | "heirs" | "seventh";
 
 const WALL = "#2a1a24";
 const WALL_STRIPE = "#3a2230";
@@ -52,14 +52,14 @@ export class TableScene extends LongScene<TableId> {
     }
     const mid = (k: number): Spot => ({ x: 88, y: this.rowY(k) });
     this.spots = {
-      crumb,
-      guest: [0, 1, 2].map((i) => ({ x: 55 + i * 30, y: this.far - 1 })),
-      grace: [mid(0.46), mid(0.3), mid(0.14)],
-      feast: [{ x: 88 - 26, y: this.rowY(0.72) }, { x: 88 + 26, y: this.rowY(0.72) }],
-      house: [{ x: 28, y: Math.round(sh * 0.2) }, { x: 148, y: Math.round(sh * 0.2) }, { x: 28, y: Math.round(sh * 0.08) + 14 }, { x: 148, y: Math.round(sh * 0.08) + 14 }],
-      whole: [mid(0.98)],
+      flame: crumb,
+      servant: [0, 1, 2].map((i) => ({ x: 55 + i * 30, y: this.far - 1 })),
+      lid: [mid(0.46), mid(0.3), mid(0.14)],
+      broth: [{ x: 88 - 26, y: this.rowY(0.72) }, { x: 88 + 26, y: this.rowY(0.72) }],
+      heirs: [{ x: 28, y: Math.round(sh * 0.2) }, { x: 148, y: Math.round(sh * 0.2) }, { x: 28, y: Math.round(sh * 0.08) + 14 }, { x: 148, y: Math.round(sh * 0.08) + 14 }],
+      seventh: [mid(0.98)],
     };
-    this.waiters = this.spots.guest.map((_, i) => ({ k: i * 0.3, dir: 1, pause: i * 3 }));
+    this.waiters = this.spots.servant.map((_, i) => ({ k: i * 0.3, dir: 1, pause: i * 3 }));
     this.motes = [];
     for (let i = 0; i < 16; i++) this.motes.push({ x: r() * SCENE_W, y: r() * this.far });
   }
@@ -120,9 +120,9 @@ export class TableScene extends LongScene<TableId> {
 
   protected scene(t: number): void {
     this.drawDust(t);
-    this.each("house", (spot, _, __, s) => this.stand(s, spot.x, spot.y));
+    this.each("heirs", (spot, _, __, s) => this.stand(s, spot.x, spot.y));
     this.drawWaiters(t);
-    this.each("crumb", (spot, _, __, s) => this.stand(s, spot.x, spot.y));
+    this.each("flame", (spot, _, __, s) => this.stand(s, spot.x, spot.y));
     this.drawBoats(t);
     this.drawCandles(t);
     this.drawDinner(t);
@@ -136,7 +136,7 @@ export class TableScene extends LongScene<TableId> {
 
   /** Out of the swing door, along the wall behind the table, and back. */
   private drawWaiters(t: number): void {
-    this.each("guest", (spot, i, broken, s) => {
+    this.each("servant", (spot, i, broken, s) => {
       const w = this.waiters[i]!;
       if (!broken) {
         w.pause -= this.dt;
@@ -158,7 +158,7 @@ export class TableScene extends LongScene<TableId> {
   }
 
   private drawBoats(t: number): void {
-    this.each("feast", (spot, i, broken, s) => {
+    this.each("broth", (spot, i, broken, s) => {
       this.stand(s, spot.x, spot.y);
       if (!broken && Math.sin(t * 0.8 + i * 2) > 0.2) {
         this.ctx.fillStyle = rgba("#f0f4f8", 0.4);
@@ -168,7 +168,7 @@ export class TableScene extends LongScene<TableId> {
   }
 
   private drawCandles(t: number): void {
-    this.each("grace", (spot, i, broken, s) => {
+    this.each("lid", (spot, i, broken, s) => {
       if (!broken) this.glow(spot.x, spot.y - s.h + 2, 10 + Math.sin(t * 8 + i), CANDLE, 0.12);
       this.stand(s, spot.x, spot.y);
     });
@@ -177,10 +177,10 @@ export class TableScene extends LongScene<TableId> {
   /** The plate, and the fork that has been coming down since you got here. */
   private drawDinner(t: number): void {
     const ctx = this.ctx;
-    this.each("whole", (spot, _, broken, s) => {
+    this.each("seventh", (spot, _, broken, s) => {
       if (!broken) this.glow(spot.x, spot.y - 6, 18, "#fff4c0", 0.08);
       this.stand(s, spot.x, spot.y);
-      const reach = clamp(Math.log2(this.owned("whole") + 1) / 7, 0, 1);
+      const reach = clamp(Math.log2(this.owned("seventh") + 1) / 7, 0, 1);
       const tip = Math.round(spot.y - s.h - 28 + reach * 24 + Math.sin(t * 0.6) * 1.2);
       ctx.fillStyle = FORK;
       ctx.fillRect(spot.x - 6, tip - 8, 2, 8);

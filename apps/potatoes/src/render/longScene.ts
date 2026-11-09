@@ -1,15 +1,41 @@
 /**
- * What the three worlds past the end share, so each of those scenes is only its picture: the canvas
- * and its loop, a backdrop painted once per size and condition, how many of each rung show, and
- * the dig. Same buffer conventions as `originScene.ts`.
+ * What every world past the farm shares, so each scene is only its picture: the canvas and its
+ * loop, a backdrop painted once per size and condition, how many of each rung show, the dig — and
+ * the farm's grammar, so nine places read as one game. Side-on, a floor you can see, a pile at the
+ * front left that is your potatoes (spend and it shrinks), and people carrying things to it.
  */
 
-import type { solo } from "@clickers/sim";
+import { solo } from "@clickers/sim";
 
 import { POTATO_SPRITE, PRODUCER_MARKS } from "./art.js";
 import { EMPTY_VIEW, SCENE_W, clamp, hashSeed, mulberry32, rgba, type FarmView } from "./farmScene.js";
-import { shownCount } from "./insideScene.js";
-import { artCanvas, artTinted, type Sprite } from "./pixel.js";
+import { artCanvas, artTinted, type Art, type Sprite } from "./pixel.js";
+
+/** How many of a tier to draw. Log: first few one-for-one, then a doubling per extra silhouette. */
+export function shownCount(owned: number, cap: number, spread = 2.4): number {
+  if (owned <= 0) return 0;
+  if (owned <= 4) return Math.min(owned, cap);
+  return Math.min(cap, 4 + Math.floor(Math.log2(owned / 4) * spread));
+}
+
+/** Somebody going back and forth between where the work is and the pile. */
+export interface Carrier {
+  x: number;
+  dir: 1 | -1;
+  loaded: boolean;
+  wait: number;
+}
+
+/** Pile slots: six courses off a six-wide base, filled bottom-up but starting each course early. */
+const PILE_BASE = 6;
+const PILE_SLOTS: { course: number; i: number }[] = (() => {
+  const slots: { course: number; i: number; rank: number }[] = [];
+  for (let course = 0; course < PILE_BASE; course++) {
+    const n = PILE_BASE - course;
+    for (let i = 0; i < n; i++) slots.push({ course, i, rank: course * 1.1 + Math.abs(i - (n - 1) / 2) * 0.7 });
+  }
+  return slots.sort((a, b) => a.rank - b.rank);
+})();
 
 export interface Spot {
   x: number;
@@ -35,6 +61,7 @@ export abstract class LongScene<Id extends solo.SoloProducerId> {
   private paper = document.createElement("canvas");
   private paintedFor = -1;
   private dug: (Spot & { born: number })[] = [];
+  private pileShown = -1;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext("2d")!;
@@ -140,6 +167,62 @@ export abstract class LongScene<Id extends solo.SoloProducerId> {
 
   protected chance(perSec: number): boolean {
     return Math.random() < perSec * this.dt;
+  }
+
+  /** Bottom-centre on the spot, mirrored: for anything with a front that has to face where it's going. */
+  protected standFlipped(s: Sprite, x: number, y: number): void {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.translate(Math.round(x + s.w / 2), Math.round(y - s.h + 1));
+    ctx.scale(-1, 1);
+    ctx.drawImage(s.canvas, 0, 0);
+    ctx.restore();
+  }
+
+  /**
+   * The pile at the front left: the potatoes you're holding, in this world's packaging. Logarithmic
+   * against what the world's first rung costs, so it means the same thing in every world — a couple of
+   * items when you can afford the bottom of the shop, a mound when you're sitting on a thousand times
+   * that — and it chases the real figure, so a big purchase visibly drains it. Runs off the left edge,
+   * like the farm's heap: something to recognise, not count.
+   */
+  protected drawPile(item: Art, x0: number, foot: number, scale: solo.SoloProducerId): void {
+    const cost = solo.SOLO_PRODUCER_BY_ID[scale].baseCost;
+    const hoard = Math.max(0, this.view.hoard);
+    const target = hoard <= 0 ? 0 : clamp(2 + 3 * Math.log10(hoard / cost), 0, PILE_SLOTS.length);
+    this.pileShown = this.pileShown < 0 ? target : this.pileShown + (target - this.pileShown) * (1 - Math.exp(-this.dt * 3));
+    const n = Math.floor(this.pileShown);
+    if (n <= 0) return;
+    const s = artCanvas(item);
+    const stepX = s.w - 2;
+    const stepY = s.h - 3;
+    const shown = PILE_SLOTS.slice(0, n).sort((a, b) => a.course - b.course || a.i - b.i);
+    for (const slot of shown) {
+      const x = x0 + slot.i * stepX + (slot.course * stepX) / 2;
+      this.stand(s, x, foot - slot.course * stepY);
+    }
+  }
+
+  /**
+   * Walk a carrier between the work at `from` and the pile at `to`, loading at one end and dropping
+   * at the other. Returns the bob to stand them at. Broken carriers stand where they are.
+   */
+  protected carry(c: Carrier, from: number, to: number, speed: number, broken: boolean, t: number): number {
+    if (broken) return 0;
+    if (c.wait > 0) {
+      c.wait -= this.dt;
+      return 0;
+    }
+    const goal = c.loaded ? to : from;
+    const dir = goal > c.x ? 1 : -1;
+    c.dir = dir;
+    c.x += dir * speed * this.dt;
+    if ((dir === 1 && c.x >= goal) || (dir === -1 && c.x <= goal)) {
+      c.x = goal;
+      c.loaded = !c.loaded;
+      c.wait = 0.5 + Math.random() * 1.2;
+    }
+    return Math.round(Math.abs(Math.sin(t * 8 + c.x)));
   }
 
   // --- The frame ---

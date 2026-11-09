@@ -3,12 +3,12 @@
 Two clicker games, one engine: a potato farm and a puppy mill sharing the same
 simulation under different themes.
 
-- **Yield, Inc.** — grow potatoes. Play: [battle-clicker-web.vercel.app](https://battle-clicker-web.vercel.app)
+- **Small Potatoes** — grow potatoes, then follow them all the way to dinner. Play: [battle-clicker-web.vercel.app](https://battle-clicker-web.vercel.app)
 - **Puppy Mill** — breed chihuahuas. Play: [puppy-mill-web.vercel.app](https://puppy-mill-web.vercel.app)
 
-| Yield, Inc. | Puppy Mill | While you were out |
+| Small Potatoes | Puppy Mill | While you were out |
 |---|---|---|
-| ![Yield, Inc., late game](shots/potatoes.png) | ![Puppy Mill, late game](shots/puppies.png) | ![The offline report](shots/while-you-were-out.png) |
+| ![Small Potatoes, late game](shots/potatoes.png) | ![Puppy Mill, late game](shots/puppies.png) | ![The offline report](shots/while-you-were-out.png) |
 
 ## The idea
 

@@ -1,15 +1,16 @@
 /**
- * Above: the kitchen, from counter height and a long way down. Tiled wall, a night window, a rack
+ * The kitchen (engine world `after`), from counter height. Tiled wall, a night window, a rack
  * of pots, steel running the width of it. Gas Rings burn along the range with Stockpots on them,
  * Pot Lids hang rattling, Recipe Books fill the shelf with a spine for each generation, Scullions
- * go back and forth along the floor with the peelings, and the Seventh Potato waits on the board.
+ * go back and forth along the floor with the peelings, and the Roast Potato waits on the board.
  * Every so often the knife comes down, and the whole room is its shadow for a moment.
  */
 
+import { POTATO_SPRITE } from "./art.js";
 import { LongScene, fillDisc, type Spot } from "./longScene.js";
 import { SCENE_W, clamp, mix, rgba } from "./farmScene.js";
 
-type KitchenId = "flame" | "servant" | "lid" | "broth" | "heirs" | "seventh";
+type KitchenId = "loam" | "drone" | "moss" | "mire" | "kinship" | "sixth";
 
 const TILE = "#b8c0b0";
 const TILE_DIM = "#8a9288";
@@ -50,14 +51,14 @@ export class KitchenScene extends LongScene<KitchenId> {
     this.shelf = Math.round(sh * 0.3);
     const ring = (x: number): Spot => ({ x, y: this.range });
     this.spots = {
-      flame: [ring(20), ring(50), ring(80), ring(110)],
-      servant: [0, 1, 2, 3].map((i) => ({ x: 20 + i * 46, y: sh - 6 + (i % 2) * 2 })),
-      lid: [{ x: 18, y: this.shelf - 18 }, { x: 40, y: this.shelf - 16 }, { x: 62, y: this.shelf - 18 }, { x: 84, y: this.shelf - 16 }, { x: 106, y: this.shelf - 18 }],
-      broth: [{ x: 20, y: this.range - 7 }, { x: 80, y: this.range - 7 }, { x: 50, y: this.range - 7 }],
-      heirs: [{ x: 18, y: this.shelf + 22 }, { x: 42, y: this.shelf + 22 }, { x: 66, y: this.shelf + 22 }],
-      seventh: [{ x: 146, y: this.counter - 1 }],
+      loam: [ring(20), ring(50), ring(80), ring(110)],
+      drone: [0, 1, 2, 3].map((i) => ({ x: 20 + i * 46, y: sh - 6 + (i % 2) * 2 })),
+      moss: [{ x: 18, y: this.shelf - 18 }, { x: 40, y: this.shelf - 16 }, { x: 62, y: this.shelf - 18 }, { x: 84, y: this.shelf - 16 }, { x: 106, y: this.shelf - 18 }],
+      mire: [{ x: 20, y: this.range - 7 }, { x: 80, y: this.range - 7 }, { x: 50, y: this.range - 7 }],
+      kinship: [{ x: 18, y: this.shelf + 22 }, { x: 42, y: this.shelf + 22 }, { x: 66, y: this.shelf + 22 }],
+      sixth: [{ x: 146, y: this.counter - 1 }],
     };
-    this.cooks = this.spots.servant.map((spot, i) => ({ x: spot.x, dir: i % 2 ? -1 : 1, until: i + 1, stopped: false }));
+    this.cooks = this.spots.drone.map((spot, i) => ({ x: spot.x, dir: i % 2 ? -1 : 1, until: i + 1, stopped: false }));
   }
 
   protected backdrop(ctx: CanvasRenderingContext2D, condition: number): void {
@@ -132,6 +133,7 @@ export class KitchenScene extends LongScene<KitchenId> {
     this.drawRings(t);
     this.drawPots(t);
     this.drawSeventh(t);
+    this.drawPile(POTATO_SPRITE, -2, this.sh - 2, "loam");
     this.drawCooks(t);
     this.drawBits();
     this.drawKnife(t);
@@ -140,7 +142,7 @@ export class KitchenScene extends LongScene<KitchenId> {
   /** The knife, and the dark it brings with it. Rare, quick, and stops just short of the potato. */
   private drawKnife(t: number): void {
     const cycle = (t + 12) % 22;
-    if (this.owned("servant") === 0 || cycle > 2.2) return;
+    if (this.owned("drone") === 0 || cycle > 2.2) return;
     const ctx = this.ctx;
     const k = cycle < 1 ? cycle : cycle < 1.2 ? 1 : Math.max(0, 1 - (cycle - 1.2));
     const low = Math.round((this.counter + 34) * k) - 90;
@@ -158,8 +160,8 @@ export class KitchenScene extends LongScene<KitchenId> {
 
   private drawBooks(): void {
     const ctx = this.ctx;
-    this.each("heirs", (spot, i, _, s) => this.stand(s, spot.x + (i % 2), spot.y - 1));
-    if (this.owned("heirs") === 0) return;
+    this.each("kinship", (spot, i, _, s) => this.stand(s, spot.x + (i % 2), spot.y - 1));
+    if (this.owned("kinship") === 0) return;
     const n = Math.min(12, Math.floor(Math.log2(this.view.generation)) * 2);
     for (let k = 0; k < n; k++) {
       ctx.fillStyle = SPINES[k % SPINES.length]!;
@@ -170,7 +172,7 @@ export class KitchenScene extends LongScene<KitchenId> {
 
   private drawLids(t: number): void {
     const ctx = this.ctx;
-    this.each("lid", (spot, i, broken, s) => {
+    this.each("moss", (spot, i, broken, s) => {
       const rattle = !broken && Math.sin(t * 0.7 + i * 2) > 0.92 ? Math.round(Math.sin(t * 50)) : 0;
       ctx.fillStyle = STEEL_LOW;
       ctx.fillRect(spot.x, this.shelf - 32, 1, spot.y - this.shelf + 32 - s.h + 2);
@@ -179,7 +181,7 @@ export class KitchenScene extends LongScene<KitchenId> {
   }
 
   private drawRings(t: number): void {
-    this.each("flame", (spot, i, broken, s) => {
+    this.each("loam", (spot, i, broken, s) => {
       if (!broken) this.glow(spot.x, spot.y - 3, 7, "#5a8af0", 0.14 + 0.05 * Math.sin(t * 7 + i * 3));
       this.stand(s, spot.x, spot.y);
     });
@@ -187,7 +189,7 @@ export class KitchenScene extends LongScene<KitchenId> {
 
   private drawPots(t: number): void {
     const kept = clamp(this.view.condition, 0, 1);
-    this.each("broth", (spot, _, broken, s) => {
+    this.each("mire", (spot, _, broken, s) => {
       this.stand(s, spot.x, spot.y);
       if (broken) return;
       const wobble = Math.round(Math.sin(t * 5 + spot.x));
@@ -198,7 +200,7 @@ export class KitchenScene extends LongScene<KitchenId> {
   }
 
   private drawSeventh(t: number): void {
-    this.each("seventh", (spot, _, broken, s) => {
+    this.each("sixth", (spot, _, broken, s) => {
       if (!broken) this.glow(spot.x, spot.y - 6, 16, "#fff4c0", 0.1 + 0.03 * Math.sin(t));
       this.stand(s, spot.x, spot.y);
     });
@@ -206,7 +208,7 @@ export class KitchenScene extends LongScene<KitchenId> {
 
   /** Back and forth along the floor, stopping to peel. */
   private drawCooks(t: number): void {
-    this.each("servant", (spot, i, broken, s) => {
+    this.each("drone", (spot, i, broken, s) => {
       const c = this.cooks[i]!;
       if (!broken) {
         if (t >= c.until) {

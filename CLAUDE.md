@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-Two clicker games that are one game underneath. `apps/potatoes` is Yield, Inc.
-(a farm, weather); `apps/puppies` is Puppy Mill (a kennel, same
+Two clicker games that are one game underneath. `apps/potatoes` is Small
+Potatoes (a farm, then the potato's whole journey to the table and back); `apps/puppies` is Puppy Mill (a kennel, same
 shape, different world). They share `packages/sim` outright: same numbers, same
 cost curves, same balance. What differs is every word and every pixel. Vite +
 React + TypeScript, no backend. `npm run dev` (potatoes, :5173) /
@@ -38,8 +38,9 @@ the monorepo is that retuning a rung is one edit.
 | Game loop, autosave | `apps/<game>/src/useFarm.ts` / `useMill.ts` |
 | Shop, gate sale screen, upkeep, seeds | `components/FarmShop.tsx` / `MillShop.tsx` |
 | The outside world's picture | `render/farmScene.ts` / `millScene.ts` |
-| The other worlds' pictures | `render/<world>Scene.ts` (inside, beyond, deep, origin, void, end; past that heap/kitchen/table, park/walk/porch) |
-| What those last three share | `render/longScene.ts` |
+| The other worlds' pictures | potatoes: `render/<place>Scene.ts` (store, factory, road, market, supermarket, larder, kitchen, table, heap). puppies: `render/<world>Scene.ts`, then park/walk/porch |
+| What the potato worlds share: the floor, the front-left pile, carriers | potatoes `render/longScene.ts` (puppies has its own for its last three) |
+| Which engine world is which potato place, and every per-world word | `apps/potatoes/src/worlds.ts` |
 | Which scene draws | `components/FarmScene.tsx` / `MillScene.tsx` |
 | The fall half of an arrival cut | `render/crossing.ts`, `components/CutFall.tsx` |
 | Sprites and icons | `render/art.ts` (char grids), `render/pixel.ts` |
@@ -78,6 +79,10 @@ agree only on the producer ids they switch on.
   generation got) and `world` (where you're looking) are easy to mix up.
 - Reusing an id retired in `OLD_IDS` (`persist.ts`) hands old saves something
   they never bought.
+- In the potato game the engine's world ids are just slots: `inside` is the
+  store, `void` the supermarket, `home` the heap. Name scenes and art after the
+  place, and look the slot up in the header of `worlds.ts`, or you'll draw a
+  void in the supermarket.
 - Only the deepest open world's four buildings count (`landsFor`), so a site's
   defences drop to its perks at every gate. Pricing a world's buildings so the
   first level isn't cheap on arrival leaves that world undefended.

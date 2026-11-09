@@ -11,12 +11,12 @@ import { solo, type Yield } from "@clickers/sim";
 
 import { producerMark } from "../marks.js";
 import { EMPTY_VIEW, FarmScene as Scene, type FarmView } from "../render/farmScene.js";
-import { BeyondScene } from "../render/beyondScene.js";
-import { DeepScene } from "../render/deepScene.js";
-import { OriginScene } from "../render/originScene.js";
-import { VoidScene } from "../render/voidScene.js";
-import { EndScene } from "../render/endScene.js";
-import { InsideScene } from "../render/insideScene.js";
+import { FactoryScene } from "../render/factoryScene.js";
+import { RoadScene } from "../render/roadScene.js";
+import { MarketScene } from "../render/marketScene.js";
+import { SupermarketScene } from "../render/supermarketScene.js";
+import { LarderScene } from "../render/larderScene.js";
+import { StoreScene } from "../render/storeScene.js";
 import { HeapScene } from "../render/heapScene.js";
 import { KitchenScene } from "../render/kitchenScene.js";
 import { TableScene } from "../render/tableScene.js";
@@ -26,7 +26,7 @@ export interface FarmSceneHandle {
   dig(at?: { x: number; y: number }): void;
 }
 
-/** What React needs from any renderer (farmScene.ts / insideScene.ts / beyondScene.ts). */
+/** What React needs from any renderer (farmScene.ts, or any `LongScene`). */
 interface SceneLike {
   update(view: FarmView): void;
   start(): void;
@@ -37,15 +37,15 @@ interface SceneLike {
 /** One renderer per world. Warping rebuilds the scene, so these are constructors, not instances. */
 const SCENES: Record<solo.World, new (canvas: HTMLCanvasElement) => SceneLike> = {
   outside: Scene,
-  inside: InsideScene,
-  beyond: BeyondScene,
-  deep: DeepScene,
-  origin: OriginScene,
-  void: VoidScene,
-  end: EndScene,
-  after: HeapScene,
-  above: KitchenScene,
-  home: TableScene,
+  inside: StoreScene,
+  beyond: FactoryScene,
+  deep: RoadScene,
+  origin: MarketScene,
+  void: SupermarketScene,
+  end: LarderScene,
+  after: KitchenScene,
+  above: TableScene,
+  home: HeapScene,
 };
 
 /** The canvas and its rAF loop. React only ever hands it a view. */

@@ -1371,41 +1371,59 @@ input {
 .world-strip {
   position: absolute;
   top: 6px;
-  left: 0;
-  right: 0;
+  border-radius: 0;
+  left: 8px;
+  right: 8px;
   display: flex;
-  gap: 4px;
-  padding: 0 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px 4px 10px;
+  background: rgba(247, 236, 216, 0.88);
+  border: 2px solid var(--wood);
   z-index: 2;
 }
-.world-strip::-webkit-scrollbar {
-  display: none;
-}
-.world-strip button {
-  position: relative;
-  flex-shrink: 0;
-  padding: 4px 9px;
-  font-size: 0.68rem;
+.world-name {
+  font-size: 0.72rem;
   font-weight: 800;
-  background: rgba(247, 236, 216, 0.85);
   color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.world-pips {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.world-pips button {
+  position: relative;
+  width: 13px;
+  height: 13px;
+  min-width: 0;
+  padding: 0;
+  background: var(--cream);
   border: 2px solid var(--wood);
+  border-radius: 0;
   box-shadow: none;
 }
-.world-strip button.on,
-.world-strip button.on:disabled {
+.world-pips button.on,
+.world-pips button.on:disabled {
   background: var(--wood);
-  color: var(--cream);
   opacity: 1;
+}
+.world-pips button.shut,
+.world-pips button.shut:disabled {
+  background: transparent;
+  border: 2px dotted var(--wood-light, #b08a5a);
+  opacity: 0.7;
 }
 .world-dot {
   position: absolute;
-  top: -3px;
-  right: -3px;
-  width: 7px;
-  height: 7px;
+  top: -4px;
+  right: -4px;
+  width: 6px;
+  height: 6px;
   background: var(--blood);
   border: 1px solid var(--cream);
 }

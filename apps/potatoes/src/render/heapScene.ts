@@ -1,228 +1,172 @@
 /**
- * After: under the ash. A cross-section of the heap, ash along the top and the last red of the sun
- * through the cracks, everything that ever ended packed in layers and going back to dirt, hotter the
- * further down you look. Rot Beds steam, the Worm Gang works its tunnels, Wet Sacking hangs off the
- * roof, Fairy Rings light up the rich patches, and White Thread runs through all of it from the
- * Sixth Potato in the hot middle, with a pulse going out along it for every generation.
+ * The heap (engine world `home`): the bottom of the back garden at dusk, where what nobody finished
+ * goes. The back door of the house at the left, Compost Bays along the fence, Wet Sacking over them,
+ * a Fairy Ring on the lawn, and a cut-away strip of soil along the front where the Worm Gang works and
+ * the White Thread runs. The Seed Potato sits on the middle bay, sprouting — and over the hedge, the
+ * farm, where it goes next. Low heat: the heap stops steaming and the lawn goes grey.
  */
 
-import { LongScene, fillDisc, type Spot } from "./longScene.js";
+import { POTATO_SPRITE } from "./art.js";
+import { LongScene } from "./longScene.js";
 import { SCENE_W, clamp, mix, rgba } from "./farmScene.js";
 
-type HeapId = "loam" | "drone" | "moss" | "mire" | "kinship" | "sixth";
+type HeapId = "crumb" | "guest" | "grace" | "feast" | "house" | "whole";
 
-const ASH = "#4e4648";
-const ASH_LIT = "#8a7a78";
-const DIRT_TOP = "#1e1416";
-const DIRT_MID = "#3a2318";
-const DIRT_LOW = "#6a3418";
-const DIRT_SOUR = "#2a2a22";
-const THREAD = "#d8e8d0";
-const HEAT = "#ff8a3a";
-const SPORE = "#c8f0d8";
-
-// Bits of every earlier world, sunk into the dirt.
-const JUNK = ["#7a8a98", "#d0b0f8", "#ffd166", "#e8e0d0", "#c04a4a", "#8ad0e8"];
-
-interface Thread {
-  points: Spot[];
-  speed: number;
-}
+const DUSK_TOP = "#4a4a7a";
+const DUSK_LOW = "#f0a070";
+const FIELD = "#6a8a3a";
+const FIELD_ROW = "#587a30";
+const HEDGE = "#3a5a2a";
+const FENCE = "#7a5a3a";
+const LAWN = "#5a8a3a";
+const LAWN_DULL = "#7a7a5a";
+const SOIL = "#3a2a1e";
+const SOIL_LIT = "#4e3828";
+const BRICK = "#8a4a3a";
+const DOOR_LIGHT = "#ffe8a0";
 
 export class HeapScene extends LongScene<HeapId> {
-  private ash = 30;
-  private threads: Thread[] = [];
-  private tunnels: { y: number; from: number; to: number }[] = [];
-  private worms: { x: number; dir: 1 | -1; phase: number }[] = [];
-  private motes: { x: number; y: number; vy: number; life: number }[] = [];
-  private junk: (Spot & { c: string })[] = [];
+  private horizon = 80;
+  private fence = 150;
+  private soil = 250;
+  private worms: { x: number; y: number; dir: 1 | -1 }[] = [];
+  private steam: { x: number; y: number; life: number }[] = [];
 
-  protected layOut(r: () => number): void {
+  protected layOut(random: () => number): void {
     const sh = this.sh;
-    const ash = (this.ash = Math.round(sh * 0.14));
-    const heart: Spot = { x: 90, y: Math.round(sh * 0.66) };
-    const at = (fx: number, fy: number): Spot => ({ x: Math.round(SCENE_W * fx), y: Math.round(sh * fy) });
-    this.tunnels = [0.4, 0.54, 0.68, 0.82].map((fy, i) => {
-      const from = 6 + Math.floor(r() * 40);
-      return { y: Math.round(sh * fy) + (i % 2), from, to: SCENE_W - 6 - Math.floor(r() * 40) };
-    });
+    this.horizon = Math.round(sh * 0.32);
+    this.fence = Math.round(sh * 0.56);
+    this.soil = Math.round(sh * 0.84);
+    const bay = this.fence + 14;
     this.spots = {
-      loam: [at(0.2, 0.34), at(0.78, 0.31), at(0.47, 0.42), at(0.13, 0.55), at(0.88, 0.52), at(0.62, 0.3)],
-      drone: this.tunnels.flatMap((t) => [{ x: t.from, y: t.y }, { x: t.to, y: t.y }]),
-      moss: [{ x: 26, y: ash + 12 }, { x: 150, y: ash + 12 }, { x: 96, y: ash + 12 }, { x: 62, y: ash + 12 }],
-      mire: [at(0.84, 0.72), at(0.14, 0.76), at(0.67, 0.52), at(0.32, 0.56), at(0.92, 0.86)],
-      kinship: [at(0.33, 0.8), at(0.73, 0.84), at(0.52, 0.5)],
-      sixth: [heart],
+      crumb: [72, 100, 128, 156].map((x) => ({ x, y: bay })),
+      grace: [72, 128, 156].map((x) => ({ x: x + 1, y: bay - 7 })),
+      whole: [{ x: 100, y: bay - 13 }],
+      feast: [52, 92, 136, 160].map((x, i) => ({ x, y: Math.round(sh * 0.74) + (i % 2) * 4 })),
+      house: [40, 96, 150].map((x, i) => ({ x, y: this.soil + 10 + (i % 2) * 6 })),
+      guest: [0, 1, 2, 3, 4, 5].map((i) => ({ x: 20 + i * 26, y: this.soil + 14 + ((i * 5) % 9) })),
     };
-    this.worms = this.spots.drone.map((spot, i) => ({ x: spot.x, dir: i % 2 ? -1 : 1, phase: i * 1.7 }));
-    this.junk = [];
-    for (let i = 0; i < 70; i++) {
-      const y = ash + 4 + Math.floor(r() * (sh - ash - 8));
-      this.junk.push({ x: Math.floor(r() * SCENE_W), y, c: JUNK[Math.floor(r() * JUNK.length)]! });
-    }
-    // Threads wander out from the heart in pixel steps, each forking off the last.
-    this.threads = [];
-    for (let i = 0; i < 26; i++) {
-      const base = this.threads[Math.floor(r() * this.threads.length)]?.points;
-      const start = base ? base[Math.floor(r() * base.length)]! : heart;
-      const a = r() * Math.PI * 2;
-      const points: Spot[] = [start];
-      let { x, y } = start;
-      for (let s = 0, n = 20 + Math.floor(r() * 40); s < n; s++) {
-        const turn = a + Math.sin(s * 0.3 + i) * 0.9;
-        x += Math.cos(turn) * 1.4;
-        y += Math.sin(turn) * 1.1;
-        if (y < ash + 6 || y > sh - 3 || x < 1 || x > SCENE_W - 2) break;
-        points.push({ x: Math.round(x), y: Math.round(y) });
-      }
-      this.threads.push({ points, speed: 12 + r() * 16 });
-    }
+    this.worms = this.spots.guest.map((s, i) => ({ x: s.x + random() * 10, y: s.y, dir: i % 2 ? 1 : -1 }));
   }
 
   protected backdrop(ctx: CanvasRenderingContext2D, condition: number): void {
-    const { sh, ash } = this;
-    const sour = clamp((1 - condition) * 1.3, 0, 1);
-    for (let y = ash; y < sh; y++) {
-      const k = (y - ash) / (sh - ash);
-      const c = k < 0.55 ? mix(DIRT_TOP, DIRT_MID, k / 0.55) : mix(DIRT_MID, DIRT_LOW, (k - 0.55) / 0.45);
-      ctx.fillStyle = mix(c, DIRT_SOUR, sour);
-      ctx.fillRect(0, y, SCENE_W, 1);
+    const { sh, horizon, fence, soil } = this;
+    const cold = clamp((1 - condition) * 1.2, 0, 1);
+    const sky = ctx.createLinearGradient(0, 0, 0, horizon);
+    sky.addColorStop(0, DUSK_TOP);
+    sky.addColorStop(1, DUSK_LOW);
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, SCENE_W, horizon);
+    // The farm over the hedge: striped fields running to the horizon, the barn, a tractor going home.
+    ctx.fillStyle = FIELD;
+    ctx.fillRect(0, horizon, SCENE_W, fence - horizon);
+    ctx.fillStyle = FIELD_ROW;
+    for (let y = horizon + 2, gap = 2; y < fence; y += gap, gap++) ctx.fillRect(0, y, SCENE_W, 1);
+    ctx.fillStyle = "#8a3a2a";
+    ctx.fillRect(126, horizon - 9, 16, 10);
+    ctx.fillStyle = "#6a2a20";
+    for (let i = 0; i < 10; i++) ctx.fillRect(124 + i, horizon - 9 - Math.min(i, 9 - i) * 0.6, 20 - i * 2, 1);
+    ctx.fillStyle = "#f4ecd8";
+    ctx.fillRect(132, horizon - 5, 4, 6);
+    ctx.fillStyle = "#c83a3a";
+    ctx.fillRect(150, horizon + 4, 5, 3);
+    ctx.fillStyle = "#2a2a2a";
+    ctx.fillRect(150, horizon + 7, 2, 1);
+    ctx.fillRect(154, horizon + 7, 1, 1);
+    // The hedge and fence at the bottom of the garden.
+    ctx.fillStyle = HEDGE;
+    ctx.fillRect(0, fence - 10, SCENE_W, 10);
+    for (let x = 0; x < SCENE_W; x += 5) ctx.fillRect(x, fence - 12 + ((x * 3) % 3), 4, 2);
+    ctx.fillStyle = FENCE;
+    for (let x = 34; x < SCENE_W; x += 9) ctx.fillRect(x, fence - 8, 2, 10);
+    ctx.fillRect(34, fence - 6, SCENE_W, 1);
+    ctx.fillRect(34, fence - 2, SCENE_W, 1);
+    // The lawn, greying when the heap goes cold.
+    ctx.fillStyle = mix(LAWN, LAWN_DULL, cold * 0.7);
+    ctx.fillRect(0, fence, SCENE_W, soil - fence);
+    ctx.fillStyle = rgba("#000000", 0.08);
+    for (let x = 0; x < SCENE_W; x += 7) ctx.fillRect(x + ((x * 5) % 4), fence + 8 + ((x * 11) % 40), 1, 2);
+    // The back of the house: brick, the door with the kitchen light behind it, the step.
+    ctx.fillStyle = BRICK;
+    ctx.fillRect(0, 0, 30, soil);
+    ctx.fillStyle = "#6a3a2e";
+    for (let row = 0, y = 0; y < soil; row++, y += 4) {
+      ctx.fillRect(0, y, 30, 1);
+      for (let x = row % 2 ? 4 : 0; x < 30; x += 8) ctx.fillRect(x, y, 1, 4);
     }
-    // Strata: the heap settled in the order things ended.
-    ctx.fillStyle = "rgba(0,0,0,0.16)";
-    for (let band = 0; band < 7; band++) {
-      const y0 = ash + 12 + band * ((sh - ash) / 7);
-      for (let x = 0; x < SCENE_W; x++) ctx.fillRect(x, Math.round(y0 + Math.sin(x / (9 + band * 2) + band) * 2.4), 1, 1 + (band % 2));
-    }
-    for (const j of this.junk) {
-      ctx.fillStyle = rgba(j.c, 0.5);
-      ctx.fillRect(j.x, j.y, 1 + (j.x % 3 === 0 ? 1 : 0), 1);
-    }
-    // Tunnels, worn into the dirt.
-    for (const t of this.tunnels) {
-      ctx.fillStyle = "rgba(0,0,0,0.42)";
-      for (let x = t.from; x < t.to; x++) ctx.fillRect(x, t.y - 3 + Math.round(Math.sin(x / 11 + t.y) * 1.5), 1, 5);
-    }
-    // The heat at the bottom of it.
-    const heart = this.spots.sixth[0]!;
-    fillDisc(ctx, heart.x, heart.y - 7, sh * 0.26, rgba(HEAT, 0.06));
-    fillDisc(ctx, heart.x, heart.y - 7, sh * 0.15, rgba(HEAT, 0.09));
-    // The ash lid, and where the sun gets through it.
-    for (let x = 0; x < SCENE_W; x++) {
-      const top = ash - 8 + Math.round(2.5 * Math.sin(x / 13) + 1.5 * Math.sin(x / 5.3));
-      ctx.fillStyle = "#6a2024";
-      ctx.fillRect(x, 0, 1, top);
-      ctx.fillStyle = ASH_LIT;
-      ctx.fillRect(x, top, 1, 1);
-      ctx.fillStyle = ASH;
-      ctx.fillRect(x, top + 1, 1, ash - top + 2 + Math.round(1.4 * Math.sin(x / 3.7)));
-    }
+    const doorTop = Math.round(sh * 0.48);
+    ctx.fillStyle = DOOR_LIGHT;
+    ctx.fillRect(8, doorTop, 16, soil - doorTop - 6);
+    ctx.fillStyle = "#3a5a4a";
+    ctx.fillRect(16, doorTop, 8, soil - doorTop - 6);
+    ctx.fillStyle = "#8a8478";
+    ctx.fillRect(4, soil - 6, 26, 6);
+    ctx.fillStyle = rgba(DOOR_LIGHT, 0.2);
+    ctx.fillRect(30, soil - 20, 30, 20);
+    // The cut-away soil along the front.
+    ctx.fillStyle = SOIL;
+    ctx.fillRect(0, soil, SCENE_W, sh - soil);
+    ctx.fillStyle = SOIL_LIT;
+    ctx.fillRect(0, soil, SCENE_W, 2);
+    ctx.fillStyle = "#5a4430";
+    for (let x = 3; x < SCENE_W; x += 13) ctx.fillRect(x, soil + 6 + ((x * 7) % 20), 2, 1);
   }
 
   protected scene(t: number): void {
-    this.drawThreads(t);
-    this.drawBeds();
-    this.drawWorms(t);
-    this.drawRings(t);
-    this.drawKnots(t);
-    this.drawSixth(t);
-    this.drawSacks(t);
-    this.drawMotes();
+    this.drawThreads();
+    this.each("house", (spot, _, __, s) => this.stand(s, spot.x, spot.y));
+    this.drawWorms();
+    this.each("crumb", (spot, _, broken, s) => {
+      this.stand(s, spot.x, spot.y);
+      if (!broken && this.chance(1.2 * this.view.condition) && this.steam.length < 40) {
+        this.steam.push({ x: spot.x - 8 + Math.random() * 16, y: spot.y - s.h, life: 2.5 });
+      }
+    });
+    this.each("grace", (spot, _, __, s) => this.stand(s, spot.x, spot.y));
+    this.each("whole", (spot, _, broken, s) => {
+      const lean = broken ? 0 : Math.round(Math.sin(t * 0.6) * 0.6);
+      this.stand(s, spot.x + lean, spot.y);
+    });
+    this.drawSteam();
+    this.each("feast", (spot, _, __, s) => this.stand(s, spot.x, spot.y));
+    this.drawPile(POTATO_SPRITE, 30, this.soil + 2, "crumb");
   }
 
-  /** As much of the web as this line has earned, and the pulses running along it. */
-  private drawThreads(t: number): void {
-    if (this.owned("kinship") === 0) return;
+  /** The White Thread: pale lines of mould joining every knot in the soil. */
+  private drawThreads(): void {
+    const n = this.owned("house");
+    if (n <= 0) return;
     const ctx = this.ctx;
-    const n = clamp(3 + Math.floor(Math.log2(this.view.generation) * 3) + Math.floor(Math.log2(this.owned("kinship"))), 3, this.threads.length);
-    ctx.fillStyle = rgba(THREAD, 0.3);
-    for (let i = 0; i < n; i++) for (const p of this.threads[i]!.points) ctx.fillRect(p.x, p.y, 1, 1);
-    ctx.fillStyle = THREAD;
-    for (let i = 0; i < n; i++) {
-      const { points, speed } = this.threads[i]!;
-      const head = Math.floor((t * speed + i * 17) % (points.length + 12));
-      for (let k = Math.max(0, head - 2); k <= head && k < points.length; k++) ctx.fillRect(points[k]!.x, points[k]!.y, 1, 1);
+    ctx.fillStyle = rgba("#e8f0e0", 0.5);
+    const strands = Math.min(5, 1 + Math.floor(Math.log2(n)));
+    for (let k = 0; k < strands; k++) {
+      const base = this.soil + 6 + k * 5;
+      for (let x = 0; x < SCENE_W; x++) ctx.fillRect(x, Math.round(base + Math.sin(x / (9 + k * 3) + k) * 3), 1, 1);
     }
   }
 
-  private drawBeds(): void {
-    this.each("loam", (spot, i, broken, s) => {
-      this.stand(s, spot.x, spot.y);
-      if (broken) return;
-      if (this.primed("loam")) this.glow(spot.x, spot.y - 5, 8, "#a4e884", 0.1);
-      if (this.chance(0.5) && this.motes.length < 30) this.motes.push({ x: spot.x - 6 + (i * 5) % 12, y: spot.y - s.h, vy: -7, life: 2 });
-    });
-  }
-
-  /** Each gang works a tunnel, nosing along it and doubling back. */
-  private drawWorms(t: number): void {
-    this.each("drone", (_, i, broken, s) => {
+  /** The gang, nosing back and forth through the soil. */
+  private drawWorms(): void {
+    this.each("guest", (spot, i, broken, s) => {
       const w = this.worms[i]!;
-      const lane = this.tunnels[Math.floor(i / 2)]!;
       if (!broken) {
-        w.x += w.dir * (5 + 2 * Math.sin(t * 2 + w.phase)) * this.dt;
-        if (w.x < lane.from) w.dir = 1;
-        if (w.x > lane.to) w.dir = -1;
+        w.x += w.dir * 3 * this.dt;
+        if (w.x < 6 || w.x > SCENE_W - 6) w.dir = w.dir === 1 ? -1 : 1;
       }
-      const y = lane.y + Math.round(Math.sin(w.x / 11 + lane.y) * 1.5) + 2;
-      const ctx = this.ctx;
-      const left = Math.round(w.x - s.w / 2);
-      ctx.save();
-      if (w.dir === 1) {
-        ctx.translate(left * 2 + s.w, 0);
-        ctx.scale(-1, 1);
-      }
-      ctx.drawImage(s.canvas, left, y - s.h + 1);
-      ctx.restore();
+      if (w.dir === 1) this.standFlipped(s, w.x, spot.y);
+      else this.stand(s, w.x, spot.y);
     });
   }
 
-  private drawRings(t: number): void {
-    const lit = clamp(this.view.condition, 0, 1);
-    this.each("mire", (spot, i, broken, s) => {
-      if (!broken) this.glow(spot.x, spot.y - 4, this.primed("mire") ? 14 : 10, "#40c0a8", (0.08 + 0.05 * Math.sin(t * 1.3 + i * 2)) * lit);
-      this.stand(s, spot.x, spot.y);
-      if (!broken && this.chance(0.5) && this.motes.length < 30) this.motes.push({ x: spot.x, y: spot.y - s.h, vy: -7, life: 3 });
-    });
-  }
-
-  private drawKnots(t: number): void {
-    this.each("kinship", (spot, i, broken, s) => {
-      if (!broken) this.glow(spot.x, spot.y - 5, 8, THREAD, 0.1 + 0.04 * Math.sin(t * 0.9 + i));
-      this.stand(s, spot.x, spot.y);
-    });
-  }
-
-  /** It breathes. Slowly, and it's the only thing down here that does. */
-  private drawSixth(t: number): void {
-    this.each("sixth", (spot, _, broken, s) => {
-      const breathe = broken ? 0 : Math.round(Math.sin(t * 0.7));
-      if (!broken) {
-        this.glow(spot.x, spot.y - 7, 24, HEAT, 0.08);
-        this.glow(spot.x, spot.y - 7, 15, HEAT, 0.12);
-      }
-      this.stand(s, spot.x, spot.y - breathe);
-    });
-  }
-
-  private drawSacks(t: number): void {
-    this.each("moss", (spot, i, broken, s) => {
-      this.stand(s, spot.x + (broken ? 0 : Math.round(Math.sin(t * 0.6 + i))), spot.y);
-      if (!broken && this.chance(0.4) && this.motes.length < 30) this.motes.push({ x: spot.x - 4 + (i * 7) % 9, y: spot.y + 1, vy: 30, life: 9 });
-    });
-  }
-
-  /** Steam going up off the beds and rings; drips coming down off the sacks. */
-  private drawMotes(): void {
+  private drawSteam(): void {
     const ctx = this.ctx;
-    for (const m of this.motes) {
-      const drip = m.vy > 0;
-      m.life -= this.dt;
-      m.y += m.vy * this.dt;
-      m.x += drip ? 0 : Math.sin(m.y / 5) * 3 * this.dt;
-      ctx.fillStyle = drip ? rgba("#8ad0e8", 0.7) : rgba(SPORE, Math.min(0.4, m.life * 0.2));
-      ctx.fillRect(Math.round(m.x), Math.round(m.y), 1, drip ? 2 : 1);
+    for (const p of this.steam) {
+      p.life -= this.dt;
+      p.y -= 6 * this.dt;
+      p.x += Math.sin(p.y / 6) * 3 * this.dt;
+      ctx.fillStyle = rgba("#f0e8e0", Math.min(0.35, p.life * 0.15));
+      ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2);
     }
-    this.motes = this.motes.filter((m) => m.life > 0 && m.y < this.sh && m.y > this.ash);
+    this.steam = this.steam.filter((p) => p.life > 0);
   }
 }
