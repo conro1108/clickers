@@ -1371,59 +1371,130 @@ input {
 .world-strip {
   position: absolute;
   top: 6px;
-  border-radius: 0;
-  left: 8px;
-  right: 8px;
+  left: 6px;
+  right: 6px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 4px 6px 4px 10px;
-  background: rgba(247, 236, 216, 0.88);
+  align-items: stretch;
+  gap: 4px;
+  z-index: 3;
+}
+.world-strip button {
+  border-radius: 0;
+  box-shadow: none;
   border: 2px solid var(--wood);
-  z-index: 2;
+  background: rgba(247, 236, 216, 0.92);
+  color: var(--ink);
+}
+.world-step {
+  width: 48px;
+  min-height: 44px;
+  padding: 0;
+  font-size: 1.6rem;
+  line-height: 1;
+  font-weight: 800;
+}
+.world-step:disabled {
+  opacity: 0.35;
+}
+.world-here {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 8px;
+}
+.world-here:disabled {
+  opacity: 1;
 }
 .world-name {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 800;
-  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
+}
+.world-name::after {
+  content: " ▾";
+  font-size: 0.7rem;
+  opacity: 0.6;
 }
 .world-pips {
   display: flex;
   gap: 3px;
-  flex-shrink: 0;
 }
-.world-pips button {
-  position: relative;
-  width: 13px;
-  height: 13px;
-  min-width: 0;
-  padding: 0;
+.world-pips span {
+  width: 7px;
+  height: 7px;
+  background: var(--cream);
+  border: 1px solid var(--wood);
+}
+.world-pips span.on {
+  background: var(--wood);
+}
+.world-pips span.hurt {
+  background: var(--blood);
+}
+.world-pips span.shut {
+  background: transparent;
+  border-style: dotted;
+  opacity: 0.6;
+}
+/* The whole journey as a list: one full-width row per world, big enough for a thumb. */
+.world-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 52px;
+  right: 52px;
+  display: flex;
+  flex-direction: column;
   background: var(--cream);
   border: 2px solid var(--wood);
-  border-radius: 0;
-  box-shadow: none;
+  box-shadow: 0 6px 18px rgba(40, 24, 16, 0.35);
 }
-.world-pips button.on,
-.world-pips button.on:disabled {
-  background: var(--wood);
-  opacity: 1;
-}
-.world-pips button.shut,
-.world-pips button.shut:disabled {
+.world-menu button,
+.world-menu-shut {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 1px solid rgba(122, 82, 55, 0.25);
   background: transparent;
-  border: 2px dotted var(--wood-light, #b08a5a);
-  opacity: 0.7;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-align: left;
+}
+.world-menu button.on {
+  background: var(--wood);
+  color: var(--cream);
+}
+.world-menu-shut {
+  color: var(--ink-soft);
+  opacity: 0.55;
+}
+.world-menu-n {
+  width: 1.4em;
+  text-align: right;
+  opacity: 0.6;
+}
+.world-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
 }
 .world-dot {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 6px;
-  height: 6px;
+  top: 50%;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
   background: var(--blood);
   border: 1px solid var(--cream);
 }

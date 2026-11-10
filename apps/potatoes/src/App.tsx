@@ -92,6 +92,78 @@ function Home({ onGo }: { onGo: (screen: Screen) => void }) {
   );
 }
 
+// --- The world strip ---
+
+function WorldStrip({
+  farm,
+  here,
+  busy,
+  open,
+  setOpen,
+  go,
+}: {
+  farm: solo.SiteState;
+  here: solo.World;
+  busy: boolean;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  go: (to: solo.World) => void;
+}) {
+  const at = solo.WORLDS.indexOf(here);
+  const hurt = (w: solo.World) => solo.producersIn(w).some((p) => solo.brokenCount(farm, p.id) > 0);
+
+  // Left and right arrow keys walk the strip, for anyone at a keyboard.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (busy || e.target instanceof HTMLInputElement) return;
+      if (e.key === "ArrowLeft" && at > 0) go(solo.WORLDS[at - 1]!);
+      if (e.key === "ArrowRight" && at < farm.depth) go(solo.WORLDS[at + 1]!);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [at, busy, farm.depth, go]);
+
+  return (
+    <>
+      {open && <div className="world-scrim" onClick={() => setOpen(false)} />}
+      <div className="world-strip">
+        <button className="world-step" aria-label="Previous world" disabled={busy || at <= 0} onClick={() => go(solo.WORLDS[at - 1]!)}>
+          ‹
+        </button>
+        <button className="world-here" aria-expanded={open} disabled={busy} onClick={() => setOpen(!open)}>
+          <span className="world-name">{WORLD_COPY[here].door}</span>
+          <span className="world-pips" aria-hidden>
+            {solo.WORLDS.map((w, i) => (
+              <span key={w} className={w === here ? "on" : i <= farm.depth ? (hurt(w) ? "hurt" : "open") : "shut"} />
+            ))}
+          </span>
+        </button>
+        <button className="world-step" aria-label="Next world" disabled={busy || at >= farm.depth} onClick={() => go(solo.WORLDS[at + 1]!)}>
+          ›
+        </button>
+        {open && (
+          <div className="world-menu">
+            {solo.WORLDS.map((w, i) =>
+              i <= farm.depth ? (
+                <button key={w} className={w === here ? "on" : undefined} onClick={() => go(w)}>
+                  <span className="world-menu-n">{i + 1}</span>
+                  {WORLD_COPY[w].door}
+                  {hurt(w) && <span className="world-dot" />}
+                </button>
+              ) : (
+                <div key={w} className="world-menu-shut">
+                  <span className="world-menu-n">{i + 1}</span>
+                  ???
+                </div>
+              ),
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 // --- The homestead ---
 
 // Sheets, named for what is inside them. `back` is not on the bar.
@@ -310,6 +382,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
   const { farm, now, report, dismissReport, budget, pendingDigs, error, dig, dispatch, abandon } =
     useFarm();
   const [sheet, setSheet] = useState<FarmSheet | null>(null);
+  const [worldMenu, setWorldMenu] = useState(false);
   const sceneRef = useRef<FarmSceneHandle>(null);
   const [pops, setPops] = useState<{ id: number; text: string }[]>([]);
   const popId = useRef(0);
@@ -369,6 +442,13 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
       setTimeout(() => setCrossing(null), CROSS_MS),
     ];
   }, []);
+  const goTo = useCallback(
+    (to: solo.World) => {
+      setWorldMenu(false);
+      if (to !== farm.world) cross(to, () => dispatch({ type: "warp", to }));
+    },
+    [farm.world, cross, dispatch],
+  );
   // Layout effect: the purchase and the world it moves you to land in the same render, so a plain effect lets a frame through.
   useLayoutEffect(() => {
     const was = wasDepth.current;
@@ -500,32 +580,18 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         {/* The whole scene digs, which is not something a farm looks like it
             does. One sentence, once, and then never again. */}
         {!taught && <p className="tap-hint">Tap the farm to dig</p>}
-        {/* The whole journey as a gauge, on the scene rather than in a sheet: one pip per world, the ones
-            not reached yet hollow, so how far along the potato you are is part of the picture. The name
-            is whichever you're looking at. A red corner is a world with something broken in it. */}
+        {/* Where you are on the potato's journey, and getting somewhere else. Thumb-sized: an arrow
+            either side steps to the next world, and the name opens the whole list for a long jump.
+            The pips under the name are the journey so far, hollow where you haven't been. */}
         {farm.depth >= 1 && (
-          <div className="world-strip">
-            <span className="world-name">{WORLD_COPY[heldWorld ?? farm.world].door}</span>
-            <div className="world-pips">
-              {solo.WORLDS.map((to, i) => {
-                const open = i <= farm.depth;
-                const here = (heldWorld ?? farm.world) === to;
-                return (
-                  <button
-                    key={to}
-                    aria-label={open ? WORLD_COPY[to].door : "Not yet"}
-                    className={here ? "on" : open ? "open" : "shut"}
-                    disabled={!open || farm.world === to || crossing !== null || cut !== null}
-                    onClick={() => cross(to, () => dispatch({ type: "warp", to }))}
-                  >
-                    {open && solo.producersIn(to).some((p) => solo.brokenCount(farm, p.id) > 0) && (
-                      <span className="world-dot" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <WorldStrip
+            farm={farm}
+            here={heldWorld ?? farm.world}
+            busy={crossing !== null || cut !== null}
+            open={worldMenu}
+            setOpen={setWorldMenu}
+            go={goTo}
+          />
         )}
       </FarmScene>
 

@@ -177,6 +177,10 @@ if (args.buy) {
   await page.waitForTimeout(Number(args.after ?? 2500));
 } else if (args.open === "back") {
   await openBackRoom();
+} else if (args.open === "worlds") {
+  // The potato game's world list: the name in the strip opens it.
+  await page.locator(".world-here").click();
+  await page.waitForTimeout(300);
 } else if (args.open) {
   // Any of the nav sheets by name: `open=Shop`, `open=Pedigree`, `open=Upkeep`.
   await page.getByRole("button", { name: args.open, exact: true }).click();
