@@ -31,7 +31,7 @@ import {
   workingCount,
 } from "./economy.js";
 import type { SiteState } from "./state.js";
-import { named, THEME, type Shape } from "../theme.js";
+import { named, TERMS, THEME, type Shape } from "../theme.js";
 
 /** Which producers a breakage event goes after. */
 type BreakScope = "best" | "cheapest" | "all";
@@ -405,7 +405,7 @@ export function fireWeather(f: SiteState, at: Millis): { site: SiteState; event:
   // "−8% production" is the same fact in the terms you'd act on.
   const parts: string[] = [];
   if (brokeTotal > 0) parts.push(describeBreak(broke));
-  if (conditionLost > 1e-9) parts.push("tired the condition");
+  if (conditionLost > 1e-9) parts.push(`tired the ${TERMS.condition}`);
   if (kind.effect.kind === "boon") parts.push(`a good run, +${format(gained)}`);
   const cost =
     lostShare > 0.0005 ? ` −${(lostShare * 100).toFixed(0)}% production.` : "";

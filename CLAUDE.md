@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 Two clicker games that are one game underneath. `apps/potatoes` is Small
-Potatoes (a farm, then the potato's whole journey to the table and back); `apps/puppies` is Puppy Mill (a kennel, same
-shape, different world). They share `packages/sim` outright: same numbers, same
+Potatoes (a farm, then the potato's whole journey to the table and back); `apps/puppies` is Puppy Mill (a kennel, then the
+dogs getting out of it and getting home). They share `packages/sim` outright: same numbers, same
 cost curves, same balance. What differs is every word and every pixel. Vite +
 React + TypeScript, no backend. `npm run dev` (potatoes, :5173) /
 `dev:puppies` (:5174) / `test` / `typecheck` / `build`.
@@ -38,8 +38,11 @@ the monorepo is that retuning a rung is one edit.
 | Game loop, autosave | `apps/<game>/src/useFarm.ts` / `useMill.ts` |
 | Shop, gate sale screen, upkeep, seeds | `components/FarmShop.tsx` / `MillShop.tsx` |
 | The outside world's picture | `render/farmScene.ts` / `millScene.ts` |
-| The other worlds' pictures | potatoes: `render/<place>Scene.ts` (store, factory, road, market, supermarket, larder, kitchen, table, heap). puppies: `render/<world>Scene.ts`, then park/walk/porch |
+| The other worlds' pictures | potatoes: `render/<place>Scene.ts` (store … heap). puppies: `insideScene.ts` (the tunnel), then `back`, `cut`, `fire`, `hill`, `bridge`, `park`, `walk`, `porch` |
 | What the potato worlds share: the floor, the front-left pile, carriers | potatoes `render/longScene.ts` (puppies has its own for its last three) |
+| The pack: the dogs you hold, drawn in every puppy world past the mill | puppies `render/pack.ts` |
+| Which engine world is which puppy place, and every per-world word | `apps/puppies/src/worlds.ts` |
+| Every world of a game side by side | `tools/sheet.mjs` |
 | Which engine world is which potato place, and every per-world word | `apps/potatoes/src/worlds.ts` |
 | Which scene draws | `components/FarmScene.tsx` / `MillScene.tsx` |
 | The fall half of an arrival cut | `render/crossing.ts`, `components/CutFall.tsx` |

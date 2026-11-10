@@ -22,6 +22,7 @@ import {
   KENNEL_HAND,
   NOTE,
   PACK_COATS,
+  FENCE_HOLE,
   PACK_POSES,
   PALLETS,
   POSE,
@@ -39,10 +40,6 @@ const W = SCENE_W;
 
 const INK = "#402e3a";
 const NIGHT = "#141630";
-
-/** Must match the flesh colours in `insideScene.ts`, or the sky omen promises the wrong thing. */
-const FLESH_LIT = "#ecd9a6";
-const FLESH_DEEP = "#7d5330";
 
 export interface MillView {
   working: Partial<Record<solo.SoloProducerId, number>>;
@@ -744,6 +741,7 @@ export class MillScene {
     this.drawChute(L);
     this.stepDrops(L, t);
     this.drawDrops(L, t);
+    this.drawWatcher(L, t);
     this.stepFetch(t, L);
     this.stepPack(dt, t, L);
     this.drawPack(L);
@@ -825,7 +823,6 @@ export class MillScene {
 
     this.drawWires(L, phase, t);
     this.drawSkyTraffic(L, t);
-    this.drawBleed(L, t);
   }
 
   /** A pole on the corner, two wires off it across the sky, and the pigeons that live on them. */
@@ -901,19 +898,32 @@ export class MillScene {
     }
   }
 
-  private drawBleed(L: Layout, t: number): void {
+  /**
+   * The only build-up the first gate gets: as it nears, one of them stops playing and sits facing
+   * the fence at the back of the lot, and the dirt beside it grows. Without it you buy a rung,
+   * nothing acknowledges it, and nine purchases later there is a tunnel nobody saw coming.
+   */
+  private drawWatcher(L: Layout, t: number): void {
     const looming = clamp(this.view.looming, 0, 1);
     if (looming <= 0) return;
     const ctx = this.ctx;
-    const pulse = 0.88 + 0.12 * Math.sin(t * 0.42);
-    const strength = Math.pow(looming, 0.55) * pulse;
-    const h = Math.max(1, L.skyBottom);
-    const grad = ctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, rgba(FLESH_LIT, 0.62 * strength));
-    grad.addColorStop(0.5, rgba(FLESH_DEEP, 0.2 * strength));
-    grad.addColorStop(1, rgba(FLESH_DEEP, 0));
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, h);
+    const foot = this.packBack(L) + 1;
+    const x = 112;
+    const fence = artCanvas(FENCE_HOLE);
+    const top = foot - fence.h;
+    ctx.drawImage(fence.canvas, x, top);
+    // Whole, until it nearly isn't.
+    if (looming < 0.85) {
+      ctx.fillStyle = "#9aa4ac";
+      for (let fy = 6; fy < 11; fy++) for (let fx = 3; fx < 13; fx++) if ((fx + fy) % 2 === 0) ctx.fillRect(x + fx, top + fy, 1, 1);
+    }
+    const heap = Math.round(1 + looming * 4);
+    for (let i = 0; i < heap; i++) {
+      ctx.fillStyle = i === heap - 1 ? "#b89668" : "#8a6a48";
+      ctx.fillRect(x + 16 + i, foot - 1 - i, (heap - i) * 2, 1);
+    }
+    const dog = artCanvas(PACK_POSES[0]![0]![POSE.sit + (Math.sin(t * 0.5) > 0.9 ? 1 : 0)]!);
+    ctx.drawImage(dog.canvas, x - 12, foot + 3 - dog.h);
   }
 
   // --- Façade and roof -------------------------------------------------------------
@@ -1056,7 +1066,7 @@ export class MillScene {
         if (this.chance(14)) this.puff(ROOM_L + Math.random() * (ROOM_R - ROOM_L), f.bottom - 1, "dust");
       }
       const paint = this.paintOf(f);
-      const wall = looming > 0 ? mix(paint.wall, FLESH_DEEP, looming * 0.3) : paint.wall;
+      const wall = paint.wall;
       ctx.fillStyle = wall;
       ctx.fillRect(0, f.top, W, FLOOR_H - SLAB_H - PLANE_H);
       ctx.fillStyle = paint.dado;
@@ -1129,7 +1139,7 @@ export class MillScene {
     if (!both) return;
     const ctx = this.ctx;
     const paint = f.kind === "works" ? LAB_PAINT : VOID_PAINT;
-    const wall = looming > 0 ? mix(paint.wall, FLESH_DEEP, looming * 0.3) : paint.wall;
+    const wall = paint.wall;
     ctx.fillStyle = wall;
     ctx.fillRect(SPLIT_X, f.top, ROOM_R - SPLIT_X + 1, FLOOR_H - SLAB_H - PLANE_H);
     ctx.fillStyle = paint.dado;

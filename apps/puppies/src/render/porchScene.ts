@@ -6,6 +6,7 @@
  * more of them there are.
  */
 
+import type { PackZone } from "./pack.js";
 import { LongScene, fillDisc, type Spot } from "./longScene.js";
 import { SCENE_W, clamp, mix, rgba } from "./millScene.js";
 
@@ -30,6 +31,12 @@ const WARM = "#ffd890";
 const FIREFLY = "#e8f080";
 
 export class PorchScene extends LongScene<PorchId> {
+  protected readonly first = "crumb" as const;
+
+  protected zone(): PackZone {
+    return { left: 2, right: SCENE_W - 2, back: Math.max(this.stripTop + 6, this.deck + 36), front: this.sh - 3, door: { x: 2, y: this.stripTop + 10 }, calm: 0.3 };
+  }
+
   private deck = 200;
   private doorRect = { x: 70, y: 100, w: 36, h: 100 };
   private moths: { a: number; r: number; light: number }[] = [];
@@ -37,16 +44,16 @@ export class PorchScene extends LongScene<PorchId> {
 
   protected layOut(r: () => number): void {
     const sh = this.sh;
-    const deck = (this.deck = Math.round(sh * 0.7));
-    const h = Math.round(sh * 0.4);
-    this.doorRect = { x: 70, y: deck - h, w: 36, h };
-    const step = (i: number) => deck + 7 + i * 10;
+    const deck = (this.deck = Math.round(sh * 0.56));
+    const h = 44;
+    this.doorRect = { x: 76, y: deck - h, w: 24, h };
+    const step = (i: number) => deck + 3 + i * 8;
     this.spots = {
       crumb: [{ x: 88, y: deck + 2 }, { x: 88, y: step(1) }, { x: 88, y: step(2) }, { x: 88, y: step(3) }],
       guest: [{ x: 32, y: deck - 12 }, { x: 150, y: deck - 12 }],
-      grace: [{ x: 62, y: deck - h + 2 }, { x: 114, y: deck - h + 2 }],
-      feast: [{ x: 56, y: deck + 1 }, { x: 122, y: deck + 1 }],
-      house: [{ x: 66, y: deck - 3 }, { x: 110, y: deck - 3 }, { x: 110, y: deck - 24 }],
+      grace: [{ x: 68, y: deck - h + 4 }, { x: 108, y: deck - h + 4 }],
+      feast: [{ x: 58, y: deck + 1 }, { x: 118, y: deck + 1 }],
+      house: [{ x: 72, y: deck - 3 }, { x: 104, y: deck - 3 }, { x: 104, y: deck - 24 }],
       whole: [{ x: 88, y: deck }],
     };
     this.moths = [];
@@ -57,9 +64,10 @@ export class PorchScene extends LongScene<PorchId> {
 
   protected backdrop(ctx: CanvasRenderingContext2D, condition: number): void {
     const { sh, deck, doorRect: d } = this;
-    const eaves = 26;
+    const top = Math.round(sh * 0.07);
+    const eaves = top + 16;
     for (let y = 0; y < sh; y++) {
-      ctx.fillStyle = mix(SKY_TOP, SKY_LOW, clamp((y - 10) / 80, 0, 1));
+      ctx.fillStyle = mix(SKY_TOP, SKY_LOW, clamp(y / (top + 70), 0, 1));
       ctx.fillRect(0, y, SCENE_W, 1);
     }
     // Clapboard: every board a line, shabbier the less it's kept.
@@ -73,22 +81,31 @@ export class PorchScene extends LongScene<PorchId> {
     ctx.fillRect(6, eaves, SCENE_W - 12, 14);
     // Roof and posts.
     ctx.fillStyle = ROOF;
-    ctx.fillRect(0, 10, SCENE_W, 16);
+    ctx.fillRect(0, top, SCENE_W, 16);
     ctx.fillStyle = "#6a4a54";
-    for (let y = 10; y < 26; y += 3) ctx.fillRect(0, y, SCENE_W, 1);
+    for (let y = top; y < eaves; y += 3) ctx.fillRect(0, y, SCENE_W, 1);
     ctx.fillStyle = TRIM;
-    ctx.fillRect(0, 26, SCENE_W, 3);
-    ctx.fillRect(4, 29, 4, deck - 29);
-    ctx.fillRect(SCENE_W - 8, 29, 4, deck - 29);
+    ctx.fillRect(0, eaves, SCENE_W, 3);
+    ctx.fillRect(4, eaves + 3, 4, deck - eaves - 3);
+    ctx.fillRect(SCENE_W - 8, eaves + 3, 4, deck - eaves - 3);
+    // Upstairs: three windows, and somebody has gone to bed in one of them.
+    for (const [i, wx] of [22, 78, 134].entries()) {
+      ctx.fillStyle = TRIM;
+      ctx.fillRect(wx - 2, eaves + 12, 24, 26);
+      ctx.fillStyle = i === 2 ? "#4a4868" : WARM;
+      ctx.fillRect(wx, eaves + 14, 20, 22);
+      ctx.fillStyle = TRIM;
+      ctx.fillRect(wx + 9, eaves + 14, 2, 22);
+    }
     // Two windows, lit.
     for (const wx of [18, 126]) {
       ctx.fillStyle = TRIM;
-      ctx.fillRect(wx - 2, deck - 74, 36, 50);
+      ctx.fillRect(wx - 2, deck - 52, 36, 36);
       ctx.fillStyle = WARM;
-      ctx.fillRect(wx, deck - 72, 32, 46);
+      ctx.fillRect(wx, deck - 50, 32, 32);
       ctx.fillStyle = TRIM;
-      ctx.fillRect(wx + 15, deck - 72, 2, 46);
-      ctx.fillRect(wx, deck - 50, 32, 2);
+      ctx.fillRect(wx + 15, deck - 50, 2, 32);
+      ctx.fillRect(wx, deck - 35, 32, 2);
     }
     // The rail either side of the steps.
     ctx.fillStyle = TRIM;
@@ -108,17 +125,17 @@ export class PorchScene extends LongScene<PorchId> {
     ctx.fillRect(0, deck + 6, SCENE_W, sh - deck - 6);
     ctx.fillStyle = LAWN_LOW;
     for (let y = deck + 8; y < sh; y += 3) for (let x = (y * 7) % 11; x < SCENE_W; x += 11) ctx.fillRect(x, y, 2, 1);
-    for (let i = 0; i < 4; i++) {
-      const y = deck + 6 + i * 10;
+    for (let i = 0; i < 3; i++) {
+      const y = deck + 6 + i * 8;
       ctx.fillStyle = STEP;
-      ctx.fillRect(58 - i * 4, y, 60 + i * 8, 7);
+      ctx.fillRect(62 - i * 4, y, 52 + i * 8, 5);
       ctx.fillStyle = STEP_LOW;
-      ctx.fillRect(58 - i * 4, y + 7, 60 + i * 8, 3);
+      ctx.fillRect(62 - i * 4, y + 5, 52 + i * 8, 3);
     }
     // The garden path, on down off the bottom.
     ctx.fillStyle = PATH;
-    for (let y = deck + 46; y < sh; y++) {
-      const left = Math.round(58 - (y - deck - 46) * 0.7);
+    for (let y = deck + 30; y < sh; y++) {
+      const left = Math.round(64 - (y - deck - 30) * 0.5);
       ctx.fillRect(left, y, (88 - left) * 2, 1);
     }
   }
@@ -144,10 +161,10 @@ export class PorchScene extends LongScene<PorchId> {
     ctx.fillStyle = rgba("#6a4a30", 0.55);
     ctx.save();
     ctx.beginPath();
-    ctx.rect(18, this.deck - 72, 32, 46);
+    ctx.rect(18, this.deck - 50, 32, 32);
     ctx.clip();
-    ctx.fillRect(x, this.deck - 54, 10, 30);
-    fillDisc(ctx, x + 5, this.deck - 59, 4, rgba("#6a4a30", 0.55));
+    ctx.fillRect(x, this.deck - 38, 8, 20);
+    fillDisc(ctx, x + 4, this.deck - 42, 3, rgba("#6a4a30", 0.55));
     ctx.restore();
   }
 

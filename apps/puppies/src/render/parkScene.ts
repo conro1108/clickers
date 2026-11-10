@@ -5,6 +5,7 @@
  * and the ball is up in the sky a long time. In the warm middle of it, flat out, the Sixth Chihuahua.
  */
 
+import type { PackZone } from "./pack.js";
 import { LongScene, fillDisc, type Spot } from "./longScene.js";
 import { SCENE_W, clamp, mix, rgba } from "./millScene.js";
 
@@ -29,6 +30,12 @@ interface Throw {
 }
 
 export class ParkScene extends LongScene<ParkId> {
+  protected readonly first = "loam" as const;
+
+  protected zone(): PackZone {
+    return { left: 2, right: SCENE_W - 2, back: this.stripTop + 6, front: this.sh - 3, door: { x: 2, y: this.stripTop + 10 } };
+  }
+
   private hz = 90;
   private clouds: (Spot & { w: number })[] = [];
   private throws: Throw[] = [];

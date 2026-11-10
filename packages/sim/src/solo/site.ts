@@ -8,7 +8,8 @@
  * are the same code path, and both are exact.
  */
 
-import { Y, ms, type Millis, type Yield } from "../numbers.js";
+import { Y, format, ms, type Millis, type Yield } from "../numbers.js";
+import { TERMS, THEME } from "../theme.js";
 import {
   LAND_BY_ID,
   MAX_CONDITION,
@@ -316,7 +317,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       const heirlooms = Math.max(0, Math.floor(cmd.heirlooms));
       if (heirlooms === 0) return fail("Nothing to grant.");
       site = { ...site, heirlooms: site.heirlooms + heirlooms };
-      note(`dev: granted ${heirlooms} Heirloom.`, "neutral");
+      note(`dev: granted ${heirlooms} ${TERMS.heirloom}.`, "neutral");
       break;
     }
 
@@ -359,7 +360,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       // more of the same. Buying a rung is otherwise silent, and it should stay
       // that way — this is the exception because nothing else told you.
       if (had === 0 && producer.id === CONVERGENCE_GATE_PRODUCER) {
-        note("the first `singularity` is running. the horizon looks wrong.", "neutral");
+        note(THEME.terms?.omen ?? "the first `singularity` is running. the horizon looks wrong.", "neutral");
       }
       // Its tier upgrades buy themselves if there's stock left; the rest wait in the shop.
       for (const u of autoUpgradesFor(site, producer.id)) {
@@ -390,7 +391,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       const opens = WORLDS[site.depth + 1] as Exclude<World, "outside"> | undefined;
       if (opens && upgrade.id === WORLD_GATE[opens]) {
         site = { ...site, depth: site.depth + 1, reached: Math.max(site.reached, site.depth + 1), world: opens };
-        note(ARRIVAL[opens], "good");
+        note(THEME.terms?.arrivals?.[opens] ?? ARRIVAL[opens], "good");
         note("nothing you built reaches this far. upkeep has what does.", "bad");
       }
       break;
@@ -423,10 +424,10 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
 
     case "restore_condition": {
       const cost = conditionRestoreCost(site);
-      if (cost <= 0) return fail("The condition is already fine.");
+      if (cost <= 0) return fail(`The ${TERMS.condition} is already fine.`);
       if (!spend(cost)) return fail("Not enough stock.");
       site = { ...site, condition: MAX_CONDITION };
-      note("put the condition right.", "good");
+      note(`put the ${TERMS.condition} right.`, "good");
       break;
     }
 
@@ -444,7 +445,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
         broken[prod.id] = 0;
       }
       site = { ...site, broken, condition: MAX_CONDITION };
-      const put = [mended > 0 ? `${mended}x broken kit` : "", tiredCondition ? "the condition" : ""].filter(
+      const put = [mended > 0 ? `${mended}x broken kit` : "", tiredCondition ? `the ${TERMS.condition}` : ""].filter(
         Boolean,
       );
       note(`put ${put.join(" and ")} right.`, "good");
@@ -460,7 +461,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       const cost = perkCost(perk, level);
       // Heirloom spent stop counting toward the output multiplier. That's the
       // whole trade, so it has to come out of the same number.
-      if (site.heirlooms < cost) return fail("Not enough Heirloom.");
+      if (site.heirlooms < cost) return fail(`Not enough ${TERMS.heirloom}.`);
       site = {
         ...site,
         heirlooms: site.heirlooms - cost,
@@ -482,7 +483,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       const earned = heirloomsFor(site.produced);
       if (earned <= 0) return fail("Nothing worth handing down yet.");
       site = resetForNextGeneration(site, earned, at);
-      note(`handed the site down. +${earned} Heirloom.`, "good");
+      note(`handed the ${TERMS.site} down. +${format(earned)} ${TERMS.heirloom}.`, "good");
       break;
     }
   }

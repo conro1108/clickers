@@ -5,8 +5,8 @@ import { producerArt, upgradePreview } from "../marks.js";
 import { PACK_POSES, POSE } from "../render/art.js";
 import { artUrl } from "../render/pixel.js";
 import { Row } from "./Row.js";
-import { WORLD_COPY, culprit, deepest } from "../worlds.js";
-import { Num } from "./Coin.js";
+import { WORLD_COPY, culprit, deepest, kept } from "../worlds.js";
+import { Coins, Num } from "./Coin.js";
 
 type BuyQty = 1 | 10 | 50 | 100;
 
@@ -62,7 +62,7 @@ function Convergence({
   world: Exclude<solo.World, "outside">;
 }) {
   const ur = solo.SOLO_UPGRADE_BY_ID[solo.WORLD_GATE[world]]!;
-  const line = WORLD_COPY[world].arrival?.waiting;
+  const line = WORLD_COPY[world].gateLine;
   const price = solo.upgradeCost(mill, ur);
   const affordable = Y.gte(budget, price);
   const held = Math.max(0, Math.min(1, budget / price));
@@ -114,7 +114,7 @@ export function GrowPanel({
   };
 
   // Once the tenth of a world's last rung stands, the gate waits at the bottom of the shop until you take it,
-  // so a world can be cleared before you leave it. The Ur-Chihuahua first, then the same at every world after.
+  // so a world can be cleared before you leave it. The tunnel first, then the same at every world after.
   const gate = solo.gatePending(mill);
   const gates: readonly string[] = Object.values(solo.WORLD_GATE);
 
@@ -212,7 +212,7 @@ function landEffect(mill: solo.SiteState, role: solo.LandRole): string {
     case "breakage":
       return `${pct}% less kit broken · never more than ${Math.round(solo.brokenCeiling(mill) * 100)}% down`;
     case "condition":
-      return `${pct}% less bedding lost · never below ${Math.round(solo.conditionFloor(mill) * 100)}%`;
+      return `${pct}% less ${kept(mill)} lost · never below ${Math.round(solo.conditionFloor(mill) * 100)}%`;
     case "frequency":
       return `Comes ${pct}% less often`;
     case "payout":
@@ -244,8 +244,8 @@ export function LandPanel({
       {(damaged.length > 0 || conditionBill > 0) && (
         <>
           <p className="hint">
-            Nothing here mends on its own. What the weather hurt stays hurt and tired bedding
-            stays tired until you spend on it — that's what {culprit(mill)}{" "}
+            Nothing here mends on its own. What the weather hurt stays hurt and worn {kept(mill)}{" "}
+            stays worn until you spend on it — that's what {culprit(mill)}{" "}
             actually costs.
           </p>
           {jobs > 1 && (
@@ -255,10 +255,10 @@ export function LandPanel({
                 name="Put everything right"
                 blurb={`${
                   brokenHere > 0 && conditionBill > 0
-                    ? `${brokenHere} broken and the bedding`
+                    ? `${brokenHere} broken and the ${kept(mill)}`
                     : brokenHere > 0
                       ? `${brokenHere} broken`
-                      : "the bedding"
+                      : `the ${kept(mill)}`
                 } · restores +${format(backHere)}/s`}
                 cost={format(bill)}
                 affordable={Y.gte(budget, bill)}
@@ -270,7 +270,7 @@ export function LandPanel({
             {conditionBill > 0 && (
               <Row
                 accent="row-repair"
-                name="Restore the bedding"
+                name={`Restore the ${kept(mill)}`}
                 blurb={`Back to 100% from ${Math.round(mill.condition * 100)}% · restores +${format(
                   solo.conditionLossRate(mill),
                 )}/s`}
@@ -336,6 +336,9 @@ export function LandPanel({
   );
 }
 
+// A multiplier: two decimals while small, the game's compact form once it passes a thousand.
+const mult = (n: number) => (n < 1000 ? n.toFixed(2) : format(n));
+
 export function LegacyPanel({
   mill,
   now,
@@ -356,8 +359,8 @@ export function LegacyPanel({
     <>
       <div className="legacy-head">
         <div>
-          <div className="legacy-value">{mill.heirlooms}</div>
-          <div className="muted small">Pedigree Paper · ×{multNow.toFixed(2)} output</div>
+          <div className="legacy-value"><Num n={mill.heirlooms} /></div>
+          <div className="muted small">Pedigree Paper · <Coins text={`×${mult(multNow)} output`} /></div>
         </div>
         {/* This run's output is what `pendingHeirlooms` is computed from, so it
             reads here rather than in a ledger somewhere else — the number and
@@ -371,13 +374,13 @@ export function LegacyPanel({
       </div>
 
       <p className="hint">
-        Pedigree do two jobs, and you can't have both. Held, every paper makes this mill and every
+        Papers do two jobs, and you can't have both. Held, every paper makes this mill and every
         mill after it produce more. Spent, they buy something permanent. Same choice as everything
         else here — one pile, competing uses.
       </p>
       {mill.reached >= 5 && (
         <p className="hint">
-          Past the first fire, prices rise with everything your papers and generations have bought
+          Past the fire, prices rise with everything your papers and generations have bought
           you. Holding more still helps up there, but only just.
         </p>
       )}
@@ -397,28 +400,26 @@ export function LegacyPanel({
       {mill.depth >= 1 && (
         <p className="hint">
           Every door you've opened closes behind a hand-down. The next generation starts in the
-          yard and works its way back in — faster, for the papers.
+          yard and digs its way out again — faster, for the papers.
         </p>
       )}
 
       <div className="rows">
         <Row
           accent="row-upgrade"
-          name={pending > 0 ? `Hand the mill down — +${pending} paper` : "Hand the mill down"}
+          name="Hand the mill down"
           blurb={
             pending > 0
-              ? `Clears everything this generation built. Output goes ×${multNow.toFixed(
-                  2,
-                )} → ×${multAfter.toFixed(2)}.${mill.depth >= 1 ? " Every door closes." : ""}`
+              ? `Clears everything this generation built. Output goes ×${mult(multNow)} → ×${mult(multAfter)}.${mill.depth >= 1 ? " Every door closes." : ""}`
               : "Not worth doing yet — grow this generation further first."
           }
-          cost={pending > 0 ? `+${pending}` : "—"}
+          cost={pending > 0 ? `+${format(pending)} paper` : "—"}
           affordable={pending > 0}
           onBuy={() => {
             const where = mill.depth >= 1 ? " Everything past the yard closes until you reach it again." : "";
             if (
               window.confirm(
-                `Hand the mill down? Everything this generation built is cleared.${where}`,
+                `Hand the mill down for +${format(pending)} paper? Everything this generation built is cleared.${where}`,
               )
             ) {
               dispatch({ type: "prestige" });
@@ -438,7 +439,7 @@ export function LegacyPanel({
               accent="row-defend"
               name={`${perk.name}${level ? ` ×${level}` : ""}`}
               blurb={maxed ? "Fully grown." : perk.blurb}
-              cost={maxed ? "—" : `${cost} paper`}
+              cost={maxed ? "—" : `${format(cost)} paper`}
               affordable={!maxed && mill.heirlooms >= cost}
               onBuy={() => dispatch({ type: "buy_perk", perk: perk.id })}
             />

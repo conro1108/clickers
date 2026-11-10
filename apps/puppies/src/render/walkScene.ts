@@ -5,13 +5,14 @@
  * top somebody is carrying the Seventh Chihuahua. Every so often there's a whistle from up there.
  */
 
+import type { PackZone } from "./pack.js";
 import { LongScene, fillDisc, type Spot } from "./longScene.js";
 import { SCENE_W, clamp, mix, rgba } from "./millScene.js";
 
 type WalkId = "flame" | "servant" | "lid" | "broth" | "heirs" | "seventh";
 
-const SKY_TOP = "#0e1230";
-const SKY_LOW = "#34406e";
+const SKY_TOP = "#1a1c48";
+const SKY_LOW = "#b0708a";
 const MOON = "#f0ecd0";
 const FAR_HILL = "#1e2a4e";
 const HILL_HI = "#2e4a5a";
@@ -26,6 +27,12 @@ const STAR = "#c8c8ff";
 const PATH_TOP = 0.68;
 
 export class WalkScene extends LongScene<WalkId> {
+  protected readonly first = "flame" as const;
+
+  protected zone(): PackZone {
+    return { left: 2, right: SCENE_W - 2, back: this.stripTop + 6, front: this.sh - 3, door: { x: 2, y: this.stripTop + 10 } };
+  }
+
   private path: Spot[] = [];
   private stars: Spot[] = [];
   private rims: number[] = [];
@@ -117,10 +124,12 @@ export class WalkScene extends LongScene<WalkId> {
     // The house, that far up: a roof, and one lit window.
     const { x, y } = this.lamp;
     ctx.fillStyle = "#0e1020";
-    ctx.fillRect(x - 5, y - 5, 10, 7);
-    for (let i = 0; i < 6; i++) ctx.fillRect(x - 6 + i, y - 5 - i, 12 - i * 2, 1);
+    ctx.fillRect(x - 9, y - 9, 18, 11);
+    for (let i = 0; i < 9; i++) ctx.fillRect(x - 11 + i, y - 9 - i, 22 - i * 2, 1);
+    ctx.fillRect(x + 4, y - 20, 2, 6);
     ctx.fillStyle = LIGHT;
-    ctx.fillRect(x - 1, y - 3, 2, 2);
+    ctx.fillRect(x - 6, y - 6, 3, 3);
+    ctx.fillRect(x + 2, y - 5, 3, 5);
   }
 
   protected scene(t: number): void {
@@ -166,7 +175,7 @@ export class WalkScene extends LongScene<WalkId> {
 
   private drawWalkers(t: number): void {
     this.each("servant", (_, i, broken, s) => {
-      if (!broken) this.walkers[i] = this.walkers[i]! + 0.0035 * this.dt;
+      if (!broken) this.walkers[i] = this.walkers[i]! + 0.014 * this.dt;
       if (this.walkers[i]! > PATH_TOP) this.walkers[i] = 0.02;
       const u = this.walkers[i]!;
       const p = this.on(u);

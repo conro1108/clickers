@@ -389,6 +389,9 @@ export function LandPanel({
   );
 }
 
+// A multiplier: two decimals while small, the game's compact form once it passes a thousand.
+const mult = (n: number) => (n < 1000 ? n.toFixed(2) : format(n));
+
 export function LegacyPanel({
   farm,
   now,
@@ -409,8 +412,8 @@ export function LegacyPanel({
     <>
       <div className="legacy-head">
         <div>
-          <div className="legacy-value">{farm.heirlooms}</div>
-          <div className="muted small">Heirloom Seed · ×{multNow.toFixed(2)} output</div>
+          <div className="legacy-value"><Num n={farm.heirlooms} /></div>
+          <div className="muted small">Heirloom Seed · <Coins text={`×${mult(multNow)} output`} /></div>
         </div>
         {/* This run's harvest is what `pendingHeirlooms` is computed from, so it
             reads here rather than in a ledger somewhere else — the number and
@@ -457,21 +460,19 @@ export function LegacyPanel({
       <div className="rows">
         <Row
           accent="row-upgrade"
-          name={pending > 0 ? `Hand the farm down — +${pending} seed` : "Hand the farm down"}
+          name="Hand the farm down"
           blurb={
             pending > 0
-              ? `Clears everything this generation built. Output goes ×${multNow.toFixed(
-                  2,
-                )} → ×${multAfter.toFixed(2)}.${farm.depth >= 1 ? " Every door closes." : ""}`
+              ? `Clears everything this generation built. Output goes ×${mult(multNow)} → ×${mult(multAfter)}.${farm.depth >= 1 ? " Every door closes." : ""}`
               : "Not worth doing yet — grow this generation further first."
           }
-          cost={pending > 0 ? `+${pending}` : "—"}
+          cost={pending > 0 ? `+${format(pending)} seed` : "—"}
           affordable={pending > 0}
           onBuy={() => {
             const where = farm.depth >= 1 ? " Every world past the sky closes until you reach it again." : "";
             if (
               window.confirm(
-                `Hand the farm down? Everything this generation built is cleared.${where}`,
+                `Hand the farm down for +${format(pending)} seed? Everything this generation built is cleared.${where}`,
               )
             ) {
               dispatch({ type: "prestige" });
@@ -491,7 +492,7 @@ export function LegacyPanel({
               accent="row-defend"
               name={`${perk.name}${level ? ` ×${level}` : ""}`}
               blurb={maxed ? "Fully grown." : perk.blurb}
-              cost={maxed ? "—" : `${cost} seed`}
+              cost={maxed ? "—" : `${format(cost)} seed`}
               affordable={!maxed && farm.heirlooms >= cost}
               onBuy={() => dispatch({ type: "buy_perk", perk: perk.id })}
             />

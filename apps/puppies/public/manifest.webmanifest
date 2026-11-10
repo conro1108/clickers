@@ -1,7 +1,7 @@
 {
   "name": "Puppy Mill",
   "short_name": "Puppy Mill",
-  "description": "Breed chihuahuas. The weather will have opinions about that.",
+  "description": "Breed chihuahuas. They have had another idea.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

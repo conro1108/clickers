@@ -69,8 +69,6 @@ export const ICONS = {
     palette: { k: K, b: "#b07c42", l: "#d6a86a" },
   },
 
-
-
   house: {
     rows: [
       ".....kk.....",
@@ -500,145 +498,118 @@ export const SINGULARITY: Art = {
   palette: { p: "#8a6ad0", v: "#5b3fa0", n: "#1c1428" },
 };
 
-// --- Above the fold — the tiers that work the nest you're inside ---
-// Drawn against the nest's creams and tans, so cool and hard-edged where everything else in here is soft.
+// --- The tunnel — what the dig under the yard is made of ---
 
-/** A press standing over the fold of hem it has worked open. */
+/** A scrape: a shallow start under the back of a pen, and what came out of it. */
 export const HEM_HOLLOW: Art = {
   rows: [
+    "...........",
+    "...........",
+    "....ddd....",
+    "..ddllldd..",
+    ".dlllllldd.",
+    "kkkkkkkkkkk",
+    "kdnnnnnnndk",
+    "kdnnnnnnndk",
+    ".kdnnnnndk.",
     "..kkkkkkk..",
-    "..kmmmmmk..",
-    "...kmmmk...",
-    "...kmmmk...",
-    "kkkkkkkkkkk",
-    "kmmmmmmmmmk",
-    "kkkkkkkkkkk",
-    ".kdddddddk.",
-    "kdswwwwwsdk",
-    ".kkkkkkkkk.",
   ],
-  palette: { k: K, m: "#8d959d", d: "#4a3a44", s: "#8a7a86", w: "#f4ecd8" },
+  palette: { k: K, d: "#8a6a48", l: "#b89668", n: "#1c1218" },
 };
 
-/** A wellhead with the shaft running off the bottom of the world. */
+/** The air line: kibble tins, end to end, back to the pens. */
 export const DOWN_WELL: Art = {
   rows: [
     "...kkkk...",
     "..kmmmmk..",
     "..kmggmk..",
-    ".kkmmmmkk.",
-    ".kmmmmmmk.",
-    "kkmmmmmmkk",
-    "km.kkkk.mk",
-    "km.khhk.mk",
-    "km.khhk.mk",
-    "kmmkhhkmmk",
-    "kkkkhhkkkk",
-    "...khhk...",
-    "...khhk...",
-    "...khhk...",
+    "..kmmmmk..",
+    "...kkkk...",
+    "...kmmk...",
+    "..kkkkkk..",
+    "..kmmmmk..",
+    "..kkkkkk..",
+    "...kmmk...",
+    "..kkkkkk..",
+    "..kmmmmk..",
+    "..kkkkkk..",
+    "...kmmk...",
   ],
-  palette: { k: K, m: "#8d959d", g: "#ffb454", h: "#5b3f2c" },
+  palette: { k: K, m: "#a8b0b8", g: "#6ab8e0", h: "#8a6a48" },
 };
 
-/** One of the other yous. */
+/** One of the howl: nose up, covering the noise. Pale, because most of them dug here generations ago. */
 export const CHORUS_FIGURE: Art = {
   rows: [
-    "...a...",
-    "..ttt..",
-    ".ttttt.",
-    "..fff..",
-    "..fef..",
-    "..fff..",
-    ".bbbbb.",
-    "bbbbbbb",
-    ".bbbbb.",
-    ".b...b.",
-    ".v...v.",
+    "...n...",
+    "..mmm..",
+    "..mmm..",
+    "p.ppp.p",
+    "ppppppp",
+    ".ppppp.",
+    ".ppppp.",
+    "ppppppp",
+    ".ppppp.",
+    ".p...p.",
+    ".p...p.",
     ".k...k.",
   ],
-  palette: {
-    k: "#6a5c7a",
-    a: "#e6dcef",
-    t: "#b9a8cc",
-    f: "#d8cde4",
-    e: "#4a3f5c",
-    b: "#8f7fb0",
-    v: "#6a5c7a",
-  },
+  palette: { k: "#6a5c7a", p: "#b9a8cc", m: "#e6dcef", n: "#4a3f5c", b: "#b9a8cc", t: "#b9a8cc", a: "#e6dcef" },
 };
 
-/** An eye, opened. */
-export const EYE: Art = {
-  rows: [
-    "...ss.s...",
-    "..sksks...",
-    "...ksk....",
-    ".kkkkkkkk.",
-    "khhhhhhhhk",
-    "khhwwwwhhk",
-    "khwwiiwwhk",
-    "khwwinwwhk",
-    "khhwwwwhhk",
-    "khhhhhhhhk",
-    ".kkkkkkkk.",
-    "..k....k..",
-  ],
-  palette: { k: K, h: "#a8703c", w: "#e8d3a0", i: "#6f4a8f", n: "#241830", s: "#7fc45a" },
-};
 
-/** Two benches cut into a face of packed fleece, with the undercut under them. */
+/** A prop: slats out of the whelping boxes, holding the roof up. */
 export const FLEECE_FACE: Art = {
   rows: [
-    "...kkkkkkkkk.",
-    "...kwwwwwwwk.",
-    "...kwsswwwwk.",
-    "kkkkkwwwwwwk.",
-    "kwwwwwwwwwwk.",
-    "kwsswwwwwwwk.",
-    "kwwwwwwwwwwk.",
-    "kdddddddddddk",
     "kkkkkkkkkkkkk",
+    "kwwwwwwwwwwwk",
+    "kkkkkkkkkkkkk",
+    ".kwk.....kwk.",
+    ".kwk.....kwk.",
+    ".kwk.....kwk.",
+    ".kwk.....kwk.",
+    ".kwk.....kwk.",
+    ".kkk.....kkk.",
   ],
-  palette: { k: K, w: "#e6dcc0", s: "#f7f1dc", d: "#2c1d14" },
+  palette: { k: K, w: "#e6d2a0", s: "#f7f1dc" },
 };
 
-/** A tapped seam. */
+/** The trolley: a feed tray on a string. Spoil goes back, dogs go forward. */
 export const SEAM_MAIN: Art = {
   rows: [
-    "..kvvk....",
-    "..kvvk....",
-    ".kkvvkk...",
-    "kmmmmmmk..",
-    "kmsggsmk..",
-    "kmmmmmmk..",
-    ".kkvvkk...",
-    "..kvvkk...",
-    "...kvvk...",
-    "...kvvk...",
-    "..kkvvkk..",
-    "..kvvvvk..",
+    "....kk....",
+    "....kk....",
+    "....kk....",
+    "....kk....",
     "...kkkk...",
+    "..k....k..",
+    ".k......k.",
+    "kkkkkkkkkk",
+    "kmddddddmk",
+    "kmmmmmmmmk",
+    "kkkkkkkkkk",
+    ".o......o.",
+    "..........",
   ],
-  palette: { k: K, v: "#8f5e8a", m: "#8d959d", s: "#5f6870", g: "#e0a8dc" },
+  palette: { k: K, m: "#a8b0b8", d: "#8a6a48", o: "#2a2228", v: "#8a6a48", g: "#b89668", s: "#7f8891" },
 };
 
-/** The warm spot, opened at the core and propped so it can't close again. */
+/** The den: a wide spot lined with what's left of a blanket, and somebody asleep in it. */
 export const WARM_HEART: Art = {
   rows: [
     "...kkkkkk...",
-    ".kkfllllfkk.",
-    ".kflnnnnlfk.",
-    "kflnnnnnnlfk",
-    "kflnsnnnnlfk",
-    "kflnnnnsnlfk",
-    "kflnnnnnnlfk",
-    ".kflnnnnlfk.",
-    ".kkfllllfkk.",
+    ".kkddddddkk.",
+    ".kdnnnnnndk.",
+    "kdnnnnnnnndk",
+    "kdnnnnnnnndk",
+    "kdnnpppnnndk",
+    "kdnpppppnndk",
+    ".kbbbbbbbbk.",
+    ".kkbbbbbbkk.",
     "...kkkkkk...",
     "...k....k...",
   ],
-  palette: { k: K, f: "#8a4a52", l: "#c98b6a", n: "#2a1520", s: "#e8c39c" },
+  palette: { k: K, d: "#8a6a48", n: "#2a1520", p: "#c98b4b", b: "#a8c0d8", f: "#8a6a48", l: "#b89668" },
 };
 
 /** The last rung, curled where the sun used to be. */
@@ -661,40 +632,40 @@ export const SECOND_CHIHUAHUA: Art = {
   palette: { k: K, ...PUPPY, w: "#f2e3c8" },
 };
 
-/** One of the shaft crew. */
+/** A digger: a dog on its hind legs with a lamp on, which is how you know whose side the picture is on now. */
 export const SHAFT_CREW: Art = {
   rows: [
-    "..ttt..",
-    ".tltttt",
-    "..fff..",
-    "..fef..",
-    "..fff..",
-    ".bbbbb.",
-    "bbbbbbb",
-    ".bbbbb.",
-    ".b...b.",
-    ".v...v.",
+    "..tlt..",
+    ".ttttt.",
+    "pptttpp",
+    ".pepep.",
+    ".ppmpp.",
+    "..pmp..",
+    ".ppppp.",
+    "ppppppp",
+    ".ppppp.",
+    ".p...p.",
     ".k...k.",
   ],
-  palette: { k: K, t: "#d8892c", l: "#fff4c0", f: "#e8bb8e", e: K, b: "#6a5c7a", v: "#4d4148" },
+  palette: { k: K, t: "#d8892c", l: "#fff4c0", p: "#c98b4b", m: "#f4e6cc", e: K, b: "#c98b4b", v: K },
 };
 
-/** The same figure with both arms up: on the ladder, or swinging at a face. */
+/** The same digger with both paws up: on the ladder, or at the face. */
 export const SHAFT_CREW_UP: Art = {
   rows: [
-    "b.ttt.b",
-    "btltttb",
-    "b.fff.b",
-    "b.fef.b",
-    ".bfffb.",
-    ".bbbbb.",
-    ".bbbbb.",
-    ".bbbbb.",
-    ".b...b.",
-    ".v...v.",
+    "p.tlt.p",
+    "ptttttp",
+    "pptttpp",
+    ".pepep.",
+    ".ppmpp.",
+    "..pmp..",
+    ".ppppp.",
+    ".ppppp.",
+    ".ppppp.",
+    ".p...p.",
     ".k...k.",
   ],
-  palette: { k: K, t: "#d8892c", l: "#fff4c0", f: "#e8bb8e", e: K, b: "#6a5c7a", v: "#4d4148" },
+  palette: { k: K, t: "#d8892c", l: "#fff4c0", p: "#c98b4b", m: "#f4e6cc", e: K },
 };
 
 /** The hoist cage, empty. */
@@ -1120,149 +1091,6 @@ const SINGULARITY_4: Art = {
   palette: { p: "#e0c04a", v: "#a8792c", n: "#120c1c", y: "#fff0b8" },
 };
 
-/** It Stops Minding: the hem has stopped closing back up. It just gives. */
-const HEM_HOLLOW_4: Art = {
-  rows: [
-    "..kkkkkkk..",
-    "..kmmmmmk..",
-    "...kmmmk...",
-    "kkkkkkkkkkk",
-    "kmmmmmmmmmk",
-    "kkkkkkkkkkk",
-    ".kdwwwwwdk.",
-    "kdwwwwwwwdk",
-    "kdwwwwwwwdk",
-    ".kkkkkkkkk.",
-  ],
-  palette: { k: K, m: "#e2e8ee", d: "#8a7a86", w: "#fffaf0" },
-};
-
-/** Core Breach: a derrick over the wellhead, and it's venting flame. */
-const DOWN_WELL_4: Art = {
-  rows: [
-    "....gg....",
-    "...gkkg...",
-    "..k.mm.k..",
-    "..km..mk..",
-    ".km.gg.mk.",
-    ".km.gg.mk.",
-    "kmmmmmmmmk",
-    "kkmmmmmmkk",
-    "km.kkkk.mk",
-    "km.khhk.mk",
-    "km.khhk.mk",
-    "kmmkhhkmmk",
-    "kkkkhhkkkk",
-    "...khhk...",
-    "...khhk...",
-    "...khhk...",
-    "...khhk...",
-  ],
-  palette: { k: K, m: "#e2e8ee", g: "#ff9a3c", h: "#c94a2c" },
-};
-
-/** All At Once: the same you, lit from inside, with the rest of them behind it. */
-const CHORUS_FIGURE_4: Art = {
-  rows: [
-    "..aaa..",
-    ".a...a.",
-    "..ttt..",
-    ".ttttt.",
-    "..fff..",
-    "..fef..",
-    "..fff..",
-    ".bbbbb.",
-    "bbbbbbb",
-    ".bbbbb.",
-    ".b...b.",
-    ".v...v.",
-    ".k...k.",
-  ],
-  palette: {
-    k: "#8a7a4a",
-    a: "#fff4c0",
-    t: "#e6d68a",
-    f: "#f4ecd0",
-    e: "#6a5c3a",
-    b: "#d8c060",
-    v: "#8a7a4a",
-  },
-};
-
-/** They Live Down Here Now: two lamps, a full kit, and they've stopped looking up. */
-const LINT_HAND_4: Art = {
-  rows: [
-    "..ttt..",
-    ".tlttl.",
-    "..fff..",
-    "..fef..",
-    ".bfffb.",
-    "bbbbbbb",
-    "bbbbbbb",
-    ".bbbbb.",
-    ".b...b.",
-    ".v...v.",
-    ".k...k.",
-  ],
-  palette: { k: K, t: "#e0c04a", l: "#fff4c0", f: "#e8bb8e", e: K, b: "#7a5ac0", v: "#4d4148" },
-};
-
-/** The Seam Goes Down: the cut face has become a shaft with a headframe. */
-const FLEECE_FACE_4: Art = {
-  rows: [
-    "....kmmmmk...",
-    "....kmssmk...",
-    "...kkmmmmkk..",
-    "...kwwwwwwk..",
-    "kkkkkwwwwwwk.",
-    "kwwwwwwsswwk.",
-    "kwsswwwwwwwk.",
-    "kwwwwwwwwwwk.",
-    "kdddddddddddk",
-    "kkkkkkkkkkkkk",
-  ],
-  palette: { k: K, w: "#f4ecd0", s: "#ffffff", d: "#2c1d14", m: "#e2e8ee" },
-};
-
-/** The Whole Seam: three clamps on a seam that has split to feed them. */
-const SEAM_MAIN_4: Art = {
-  rows: [
-    "..kvvk....",
-    ".kkvvkk...",
-    "kmmmmmmk..",
-    "kmsggsmk..",
-    "kmmmmmmk..",
-    ".kvvvvk...",
-    "kkvvkkvvk.",
-    "kmmk..kmmk",
-    "kmgk..kgmk",
-    "kmmk..kmmk",
-    ".kvk..kvk.",
-    ".kvvkkvvk.",
-    "..kvvvvk..",
-    "...kkkk...",
-  ],
-  palette: { k: K, v: "#c48ac0", m: "#e2e8ee", s: "#8d959d", g: "#ffd166" },
-};
-
-/** It Was Always Warm: the hollow has stopped being dark. Something in it is lit. */
-const WARM_HEART_4: Art = {
-  rows: [
-    "...kkkkkk...",
-    ".kkflllofkk.",
-    ".kflonnolfk.",
-    "kflonoonolfk",
-    "kflonoooolfk",
-    "kfloooooolfk",
-    "kflonoooolfk",
-    ".kflonoolfk.",
-    ".kkfollofkk.",
-    "...kkkkkk...",
-    "...k....k...",
-  ],
-  palette: { k: K, f: "#a8657a", l: "#e8c39c", n: "#2a1520", o: "#ffd166" },
-};
-
 /** It's Awake: the eyes opened. Nothing else about the sprite had to change. */
 const SECOND_CHIHUAHUA_4: Art = {
   rows: [
@@ -1551,210 +1379,7 @@ export const GLYPHS: Readonly<Record<string, readonly string[]>> = {
   " ": ["...", "...", "...", "...", "..."],
 };
 
-// --- Beyond — the dream the Second Chihuahua is having ---
-// Moonlit and cool: everything out here is the colour of a lawn at three in the morning.
-
-const DREAM_K = "#3a3a6a";
-
-/** A kennel the way a dog remembers one: pale, and with the door always open. */
-export const ECHO_KENNEL: Art = {
-  rows: [
-    "....kkk....",
-    "...kaaak...",
-    "..kaaaaak..",
-    ".kaaaaaaak.",
-    "kkkkkkkkkkk",
-    ".kbbbbbbbk.",
-    ".kbbkkkbbk.",
-    ".kbknnnkbk.",
-    ".kbknnnkbk.",
-    ".kkkkkkkkk.",
-  ],
-  palette: { k: DREAM_K, a: "#9fb4e6", b: "#c8d6f4", n: "#141430" },
-};
-
-const ECHO_KENNEL_4: Art = {
-  rows: [
-    "....kkk....",
-    "...kaaak...",
-    "..kaaaaak..",
-    ".kkkkkkkkk.",
-    ".kbbbybbbk.",
-    ".kbbbbbbbk.",
-    "kkkkkkkkkkk",
-    ".kbbkkkbbk.",
-    ".kbknnnkbk.",
-    ".kbknnnkbk.",
-    ".kkkkkkkkk.",
-  ],
-  palette: { ...ECHO_KENNEL.palette, y: "#ffe9a8" },
-};
-
-/** Somebody with a ball. Seen from knee height, which is mostly legs. */
-export const THROWER: Art = {
-  rows: [
-    ".....o.",
-    "..hh.k.",
-    "..ff.k.",
-    ".bbbbk.",
-    "kbbbb..",
-    ".bbbb..",
-    ".bbbb..",
-    ".ll.ll.",
-    ".ll.ll.",
-    ".ll.ll.",
-    ".ll.ll.",
-    ".kk.kk.",
-  ],
-  palette: { k: DREAM_K, o: "#ffd166", h: "#5a4060", f: "#e8c8a8", b: "#7f9fd8", l: "#4a4a80" },
-};
-
-const THROWER_4: Art = {
-  rows: [
-    "o.....o",
-    "k.hh.k.",
-    ".kffk..",
-    "..bbb..",
-    ".bbbbb.",
-    ".bbbbb.",
-    ".ll.ll.",
-    ".ll.ll.",
-    ".ll.ll.",
-    ".ll.ll.",
-    ".ll.ll.",
-    ".kk.kk.",
-  ],
-  palette: THROWER.palette,
-};
-
-/** A tree that is mostly sticks, which is what trees are for. */
-export const STICK_TREE: Art = {
-  rows: [
-    "...ggggg...",
-    ".ggglgggg..",
-    "gggggggglgg",
-    "ggglggggggg",
-    ".gggggggg..",
-    "...gstg....",
-    "....t..s...",
-    "....t......",
-    "....t......",
-    "...ttt.....",
-  ],
-  palette: { g: "#3f6a7a", l: "#7fb8c8", t: "#6a4a3a", s: "#8a6a4a" },
-};
-
-const STICK_TREE_4: Art = {
-  rows: [
-    "..ggggggg..",
-    ".ggggglgggg",
-    "ggglggggggg",
-    "ggggggggglg",
-    "gggggggggg.",
-    ".ggggggggg.",
-    "...gtgt.g..",
-    "....t.r....",
-    "....t.r....",
-    "....trrr...",
-    "....trrr...",
-    "...ttt.....",
-  ],
-  palette: { ...STICK_TREE.palette, r: "#2a2a3a" },
-};
-
-/** A puddle with the moon in it. */
-export const MOON_PUDDLE: Art = {
-  rows: [
-    "..kkkkkkkk..",
-    ".kwwwmwwwwk.",
-    "kwwwmmmwwwwk",
-    ".kwwwmwwwwk.",
-    "..kkkkkkkk..",
-  ],
-  palette: { k: "#22304a", w: "#3a5a9a", m: "#e8eefc" },
-};
-
-const MOON_PUDDLE_4: Art = {
-  rows: [
-    "......n.....",
-    "......n.....",
-    "..kkkknkkk..",
-    ".kwwwwnmwwk.",
-    "kwwwwmnmmwwk",
-    ".kwwwwnmwwk.",
-    "..kkkkkkkk..",
-  ],
-  palette: { ...MOON_PUDDLE.palette, n: "#8a6a4a" },
-};
-
-/** A porch light on a post. Somebody always leaves it on. */
-export const PORCH_LIGHT: Art = {
-  rows: [
-    "..kkk..",
-    ".kyyyk.",
-    ".kyyyk.",
-    "..kkk..",
-    "...p...",
-    "...p...",
-    "...p...",
-    "...p...",
-    "...p...",
-    "...p...",
-    "...p...",
-    "..ppp..",
-    ".kkkkk.",
-  ],
-  palette: { k: "#2a2238", y: "#ffe08a", p: "#5a4a5a" },
-};
-
-const PORCH_LIGHT_4: Art = {
-  rows: [
-    "kkk.kkk",
-    "kyk.kyk",
-    "kkk.kkk",
-    ".ppppp.",
-    "...p...",
-    "...p...",
-    "...p...",
-    "...p...",
-    "...p...",
-    "...p...",
-    "...p...",
-    "..ppp..",
-    ".kkkkk.",
-  ],
-  palette: PORCH_LIGHT.palette,
-};
-
-/** The last rung: a small moon, curled up. */
-export const MOON_DOG: Art = {
-  rows: [
-    ".k...k....",
-    "kmk.kmk...",
-    "kmmkmmmkk.",
-    "kmemmmmmmk",
-    ".kmmmmmmmk",
-    "..kmmmmddk",
-    "...kkkkkk.",
-  ],
-  palette: { k: "#6a6a9a", m: "#f4f0dc", d: "#c8c0a0", e: DREAM_K },
-};
-
-const MOON_DOG_4: Art = {
-  rows: [
-    "y........y",
-    ".k...k....",
-    "kmk.kmk.y.",
-    "kmmkmmmkk.",
-    "kmemmmmmmk",
-    ".kmmmmmmmk",
-    "..kmmmmddk",
-    "y..kkkkkk.",
-  ],
-  palette: { ...MOON_DOG.palette, y: "#ffe9a8" },
-};
-
-// --- Origin — the first morning, the first fire, the first dog ---
+// --- The fire — a camp at the edge of the woods, at dawn ---
 // Firelit and old: ochre, ash and wolf-grey, the warmest palette in the game.
 
 const OR_K = "#2a2018";
@@ -1811,25 +1436,6 @@ export const FIRE_KEEPER: Art = {
   palette: { h: "#3a2a20", f: "#c89070", p: "#8a6a4a", P: "#b08a5a", s: "#6a4a30", l: "#5a4030", k: OR_K },
 };
 
-/** An elder in an antler crown, carrying a pup nobody else would pick up. */
-const FIRE_KEEPER_4: Art = {
-  rows: [
-    "a.....a",
-    "aa...aa",
-    ".ahhha.",
-    ".hfffh.",
-    "..fff..",
-    ".PpPpP.",
-    "PpwwwpP",
-    "pPwwwPp",
-    ".pPpPp.",
-    ".ppppp.",
-    ".ll.ll.",
-    ".ll.ll.",
-    ".kk.kk.",
-  ],
-  palette: { ...FIRE_KEEPER.palette, a: "#d8c8a8", w: "#9a9aa0" },
-};
 
 /** Thrown just past the light, on purpose. */
 export const BONE_PILE: Art = {
@@ -1890,38 +1496,6 @@ const COLD_SPRING_4: Art = {
   palette: { ...COLD_SPRING.palette, c: "#c8642c" },
 };
 
-/** A rock face with a dog on it in ochre, and a hand next to it to say who. */
-export const PAINTED_CAVE: Art = {
-  rows: [
-    "...rrrrrrr...",
-    ".rrRrrrrrRrr.",
-    "rrrorrrrhrrrr",
-    "rrooooorrrrrr",
-    "rrorrorrrrrrr",
-    "rrrrrrrrrrrrr",
-    "rrrrrnnnrrrrr",
-    "rrrrnnnnnrrrr",
-    "rrrnnnnnnnrrr",
-  ],
-  palette: { r: "#7a6a5a", R: "#a09080", o: "#c8642c", h: "#e8a060", n: "#1e1612" },
-};
-
-/** Two dogs on the wall now, and a fire lit in the mouth of it. */
-const PAINTED_CAVE_4: Art = {
-  rows: [
-    "...rrrrrrr...",
-    ".rrRrrrrrRrr.",
-    "rrrorrrorrhrr",
-    "rrooooroooorr",
-    "rrorrorroorrr",
-    "rrrrrrrrrrrrr",
-    "rrrrrnnnrrrrr",
-    "rrrrnnynnrrrr",
-    "rrrnnyyynnrrr",
-  ],
-  palette: { ...PAINTED_CAVE.palette, y: "#ffb04a" },
-};
-
 /** The last rung: a wolf, sitting, with the fire in its eye. */
 export const FIRST_DOG: Art = {
   rows: [
@@ -1957,8 +1531,7 @@ const FIRST_DOG_4: Art = {
 };
 
 /** Four marks per tier, indexed by how many of its three upgrades you own. */
-// --- Deep — under the dream, on the bottom of sleep ---
-// Cold water, a long way down: everything is blue-black except what glows.
+// --- The cut — what's in the canal ---
 
 const SEA_K = "#0c2230";
 
@@ -1989,168 +1562,6 @@ const SUNK_BALL_4: Art = {
     "...ggg...",
   ],
   palette: { ...SUNK_BALL.palette, g: "#d8f08a" },
-};
-
-/** Somebody in a brass helmet, on a hose that goes all the way back up to the dream. */
-export const DIVER: Art = {
-  rows: [
-    "...h....",
-    "...h....",
-    "..ooo...",
-    ".owwwo..",
-    ".owwwo..",
-    "..ooo...",
-    ".sssss..",
-    "ssssssn.",
-    "s.sss.n.",
-    "..s.s...",
-    "..s.s...",
-    ".bb.bb..",
-  ],
-  palette: { h: "#3a4a4a", o: "#c8963c", w: "#7fd0d8", s: "#4a6a6a", n: "#d8c08a", b: "#1e2a2a" },
-};
-
-const DIVER_4: Art = {
-  rows: [
-    "........",
-    "..ooo...",
-    ".owwwo.y",
-    ".owwwo.k",
-    "..ooo..k",
-    ".sssssk.",
-    "sssssss.",
-    "s.sss...",
-    "..s.s...",
-    "..s.s...",
-    "..s.s...",
-    "fff.fff.",
-  ],
-  palette: { ...DIVER.palette, y: "#ffe08a", k: "#3a4a4a", f: "#2a6a7a" },
-};
-
-/** A chewed slipper, grown over with coral. */
-export const SLIPPER_REEF: Art = {
-  rows: [
-    "..c....c...",
-    ".cdc..cdc..",
-    "..c.c.c.c..",
-    "...ccccc...",
-    "....cdc....",
-    "..ppppppp..",
-    ".pwwpppppp.",
-    "ppppppppppp",
-    ".kkkkkkkkk.",
-  ],
-  palette: { c: "#e07a8a", d: "#a84a6a", p: "#7a6a9a", w: "#d8c8e8", k: SEA_K },
-};
-
-const SLIPPER_REEF_4: Art = {
-  rows: [
-    ".c..c..c..c",
-    "cdc.cdc.cdc",
-    ".c.c.c.c.c.",
-    "..ccccccc..",
-    "...cdcdc...",
-    "....ccc....",
-    "ppppp.ppppp",
-    "pwwpp.pwwpp",
-    "ppppp.ppppp",
-    ".kkkkkkkkk.",
-  ],
-  palette: SLIPPER_REEF.palette,
-};
-
-/** A kennel on the bottom, barnacled, holding a pocket of air from the bedding up top. */
-export const SUNK_KENNEL: Art = {
-  rows: [
-    ".....kk.....",
-    "....kaak....",
-    "...kaaaak...",
-    "..kaaaaaak..",
-    ".kkkkkkkkkk.",
-    ".kbxbbbbxbk.",
-    ".kbbknnkbbk.",
-    ".kbknnnnkbk.",
-    ".kbknnnnkbk.",
-    "skkkkkkkkkks",
-  ],
-  palette: { k: "#14303a", a: "#3a6a6a", b: "#5a7a6a", x: "#d8d0b8", n: "#050d14", s: "#a89870" },
-};
-
-const SUNK_KENNEL_4: Art = {
-  rows: [
-    "...gggggg...",
-    "..g......g..",
-    ".g...kk...g.",
-    ".g..kaak..g.",
-    ".g.kaaaak.g.",
-    "g.kkkkkkkk.g",
-    "g.kbbyybbk.g",
-    "g.kbknnkbk.g",
-    "g.kbknnkbk.g",
-    "gskkkkkkkksg",
-  ],
-  palette: { ...SUNK_KENNEL.palette, g: "#a8e0f0", y: "#ffe08a" },
-};
-
-/** An anglerfish with a chihuahua's ears, and a light on a stalk. */
-export const ANGLER_PUP: Art = {
-  rows: [
-    "......sL...",
-    ".....s.....",
-    "...e.s.e...",
-    "..eppppe...",
-    "t.pppopppp.",
-    "ttpppppppw.",
-    "t.ppppppkk.",
-    "...pp.pp...",
-  ],
-  palette: { s: "#5a4a6a", L: "#c8ffe0", e: "#5a3a5a", p: "#7a5a7a", o: "#f0ffb0", t: "#4a3a5a", w: "#f4f0dc", k: "#2a1a2a" },
-};
-
-const ANGLER_PUP_4: Art = {
-  rows: [
-    ".L..L..L...",
-    "..s.s.s....",
-    "...esse....",
-    "..eppppe...",
-    "t.pppopppp.",
-    "ttpppppppw.",
-    "t.ppppppkk.",
-    "...pp.pp...",
-  ],
-  palette: ANGLER_PUP.palette,
-};
-
-/** Curled up asleep on the bottom of everything. */
-export const FOURTH_CHIHUAHUA: Art = {
-  rows: [
-    "..........e...",
-    ".........eep..",
-    "..ppppp.pppp..",
-    ".pppppppppcpp.",
-    "pppppppppppppn",
-    "ptttpppppppp..",
-    ".kkkkkkkkkkk..",
-  ],
-  palette: { p: "#b8a08a", e: "#8a6a5a", c: "#3a2a2a", n: "#2a1a1a", t: "#9a8470", k: "#0a1620" },
-};
-
-const FOURTH_CHIHUAHUA_4: Art = {
-  rows: [
-    "........oooo..",
-    ".......o.yy.o.",
-    "........oooo..",
-    "..........o...",
-    "..........e...",
-    ".........eep..",
-    "..ppppp.pppp..",
-    ".pppppppppcpp.",
-    "pppppppppppppn",
-    "ptttpppppppp..",
-    ".kkkkkkkkkkk..",
-  ],
-  palette: { ...FOURTH_CHIHUAHUA.palette, o: "#c8e8f8", y: "#ffe08a" },
 };
 
 // --- Void: the sky before there were dogs, with a dog in it ---
@@ -2199,49 +1610,6 @@ export const SKY_HERDER: Art = {
     "c.k.k..",
   ],
   palette: { k: K, c: "#c8b080", h: "#2a3a6a", f: "#e0d0f0", r: "#3a4a8a" },
-};
-
-const SKY_HERDER_4: Art = {
-  rows: [
-    "yc.....",
-    "c..hhh.",
-    "c..hfh.",
-    "c..hhh.",
-    "crrrrr.",
-    "crrrrrr",
-    "c.rrr.r",
-    "c.rrr..",
-    "c.r.r..",
-    "c.r.r..",
-    "c.k.k..",
-  ],
-  palette: { k: K, c: "#c8b080", h: "#2a3a6a", f: "#e0d0f0", r: "#3a4a8a", y: "#fff4c0" },
-};
-
-/** A Crate Blanket, plaid, fringed, big enough for the sky. */
-export const CRATE_BLANKET: Art = {
-  rows: [
-    "bbrbbbrbbbr",
-    "rrrrrrrrrrr",
-    "bbrbbbrbbbr",
-    "bbrbbbrbbbr",
-    "rrrrrrrrrrr",
-    ".b.b.b.b.b.",
-  ],
-  palette: { b: "#3a3a7a", r: "#7a5ab0" },
-};
-
-const CRATE_BLANKET_4: Art = {
-  rows: [
-    "bbrbybrbbbr",
-    "rrrrrrrrrrr",
-    "bbrbbbrbybr",
-    "bybbbbrbbbr",
-    "rrrrrrrrrrr",
-    "bbrbbbrbbbr",
-    ".b.b.b.b.b.",
-  ],
-  palette: { b: "#3a3a7a", r: "#7a5ab0", y: "#fff4c0" },
 };
 
 /** A Litter Nebula: where puppies are before they're anywhere. */
@@ -2449,11 +1817,12 @@ export const WAITING_PACK: Art = {
   rows: [
     "b.b.c.c.d.d",
     "bbb.ccc.ddd",
+    "bkb.ckc.dkd",
+    ".b...c...d.",
     "bbb.ccc.ddd",
     "bbb.ccc.ddd",
-    "b.b.c.c.d.d",
   ],
-  palette: { b: "#c08a50", c: "#e0e0d0", d: "#5a4030" },
+  palette: { b: "#c08a50", c: "#e0e0d0", d: "#7a5a40", k: "#2a2028" },
 };
 
 const WAITING_PACK_4: Art = {
@@ -2836,6 +2205,229 @@ export const GOOD_DOG: Art = {
 };
 const GOOD_DOG_4 = grown(GOOD_DOG, ["....y.y.y....", "...y..y..y..."], { y: "#fff4c0" });
 
+/** A hundred diggers in: two lamps and a gold hat. */
+const DIGGER_4: Art = {
+  rows: [
+    ".ltttl.",
+    ".ttttt.",
+    "pptttpp",
+    ".pepep.",
+    ".ppmpp.",
+    "..pmp..",
+    ".ppppp.",
+    "ppppppp",
+    ".ppppp.",
+    ".p...p.",
+    ".k...k.",
+  ],
+  palette: { k: K, t: "#e0c04a", l: "#fff4c0", p: "#c98b4b", m: "#f4e6cc", e: K },
+};
+
+// --- The way home: what the pack finds between the tunnel and the bridge ---
+// Out the back of the estate, the canal out of town, the fire at the edge of the woods, the hill.
+
+/** The hundredth of anything: the same thing, with a glint on it. */
+const GLINT = ["..y..", ".yly.", "..y.."] as const;
+const GLINT_PAINT = { y: "#ffd166", l: "#fff4c0" } as const;
+const glinting = (art: Art): Art => grown(art, GLINT, GLINT_PAINT);
+
+/** Lid up, it's dinner. Lid down, it's somewhere to be. */
+export const WHEELIE_BIN: Art = {
+  rows: [
+    ".kkkkkkk.",
+    "kgggggggk",
+    "kkkkkkkkk",
+    ".kdddddk.",
+    ".kdldddk.",
+    ".kdldddk.",
+    ".kdddddk.",
+    ".kdddddk.",
+    ".kdddddk.",
+    ".kdddddk.",
+    ".kkkkkkk.",
+    ".o.....o.",
+  ],
+  palette: { k: K, g: "#5a8a6a", d: "#3f6b5e", l: "#7fbfa8", o: "#2a2228" },
+};
+
+/** Whites, a paper hat, and a tray on the way out. The first kind person in the game. */
+export const FRY_COOK: Art = repaint(KENNEL_HAND, { t: "#f4f0e8", b: "#e8e2d4", v: "#3a3a48" });
+
+/** A builder's skip, full of somebody's kitchen. */
+export const SKIP_FULL: Art = {
+  rows: [
+    "....m..w.....b....",
+    "kkkkkkkkkkkkkkkkkk",
+    "kddddddddddddddddk",
+    ".kyyyyyyyyyyyyyyk.",
+    ".kyylyyyyyyyyyyyk.",
+    "..kyyyyyyyyyyyyk..",
+    "..kyyyyyyyyyyyyk..",
+    "..kyyyyyyyyyyyyk..",
+    "...kkkkkkkkkkkk...",
+    "...kk........kk...",
+  ],
+  palette: { k: K, y: "#d8a33a", d: "#8a6420", l: "#f4d27a", m: "#a8b0b8", w: "#f2e3c8", b: "#8a5a3a" },
+};
+
+/** On the wall behind the units, and it drips. */
+export const WALL_TAP: Art = {
+  rows: [
+    "kkk....",
+    "kmkkk..",
+    "kmmmk..",
+    "kkkmk..",
+    "...k...",
+    "...b...",
+    ".......",
+    ".kbbbk.",
+    ".kbbbk.",
+    "..kkk..",
+  ],
+  palette: { k: K, m: "#a8b0b8", b: "#6ab8e0" },
+};
+
+/** Chain-link, peeled back at the corner. */
+export const FENCE_HOLE: Art = {
+  rows: [
+    "k.............k",
+    "kwwwwwwwwwwwwwk",
+    "kx.x.x.x.x.x.xk",
+    "k.x.x.x.x.x.x.k",
+    "kx.x.x.x.x.x.xk",
+    "k.x.x.x.x.x.x.k",
+    "kx.x.x.....x.xk",
+    "k.x.x.......x.k",
+    "kx.x.........xk",
+    "k.x..........xk",
+    "kx.x........x.k",
+    "k.............k",
+  ],
+  palette: { k: "#5b4f58", w: "#c4ccd2", x: "#9aa4ac" },
+};
+
+/** The scrapyard's Alsatian, on its chain, saying nothing. */
+export const YARD_DOG: Art = {
+  rows: [
+    "..k...k.............",
+    ".kbk.kbk............",
+    ".kbbkbbk............",
+    ".kttttttk...........",
+    "kttettetk...........",
+    "kttttttttk..........",
+    "nntttttttk..........",
+    ".kkkttttk...........",
+    "...kttttkk..........",
+    "...ktttbbbkk........",
+    "...kttbbbbbbkk......",
+    "...kttbbbbbbbbk.....",
+    "...kttbbbbbbbbbk....",
+    "...ktttbbbbbbbbk....",
+    "...kttttbbbbbtbk..cc",
+    "...kttkttbbbttbkcc..",
+    "...kttkttkkkttbk....",
+    "...kkkkkkk.kkkkk....",
+  ],
+  palette: { k: "#241a20", t: "#c08a50", b: "#4a3c40", e: "#1c1218", n: "#1a1418", c: "#9aa4ac" },
+};
+
+/** Flask, rope, magnet. */
+export const MAGNET_FISHER: Art = repaint(KENNEL_HAND, { t: "#5a7a4a", b: "#6a7a4a", v: "#3a3a30" });
+
+/** A shopping trolley in the shallows, grown over. */
+export const TROLLEY: Art = {
+  rows: [
+    "m..........",
+    "mmmmmmmmmm.",
+    ".mxmxmxmxm.",
+    ".mmmmmmmmm.",
+    ".mxmxmxmxm.",
+    "..mmmmmmm..",
+    "..g.g.g.g..",
+    ".ggggggggg.",
+  ],
+  palette: { m: "#a8b0b8", x: "#6f7880", g: "#4f8f5a" },
+};
+
+/** Moored, stove lit, hatch open. */
+export const NARROWBOAT: Art = {
+  rows: [
+    ".......c......................",
+    ".....kkkkkkkkkkkkkkkkkkk......",
+    ".....krrrrrrrrrrrrrrrrrk..k...",
+    ".....krwwrrwwrrwwrrrddrk..k...",
+    ".....krwwrrwwrrwwrrrddrk.kk...",
+    "kkkkkkkkkkkkkkkkkkkkkkkkkkkkk.",
+    ".kgggggggggggggggggggggggggk..",
+    "..kgyyyyyyyyyyyyyyyyyyyyygk...",
+    "...kkkkkkkkkkkkkkkkkkkkkkk....",
+  ],
+  palette: { k: K, r: "#a83a3a", w: "#ffd88a", d: "#3a5a4a", g: "#2f4a44", y: "#d8a33a", c: "#2a2228" },
+};
+
+/** Under the bridge: brick, and a scratch for each generation, all at the same height. */
+export const BRIDGE_HOLE: Art = {
+  rows: [
+    "bbbmbbbmb",
+    "mbbbmbbbm",
+    "bwbwbwbmb",
+    "mwbwbwbbm",
+    "bwbwbwbmb",
+    "mbbbmbbbm",
+    "bbbmbbbmb",
+  ],
+  palette: { b: "#8a4a3a", m: "#6a3a30", w: "#e8d8c0" },
+};
+
+/** On the roof of the last boat. Very big, very grey, going the same way. */
+export const BOAT_DOG: Art = {
+  rows: [
+    "..............k.k.",
+    ".............kgkgk",
+    "....kkkkkkkkkggegk",
+    "..kkgggggggggggggn",
+    ".kgggggggggggggkk.",
+    "kgglggggggglgggk..",
+    "kgkkgggkkkkkggkk..",
+    ".k..kkk.....kk....",
+  ],
+  palette: { k: "#3a3440", g: "#8a8490", l: "#6a6470", e: "#ffd166", n: "#1a1418" },
+};
+
+/** In a sleeping bag, feeding the fire. */
+export const CAMPER: Art = repaint(FIRE_KEEPER, { h: "#c0392f", p: "#4a6a8a", P: "#6a8ab0", s: "#3a4a6a", l: "#4a5a6a" });
+
+/** One more goes up for every generation that came through. */
+export const TENT: Art = {
+  rows: [
+    "......k......",
+    ".....ktk.....",
+    "....kttdk....",
+    "...kttoddk...",
+    "..kttooodk...",
+    ".kttoooodddk.",
+    "ktttooooddddk",
+    "kkkkkkkkkkkkk",
+  ],
+  palette: { k: K, t: "#5a8a5a", d: "#3f6b4a", o: "#2a2018" },
+};
+
+/** Out all night with a crook and a flask, counting. */
+export const SHEPHERD: Art = repaint(SKY_HERDER, { h: "#5a4030", f: "#e8bb8e", r: "#6a7a4a", c: "#c8b080" });
+
+/** Lie along the lee side and the wind goes over the top. */
+export const STONE_WALL: Art = {
+  rows: [
+    ".ssSsssSssSssss.",
+    "sSssSsssSsssSsss",
+    "ssSsssSssSsssSss",
+    "SsssSsssSssSssss",
+    "ssSssSsssSsssSss",
+    "kkkkkkkkkkkkkkkk",
+  ],
+  palette: { s: "#6a6a78", S: "#9a9aa8", k: "#2a2a38" },
+};
+
 export const PRODUCER_MARKS = {
   patch: [CAGE, CAGE_2, CAGE_3, CAGE_4],
   hand: [
@@ -2874,139 +2466,44 @@ export const PRODUCER_MARKS = {
     repaint(SINGULARITY, { p: "#e0c04a", v: "#a8792c", n: "#120c1c" }),
     SINGULARITY_4,
   ],
-  fold: [
-    HEM_HOLLOW,
-    repaint(HEM_HOLLOW, { b: "#4f8f7a", g: "#b6f2fb" }),
-    repaint(HEM_HOLLOW, { b: "#7a5ac0", g: "#ffd166", m: "#e2e8ee" }),
-    HEM_HOLLOW_4,
-  ],
-  well: [
-    DOWN_WELL,
-    repaint(DOWN_WELL, { g: "#ff7a4a", h: "#7a4a24" }),
-    repaint(DOWN_WELL, { g: "#ffe08a", m: "#cfd6dc", h: "#8a5a2c" }),
-    DOWN_WELL_4,
-  ],
-  chorus: [
-    CHORUS_FIGURE,
-    repaint(CHORUS_FIGURE, { b: "#7f9fc0", t: "#a8c0d8", a: "#dceaf4" }),
-    repaint(CHORUS_FIGURE, { b: "#c0a86a", t: "#d8c894", a: "#f4ecd0" }),
-    CHORUS_FIGURE_4,
-  ],
-  // The one tier drawn as a person, so its marks recolour the kit rather than changing the shape.
-  deephand: [
-    SHAFT_CREW,
-    repaint(SHAFT_CREW, { t: "#4f8f7a", b: "#4a5c7a", l: "#b6f2fb" }),
-    repaint(SHAFT_CREW, { t: "#c9a24a", b: "#7a5ac0", l: "#fff0b8", v: "#5b4f58" }),
-    LINT_HAND_4,
-  ],
-  face: [
-    FLEECE_FACE,
-    repaint(FLEECE_FACE, { s: "#ffffff", w: "#efe6cc" }),
-    repaint(FLEECE_FACE, { s: "#d8f0f8", w: "#f4ecd0", m: "#cfd6dc" }),
-    FLEECE_FACE_4,
-  ],
-  main: [
-    SEAM_MAIN,
-    repaint(SEAM_MAIN, { v: "#a86ea2", g: "#f0c6ec" }),
-    repaint(SEAM_MAIN, { v: "#c48ac0", g: "#ffd166", m: "#cfd6dc" }),
-    SEAM_MAIN_4,
-  ],
-  heart: [
-    WARM_HEART,
-    repaint(WARM_HEART, { f: "#d8b070", l: "#f7e8c0" }),
-    repaint(WARM_HEART, { d: "#8d959d", f: "#e2b077", l: "#fff4c0" }),
-    WARM_HEART_4,
-  ],
+  fold: [HEM_HOLLOW, repaint(HEM_HOLLOW, { l: "#c8a878" }), repaint(HEM_HOLLOW, { d: "#6a5a50", l: "#a89888" }), glinting(HEM_HOLLOW)],
+  well: [DOWN_WELL, repaint(DOWN_WELL, { m: "#c8963c" }), repaint(DOWN_WELL, { m: "#cfd6dc", g: "#b6f2fb" }), glinting(DOWN_WELL)],
+  chorus: [CHORUS_FIGURE, repaint(CHORUS_FIGURE, { p: "#a8c0d8", m: "#dceaf4" }), repaint(CHORUS_FIGURE, { p: "#d8c894", m: "#f4ecd0" }), glinting(CHORUS_FIGURE)],
+  // Drawn as a figure, so its marks recolour the kit rather than changing the shape.
+  deephand: [SHAFT_CREW, repaint(SHAFT_CREW, { t: "#4f8f7a", l: "#b6f2fb" }), repaint(SHAFT_CREW, { t: "#c0392f", l: "#fff0b8" }), DIGGER_4],
+  face: [FLEECE_FACE, repaint(FLEECE_FACE, { w: "#f4e6c0" }), repaint(FLEECE_FACE, { w: "#c8a878" }), glinting(FLEECE_FACE)],
+  main: [SEAM_MAIN, repaint(SEAM_MAIN, { m: "#c8963c" }), repaint(SEAM_MAIN, { m: "#cfd6dc", o: "#c0392f" }), glinting(SEAM_MAIN)],
+  heart: [WARM_HEART, repaint(WARM_HEART, { b: "#e0a8c0" }), repaint(WARM_HEART, { b: "#e0c04a", p: "#e2b077" }), glinting(WARM_HEART)],
   second: [
     SECOND_CHIHUAHUA,
     repaint(SECOND_CHIHUAHUA, { p: "#d69a58", l: "#f0c68c" }),
     repaint(SECOND_CHIHUAHUA, { p: "#e0c04a", l: "#f7e08a", d: "#8a6a1c" }),
     SECOND_CHIHUAHUA_4,
   ],
-  echo: [
-    ECHO_KENNEL,
-    repaint(ECHO_KENNEL, { a: "#b9a8e6", b: "#e0d8f8" }),
-    repaint(ECHO_KENNEL, { a: "#e0c04a", b: "#f4ecd0", n: "#2a2050" }),
-    ECHO_KENNEL_4,
-  ],
-  kin: [
-    THROWER,
-    repaint(THROWER, { b: "#d88a7f", o: "#a8f07a" }),
-    repaint(THROWER, { b: "#e0c04a", l: "#3a5a8a", o: "#ff7a6a" }),
-    THROWER_4,
-  ],
-  grove: [
-    STICK_TREE,
-    repaint(STICK_TREE, { g: "#4f6a8f", l: "#a8c0e8" }),
-    repaint(STICK_TREE, { g: "#6a5a8f", l: "#e0c6f0", s: "#e0c04a" }),
-    STICK_TREE_4,
-  ],
-  tide: [
-    MOON_PUDDLE,
-    repaint(MOON_PUDDLE, { w: "#4a6aaa", m: "#fff4c0" }),
-    repaint(MOON_PUDDLE, { w: "#5a5aa8", m: "#ffe08a", k: "#2a2a5a" }),
-    MOON_PUDDLE_4,
-  ],
-  beacon: [
-    PORCH_LIGHT,
-    repaint(PORCH_LIGHT, { y: "#ffc46a" }),
-    repaint(PORCH_LIGHT, { y: "#fff4c0", p: "#8d959d" }),
-    PORCH_LIGHT_4,
-  ],
-  third: [
-    MOON_DOG,
-    repaint(MOON_DOG, { m: "#fff4d0", d: "#e0c890" }),
-    repaint(MOON_DOG, { m: "#ffe9a8", d: "#e0c04a" }),
-    MOON_DOG_4,
-  ],
+  echo: [WHEELIE_BIN, repaint(WHEELIE_BIN, { g: "#4a6a9a", d: "#3a4f7a", l: "#8aa8d8" }), repaint(WHEELIE_BIN, { g: "#8a5a3a", d: "#6a4028", l: "#c89a6a" }), glinting(WHEELIE_BIN)],
+  kin: [FRY_COOK, repaint(FRY_COOK, { b: "#f4e8c0" }), repaint(FRY_COOK, { b: "#ffd166", t: "#ffffff" }), glinting(FRY_COOK)],
+  grove: [SKIP_FULL, repaint(SKIP_FULL, { y: "#4f8f7a", d: "#3f6b5e", l: "#7fbfa8" }), repaint(SKIP_FULL, { y: "#c0504a", d: "#7a2a28", l: "#f08a80" }), glinting(SKIP_FULL)],
+  tide: [WALL_TAP, repaint(WALL_TAP, { m: "#c8963c" }), repaint(WALL_TAP, { m: "#e0c04a", b: "#a8e0f8" }), glinting(WALL_TAP)],
+  beacon: [FENCE_HOLE, repaint(FENCE_HOLE, { x: "#b8c0c8" }), repaint(FENCE_HOLE, { x: "#e0c04a", w: "#fff4c0" }), glinting(FENCE_HOLE)],
+  third: [YARD_DOG, repaint(YARD_DOG, { t: "#d8a868" }), repaint(YARD_DOG, { t: "#e0b878", b: "#5a4a40", c: "#ffd166" }), glinting(YARD_DOG)],
   spark: [
     SUNK_BALL,
     repaint(SUNK_BALL, { y: "#f08a5a", w: "#fff0e0" }),
     repaint(SUNK_BALL, { y: "#e0c04a", w: "#fff8d0", k: "#3a2a10" }),
     SUNK_BALL_4,
   ],
-  kith: [
-    DIVER,
-    repaint(DIVER, { o: "#d8b060", s: "#6a5a4a" }),
-    repaint(DIVER, { o: "#e8d07a", s: "#3a5a7a", w: "#a8f0f0" }),
-    DIVER_4,
-  ],
-  loom: [
-    SLIPPER_REEF,
-    repaint(SLIPPER_REEF, { c: "#f0a85a", d: "#b86a3a" }),
-    repaint(SLIPPER_REEF, { c: "#7ae0d0", d: "#3a9a8a", p: "#9a6a5a" }),
-    SLIPPER_REEF_4,
-  ],
-  vault: [
-    SUNK_KENNEL,
-    repaint(SUNK_KENNEL, { a: "#6a5a8a", b: "#7a6a9a" }),
-    repaint(SUNK_KENNEL, { a: "#c8963c", b: "#8a7a5a", x: "#fff4d0" }),
-    SUNK_KENNEL_4,
-  ],
-  crown: [
-    ANGLER_PUP,
-    repaint(ANGLER_PUP, { L: "#ffe08a", p: "#6a5a8a" }),
-    repaint(ANGLER_PUP, { L: "#ff9aa8", p: "#8a5a6a", o: "#ffd8e0" }),
-    ANGLER_PUP_4,
-  ],
-  fourth: [
-    FOURTH_CHIHUAHUA,
-    repaint(FOURTH_CHIHUAHUA, { p: "#c8b08a", t: "#a8906a" }),
-    repaint(FOURTH_CHIHUAHUA, { p: "#d8c08a", t: "#b8a06a", e: "#c8963c" }),
-    FOURTH_CHIHUAHUA_4,
-  ],
+  kith: [MAGNET_FISHER, repaint(MAGNET_FISHER, { b: "#8a6a4a" }), repaint(MAGNET_FISHER, { b: "#c9a24a", t: "#c0392f" }), glinting(MAGNET_FISHER)],
+  loom: [TROLLEY, repaint(TROLLEY, { g: "#6aa85a" }), repaint(TROLLEY, { m: "#c8963c", g: "#8ac86a" }), glinting(TROLLEY)],
+  vault: [NARROWBOAT, repaint(NARROWBOAT, { r: "#3a6a8a", y: "#e0e0d0" }), repaint(NARROWBOAT, { r: "#3f6b4a", y: "#ffd166", w: "#fff4c0" }), glinting(NARROWBOAT)],
+  crown: [BRIDGE_HOLE, repaint(BRIDGE_HOLE, { w: "#fff4d0" }), repaint(BRIDGE_HOLE, { w: "#ffd166", b: "#9a5a4a" }), glinting(BRIDGE_HOLE)],
+  fourth: [BOAT_DOG, repaint(BOAT_DOG, { g: "#a8a0a8" }), repaint(BOAT_DOG, { g: "#c8a070", l: "#a88050", k: "#4a3828" }), glinting(BOAT_DOG)],
   dawn: [
     DAWN_FIRE,
     repaint(DAWN_FIRE, { f: "#ff5a2c", y: "#ffd86a" }),
     repaint(DAWN_FIRE, { f: "#ffb04a", y: "#fff0a0", s: "#9a8a78" }),
     DAWN_FIRE_4,
   ],
-  elder: [
-    FIRE_KEEPER,
-    repaint(FIRE_KEEPER, { p: "#6a5a4a", P: "#d8c8a8" }),
-    repaint(FIRE_KEEPER, { p: "#8a4a2c", P: "#e0c04a", h: "#d8d0c8" }),
-    FIRE_KEEPER_4,
-  ],
+  elder: [CAMPER, repaint(CAMPER, { p: "#8a4a2c", P: "#b06a3c" }), repaint(CAMPER, { p: "#5a8a5a", P: "#8ab87a", h: "#ffd166" }), glinting(CAMPER)],
   root: [
     BONE_PILE,
     repaint(BONE_PILE, { b: "#f4ecd8", d: "#6a3a2a" }),
@@ -3019,12 +2516,7 @@ export const PRODUCER_MARKS = {
     repaint(COLD_SPRING, { w: "#8ad0f0", r: "#7a7a88", W: "#ffffff" }),
     COLD_SPRING_4,
   ],
-  hearth: [
-    PAINTED_CAVE,
-    repaint(PAINTED_CAVE, { o: "#e07a3c", h: "#f4c080" }),
-    repaint(PAINTED_CAVE, { o: "#e0c04a", h: "#fff4c0", r: "#8a7868" }),
-    PAINTED_CAVE_4,
-  ],
+  hearth: [TENT, repaint(TENT, { t: "#c0704a", d: "#8a4a30" }), repaint(TENT, { t: "#4a7ab0", d: "#3a5a8a" }), glinting(TENT)],
   first: [
     FIRST_DOG,
     repaint(FIRST_DOG, { g: "#a8a0a8", w: "#f0e8e0" }),
@@ -3037,18 +2529,8 @@ export const PRODUCER_MARKS = {
     repaint(STAR_PUP, { l: "#ffd166", w: "#fff4c0" }),
     STAR_PUP_4,
   ],
-  wisp: [
-    SKY_HERDER,
-    repaint(SKY_HERDER, { r: "#4a3a8a", c: "#e0c890" }),
-    repaint(SKY_HERDER, { r: "#6a4aa0", h: "#1a2a5a", c: "#ffd166" }),
-    SKY_HERDER_4,
-  ],
-  veil: [
-    CRATE_BLANKET,
-    repaint(CRATE_BLANKET, { b: "#2a4a6a", r: "#5a8ab0" }),
-    repaint(CRATE_BLANKET, { b: "#5a2a5a", r: "#c07ab0" }),
-    CRATE_BLANKET_4,
-  ],
+  wisp: [SHEPHERD, repaint(SHEPHERD, { r: "#8a6a4a" }), repaint(SHEPHERD, { r: "#4a6a8a", c: "#ffd166" }), glinting(SHEPHERD)],
+  veil: [STONE_WALL, repaint(STONE_WALL, { s: "#7a7a70", S: "#a8a898" }), repaint(STONE_WALL, { s: "#8a7a68", S: "#c8b898" }), glinting(STONE_WALL)],
   nebula: [
     LITTER_NEBULA,
     repaint(LITTER_NEBULA, { p: "#4a4a8a", l: "#a0b0e0" }),
@@ -3245,32 +2727,6 @@ export const CUT_NEST_DOG: Art = {
   palette: { q: "#e86a7a", k: "#402e3a", p: "#c98b4b", l: "#e2b077", d: "#95602c", i: "#e89a9a", e: "#1c1218", w: "#ffffff", m: "#f2e3c8", n: "#2a1a1a" },
 };
 
-/** The same head asleep, which is the way into the dream. */
-export const CUT_DREAM_DOG: Art = {
-  rows: [
-    "kk....................kk",
-    "kik..................kik",
-    "kiik................kiik",
-    "kpiik..............kiipk",
-    ".kpiik............kiipk.",
-    ".kppiik.kkkkkkkk.kiippk.",
-    "..kppiikpppllpppkiippk..",
-    "..kpppppppllllpppppppk..",
-    "..kppppppppllppppppppk..",
-    ".kpppppppppllpppppppppk.",
-    ".kpppppppppllpppppppppk.",
-    "kpppppppppllllpppppppppk",
-    "kppkpppkppllllppkpppkppk",
-    "kpppkkkpppllllpppkkkpppk",
-    ".kpppppppplmmlppppppppk.",
-    ".kpppppplmnnnnmlppppppk.",
-    "..kpppplmmnnnnmmlppppk..",
-    "..kppplmmmmkkmmmmlpppk..",
-    "...kkpmmmkqqqqkmmmpkk...",
-    ".....kkkkkkkkkkkkkk.....",
-  ],
-  palette: { q: "#e86a7a", k: "#402e3a", p: "#c98b4b", l: "#e2b077", d: "#95602c", i: "#e89a9a", e: "#1c1218", w: "#ffffff", m: "#f2e3c8", n: "#2a1a1a" },
-};
 
 /** A ball going down, and you after it. */
 export const CUT_SUNK_BALL: Art = {
@@ -3497,4 +2953,29 @@ export const CUT_FRONT_DOOR: Art = {
     "kkkssssssssssssssssssssssskk",
   ],
   palette: { k: "#1a1a2e", y: "#ffd890", w: "#fff8e0", b: "#f0e4cc", d: "#7a2a2a", m: "#a88a58", s: "#6a6070" },
+};
+
+/** The way out: chain-link, and the hole in it, and a star through the hole. */
+export const CUT_FENCE: Art = {
+  rows: [
+    "kwwwwwwwwwwwwwwwwwwwwwwk",
+    "kxdxdxdxdxdxdxdxdxdxdxdk",
+    "kdxdxdxdxdxdxdxdxdxdxdxk",
+    "kxdxdxdxdxdxdxdxdxdxdxdk",
+    "kdxdxdxdxdxdxdxdxdxdxdxk",
+    "kxdxdxdxdxdxdxdxdxdxdxdk",
+    "kdxdxdxdxnwnwnwdxdxdxdxk",
+    "kxdxdxdxnwnnnnnwdxdxdxdk",
+    "kdxdxdxnnnnnnnsnwdxdxdxk",
+    "kxdxdxnwnnnnnnnnnwdxdxdk",
+    "kdxdxdwnnnnnnnnnwnxdxdxk",
+    "kxdxdxnwnnnnnnnnnwdxdxdk",
+    "kdxdxdxnnnnnnnnnwdxdxdxk",
+    "kxdxdxdxnwnnnnnwdxdxdxdk",
+    "kdxdxdxdxnwnwnwdxdxdxdxk",
+    "kxdxdxdxdxdxdxdxdxdxdxdk",
+    "kdxdxdxdxdxdxdxdxdxdxdxk",
+    "kxdxdxdxdxdxdxdxdxdxdxdk",
+  ],
+  palette: { k: "#5b4f58", w: "#c4ccd2", x: "#8a949c", d: "#141224", n: "#0c0a1a", s: "#fff4c0" },
 };

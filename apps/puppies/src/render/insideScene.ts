@@ -1,4 +1,10 @@
-/** The inside of the nest, drawn as a descent. */
+/**
+ * The tunnel (engine world `inside`): under the mill's yard, drawn as a descent. The slab of the lot
+ * across the top, then the dig going down through four kinds of ground to a sump where the pack
+ * waits and the spoil is heaped. Diggers (dogs, with lamps) work the ledges and ride the hoist;
+ * every so often something they've turned out rolls off a ledge and down the shaft to join the rest.
+ * This is where the picture changes sides: the workers aren't people any more.
+ */
 
 import type { solo } from "@clickers/sim";
 
@@ -58,7 +64,7 @@ export interface Zone {
   lit: string;
   weave: string;
   deep: string;
-  /** The one colour in the stratum that isn't the material — threads, lint, embers. */
+  /** The one colour in the stratum that isn't the material — pebbles, roots, lamplight. */
   accent: string;
   /** Share of the shaft's height, before normalising over however many zones are open. */
   weight: number;
@@ -69,36 +75,36 @@ export const ZONES: readonly Zone[] = [
   {
     id: "fold",
     tiers: ["fold", "deephand"],
-    lit: "#f6efe4",
-    weave: "#e6dccb",
-    deep: "#c2b6a2",
-    accent: "#f0a8c0",
+    lit: "#c2a47a",
+    weave: "#a2845c",
+    deep: "#7c6042",
+    accent: "#e0d0a8",
     weight: 1,
   },
   {
     id: "face",
     tiers: ["face", "well"],
-    lit: "#e4d3ae",
-    weave: "#cdb488",
-    deep: "#a48a5e",
-    accent: "#fffaf0",
+    lit: "#a88058",
+    weave: "#8a6444",
+    deep: "#62452c",
+    accent: "#e8dcc0",
     weight: 1.15,
   },
   {
     id: "main",
     tiers: ["main", "chorus"],
-    lit: "#a06a62",
-    weave: "#7a4a48",
-    deep: "#48282a",
-    accent: "#e8b0a0",
+    lit: "#80604e",
+    weave: "#60443a",
+    deep: "#3c2a26",
+    accent: "#c8a888",
     weight: 1.3,
   },
   {
     id: "warm",
     tiers: ["heart", "second"],
-    lit: "#3a1c1c",
-    weave: "#241010",
-    deep: "#140808",
+    lit: "#4a362c",
+    weave: "#30221c",
+    deep: "#1a120e",
     accent: "#ffb454",
   weight: 1.5,
   },
@@ -138,11 +144,11 @@ const PRIME_GLOW: Record<InsideId, string> = {
 // --- The place ---
 
 /** The fold: the underside of what closed over you, still the brightest thing. */
-const LID_LIT = "#f2e0b4";
-const LID_DEEP = "#c9a05c";
+const LID_LIT = "#b4afa6";
+const LID_DEEP = "#86817a";
 
-const SUMP_DEEP = "#2c1620";
-const SUMP_FLOOR = "#7a5648";
+const SUMP_DEEP = "#2a1c18";
+const SUMP_FLOOR = "#7c5e46";
 const SUMP_SPOIL = "#a88c5c";
 
 const VOID = "#160c12";
@@ -165,10 +171,10 @@ const BAND_MIN = 15;
 export const HEM = -1;
 export const SUMP = -2;
 /** Puppy you haven't cut into yet, between the deepest workings and the sump. */
-export const UNWHISTLED = -3;
+export const UNDUG = -3;
 
 export interface Band {
-  /** Index into `ZONES`, or one of `HEM` / `SUMP` / `UNWHISTLED`. */
+  /** Index into `ZONES`, or one of `HEM` / `SUMP` / `UNDUG`. */
   zone: number;
   top: number;
   bottom: number;
@@ -197,7 +203,7 @@ export function bandsFor(sh: number, openF: number): Band[] {
   }
 
   const sumpTop = Math.max(y, sh - sumpH);
-  if (sumpTop > y) bands.push({ zone: UNWHISTLED, top: y, bottom: sumpTop });
+  if (sumpTop > y) bands.push({ zone: UNDUG, top: y, bottom: sumpTop });
   bands.push({ zone: SUMP, top: sumpTop, bottom: Math.max(sumpTop + 8, sh) });
   return bands;
 }
@@ -382,7 +388,7 @@ const SLIDE_SPEED = 34;
 
 const HEAP_CROWN_X = 12;
 
-/** A pocket: a fold of blanket closed around what you're holding — the inside's kennel/crate stack. */
+/** A spoil heap: what came out of the dig, mounded in the sump. More of them the more you're holding. */
 const CYST_SLOTS: { x: number; row: number; w: number }[] = [
   { x: 158, row: 0, w: 9 },
   { x: 140, row: 1, w: 11 },
@@ -643,7 +649,7 @@ export class InsideScene {
     this.drawLid(bands[0]!);
     for (const band of bands) {
       if (band.zone >= 0) this.drawStratum(band, t);
-      else if (band.zone === UNWHISTLED) this.drawUnworked(band, bands);
+      else if (band.zone === UNDUG) this.drawUnworked(band, bands);
     }
     this.drawSump(sump);
     this.drawBore(bands, t);
@@ -686,12 +692,12 @@ export class InsideScene {
       const y = Math.round(rng() * (hem.bottom - 2)) + 1;
       const x = Math.round(rng() * SCENE_W);
       const w = 3 + Math.round(rng() * 11);
-      ctx.fillStyle = rgba(rng() > 0.6 ? "#f7ecd0" : "#b0854a", 0.22);
+      ctx.fillStyle = rgba(rng() > 0.6 ? "#d8d4cc" : "#5e5a54", 0.3);
       ctx.fillRect(x, y, w, 1);
     }
     for (let i = 0; i < 2; i++) {
       const base = Math.round(hem.bottom * (0.42 + i * 0.3));
-      ctx.fillStyle = rgba("#a8703c", 0.35);
+      ctx.fillStyle = rgba("#4e4a46", 0.4);
       for (let x = 0; x < SCENE_W; x++) {
         ctx.fillRect(x, base + Math.round(Math.sin(x * 0.09 + i * 2) * 1.6), 1, 1);
       }
@@ -699,11 +705,11 @@ export class InsideScene {
     for (let i = 0; i < 4; i++) {
       const x = 14 + Math.round(rng() * (SCENE_W - 28));
       const y = hem.bottom - 4;
-      ctx.fillStyle = rgba("#8a5a2c", 0.6);
+      ctx.fillStyle = rgba("#3a363c", 0.8);
       ctx.fillRect(x, y, 3, 2);
-      ctx.fillStyle = rgba("#f2e0b4", 0.5);
+      ctx.fillStyle = rgba("#d8d4cc", 0.5);
       ctx.fillRect(x, y - 1, 3, 1);
-      ctx.fillStyle = rgba("#e6dcc0", 0.55);
+      ctx.fillStyle = rgba("#7a5a3c", 0.7);
       ctx.fillRect(x + 1, y + 2, 1, 2 + Math.round(rng() * 2));
     }
     ctx.fillStyle = INK;
@@ -762,7 +768,7 @@ export class InsideScene {
     ctx.fillRect(0, band.bottom - 1, SCENE_W, 1);
   }
 
-  /** The blanket you haven't cut into yet. */
+  /** The ground nobody has dug into yet. */
   private drawUnworked(band: Band, bands: Band[]): void {
     const ctx = this.ctx;
     const h = band.bottom - band.top;
@@ -1007,7 +1013,7 @@ export class InsideScene {
     ctx.fillRect(0, sump.top + 1, SCENE_W, 1);
   }
 
-  /** Lint dust, rising up the shaft. It falls up in here. */
+  /** Dust, hanging in the shaft. */
   private drawMotes(top: number, floor: number, t: number): void {
     const ctx = this.ctx;
     if (this.motes.length === 0) {
@@ -1043,7 +1049,7 @@ export class InsideScene {
       ZONES[band.zone]!.tiers.forEach((id, ti) => {
         const n = this.working(id);
         if (n <= 0 || !this.chance(flow(n))) return;
-        // A Pit Hand turns pup up wherever they're standing, not from a slot.
+        // A Digger turns one out wherever it's standing, not from a slot.
         if (id === "deephand") {
           const who = this.crew[Math.floor(Math.random() * this.crew.length)];
           if (who && who.state === "work") this.cut(who.x + 2, who.y - 3, id);
@@ -1059,7 +1065,7 @@ export class InsideScene {
         this.cut(from.x + art.w / 2, this.benchY(band, ti === 0) - 4, id);
       });
     }
-    // The Second Puppy fruits rather than being worked, so it drops straight into the bore.
+    // The top rung isn't worked from a ledge, so what it turns out drops straight into the shaft.
     if (this.owned("second") > 0 && this.chance(0.2)) {
       this.puff(this.boreRight() + 2, bands[bands.length - 1]!.top - 6, -4);
     }
@@ -1117,7 +1123,7 @@ export class InsideScene {
 
   // --- The crew and the hoist ---
 
-  /** How many bodies are underground: exactly the Pit Hands you've bought. */
+  /** How many bodies are underground: exactly the Diggers you've bought. */
   private crewSize(bands: Band[]): number {
     if (bands.filter((b) => b.zone >= 0).length === 0) return 0;
     return Math.min(MAX_CREW, shownCount(this.owned("deephand"), MAX_CREW, 1.7));
@@ -1374,7 +1380,7 @@ export class InsideScene {
     const ctx = this.ctx;
     for (const c of this.crew) {
       const up = c.state === "ride" || c.state === "work";
-      // Walking crew wear the Pit Hand tier's current mark, so its upgrades visibly re-kit them.
+      // Walking crew wear the Digger tier's current mark, so its upgrades visibly re-kit them.
       const art = artCanvas(up ? SHAFT_CREW_UP : this.mark("deephand"));
       const bob = c.state === "walk" ? Math.round(Math.sin(this.clock * 7 + c.phase) * 0.5) : 0;
       const x = Math.round(c.x);
@@ -1386,7 +1392,7 @@ export class InsideScene {
 
   // --- The sump ---
 
-  /** The hoard: a mound of puppies with the blanket folding up around it into cysts as you get richer. */
+  /** The hoard: the pack in the sump, with spoil heaped up round it as you get richer. */
   private drawHoard(sumpTop: number): void {
     const target = Math.max(0, this.view.hoard);
     if (this.shown < 0) this.shown = target;
@@ -1496,7 +1502,7 @@ export class InsideScene {
     }
   }
 
-  /** One fold of the blanket, drawn rather than blitted. */
+  /** One spoil heap, drawn rather than blitted. */
   private drawCyst(slot: { x: number; row: number; w: number }, sumpTop: number, i: number): void {
     const ctx = this.ctx;
     const breathe = Math.sin(this.clock * 0.8 + i * 1.7);
@@ -1537,7 +1543,7 @@ export class InsideScene {
     ctx.fillRect(slot.x + 3, base - courses + 1, 1, 1);
   }
 
-  /** What the nest closed around, left where it stands in a strip along the front. */
+  /** What the ground came down on, left where it stands in a strip along the front. */
   private drawBroken(sumpTop: number): void {
     const ctx = this.ctx;
     let x = Math.max(24, this.boreRight() + 6);

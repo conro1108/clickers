@@ -26,7 +26,7 @@ import {
 import { PxIcon } from "./components/PxIcon.js";
 import { Sheet } from "./components/Sheet.js";
 import { hasSavedMill, useMill } from "./useMill.js";
-import { WORLD_COPY, culprit } from "./worlds.js";
+import { WORLD_COPY, culprit, kept } from "./worlds.js";
 import { Num, Coins } from "./components/Coin.js";
 
 type Screen = { kind: "home" } | { kind: "puppies" };
@@ -83,7 +83,7 @@ function Home({ onGo }: { onGo: (screen: Screen) => void }) {
         Puppy <span>Mill</span>
       </h1>
       <p className="tagline">
-        Breed chihuahuas. The weather will have opinions about that.
+        Breed chihuahuas. They have had another idea.
       </p>
 
       {/* Somebody's mill, running. A title screen for a game about a place
@@ -102,6 +102,81 @@ function Home({ onGo }: { onGo: (screen: Screen) => void }) {
 
 // --- The homestead ---
 
+// --- The world strip ---
+
+function WorldStrip({
+  mill,
+  here,
+  busy,
+  open,
+  setOpen,
+  go,
+}: {
+  mill: solo.SiteState;
+  here: solo.World;
+  busy: boolean;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  go: (to: solo.World) => void;
+}) {
+  const at = solo.WORLDS.indexOf(here);
+  const hurt = (w: solo.World) => solo.producersIn(w).some((p) => solo.brokenCount(mill, p.id) > 0);
+
+  // Left and right arrow keys walk the strip, for anyone at a keyboard.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (busy || e.target instanceof HTMLInputElement) return;
+      if (e.key === "ArrowLeft" && at > 0) go(solo.WORLDS[at - 1]!);
+      if (e.key === "ArrowRight" && at < mill.depth) go(solo.WORLDS[at + 1]!);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [at, busy, mill.depth, go]);
+
+  return (
+    <>
+      {open && <div className="world-scrim" onClick={() => setOpen(false)} />}
+      <div className="world-strip">
+        <button className="world-step" aria-label="Previous world" disabled={busy || at <= 0} onClick={() => go(solo.WORLDS[at - 1]!)}>
+          ‹
+        </button>
+        <button className="world-here" aria-expanded={open} disabled={busy} onClick={() => setOpen(!open)}>
+          <span className="world-name">{WORLD_COPY[here].door}</span>
+          <span className="world-pips" aria-hidden>
+            {solo.WORLDS.map((w, i) => (
+              <span key={w} className={w === here ? "on" : i <= mill.depth ? (hurt(w) ? "hurt" : "open") : "shut"} />
+            ))}
+          </span>
+        </button>
+        <button className="world-step" aria-label="Next world" disabled={busy || at >= mill.depth} onClick={() => go(solo.WORLDS[at + 1]!)}>
+          ›
+        </button>
+        {open && (
+          <div className="world-menu">
+            {solo.WORLDS.map((w, i) =>
+              i <= mill.depth ? (
+                <button key={w} className={w === here ? "on" : undefined} onClick={() => go(w)}>
+                  <span className="world-menu-n">{i + 1}</span>
+                  {WORLD_COPY[w].door}
+                  {hurt(w) && <span className="world-dot" />}
+                </button>
+              ) : (
+                <div key={w} className="world-menu-shut">
+                  <span className="world-menu-n">{i + 1}</span>
+                  ???
+                </div>
+              ),
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// --- The homestead ---
+
+// Sheets, named for what is inside them. `back` is not on the bar.
 // Sheets, named for what is inside them. `back` is not on the bar.
 type MillSheet = "shop" | "upkeep" | "papers" | "back";
 
@@ -130,7 +205,7 @@ const OMEN_MS = 7600;
 // Short omen for every Singularity after the first of a run: one dark pull with a single line in it.
 const OMEN_FLASH_MS = 1900;
 
-// The Convergence: sky to blanket. Timings live in the `converge-*` keyframes as percentage offsets of this.
+// The first gate's cut, and every one after it. Timings live in the `converge-*` keyframes as percentage offsets of this.
 // `FOLD_SWAP_MS` keeps the canvas from spending the arrival while this is over the top of it.
 const CONVERGE_MS = 9600;
 
@@ -268,7 +343,7 @@ function BackRoom({
       </section>
 
       <section>
-        <h3>How far in</h3>
+        <h3>The worlds</h3>
         <p className="muted small">
           Opens every world up to the one you pick without the purchases, so without the cuts — to
           watch one, buy its gate. Going back strips the kit that only exists past the line and puts
@@ -291,7 +366,7 @@ function BackRoom({
       <section>
         <h3>Start over</h3>
         <p className="muted small">
-          Not a hand-down. This keeps nothing — not the papers, not the generation, not the fold.
+          Not a hand-down. This keeps nothing — not the papers, not the generation, not the tunnel.
         </p>
         <div className="choices">
           <button className="ghost" onClick={onTitle}>
@@ -354,7 +429,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
     return () => clearTimeout(id);
   }, [singularities]);
 
-  // The Convergence, same shape: an answer to a purchase, seeded from first render so an open save reopens open.
+  // The arrival cut, same shape: an answer to a purchase, seeded from first render so an open save reopens open.
   // Which world's cut is playing. Same overlay for all of them, different words and colours.
   const [crossing, setCrossing] = useState<solo.World | null>(null);
   const converging = crossing !== null;
@@ -378,6 +453,14 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
       setTimeout(() => setWalk(null), WALK_MS),
     ];
   }, []);
+  const [worldMenu, setWorldMenu] = useState(false);
+  const goTo = useCallback(
+    (to: solo.World) => {
+      setWorldMenu(false);
+      if (to !== mill.world) walkTo(to, () => dispatch({ type: "warp", to }));
+    },
+    [mill.world, walkTo, dispatch],
+  );
   // Layout effect: the purchase and the world it moves you to land in the same render, so a plain effect lets a frame through.
   useLayoutEffect(() => {
     const was = wasDepth.current;
@@ -464,16 +547,11 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
 
   const beddingPct = Math.round(mill.condition * 100);
   const hold = useHold(useCallback(() => setSheet("back"), []));
-  // Keep where you're standing on screen when the strip is wider than the phone.
-  const strip = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    strip.current?.querySelector(".on")?.scrollIntoView({ inline: "nearest", block: "nearest" });
-  }, [mill.world, mill.depth]);
   const kitOnTheLand = solo.SOLO_PRODUCERS.reduce((n, p) => n + (mill.producers[p.id] ?? 0), 0);
 
-  // The shop has emptied itself for the Ur-Chihuahua; the bottom bar is where that announces itself.
+  // The shop has emptied itself for the tunnel; the bottom bar is where that announces itself.
   const gateWaiting = solo.gatePending(mill) !== null;
-  const arrival = crossing ? WORLD_COPY[crossing].arrival : undefined;
+  const arrival = crossing ? WORLD_COPY[crossing].cut : undefined;
 
   return (
     <div className="app mill-app">
@@ -488,19 +566,19 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
           <PxIcon name="puppy" size={28} />
           <div>
             <div className="hud-value"><Num n={budget} /></div>
-            <div className="hud-label">in the yard</div>
+            <div className="hud-label">{WORLD_COPY[heldWorld ?? mill.world].held}</div>
           </div>
         </div>
         <div className="hud-side">
           <div className="hud-rate"><Num n={rate} />/s</div>
-          <div className="bedding" title="Bedding health">
+          <div className="bedding" title="Condition">
             <div className="bedding-track">
               <div
                 className={`bedding-fill ${mill.condition < 0.75 ? "low" : ""}`}
                 style={{ width: `${beddingPct}%` }}
               />
             </div>
-            <span className={mill.condition < 1 ? "hurt" : "muted"}>bedding {beddingPct}%</span>
+            <span className={mill.condition < 1 ? "hurt" : "muted"}>{kept(mill)} {beddingPct}%</span>
           </div>
         </div>
       </header>
@@ -517,25 +595,17 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         {/* The whole scene whistles, which is not something a mill looks like it
             does. One sentence, once, and then never again. */}
         {!taught && <p className="tap-hint">Tap the mill to whistle</p>}
-        {/* The worlds, top to bottom, on the mill rather than in a sheet:
-            where you're standing is part of the picture, and so is getting
-            somewhere else. A dot is a world with something broken in it. */}
+        {/* Where they are on the way home, and getting somewhere else. Thumb-sized: an arrow either
+            side steps to the next world, and the name opens the whole list for a long jump. */}
         {mill.depth >= 1 && (
-          <div className="world-strip" ref={strip}>
-            {solo.openWorlds(mill).map((to) => (
-              <button
-                key={to}
-                className={(heldWorld ?? mill.world) === to ? "on" : undefined}
-                disabled={mill.world === to || walk !== null || converging}
-                onClick={() => walkTo(to, () => dispatch({ type: "warp", to }))}
-              >
-                {WORLD_COPY[to].door}
-                {solo.producersIn(to).some((p) => solo.brokenCount(mill, p.id) > 0) && (
-                  <span className="world-dot" />
-                )}
-              </button>
-            ))}
-          </div>
+          <WorldStrip
+            mill={mill}
+            here={heldWorld ?? mill.world}
+            busy={walk !== null || converging}
+            open={worldMenu}
+            setOpen={setWorldMenu}
+            go={goTo}
+          />
         )}
       </MillScene>
 
@@ -545,7 +615,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
       <div className="whistlebar">
         <button className="click" onClick={() => onWhistle()}>
           <PxIcon name="puppy" size={14} />
-          <span className="whistle-label">Whistle</span>
+          <span className="whistle-label">{WORLD_COPY[heldWorld ?? mill.world].verb}</span>
           <span className="whistle-yield">+<Num n={perWhistle} /></span>
         </button>
         <div className="pops" aria-hidden>
@@ -588,7 +658,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
               {/* The one number off the old ledger that had nowhere else to
                   go. It reads as a footnote to a catalogue rather than a
                   stat: what you've bought, under what you can spend. */}
-              <span className="muted">{kitOnTheLand} on the land</span>
+              <span className="muted">{kitOnTheLand} bought</span>
               <strong><Num n={budget} /></strong>
             </>
           }
@@ -619,7 +689,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         >
           <Damage mill={mill} />
           <LandPanel mill={mill} budget={budget} dispatch={dispatch} />
-          <h3 className="sheet-section">Yard report</h3>
+          <h3 className="sheet-section">Report</h3>
           <MillFeed mill={mill} now={now} />
         </Sheet>
       )}
@@ -669,7 +739,7 @@ function Homefarm({ onGo }: { onGo: (screen: Screen) => void }) {
         >
           {omen.kind === "full" ? (
             <>
-              <p className="omen-line">The horizon isn't where you left it</p>
+              <p className="omen-line">One of them is looking at the fence</p>
               <p className="omen-call">Keep going</p>
             </>
           ) : (

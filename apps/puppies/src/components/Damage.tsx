@@ -1,6 +1,6 @@
 import { solo } from "@clickers/sim";
 
-import { culprit } from "../worlds.js";
+import { culprit, kept } from "../worlds.js";
 import { Num } from "./Coin.js";
 
 export function Damage({ mill }: { mill: solo.SiteState }) {
@@ -27,7 +27,7 @@ export function Damage({ mill }: { mill: solo.SiteState }) {
         )}
         {lostToBedding > 0 && (
           <div>
-            <span className="hurt">−{beddingPct}% production</span> tired bedding ·{" "}
+            <span className="hurt">−{beddingPct}% production</span> worn {kept(mill)} ·{" "}
             <span className="muted"><Num n={solo.conditionRestoreCost(mill)} /> to put right</span>
           </div>
         )}

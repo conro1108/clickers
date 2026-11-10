@@ -130,6 +130,8 @@ export interface SoloProducer {
    */
   hurt: string;
   mend: string;
+  /** For the tier blurbs, where name + "s" is wrong. */
+  plural?: string;
   /** Yield per second, per unit owned, before any multipliers. */
   baseRate: number;
   baseCost: Yield;
@@ -656,10 +658,11 @@ function tierUpgrades(): SoloUpgrade[] {
     const naming = THEME.soloTierUpgrades[prod.id];
     if (!naming) throw new Error(`theme has no tier upgrade names for "${prod.id}"`);
     const [first, second, third] = naming;
+    const many = prod.plural ?? `${prod.name}s`;
     out.push({
       id: `${prod.id}_x2a`,
       name: first,
-      blurb: `${prod.name}s produce twice as much.`,
+      blurb: `${many} produce twice as much.`,
       cost: fleetCost(prod.id, 10),
       effect: { kind: "producer_mult", producer: prod.id, factor: 2 },
       requires: { producer: prod.id, count: 10 },
@@ -668,7 +671,7 @@ function tierUpgrades(): SoloUpgrade[] {
     out.push({
       id: `${prod.id}_x2b`,
       name: second,
-      blurb: `${prod.name}s produce 50% more.`,
+      blurb: `${many} produce 50% more.`,
       cost: fleetCost(prod.id, 50, 0.4),
       effect: { kind: "producer_mult", producer: prod.id, factor: 1.5 },
       requires: { producer: prod.id, count: 50 },
@@ -677,7 +680,7 @@ function tierUpgrades(): SoloUpgrade[] {
     out.push({
       id: `${prod.id}_x2c`,
       name: third,
-      blurb: `${prod.name}s produce twice as much — and stop looking like the old ones.`,
+      blurb: `${many} produce twice as much — and stop looking like the old ones.`,
       cost: fleetCost(prod.id, 100, 1.2),
       effect: { kind: "producer_mult", producer: prod.id, factor: 2 },
       requires: { producer: prod.id, count: 100 },

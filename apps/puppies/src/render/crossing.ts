@@ -11,8 +11,8 @@ import {
   CUT_BRIDGE,
   CUT_DOG_STAR,
   CUT_DOG_STAR_DIM,
-  CUT_DREAM_DOG,
   CUT_FAR_LIGHT,
+  CUT_FENCE,
   CUT_FIRE,
   CUT_FIRE_FLICKER,
   CUT_FRONT_DOOR,
@@ -37,7 +37,7 @@ export interface Subject {
 
 export const SUBJECTS: Record<Exclude<solo.World, "outside">, Subject> = {
   inside: { frames: [CUT_NEST_DOG], focus: { x: 6, y: 12 }, glow: "255, 191, 122", flash: "#fff3d6" },
-  beyond: { frames: [CUT_DREAM_DOG], focus: { x: 6, y: 12 }, glow: "200, 214, 244", flash: "#e8eefc" },
+  beyond: { frames: [CUT_FENCE], focus: { x: 14, y: 8 }, glow: "255, 170, 90", flash: "#ffe2b8" },
   deep: { frames: [CUT_SUNK_BALL], focus: { x: 8, y: 12 }, glow: "110, 200, 220", flash: "#cfeff0" },
   origin: { frames: [CUT_FIRE, CUT_FIRE_FLICKER], fps: 5, focus: { x: 22, y: 5 }, glow: "255, 150, 60", flash: "#fff0d0" },
   void: { frames: [CUT_DOG_STAR, CUT_DOG_STAR_DIM], fps: 3, focus: { x: 10, y: 10 }, glow: "255, 244, 192", flash: "#e8e8ff", shake: true },

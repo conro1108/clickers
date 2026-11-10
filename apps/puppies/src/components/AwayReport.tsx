@@ -32,7 +32,7 @@ export function AwayReport({
       <div className="result">
         <h2>While you were out</h2>
         <p className="muted">
-          {describeAway(report.awayMs)} away. The mill kept going, and so did the weather.
+          {describeAway(report.awayMs)} away. It all kept going, and so did the trouble.
         </p>
 
         <ol className="final">
@@ -54,7 +54,7 @@ export function AwayReport({
           )}
           {report.conditionLost > 0.001 && (
             <li>
-              <span>Bedding worn down</span>
+              <span>Worn down</span>
               <strong className="hurt">−{(report.conditionLost * 100).toFixed(0)}% production</strong>
             </li>
           )}

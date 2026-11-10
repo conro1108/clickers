@@ -12,11 +12,11 @@ import { solo, type Yield } from "@clickers/sim";
 import { producerMark } from "../marks.js";
 import { EMPTY_VIEW, MillScene as Scene, type MillView } from "../render/millScene.js";
 import { InsideScene } from "../render/insideScene.js";
-import { BeyondScene } from "../render/beyondScene.js";
-import { DeepScene } from "../render/deepScene.js";
-import { OriginScene } from "../render/originScene.js";
-import { VoidScene } from "../render/voidScene.js";
-import { EndScene } from "../render/endScene.js";
+import { BackScene } from "../render/backScene.js";
+import { CutScene } from "../render/cutScene.js";
+import { FireScene } from "../render/fireScene.js";
+import { HillScene } from "../render/hillScene.js";
+import { BridgeScene } from "../render/bridgeScene.js";
 import { ParkScene } from "../render/parkScene.js";
 import { WalkScene } from "../render/walkScene.js";
 import { PorchScene } from "../render/porchScene.js";
@@ -36,11 +36,11 @@ interface SceneLike {
 const SCENES: Record<solo.World, new (canvas: HTMLCanvasElement) => SceneLike> = {
   outside: Scene,
   inside: InsideScene,
-  beyond: BeyondScene,
-  deep: DeepScene,
-  origin: OriginScene,
-  void: VoidScene,
-  end: EndScene,
+  beyond: BackScene,
+  deep: CutScene,
+  origin: FireScene,
+  void: HillScene,
+  end: BridgeScene,
   after: ParkScene,
   above: WalkScene,
   home: PorchScene,

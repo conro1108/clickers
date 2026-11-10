@@ -1349,48 +1349,141 @@ input {
   font-variant-numeric: tabular-nums;
 }
 
-/* The worlds, across the top of the mill. Scrolls sideways once there are more
-   than fit; the one you're on is the filled one. */
+/* Where they are on the way home, and getting somewhere else: an arrow either side steps a world,
+   the name opens the whole list, and the pips under it are the journey so far. */
 .world-strip {
   position: absolute;
   top: 6px;
-  left: 0;
-  right: 0;
+  left: 6px;
+  right: 6px;
   display: flex;
+  align-items: stretch;
   gap: 4px;
-  padding: 0 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  z-index: 2;
-}
-.world-strip::-webkit-scrollbar {
-  display: none;
+  z-index: 3;
 }
 .world-strip button {
-  position: relative;
-  flex-shrink: 0;
-  padding: 4px 9px;
-  font-size: 0.68rem;
-  font-weight: 800;
-  background: rgba(247, 236, 216, 0.85);
-  color: var(--ink);
-  border: 2px solid var(--wood);
+  border-radius: 10px;
   box-shadow: none;
+  border: 2px solid var(--wood);
+  background: rgba(243, 238, 244, 0.92);
+  color: var(--ink);
 }
-.world-strip button.on,
-.world-strip button.on:disabled {
+.world-step {
+  width: 48px;
+  min-height: 44px;
+  padding: 0;
+  font-size: 1.6rem;
+  line-height: 1;
+  font-weight: 800;
+}
+.world-step:disabled {
+  opacity: 0.35;
+}
+.world-here {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 8px;
+}
+.world-here:disabled {
+  opacity: 1;
+}
+.world-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.world-name::after {
+  content: " ▾";
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+.world-pips {
+  display: flex;
+  gap: 3px;
+}
+.world-pips span {
+  border-radius: 50%;
+  width: 7px;
+  height: 7px;
+  background: var(--cream);
+  border: 1px solid var(--wood);
+}
+.world-pips span.on {
+  background: var(--wood);
+}
+.world-pips span.hurt {
+  background: var(--blood);
+}
+.world-pips span.shut {
+  background: transparent;
+  border-style: dotted;
+  opacity: 0.6;
+}
+/* The whole journey as a list: one full-width row per world, big enough for a thumb. */
+.world-menu {
+  border-radius: 10px;
+  overflow: hidden;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 52px;
+  right: 52px;
+  display: flex;
+  flex-direction: column;
+  background: var(--cream);
+  border: 2px solid var(--wood);
+  box-shadow: 0 6px 18px rgba(53, 41, 63, 0.35);
+}
+.world-menu button,
+.world-menu-shut {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 1px solid rgba(75, 63, 94, 0.2);
+  background: transparent;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-align: left;
+}
+.world-menu button.on {
   background: var(--wood);
   color: var(--cream);
-  opacity: 1;
+}
+.world-menu-shut {
+  color: var(--ink-soft);
+  opacity: 0.55;
+}
+.world-menu-n {
+  width: 1.4em;
+  text-align: right;
+  opacity: 0.6;
+}
+.world-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
 }
 .world-dot {
   position: absolute;
-  top: -3px;
-  right: -3px;
-  width: 7px;
-  height: 7px;
+  top: 50%;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
   background: var(--blood);
   border: 1px solid var(--cream);
+  border-radius: 50%;
 }
 
 /* A walk between worlds: down to dark, swap, back up. The name sits in the dark. */

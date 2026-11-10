@@ -12,6 +12,22 @@ export interface Named {
 export interface ProducerNamed extends Named {
   hurt: string;
   mend: string;
+  /** For "{plural} produce twice as much." Only needed where name + "s" is wrong. */
+  plural?: string;
+}
+
+/** The engine's own nouns, where a game has a better word. Each falls back to the neutral one. */
+export interface Terms {
+  /** "+3 {heirloom}." */
+  heirloom?: string;
+  /** "put the {condition} right." */
+  condition?: string;
+  /** "handed the {site} down." */
+  site?: string;
+  /** The log line when the first of the top outside rung starts running. */
+  omen?: string;
+  /** The log line as each world opens, by world id. */
+  arrivals?: Record<string, string>;
 }
 
 export interface ThemeStrings {
@@ -23,9 +39,16 @@ export interface ThemeStrings {
   weather: Record<string, { name: string }>;
   /** Titles for the three per-rung upgrades (at 10/50/100 owned); blurbs are generated. */
   soloTierUpgrades: Record<string, readonly [string, string, string]>;
+  terms?: Terms;
 }
 
 export const THEME: ThemeStrings = STRINGS;
+
+export const TERMS: Required<Omit<Terms, "omen" | "arrivals">> = {
+  heirloom: THEME.terms?.heirloom ?? "Heirloom",
+  condition: THEME.terms?.condition ?? "condition",
+  site: THEME.terms?.site ?? "site",
+};
 
 export type Shape<T> = Omit<T, "name" | "blurb" | "hurt" | "mend">;
 
