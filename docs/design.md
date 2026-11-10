@@ -85,6 +85,7 @@ Only words and pixels differ (see CLAUDE.md). Theme choices worth knowing:
 
 - Potatoes: farm, soil, weather; the fold is inside the tuber. The hoard is
   drawn as denominations of ten.
-- Puppies: kennel, bedding, weather; the fold is inside the nest. The hoard is
+- Puppies: the mill makes them, and every world after it is them getting out and getting home;
+  the fold is the tunnel under the yard, and the count turns from stock into the pack. The hoard is
   a crowd, not a pile — a heap of bodies read wrong. Puppies are drawn
   head-on; side-on failed twice (see `art.ts`).

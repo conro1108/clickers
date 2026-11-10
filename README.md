@@ -4,7 +4,7 @@ Two clicker games, one engine: a potato farm and a puppy mill sharing the same
 simulation under different themes.
 
 - **Small Potatoes** — grow potatoes, then follow them all the way to dinner. Play: [battle-clicker-web.vercel.app](https://battle-clicker-web.vercel.app)
-- **Puppy Mill** — breed chihuahuas. Play: [puppy-mill-web.vercel.app](https://puppy-mill-web.vercel.app)
+- **Puppy Mill** — breed chihuahuas, then follow them out the back and all the way home. Play: [puppy-mill-web.vercel.app](https://puppy-mill-web.vercel.app)
 
 | Small Potatoes | Puppy Mill | While you were out |
 |---|---|---|

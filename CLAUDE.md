@@ -82,10 +82,13 @@ agree only on the producer ids they switch on.
   generation got) and `world` (where you're looking) are easy to mix up.
 - Reusing an id retired in `OLD_IDS` (`persist.ts`) hands old saves something
   they never bought.
-- In the potato game the engine's world ids are just slots: `inside` is the
-  store, `void` the supermarket, `home` the heap. Name scenes and art after the
-  place, and look the slot up in the header of `worlds.ts`, or you'll draw a
-  void in the supermarket.
+- The engine's world ids are just slots in both games: `inside` is the potato
+  store and the puppy tunnel, `void` the supermarket and the hill. Name scenes
+  and art after the place, and look the slot up in the header of the app's
+  `worlds.ts`, or you'll draw a void in the supermarket.
+- Puppy scenes past the tunnel size the pack against their world's first rung
+  (`first` on the scene). Point it at the wrong rung and the strip is empty or
+  always full, and spending stops moving it.
 - Only the deepest open world's four buildings count (`landsFor`), so a site's
   defences drop to its perks at every gate. Pricing a world's buildings so the
   first level isn't cheap on arrival leaves that world undefended.
