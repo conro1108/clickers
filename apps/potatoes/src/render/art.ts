@@ -2350,6 +2350,18 @@ export const COMPOST_BAY: Art = {
   palette: { k: "#402e3a", w: "#9a6a42", v: "#6a4630", n: "#4a3424", b: "#6a4a30", o: "#c98b4b", g: "#6a8a3a" },
 };
 
+/** A roast potato, golden on the outside, for the platter. */
+export const ROASTIE: Art = {
+  rows: [
+    "..kkkk.",
+    ".kyyllk",
+    "kyyyyyk",
+    "kyoyyok",
+    ".kkkkk.",
+  ],
+  palette: { k: "#402e3a", y: "#e0a040", l: "#f8d080", o: "#a86a2a" },
+};
+
 /** A bag of washed potatoes with a red label. */
 export const POTATO_BAG: Art = {
   rows: [
