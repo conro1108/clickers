@@ -193,8 +193,8 @@ const END_LAND = END_COST / 40_000;
  */
 const LONG_WAY = {
   after: { ids: ["loam", "drone", "moss", "mire", "kinship", "sixth"] as SoloProducerId[], before: "last" as SoloProducerId, cost: 5e57, rate: 1e36, growth: 1.23 },
-  above: { ids: ["flame", "servant", "lid", "broth", "heirs", "seventh"] as SoloProducerId[], before: "sixth" as SoloProducerId, cost: 5e67, rate: 1e41, growth: 1.24 },
-  home: { ids: ["crumb", "guest", "grace", "feast", "house", "whole"] as SoloProducerId[], before: "seventh" as SoloProducerId, cost: 1.5e76, rate: 1e45, growth: 1.25 },
+  above: { ids: ["flame", "servant", "lid", "broth", "heirs", "seventh"] as SoloProducerId[], before: "sixth" as SoloProducerId, cost: 6e68, rate: 1e42, growth: 1.24 },
+  home: { ids: ["crumb", "guest", "grace", "feast", "house", "whole"] as SoloProducerId[], before: "seventh" as SoloProducerId, cost: 1.5e76, rate: 1e46, growth: 1.25 },
 };
 type LongWorld = keyof typeof LONG_WAY;
 
