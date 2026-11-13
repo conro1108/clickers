@@ -11,7 +11,8 @@
  * `early` is one of the world's first rung, `mid` a dozen of its first three, `full` thirty of
  * everything; the worlds before it are built up in every case. `stock=` multiplies what's held
  * (default is ten minutes of output), `condition=` sets the bar, `hour=` fakes the clock the mill's
- * sky runs on, `shots=dir` also keeps each phone-sized screenshot.
+ * sky runs on, `shots=dir` also keeps each phone-sized screenshot, `size=1280x720` is a window that
+ * isn't a phone (the scenes lay out by height, and a short one is where things collide).
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -69,7 +70,8 @@ const browser = await chromium.launch({
   // On the GPU: SwiftShader is ~70x slower here and lit differently from a real device.
   args: ["--use-angle=metal", "--ignore-gpu-blocklist", "--enable-gpu"],
 });
-const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+const [vw, vh] = (args.size ?? "390x844").split("x").map(Number);
+const ctx = await browser.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 2 });
 const page = await ctx.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));

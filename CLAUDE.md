@@ -40,6 +40,7 @@ the monorepo is that retuning a rung is one edit.
 | The outside world's picture | `render/farmScene.ts` / `millScene.ts` |
 | The other worlds' pictures | potatoes: `render/<place>Scene.ts` (store … heap). puppies: `insideScene.ts` (the tunnel), then `back`, `cut`, `fire`, `hill`, `bridge`, `park`, `walk`, `porch` |
 | What the potato worlds share: the floor, the front-left pile, carriers | potatoes `render/longScene.ts` (puppies has its own for its last three) |
+| The people in the larder, kitchen and table, and how tall everything near them is | potatoes `render/figures.ts` (`ADULT`) |
 | The pack: the dogs you hold, drawn in every puppy world past the mill | puppies `render/pack.ts` |
 | Which engine world is which puppy place, and every per-world word | `apps/puppies/src/worlds.ts` |
 | Every world of a game side by side | `tools/sheet.mjs` |
@@ -89,6 +90,10 @@ agree only on the producer ids they switch on.
 - Puppy scenes past the tunnel size the pack against their world's first rung
   (`first` on the scene). Point it at the wrong rung and the strip is empty or
   always full, and spending stops moving it.
+- The larder, kitchen and table are drawn at the size of the family sat at the table, not at the
+  farm's. A rung sprite from `art.ts` stood in one of them is a shop icon next to a door: a waiter
+  the size of a dinner plate. People there come from `figures.ts`, and doors, worktops and table legs
+  are multiples of its `ADULT`.
 - Only the deepest open world's four buildings count (`landsFor`), so a site's
   defences drop to its perks at every gate. Pricing a world's buildings so the
   first level isn't cheap on arrival leaves that world undefended.

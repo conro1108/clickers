@@ -156,6 +156,22 @@ export abstract class LongScene<Id extends solo.SoloProducerId> {
     return (this.view.marks[id] ?? 0) >= 3;
   }
 
+  /** Which upgrade mark a rung is on, for scenes that draw their own art for it (`figures.ts`). */
+  protected mark(id: Id): number {
+    return clamp(this.view.marks[id] ?? 0, 0, 3);
+  }
+
+  /** A scene's own art as a sprite, greyed like `each` greys the rung's when it's broken. */
+  protected sprite(art: Art, broken: boolean): Sprite {
+    return broken ? artTinted(art, BROKEN_TINT, 0.65) : artCanvas(art);
+  }
+
+  /** Stand a figure facing the way it's going (figures are drawn facing left). */
+  protected face(s: Sprite, x: number, y: number, dir: 1 | -1): void {
+    if (dir === 1) this.standFlipped(s, x, y);
+    else this.stand(s, x, y);
+  }
+
   /** Bottom-centre on the spot, on whole pixels. */
   protected stand(s: Sprite, x: number, y: number): void {
     this.ctx.drawImage(s.canvas, Math.round(x - s.w / 2), Math.round(y - s.h + 1));

@@ -2,11 +2,15 @@
  * The kitchen (engine world `after`): somebody's kitchen in the evening, side-on and at the size it
  * is. Tiled wall, the night in the window, Pot Lids on the rail, Recipe Books on the shelf with a
  * spine for each generation, the hob along the worktop with Gas Rings burning and Stockpots on them,
- * the Roast Potato in its tin by the window, Kitchen Hands peeling behind the counter or fetching
+ * the Roast Potato in its tin by the window, Kitchen Hands peeling at the worktop or fetching
  * potatoes from the sack on the lino. Low clean: the tiles go brown and the pans stop steaming.
+ *
+ * Sized against the Kitchen Hands (`figures.ts`): the worktop comes to their waist, and everything on
+ * the wall hangs where one of them could reach it.
  */
 
 import { POTATO_SPRITE } from "./art.js";
+import { ADULT, kitchenHand } from "./figures.js";
 import { LongScene, type Carrier } from "./longScene.js";
 import { SCENE_W, clamp, mix, rgba } from "./farmScene.js";
 import { artCanvas } from "./pixel.js";
@@ -35,7 +39,7 @@ const PEEL = "#c9a06a";
 const STEAM = "#f4f8fc";
 const SPINES = ["#7a2a2a", "#2a4a7a", "#3a6a3a", "#8a6a2a", "#5a3a7a"];
 
-/** Hands alternate: even ones peel behind the counter, odd ones fetch from the sack on the floor. */
+/** Hands alternate: even ones peel at the worktop, odd ones fetch from the sack on the floor. */
 const peels = (i: number) => i % 2 === 0;
 
 export class KitchenScene extends LongScene<KitchenId> {
@@ -43,16 +47,18 @@ export class KitchenScene extends LongScene<KitchenId> {
   private floor = 250;
   private rail = 40;
   private shelf = 100;
+  private hood = 140;
   private hands: Carrier[] = [];
   private steam: { x: number; y: number; life: number }[] = [];
   private bits: { x: number; y: number; vx: number; vy: number }[] = [];
 
   protected layOut(): void {
     const sh = this.sh;
-    this.top = Math.round(sh * 0.68);
     this.floor = Math.round(sh * 0.86);
-    this.rail = Math.round(sh * 0.13);
-    this.shelf = Math.round(sh * 0.34);
+    this.top = this.floor - Math.round(ADULT * 0.62);
+    this.hood = this.top - ADULT;
+    this.shelf = this.hood - Math.round(sh * 0.1);
+    this.rail = this.shelf - Math.round(sh * 0.16);
     const ring = (x: number) => ({ x, y: this.top });
     this.spots = {
       loam: [ring(18), ring(38), ring(58), ring(78)],
@@ -61,17 +67,18 @@ export class KitchenScene extends LongScene<KitchenId> {
       kinship: [{ x: 20, y: this.shelf }, { x: 40, y: this.shelf }, { x: 60, y: this.shelf }],
       sixth: [{ x: 150, y: this.top - 3 }],
       drone: [
-        { x: 112, y: this.top + 3 },
+        { x: 112, y: this.floor + 4 },
         { x: 0, y: sh - 3 },
-        { x: 130, y: this.top + 4 },
-        { x: 0, y: sh - 4 },
+        { x: 130, y: this.floor + 5 },
+        { x: 0, y: sh - 7 },
       ],
     };
     this.hands = this.spots.drone.map((_, i) => ({ x: 40 + i * 20, dir: 1, loaded: i === 1, wait: i * 0.8 }));
   }
 
   protected backdrop(ctx: CanvasRenderingContext2D, condition: number): void {
-    const { sh, top, floor, rail, shelf } = this;
+    const { top, floor, rail, shelf, hood } = this;
+    const sh = this.sh;
     const dirty = clamp((1 - condition) * 1.2, 0, 1);
     // Tiles, going brown when nobody wipes them.
     ctx.fillStyle = mix(TILE, TILE_DIRTY, dirty * 0.7);
@@ -83,9 +90,9 @@ export class KitchenScene extends LongScene<KitchenId> {
     }
     // The night window over the sink end.
     const wx = 124;
-    const wy = Math.round(sh * 0.1);
     const ww = 42;
-    const wh = Math.round(sh * 0.3);
+    const wh = Math.round(ADULT * 1.2);
+    const wy = top - Math.round(ADULT * 0.5) - wh;
     ctx.fillStyle = WOOD;
     ctx.fillRect(wx - 2, wy - 2, ww + 4, wh + 4);
     ctx.fillStyle = NIGHT;
@@ -105,6 +112,21 @@ export class KitchenScene extends LongScene<KitchenId> {
     ctx.fillRect(wx, wy + (wh >> 1) + 2, ww, wh - (wh >> 1) - 2);
     ctx.fillStyle = "#c85a4a";
     for (let y = wy + (wh >> 1) + 2; y < wy + wh; y += 4) for (let x = wx + ((y >> 2) % 2) * 2; x < wx + ww; x += 4) ctx.fillRect(x, y, 2, 2);
+    // A pendant lamp, so the wall above everybody's reach isn't bare.
+    const lamp = Math.min(Math.round(sh * 0.2), rail - 18);
+    ctx.fillStyle = STEEL_LOW;
+    ctx.fillRect(66, 0, 1, lamp - 7);
+    ctx.fillStyle = "#3a6a5a";
+    for (let i = 0; i < 7; i++) ctx.fillRect(66 - 2 - i, lamp - 7 + i, 5 + i * 2, 1);
+    ctx.fillStyle = "#5a8a78";
+    ctx.fillRect(63, lamp - 7, 2, 6);
+    ctx.fillStyle = "#fff4c0";
+    ctx.fillRect(64, lamp, 5, 2);
+    const glow = ctx.createRadialGradient(66, lamp + 2, 0, 66, lamp + 2, 60);
+    glow.addColorStop(0, rgba("#fff0b0", 0.3));
+    glow.addColorStop(1, rgba("#fff0b0", 0));
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, lamp - 58, SCENE_W, 120);
     // The pot rail and the book shelf.
     ctx.fillStyle = STEEL_LOW;
     ctx.fillRect(6, rail, 102, 2);
@@ -113,7 +135,6 @@ export class KitchenScene extends LongScene<KitchenId> {
     ctx.fillStyle = WOOD_LIT;
     ctx.fillRect(6, shelf + 1, 80, 1);
     // The extractor hood over the hob.
-    const hood = Math.round(sh * 0.44);
     ctx.fillStyle = STEEL;
     ctx.fillRect(40, shelf + 8, 16, hood - shelf - 8);
     for (let i = 0; i < 8; i++) ctx.fillRect(12 + i * 1, hood + i, 72 - i * 2, 1);
@@ -150,10 +171,15 @@ export class KitchenScene extends LongScene<KitchenId> {
     ctx.fillRect(8, top + 6, 84, floor - top - 9);
     ctx.fillStyle = STEEL;
     ctx.fillRect(10, top + 8, 80, 2);
-    ctx.fillStyle = "#2a1a14";
-    ctx.fillRect(16, top + 13, 68, floor - top - 19);
-    ctx.fillStyle = rgba(OVEN, 0.55);
-    ctx.fillRect(18, top + 15, 64, floor - top - 23);
+    // Two oven doors, each about as wide as whoever opens it.
+    for (const x of [12, 52]) {
+      ctx.fillStyle = "#2a1a14";
+      ctx.fillRect(x, top + 12, 36, floor - top - 17);
+      ctx.fillStyle = rgba(OVEN, 0.55);
+      ctx.fillRect(x + 2, top + 15, 32, floor - top - 22);
+      ctx.fillStyle = STEEL_LIT;
+      ctx.fillRect(x + 6, top + 13, 24, 1);
+    }
     // Lino, in checks.
     for (let y = floor, row = 0; y < sh; y += 6, row++) {
       for (let x = 0, col = 0; x < SCENE_W; x += 6, col++) {
@@ -168,16 +194,6 @@ export class KitchenScene extends LongScene<KitchenId> {
   protected scene(t: number): void {
     this.drawLids(t);
     this.drawBooks();
-    // Behind the counter first, so the worktop cuts them off at the waist.
-    this.each("drone", (spot, i, broken, s) => {
-      if (!peels(i)) return;
-      const bob = broken ? 0 : Math.round(Math.abs(Math.sin(t * 3 + i)) * 0.6);
-      this.stand(s, spot.x, spot.y - bob);
-      if (!broken && this.chance(2.5) && this.bits.length < 30) {
-        this.bits.push({ x: spot.x + 5, y: spot.y - 8, vx: 4 + Math.random() * 8, vy: -14 - Math.random() * 6 });
-      }
-    });
-    this.redrawWorktop();
     this.each("loam", (spot, i, broken, s) => {
       this.stand(s, spot.x, spot.y);
       if (broken) return;
@@ -186,24 +202,23 @@ export class KitchenScene extends LongScene<KitchenId> {
     });
     this.drawPots(t);
     this.drawRoast(t);
+    this.drawPeelers(t);
     this.drawBits();
     this.drawPile(POTATO_SPRITE, -3, this.sh - 1, "loam");
     this.drawFetchers(t);
   }
 
-  /** The worktop again over the waist of anyone behind it. */
-  private redrawWorktop(): void {
-    const ctx = this.ctx;
-    ctx.fillStyle = UNIT;
-    ctx.fillRect(98, this.top + 4, SCENE_W - 98, 4);
-    ctx.fillStyle = WORKTOP;
-    ctx.fillRect(98, this.top, SCENE_W - 98, 4);
-    ctx.fillStyle = WORKTOP_LIT;
-    ctx.fillRect(98, this.top, SCENE_W - 98, 1);
-    ctx.fillStyle = WOOD;
-    ctx.fillRect(104, this.top - 2, 30, 2);
-    ctx.fillStyle = WOOD_LIT;
-    ctx.fillRect(104, this.top - 2, 30, 1);
+  /** Stood at the chopping board with their backs to us, peel coming off to one side. */
+  private drawPeelers(t: number): void {
+    const mark = this.mark("drone");
+    this.each("drone", (spot, i, broken) => {
+      if (!peels(i)) return;
+      const bob = broken ? 0 : Math.round(Math.abs(Math.sin(t * 3 + i)) * 0.6);
+      this.stand(this.sprite(kitchenHand(mark, 0, "back"), broken), spot.x, spot.y - bob);
+      if (!broken && this.chance(2.5) && this.bits.length < 30) {
+        this.bits.push({ x: spot.x + 7, y: this.top - 4, vx: 4 + Math.random() * 8, vy: -14 - Math.random() * 6 });
+      }
+    });
   }
 
   private drawLids(t: number): void {
@@ -258,12 +273,16 @@ export class KitchenScene extends LongScene<KitchenId> {
   /** From the sack on the floor to the worktop with a potato, and back. */
   private drawFetchers(t: number): void {
     const potato = artCanvas(POTATO_SPRITE);
-    this.each("drone", (spot, i, broken, s) => {
+    const mark = this.mark("drone");
+    this.each("drone", (spot, i, broken) => {
       if (peels(i)) return;
       const c = this.hands[i]!;
-      const bob = this.carry(c, 26 + i * 3, 104 + i * 6, 11, broken, t);
-      this.stand(s, c.x, spot.y - bob);
-      if (c.loaded) this.ctx.drawImage(potato.canvas, Math.round(c.x - potato.w / 2), Math.round(spot.y - s.h - potato.h + 2 - bob));
+      const still = broken || c.wait > 0;
+      const bob = this.carry(c, 26 + i * 3, 92 + i * 4, 12, broken, t);
+      const art = kitchenHand(mark, still ? 0 : ((1 + (Math.floor(t * 4 + i) % 2)) as 1 | 2), "side");
+      this.face(this.sprite(art, broken), c.x, spot.y - bob, c.dir);
+      // Held out in front, in both hands.
+      if (c.loaded) this.ctx.drawImage(potato.canvas, Math.round(c.x + c.dir * 7 - potato.w / 2), spot.y - bob - 24);
     });
   }
 

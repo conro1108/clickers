@@ -5,9 +5,13 @@
  * fork that comes down a little further the more of it there is, and does not arrive. Waiters bring
  * roast potatoes through the swing door to the trolley at the front left. Low mood: wine on the cloth,
  * and the family stops eating.
+ *
+ * The family sets the scale (see `figures.ts`): the table, the door, the trolley and the waiters are
+ * all sized against somebody sat in one of those chairs.
  */
 
 import { ROASTIE } from "./art.js";
+import { ADULT, waiter } from "./figures.js";
 import { LongScene, type Carrier } from "./longScene.js";
 import { SCENE_W, clamp, rgba } from "./farmScene.js";
 
@@ -56,8 +60,9 @@ export class TableScene extends LongScene<TableId> {
     this.wall = Math.round(sh * 0.66);
     this.back = Math.round(sh * 0.65);
     this.edge = Math.round(sh * 0.71);
-    this.hem = Math.round(sh * 0.81);
-    this.feet = Math.round(sh * 0.89);
+    // A table top comes to a standing waiter's hip, so its legs are half an adult long.
+    this.feet = this.edge + Math.round(ADULT * 0.5);
+    this.hem = this.feet - 9;
     const seats = [24, 50, 76, 100, 126, 152];
     this.spots = {
       flame: seats.map((x) => ({ x, y: this.back + 9 })),
@@ -65,7 +70,7 @@ export class TableScene extends LongScene<TableId> {
       broth: [63, 113].map((x) => ({ x, y: this.back + 12 })),
       heirs: [20, 52, 84, 116].map((x, i) => ({ x, y: Math.round(sh * 0.4) - (i % 2) * 4 })),
       seventh: [{ x: 88, y: this.edge + 3 }],
-      servant: [0, 1, 2].map((i) => ({ x: 150 + i * 6, y: sh - 3 - (i % 2) })),
+      servant: [0, 1, 2].map((i) => ({ x: 146 + i * 9, y: sh - 3 - (i % 2) * 5 })),
     };
     this.waiters = this.spots.servant.map((s, i) => ({ x: s.x, dir: -1, loaded: true, wait: i * 1.6 }));
   }
@@ -94,15 +99,17 @@ export class TableScene extends LongScene<TableId> {
     ctx.fillStyle = PANEL_LIT;
     for (let x = 4; x < SCENE_W; x += 24) ctx.fillRect(x, dado + 6, 18, 1);
     // The swing door at the right, the kitchen's light round it.
-    const doorTop = Math.round(sh * 0.34);
+    const doorTop = wall - Math.round(ADULT * 1.3);
     ctx.fillStyle = DOOR_LIGHT;
-    ctx.fillRect(149, doorTop - 1, 24, wall - doorTop + 1);
+    ctx.fillRect(147, doorTop - 1, 28, wall - doorTop + 1);
     ctx.fillStyle = DOOR;
-    ctx.fillRect(150, doorTop, 22, wall - doorTop);
+    ctx.fillRect(148, doorTop, 26, wall - doorTop);
     ctx.fillStyle = "#3a2018";
-    ctx.fillRect(152, doorTop + 2, 18, 10);
+    ctx.fillRect(151, doorTop + 3, 20, 14);
     ctx.fillStyle = "#ffe8b0";
-    ctx.fillRect(157, doorTop + 4, 8, 6);
+    ctx.fillRect(155, doorTop + 5, 12, 10);
+    ctx.fillStyle = "#c9a24a";
+    ctx.fillRect(150, wall - 30, 2, 8);
     // Boards.
     ctx.fillStyle = BOARD;
     ctx.fillRect(0, wall, SCENE_W, sh - wall);
@@ -137,16 +144,26 @@ export class TableScene extends LongScene<TableId> {
         ctx.fillRect(x, edge + 3 + ((i * 7) % 10), 3 + (i % 3), 2);
       }
     }
-    // A trolley at the front left, for the potatoes coming out.
-    const ty = sh - 14;
+    // A trolley at the front left, for the potatoes coming out: hip-high, two shelves.
+    const ty = this.trolley;
+    ctx.fillStyle = rgba("#000000", 0.3);
+    ctx.fillRect(0, sh - 2, 46, 2);
     ctx.fillStyle = "#b8bcc8";
-    ctx.fillRect(0, ty, 40, 2);
-    ctx.fillRect(0, sh - 5, 40, 1);
-    ctx.fillRect(2, ty, 1, sh - ty - 3);
-    ctx.fillRect(37, ty, 1, sh - ty - 3);
+    ctx.fillRect(0, ty, 44, 2);
+    ctx.fillRect(0, sh - 12, 44, 2);
+    ctx.fillRect(2, ty, 2, sh - ty - 4);
+    ctx.fillRect(40, ty, 2, sh - ty - 4);
+    ctx.fillStyle = "#e4e8f0";
+    ctx.fillRect(0, ty, 44, 1);
+    ctx.fillRect(0, sh - 12, 44, 1);
     ctx.fillStyle = "#3a3a44";
-    ctx.fillRect(1, sh - 3, 3, 3);
-    ctx.fillRect(36, sh - 3, 3, 3);
+    ctx.fillRect(1, sh - 4, 4, 4);
+    ctx.fillRect(39, sh - 4, 4, 4);
+  }
+
+  /** The top of the trolley. */
+  private get trolley(): number {
+    return this.sh - Math.round(ADULT * 0.5);
   }
 
   protected scene(t: number): void {
@@ -163,7 +180,7 @@ export class TableScene extends LongScene<TableId> {
     this.each("flame", (spot, _, __, s) => this.stand(s, spot.x, spot.y));
     this.drawBoats(t);
     this.drawDinner(t);
-    this.drawPile(ROASTIE, 1, this.sh - 15, "flame");
+    this.drawPile(ROASTIE, 1, this.trolley - 1, "flame");
     this.drawWaiters(t);
   }
 
@@ -247,12 +264,19 @@ export class TableScene extends LongScene<TableId> {
 
   /** Out of the swing door with the potatoes, across the front of the room to the trolley, and back. */
   private drawWaiters(t: number): void {
-    this.each("servant", (spot, i, broken, s) => {
+    const mark = this.mark("servant");
+    const out: (() => void)[] = [];
+    this.each("servant", (spot, i, broken) => {
       const c = this.waiters[i]!;
-      const bob = this.carry(c, 160 - i * 4, 46 + i * 8, 10, broken, t);
-      if (c.dir === 1) this.standFlipped(s, c.x, spot.y - bob);
-      else this.stand(s, c.x, spot.y - bob);
+      const still = broken || c.wait > 0;
+      const bob = this.carry(c, 160 - i * 5, 64 + i * 9, 12, broken, t);
+      const art = waiter(mark, still ? 0 : ((1 + (Math.floor(t * 4 + i) % 2)) as 1 | 2), c.loaded);
+      const draw = () => this.face(this.sprite(art, broken), c.x, spot.y - bob, c.dir);
+      // The one walking further back goes down first.
+      if (i % 2) out.unshift(draw);
+      else out.push(draw);
     });
+    for (const draw of out) draw();
   }
 }
 

@@ -4,9 +4,12 @@
  * and Paper Sacks stand on the quarry tiles, the Chest Freezer hums in the corner, Mousetraps wait
  * along the skirting, and the Errand Kid comes in from the hall for potatoes. Low dark: the blind
  * creeps up and daylight gets in.
+ *
+ * Sized against the Errand Kid (`figures.ts`), who has to fit through the door.
  */
 
 import { POTATO_SPRITE } from "./art.js";
+import { ADULT, errandKid } from "./figures.js";
 import { LongScene, type Carrier } from "./longScene.js";
 import { SCENE_W, clamp, rgba } from "./farmScene.js";
 import { artCanvas } from "./pixel.js";
@@ -44,7 +47,7 @@ export class LarderScene extends LongScene<LarderId> {
       ember: [80, 94, 108, 87, 101, 122].map((x, i) => ({ x, y: Math.round(sh * (i < 3 ? 0.76 : 0.8)) })),
       last: [{ x: 146, y: Math.round(sh * 0.82) }],
       lull: [70, 110, 40].map((x) => ({ x, y: this.front - 1 })),
-      ward: [{ x: 168, y: this.front }, { x: 172, y: this.front - 1 }],
+      ward: [{ x: 168, y: this.front }, { x: 174, y: this.front - 5 }],
     };
     this.kids = this.spots.ward.map((s, i) => ({ x: s.x, dir: -1, loaded: false, wait: 2 + i * 3 }));
   }
@@ -104,10 +107,12 @@ export class LarderScene extends LongScene<LarderId> {
     }
     // The door to the hall, ajar, light coming round it.
     const dx = SCENE_W - 14;
+    const lintel = floor - Math.round(ADULT * 1.3);
     ctx.fillStyle = HALL;
-    ctx.fillRect(dx, Math.round(sh * 0.22), 14, floor - Math.round(sh * 0.22));
+    ctx.fillRect(dx, lintel, 14, floor - lintel);
     ctx.fillStyle = STAIR;
-    ctx.fillRect(dx - 2, Math.round(sh * 0.22) - 2, 2, floor - Math.round(sh * 0.22) + 2);
+    ctx.fillRect(dx - 2, lintel - 2, 16, 2);
+    ctx.fillRect(dx - 2, lintel - 2, 2, floor - lintel + 2);
     // Quarry tiles.
     ctx.fillStyle = TILE;
     ctx.fillRect(0, floor, SCENE_W, sh - floor);
@@ -159,12 +164,20 @@ export class LarderScene extends LongScene<LarderId> {
   /** In from the hall, a potato off the pile, back out again. */
   private drawKids(t: number): void {
     const potato = artCanvas(POTATO_SPRITE);
-    this.each("ward", (spot, i, broken, s) => {
+    const mark = this.mark("ward");
+    const out: (() => void)[] = [];
+    this.each("ward", (spot, i, broken) => {
       const c = this.kids[i]!;
-      const bob = this.carry(c, 24 + i * 6, spot.x, 13, broken, t);
-      this.stand(s, c.x, spot.y - bob);
-      if (c.loaded) this.ctx.drawImage(potato.canvas, Math.round(c.x + c.dir * 4), Math.round(spot.y - 8 - bob));
+      const still = broken || c.wait > 0;
+      const bob = this.carry(c, 30 + i * 12, spot.x, 14, broken, t);
+      const art = errandKid(mark, still ? 0 : ((1 + (Math.floor(t * 5 + i) % 2)) as 1 | 2));
+      out.unshift(() => {
+        this.face(this.sprite(art, broken), c.x, spot.y - bob, c.dir);
+        // Clutched to the chest.
+        if (c.loaded) this.ctx.drawImage(potato.canvas, Math.round(c.x + c.dir * 5 - potato.w / 2), spot.y - bob - 19);
+      });
     });
+    for (const draw of out) draw();
   }
 
   /** A mouse along the skirting now and then. Fewer, the more traps there are. */
