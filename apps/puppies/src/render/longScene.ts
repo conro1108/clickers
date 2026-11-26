@@ -11,7 +11,7 @@ import { solo } from "@clickers/sim";
 import { PRODUCER_MARKS, PUPPY_SPRITE } from "./art.js";
 import { EMPTY_VIEW, SCENE_W, clamp, hashSeed, mulberry32, rgba, type MillView } from "./millScene.js";
 import { Pack, packFor, type PackZone } from "./pack.js";
-import { artCanvas, artTinted, type Sprite } from "./pixel.js";
+import { artCanvas, artTinted, type Art, type Sprite } from "./pixel.js";
 
 /** How many of a rung to draw: the first few one for one, then one more silhouette per doubling. */
 export function shownSome(owned: number, cap: number, spread = 1.6): number {
@@ -233,10 +233,15 @@ export abstract class LongScene<Id extends solo.SoloProducerId> {
     this.drawTaps(now);
   }
 
+  /** What a tap turns up: a puppy, mostly. */
+  protected get tapArt(): Art {
+    return PUPPY_SPRITE;
+  }
+
   /** Whoever just got whistled up. */
   private drawTaps(now: number): void {
     const ctx = this.ctx;
-    const pup = artCanvas(PUPPY_SPRITE);
+    const pup = artCanvas(this.tapArt);
     this.leaps = this.leaps.filter((l) => now - l.born < LEAP_MS);
     for (const l of this.leaps) {
       const age = (now - l.born) / LEAP_MS;

@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -120,6 +121,8 @@ function WorldStrip({
   go: (to: solo.World) => void;
 }) {
   const at = solo.WORLDS.indexOf(here);
+  const circles = solo.knownCircles(mill);
+  const mine = circles.findIndex((c) => c.worlds.includes(here));
   const hurt = (w: solo.World) => solo.producersIn(w).some((p) => solo.brokenCount(mill, p.id) > 0);
 
   // Left and right arrow keys walk the strip, for anyone at a keyboard.
@@ -142,10 +145,21 @@ function WorldStrip({
         </button>
         <button className="world-here" aria-expanded={open} disabled={busy} onClick={() => setOpen(!open)}>
           <span className="world-name">{WORLD_COPY[here].door}</span>
-          <span className="world-pips" aria-hidden>
-            {solo.WORLDS.map((w, i) => (
-              <span key={w} className={w === here ? "on" : i <= mill.depth ? (hurt(w) ? "hurt" : "open") : "shut"} />
-            ))}
+          {/* Only what this line has seen, so the strip never gives away how many there are. Another circle
+              is one diamond; the one you're in turns gold once you've walked it to the end. */}
+          <span className={`world-pips${circles[mine]?.done ? " done" : ""}`} aria-hidden>
+            {circles.map((c, ci) =>
+              ci === mine ? (
+                <Fragment key={ci}>
+                  {c.worlds.map((w) => (
+                    <span key={w} className={w === here ? "on" : solo.WORLDS.indexOf(w) <= mill.depth ? (hurt(w) ? "hurt" : "open") : "shut"} />
+                  ))}
+                  {c.more && <span className="more" />}
+                </Fragment>
+              ) : (
+                <span key={ci} className={`circle${c.done ? " done" : ""}`} />
+              ),
+            )}
           </span>
         </button>
         <button className="world-step" aria-label="Next world" disabled={busy || at >= mill.depth} onClick={() => go(solo.WORLDS[at + 1]!)}>
@@ -153,20 +167,31 @@ function WorldStrip({
         </button>
         {open && (
           <div className="world-menu">
-            {solo.WORLDS.map((w, i) =>
-              i <= mill.depth ? (
-                <button key={w} className={w === here ? "on" : undefined} onClick={() => go(w)}>
-                  <span className="world-menu-n">{i + 1}</span>
-                  {WORLD_COPY[w].door}
-                  {hurt(w) && <span className="world-dot" />}
-                </button>
-              ) : (
-                <div key={w} className="world-menu-shut">
-                  <span className="world-menu-n">{i + 1}</span>
-                  ???
-                </div>
-              ),
-            )}
+            {circles.map((c, ci) => (
+              <Fragment key={ci}>
+                {c.worlds.map((w, i) =>
+                  solo.WORLDS.indexOf(w) <= mill.depth ? (
+                    <button key={w} className={w === here ? "on" : undefined} onClick={() => go(w)}>
+                      <span className="world-menu-n">{i + 1}</span>
+                      {WORLD_COPY[w].door}
+                      {hurt(w) && <span className="world-dot" />}
+                    </button>
+                  ) : (
+                    <div key={w} className="world-menu-shut">
+                      <span className="world-menu-n">{i + 1}</span>
+                      {WORLD_COPY[w].door}
+                    </div>
+                  ),
+                )}
+                {c.more && (
+                  <div className="world-menu-shut">
+                    <span className="world-menu-n">{c.worlds.length + 1}</span>
+                    ???
+                  </div>
+                )}
+                {c.done && <div className="world-menu-done">★ Home, all the way</div>}
+              </Fragment>
+            ))}
           </div>
         )}
       </div>

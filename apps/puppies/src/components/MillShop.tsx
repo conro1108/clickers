@@ -410,7 +410,7 @@ export function LegacyPanel({
           name="Hand the mill down"
           blurb={
             pending > 0
-              ? `Clears everything this generation built. Output goes ×${mult(multNow)} → ×${mult(multAfter)}.${mill.depth >= 1 ? " Every door closes." : ""}`
+              ? `Clears everything this generation built. Output goes ×${mult(multNow)} → ×${mult(multAfter)}.${mill.depth >= 1 ? " Every door closes." : ""}${mill.depth >= solo.WORLDS.indexOf("wild") ? ` Every rung past the hundred comes back ×${solo.RETURN_FACTOR} stronger.` : ""}`
               : "Not worth doing yet — grow this generation further first."
           }
           cost={pending > 0 ? `+${format(pending)} paper` : "—"}

@@ -19,6 +19,8 @@ import {
   CUT_NEST_DOG,
   CUT_PARK_GATE,
   CUT_SUNK_BALL,
+  CUT_WOLF,
+  CUT_WOLF_SOFT,
 } from "./art.js";
 import { artCanvas, type Art } from "./pixel.js";
 
@@ -45,6 +47,8 @@ export const SUBJECTS: Record<Exclude<solo.World, "outside">, Subject> = {
   after: { frames: [CUT_PARK_GATE], focus: { x: 15, y: 6 }, glow: "255, 216, 144", flash: "#fff8e0" },
   above: { frames: [CUT_FAR_LIGHT], focus: { x: 16, y: 7 }, glow: "255, 209, 102", flash: "#fff4d0" },
   home: { frames: [CUT_FRONT_DOOR], focus: { x: 14, y: 9 }, glow: "255, 216, 144", flash: "#fffaf0" },
+  // A wolf's eye, and it goes brown on the way in.
+  wild: { frames: [CUT_WOLF, CUT_WOLF_SOFT], focus: { x: 6, y: 10 }, glow: "200, 220, 255", flash: "#f4f8ff" },
 };
 
 // Fractions of the cut. Kept in step with the `converge-*` keyframes in styles.css.

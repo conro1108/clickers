@@ -1,11 +1,12 @@
 // A headless player for tuning. Competent, not optimal.
 
 import { Y, ms, seconds, type Millis, type Yield, type Rate } from "../numbers.js";
-import { SOLO_PRODUCERS, SOLO_PRODUCER_BY_ID, SOLO_UPGRADES, WORLD_GATE, type SoloProducerId, type World } from "./content.js";
+import { SOLO_PRODUCERS, SOLO_PRODUCER_BY_ID, SOLO_UPGRADES, WORLD_GATE, WORLDS, type SoloProducerId, type SoloUpgrade, type World } from "./content.js";
 import {
   brokenCount,
   currentRate,
   isLandMaxed,
+  isPerkAvailable,
   isProducerAvailable,
   isUnlocked,
   landCost,
@@ -297,9 +298,19 @@ export function simulateCadence(opts: {
 
 // --- The long game: how far a line gets, by how many seeds it arrives with ---
 
+/** Each rung's milestones: the auto upgrades that lift the whole site. */
+const LIFTS: Partial<Record<SoloProducerId, SoloUpgrade[]>> = {};
+for (const u of SOLO_UPGRADES) {
+  if (u.auto && u.effect.kind === "global_mult" && u.requires) (LIFTS[u.requires.producer] ??= []).push(u);
+}
+
 export interface PushResult {
   /** Days from the hand-down to each world's first rung standing (not its gate, which is cheap); absent if it never did. */
   reached: Partial<Record<World, number>>;
+  /** Days from the hand-down to each world opening; absent if it never did. */
+  opened: Partial<Record<World, number>>;
+  /** The site's rate as each world opened: what the first rung there is priced against. */
+  openedRate: Partial<Record<World, number>>;
   site: SiteState;
 }
 
@@ -308,10 +319,17 @@ export interface PushResult {
  * broken, takes every upgrade, then buys whichever rung has the best payback counting the wait.
  * Starts with perks bought out of `seeds`. `tools/pace.mts` is the table of these.
  */
-export function simulatePush(opts: { seeds: number; generation: number; days: number; tickHours?: number; seed?: string }): PushResult {
+export function simulatePush(opts: { seeds: number; generation: number; days: number; tickHours?: number; seed?: string; reached?: number; returns?: number }): PushResult {
   const tick = seconds((opts.tickHours ?? 4) * 3_600);
-  let site: SiteState = { ...createSite({ seed: opts.seed ?? "push", startedAt: ms(0) }), heirlooms: opts.seeds, generation: opts.generation, reached: 1 };
+  let site: SiteState = {
+    ...createSite({ seed: opts.seed ?? "push", startedAt: ms(0) }),
+    heirlooms: opts.seeds,
+    generation: opts.generation,
+    reached: opts.reached ?? 1,
+    returns: opts.returns ?? 0,
+  };
   for (const perk of PERKS) {
+    if (!isPerkAvailable(site, perk.id)) continue;
     while ((site.perks[perk.id] ?? 0) < perk.maxLevel && perkCost(perk, site.perks[perk.id] ?? 0) < site.heirlooms * 0.05) {
       site = mustApplySite(site, { type: "buy_perk", perk: perk.id }, ms(0));
     }
@@ -319,9 +337,15 @@ export function simulatePush(opts: { seeds: number; generation: number; days: nu
   site = { ...site, stock: headStartStock(site.perks.head_start ?? 0) };
 
   const reached: PushResult["reached"] = {};
+  const opened: PushResult["opened"] = {};
+  const openedRate: PushResult["openedRate"] = {};
   const buy = (cmd: SiteCommand, t: Millis): boolean => {
     const res = applySiteCommand(site, cmd, t);
     if (res.ok) site = res.site;
+    if (opened[WORLDS[site.depth]!] === undefined) {
+      opened[WORLDS[site.depth]!] = t / DAY_MS;
+      openedRate[WORLDS[site.depth]!] = currentRate(site);
+    }
     return res.ok;
   };
 
@@ -340,17 +364,26 @@ export function simulatePush(opts: { seeds: number; generation: number; days: nu
       const land = landsFor(site).find((l) => !isLandMaxed(site, l.id) && landLevel(site, l.id) < 6 && landCost(site, l.id) <= site.stock * 0.1);
       if (land && buy({ type: "buy_land", land: land.id }, t)) continue;
       const rate = Math.max(1, currentRate(site));
-      let pick: { id: SoloProducerId; score: number } | null = null;
+      let pick: { id: SoloProducerId; qty: number; score: number } | null = null;
       for (const prod of SOLO_PRODUCERS) {
         if (!isProducerAvailable(site, prod.id)) continue;
         const cost = producerCost(site, prod.id, 1);
         const score = cost / producerRateEach(site, prod.id) + Math.max(0, cost - site.stock) / rate;
-        if (!pick || score < pick.score) pick = { id: prod.id, score };
+        if (!pick || score < pick.score) pick = { id: prod.id, qty: 1, score };
+        // Or the run up to its next milestone, paid back by the lift it gives the whole site.
+        const owned = site.producers[prod.id] ?? 0;
+        const next = LIFTS[prod.id]?.find((u) => u.requires!.count > owned);
+        if (!next || next.effect.kind !== "global_mult") continue;
+        const qty = next.requires!.count - owned;
+        const run = producerCost(site, prod.id, qty) + upgradeCost(site, next);
+        const lift = rate * (next.effect.factor - 1) + qty * producerRateEach(site, prod.id);
+        const runScore = run / lift + Math.max(0, run - site.stock) / rate;
+        if (runScore < pick.score) pick = { id: prod.id, qty, score: runScore };
       }
-      if (!pick || !buy({ type: "buy_producer", producer: pick.id, qty: 1 }, t)) break;
+      if (!pick || !buy({ type: "buy_producer", producer: pick.id, qty: pick.qty }, t)) break;
       const world = SOLO_PRODUCER_BY_ID[pick.id].world;
       reached[world] ??= t / DAY_MS;
     }
   }
-  return { reached, site };
+  return { reached, opened, openedRate, site };
 }

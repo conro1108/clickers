@@ -38,6 +38,11 @@ export interface SiteState {
   world: World;
   heirlooms: number;
   perks: Partial<Record<PerkId, number>>;
+  /**
+   * Hand-downs made from inside the last circle of worlds. Each makes that circle's rungs
+   * `RETURN_FACTOR` times stronger for good: it's somewhere a line gets further every time it comes back.
+   */
+  returns: number;
   lifetimeProduced: Yield;
   generation: number;
   runStartedAt: Millis;

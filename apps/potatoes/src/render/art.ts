@@ -1539,6 +1539,230 @@ export const DINNER: Art = {
 };
 const DINNER_4 = grown(DINNER, ["........yy...yy.........", ".......y..y.y..y........", ".........y....y........."], { y: "#fff4c0" });
 
+// --- The New World: the high lake, thousands of years ago ---
+// Colours shared across it: puna olive for the wild leaves, lake-stone greys, ichu-straw thatch, and the
+// weave (red, orange, blue, green) that turns up on the people, the houses and the cloth under the pile.
+const STONE = { s: "#9a948a", u: "#bab4a8", t: "#6e6a62" };
+const THATCH = { h: "#c8a050", i: "#e8c470", j: "#8a6a30" };
+
+/** Wild potato between the rocks: dark little leaves, a few pale flowers, the tubers barely the size of a thumb. */
+export const WILD_PATCH: Art = {
+  rows: [
+    "....l......w.",
+    "...lyl....wyw",
+    "....l.g..g.w.",
+    "..gg.gdgdgg..",
+    ".gdggdggdgdg.",
+    "gdgdgggdggdgg",
+    ".ggdgdgdgdgd.",
+    "..kpk.kpkk...",
+  ],
+  palette: { k: K, g: "#6a8a3a", d: "#4a6a2a", l: "#b89ad8", w: "#f4eefa", y: "#ffd166", p: "#7a4a6a" },
+};
+const WILD_PATCH_4 = grown(WILD_PATCH, ["..l...w...l..", ".lyl.wyw.lyl.", "..l...w...l.."], { l: "#d8c0f4", w: "#ffffff" });
+/** Digging stick in front, carrying cloth on the back, facing the way they're going. */
+export const FORAGER: Art = {
+  rows: [
+    "...kkkk..",
+    "..khhhhk.",
+    "..kfehhk.",
+    "w.kfffhk.",
+    "w..kffk..",
+    "w.krrrrk.",
+    "wfkrorrrk",
+    "w.krrrrrk",
+    "w.koooook",
+    "w.krrrrrk",
+    "w..kbkbk.",
+    "w..kk.kk.",
+    "k........",
+  ],
+  palette: { k: K, h: "#1e1a22", f: "#a8704a", e: K, r: "#a0402e", o: "#e8a03a", b: "#5a4030", w: "#8a6a3a" },
+};
+const FORAGER_4 = grown(FORAGER, [".l.y.l.", "lylylyl"], { l: "#b89ad8", y: "#ffd166" });
+/** A hillside in steps, a wall of dry stone under each, planted along the top. */
+export const STONE_TERRACE: Art = {
+  rows: [
+    "......kkkkk......",
+    ".....kgpgpgk.....",
+    ".....ksutusk.....",
+    "...kkgpgpgpgkk...",
+    "...ksutsustusk...",
+    ".kkgpgpgpgpgpgkk.",
+    ".ksutsutsustsutk.",
+    "kgpgpgpgpgpgpgpgk",
+    "ksutsustsutsustsk",
+    "kkkkkkkkkkkkkkkkk",
+  ],
+  palette: { k: K, g: "#7a9a40", p: "#4e7a2e", ...STONE },
+};
+const STONE_TERRACE_4 = grown(STONE_TERRACE, ["..u..", ".sus.", "ststs"], {});
+/** Potatoes spread on straw for the frost, gone black and wrinkled and light as cork. */
+export const CHUNO: Art = {
+  rows: [
+    "...w.....w...w.",
+    ".cw.cx..wx.cx..",
+    "cxcc.cc.cxc.cxc",
+    ".cc.cxc.cc..cc.",
+    "hhhhhhhhhhhhhhh",
+    "jjjjjjjjjjjjjjj",
+  ],
+  palette: { c: "#3a2e3e", x: "#6a5a70", w: "#f0f6ff", h: "#c8b070", j: "#9a8450" },
+};
+const CHUNO_4 = grown(CHUNO, ["..cx..cx..cx..", ".cxc.cwxc.cxc."], {});
+/** Long neck, ears up, an opinion forming. The ear is its own key so the tassels can go in. */
+export const LLAMA: Art = {
+  rows: [
+    "..k.k........",
+    "..krkk.......",
+    ".kcccck......",
+    "kceccck......",
+    "kcccck.......",
+    ".kkcck.......",
+    "...kcck......",
+    "...kcck......",
+    "...kccckkkkkk",
+    "...kcccccccck",
+    "...kcccccccck",
+    "....kdcccddk.",
+    "....kdk.kdk..",
+    "....kdk.kdk..",
+    "....kk..kk...",
+  ],
+  palette: { k: K, c: "#efe4d0", e: K, d: "#cbb898", r: "#efe4d0" },
+};
+const LLAMA_4 = grown(LLAMA, ["..y.y........", ".yrry........"], { y: "#ffd166", r: "#c83a3a" });
+/** A mountain with a path zigzagging up it to the pass. */
+export const TRAIL: Art = {
+  rows: [
+    ".......k.......",
+    "......kwk......",
+    ".....kwwwk.....",
+    "....kwwnwwk....",
+    "...kmyyyymmk...",
+    "..kmmmmmmymnk..",
+    ".kmmyyyyyymnnk.",
+    ".kmymmmmmmmnnk.",
+    "kmmyyyyyymmnnnk",
+    "kmmmmmmmyymnnnk",
+    "kkkkkkkkkkkkkkk",
+  ],
+  palette: { k: K, m: "#7a7690", n: "#4a4862", w: "#f4f6fa", y: "#e8c890" },
+};
+const TRAIL_4 = grown(TRAIL, [".u.", "sus"], { u: "#bab4a8", s: "#8a847a" });
+/** A tall stone set up to read the horizon by, the moon cut near the top and a notch down it for every one since. */
+export const MOON_STONE: Art = {
+  rows: [
+    "...kk..",
+    "..kuuk.",
+    ".kuuusk",
+    ".kusmsk",
+    ".ksmssk",
+    ".kusmsk",
+    ".ktsssk",
+    ".kssusk",
+    ".ktsssk",
+    ".kssusk",
+    ".ktsssk",
+    ".kssusk",
+    "kktsssk",
+    "kkkkkkk",
+  ],
+  palette: { k: K, s: "#9a8a7a", u: "#c0b0a0", t: "#5a4e44", m: "#f4ecc8" },
+};
+const MOON_STONE_4 = grown(MOON_STONE, ["..y..", ".yyy.", "..y.."], { y: "#fff4c0" });
+/** Round, stone, a cone of thatch: the first store. */
+export const STOREHOUSE: Art = {
+  rows: [
+    ".....k.....",
+    "....khk....",
+    "...khihk...",
+    "..khhhihk..",
+    ".khihhhhik.",
+    "khhhhihhhhk",
+    "kjjjjjjjjjk",
+    ".ksutsustk.",
+    ".kusxxxsuk.",
+    ".ktsxxxutk.",
+    ".ksuxxxtsk.",
+    "kkkkkkkkkkk",
+  ],
+  palette: { k: K, ...THATCH, ...STONE, x: "#2a2228" },
+};
+const STOREHOUSE_4 = grown(STOREHOUSE, ["..rr.", "..rrr", "..k.."], { r: "#c83a3a" });
+/** A house on the shore: stone footing, mud walls, steep thatch, a weaving hung by the door. */
+export const AYLLU_HOUSE: Art = {
+  rows: [
+    "......kk......",
+    ".....khhk.....",
+    "....khihhk....",
+    "...khhhhihk...",
+    "..khihhhhhhk..",
+    ".khhhhhihhhhk.",
+    "kjjjjjjjjjjjjk",
+    ".kaaaaaaaaaak.",
+    ".kaxxaaarorak.",
+    ".kaxxaaarorak.",
+    ".ksxxstsusutk.",
+    "kkkkkkkkkkkkkk",
+  ],
+  palette: { k: K, ...THATCH, ...STONE, a: "#b08860", x: "#2a2228", r: "#c83a3a", o: "#e8a03a" },
+};
+const AYLLU_HOUSE_4 = grown(AYLLU_HOUSE, ["w..........w", "wkkkkkkkkkkw", "w.r.o.y.g.bw"], { w: "#7a5237", y: "#ffd166", g: "#3a8a5a", b: "#3a4aa0" });
+/** The first one you can eat: small, purple, laid on a good cloth with a sprig of the plant it came off. */
+export const FIRST_POTATO: Art = {
+  rows: [
+    "....kkkkkk.......l..",
+    "..kkqqqpppkk....lyl.",
+    ".kqqppppeppk.....lg.",
+    "kqppppppppprk.....g.",
+    "kppeppppppprrk...gl.",
+    "kpppppppeprrrk..glyl",
+    ".kppppppprrrk..gg.l.",
+    "..kkrrprrrkk..g.....",
+    "....kkkkkk..........",
+    "cccccccccccccccccccc",
+    "obobobobobobobobobob",
+    "nnnnnnnnnnnnnnnnnnnn",
+  ],
+  palette: {
+    k: K,
+    p: "#7a3a7a",
+    q: "#a05aa0",
+    r: "#4e2050",
+    e: "#3a1a3a",
+    l: "#b89ad8",
+    y: "#ffd166",
+    g: "#4e7a2e",
+    c: "#c83a3a",
+    o: "#e8823a",
+    b: "#3a4aa0",
+    n: "#3a8a5a",
+  },
+};
+const FIRST_POTATO_4 = grown(FIRST_POTATO, ["...g...g............", "...gg.gg............", "....g.g............."], { g: "#a8e070" });
+/** What you're holding up here: little purple knobbly ones, straight out of the ground. */
+export const WILD_TUBER: Art = {
+  rows: [
+    ".kkkk..",
+    "kqqppk.",
+    "kqpprpk",
+    ".kpprrk",
+    "..kkkk.",
+  ],
+  palette: { k: K, p: "#8a4a7a", q: "#b07aa0", r: "#5a2a50" },
+};
+/** The condor, wings out, riding the air over the lake and not flapping once. */
+export const CONDOR: Art = {
+  rows: [
+    "kk.........kk",
+    ".kkkk.k.kkkk.",
+    "...kkkwkkk...",
+    ".....kkk.....",
+  ],
+  palette: { k: "#1e1a22", w: "#f4f0e8" },
+};
+
 /** Four marks per tier, indexed by how many of its three upgrades you own. See the marks note above. */
 // --- The potato's journey past the farm: store, factory, road, market, supermarket, larder, heap ---
 
@@ -2901,6 +3125,66 @@ export const PRODUCER_MARKS = {
     repaint(DINNER, { b: "#c9a24a", p: "#e8a848", l: "#ffd98a" }),
     DINNER_4,
   ],
+  flint: [
+    WILD_PATCH,
+    repaint(WILD_PATCH, { g: "#7a9a40", l: "#c8a8ec" }),
+    repaint(WILD_PATCH, { g: "#80a848", d: "#557a30", p: "#a05a8a", l: "#e0d0fa" }),
+    WILD_PATCH_4,
+  ],
+  ochre: [
+    FORAGER,
+    repaint(FORAGER, { r: "#3a5a8a", o: "#e8d04a" }),
+    repaint(FORAGER, { r: "#7a2a5a", o: "#f0c050", b: "#3a3040" }),
+    FORAGER_4,
+  ],
+  cairn: [
+    STONE_TERRACE,
+    repaint(STONE_TERRACE, { g: "#8aaa48" }),
+    repaint(STONE_TERRACE, { g: "#9ab84a", p: "#b89ad8" }),
+    STONE_TERRACE_4,
+  ],
+  tusk: [
+    CHUNO,
+    repaint(CHUNO, { c: "#4a3a4a", x: "#8a7a8a" }),
+    repaint(CHUNO, { c: "#c8c0b8", x: "#f4f0ea", w: "#ffffff" }),
+    CHUNO_4,
+  ],
+  herd: [
+    LLAMA,
+    repaint(LLAMA, { r: "#c83a3a" }),
+    repaint(LLAMA, { r: "#e8823a", c: "#8a5a3a", d: "#6a4028" }),
+    LLAMA_4,
+  ],
+  trail: [
+    TRAIL,
+    repaint(TRAIL, { y: "#f0d8a0" }),
+    repaint(TRAIL, { y: "#ffd166", w: "#ffffff" }),
+    TRAIL_4,
+  ],
+  moon: [
+    MOON_STONE,
+    repaint(MOON_STONE, { m: "#ffe9a0" }),
+    repaint(MOON_STONE, { m: "#fff4d0", s: "#a8a294", u: "#d0cabc" }),
+    MOON_STONE_4,
+  ],
+  cave: [
+    STOREHOUSE,
+    repaint(STOREHOUSE, { h: "#b89040", i: "#d8b460" }),
+    repaint(STOREHOUSE, { h: "#d8b058", i: "#f4d488", s: "#aaa496" }),
+    STOREHOUSE_4,
+  ],
+  ancestor: [
+    AYLLU_HOUSE,
+    repaint(AYLLU_HOUSE, { r: "#3a6aa0", o: "#e8d04a" }),
+    repaint(AYLLU_HOUSE, { r: "#8a3a8a", o: "#ffd166", a: "#c09870" }),
+    AYLLU_HOUSE_4,
+  ],
+  eighth: [
+    FIRST_POTATO,
+    repaint(FIRST_POTATO, { p: "#8a3a5a", q: "#b0607a", r: "#5a2038" }),
+    repaint(FIRST_POTATO, { p: "#c89040", q: "#e8b860", r: "#8a5a20", e: "#5a3a10" }),
+    FIRST_POTATO_4,
+  ],
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 
 export type MarkedProducerId = keyof typeof PRODUCER_MARKS;
@@ -3001,4 +3285,36 @@ export const CUT_PLATE: Art = {
     ".............kkkkkkkk.............",
   ],
   palette: { k: "#2a1a22", w: "#fff8ec", b: "#7a90b8", p: "#d09858", l: "#ecc488", d: "#a06c38", e: "#5a3418" },
+};
+
+/** A wild potato's flower, face on: five lilac petals and a cone of gold in the middle. */
+export const CUT_FLOWER: Art = {
+  rows: [
+    ".............k.............",
+    "...........kkmkk...........",
+    "..........kmmmmmk..........",
+    ".........kmmmvmmmk.........",
+    ".........kmmlvlmmk.........",
+    ".........kmllvllmk.........",
+    ".....kkkkmmllvllmmkkkk.....",
+    "...kkmmmmmlllvllmmmmmmkk...",
+    "..kmmmmmmmlllwlmmmmmmmmmk..",
+    ".kmmmlllllwwwwwwwmmmmmmmmk.",
+    ".kmvvvlllwwwyyywwwmmmvvvmk.",
+    ".kmmllvvlwwyyyyywwmvvmmmmk.",
+    ".kmmlllllwyyaaayywmmmmmmmk.",
+    "..kmmlllwwyyaaayywwmmmmmk..",
+    "...kmmmllwyyaaayywmmmmmk...",
+    "....kmmmlwwyyyyywwmmmmk....",
+    ".....kmmlwwwyyywwwmmmk.....",
+    ".....kmlllwwwwwwwmmmmk.....",
+    "....kmmllvmmmwmmmvmmmmk....",
+    "....kmmllvmmmmmmmvmmmmk....",
+    "....kmmlvmmmmmmmmmvmmmk....",
+    "....kmmvmmmmmmmmmmmvmmk....",
+    ".....kmmmmmmkkkmmmmmmk.....",
+    "......kmmmkk...kkmmmk......",
+    ".......kkk.......kkk.......",
+  ],
+  palette: { k: "#2a1e3a", m: "#9a7ac8", l: "#c4a8ec", v: "#7a58a8", w: "#f4eefa", y: "#ffd166", a: "#e8a02a" },
 };

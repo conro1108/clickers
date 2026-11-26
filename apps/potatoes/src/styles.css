@@ -1443,6 +1443,46 @@ input {
   border-style: dotted;
   opacity: 0.6;
 }
+/* The next world in this circle, unseen: a dotted outline with nothing in it. */
+.world-pips span.more {
+  background: transparent;
+  border-style: dashed;
+  opacity: 0.4;
+}
+/* Another circle of worlds, folded down to one diamond. */
+.world-pips span.circle {
+  transform: rotate(45deg) scale(0.9);
+  border-radius: 0;
+  margin: 0 2px;
+}
+/* A circle walked to its end: every pip gold. */
+.world-pips.done span,
+.world-pips span.circle.done {
+  background: var(--gold);
+  border-color: var(--wood-dark);
+  border-style: solid;
+  opacity: 1;
+}
+.world-pips.done span.on {
+  background: var(--wood-dark);
+  box-shadow: 0 0 0 1px var(--gold);
+}
+.world-pips.done span.hurt {
+  background: var(--blood);
+}
+.world-menu-done {
+  min-height: 34px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold);
+  color: var(--wood-dark);
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid var(--wood);
+}
 /* The whole journey as a list: one full-width row per world, big enough for a thumb. */
 .world-menu {
   position: absolute;

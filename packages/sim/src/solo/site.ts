@@ -19,6 +19,7 @@ import {
   type LandId,
   type SoloProducerId,
   type World,
+  CIRCLE_STARTS,
   WORLD_GATE,
   WORLDS,
 } from "./content.js";
@@ -66,6 +67,7 @@ const ARRIVAL: Record<Exclude<World, "outside">, string> = {
   after: "you went on past the end. it is warm here.",
   above: "you went on up. somebody is working.",
   home: "you came in. everyone is here.",
+  wild: "you had a hundred of everything. then there was nothing, and it was very old.",
 };
 
 /**
@@ -121,6 +123,7 @@ export function createSite(opts: { seed: string; startedAt: Millis }): SiteState
     world: "outside",
     heirlooms: 0,
     perks: {},
+    returns: 0,
     lifetimeProduced: Y.zero,
     generation: 1,
     runStartedAt: opts.startedAt,
@@ -368,6 +371,12 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
         site = { ...site, upgrades: [...site.upgrades, u.id] };
         note(`bought ${u.name}.`, "neutral");
       }
+      // A secret gate isn't sold: the purchase that unlocks it walks you through.
+      const next = gatePending(site);
+      if (next && SOLO_UPGRADE_BY_ID[WORLD_GATE[next]]?.secret) {
+        site = { ...site, upgrades: [...site.upgrades, WORLD_GATE[next]] };
+        site = openNext(site, note);
+      }
       break;
     }
 
@@ -389,11 +398,7 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
       // Every later gate is the same move one world further, and every
       // generation walks through them again: a hand-down closes them all.
       const opens = WORLDS[site.depth + 1] as Exclude<World, "outside"> | undefined;
-      if (opens && upgrade.id === WORLD_GATE[opens]) {
-        site = { ...site, depth: site.depth + 1, reached: Math.max(site.reached, site.depth + 1), world: opens };
-        note(THEME.terms?.arrivals?.[opens] ?? ARRIVAL[opens], "good");
-        note("nothing you built reaches this far. upkeep has what does.", "bad");
-      }
+      if (opens && upgrade.id === WORLD_GATE[opens]) site = openNext(site, note);
       break;
     }
 
@@ -491,6 +496,14 @@ export function applySiteCommand(f0: SiteState, cmd: SiteCommand, now: Millis): 
   return { ok: true, site: { ...site, log: [...site.log, ...entries].slice(-60) }, entries };
 }
 
+/** Walk through to the next world: you stand in it, and its weather is the one that blows. */
+function openNext(site: SiteState, note: (text: string, tone: SiteLogEntry["tone"]) => void): SiteState {
+  const opens = WORLDS[site.depth + 1] as Exclude<World, "outside">;
+  note(THEME.terms?.arrivals?.[opens] ?? ARRIVAL[opens], "good");
+  note("nothing you built reaches this far. upkeep has what does.", "bad");
+  return { ...site, depth: site.depth + 1, reached: Math.max(site.reached, site.depth + 1), world: opens };
+}
+
 /**
  * Everything a generation earns is wiped except the heirlooms and what they bought.
  * `lifetimeProduced` deliberately survives — it's the only number in the game
@@ -518,6 +531,7 @@ function resetForNextGeneration(
     depth: 0,
     world: "outside",
     heirlooms,
+    returns: f.returns + (f.depth >= WORLDS.indexOf(CIRCLE_STARTS.at(-1)!) ? 1 : 0),
     generation: f.generation + 1,
     runStartedAt: at,
   };

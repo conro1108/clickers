@@ -5,7 +5,9 @@
 // The mill, the tunnel under its yard, out the back of the estate, the canal out of town, a fire at the
 // edge of the woods, a night on the hill, the bridge, the far side, the walk, the porch. From the tunnel
 // on the count is the pack and the copy says "they"; it turns to "you" on the walk, where somebody is
-// whistling. Engine ids keep their old names (`inside` is the tunnel, `void` the hill).
+// whistling. Then, secretly, long ago (`wild`): a hundred of everything takes you back fifteen thousand
+// years to a frozen steppe, where a wolf is edging closer to a people's camp, and where the pack is wolves.
+// Engine ids keep their old names (`inside` is the tunnel, `void` the hill, `wild` the steppe).
 import { solo } from "@clickers/sim";
 
 export interface WorldCopy {
@@ -172,6 +174,21 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
       line: "There is a light on",
       call: "Somebody has been saying your name the whole time",
       title: "Home",
+    },
+  },
+  wild: {
+    door: "Long ago",
+    held: "in the snow",
+    verb: "Stay",
+    kept: "warmth",
+    shop: "The steppe, fifteen thousand years back, before any of it. It takes lifetimes for a wolf to become a dog.",
+    culprit: "the winter",
+    against: "an Ice Age with lions in it",
+    gateLine: "A hundred of everything, and every one of them a dog. Somebody had to be the first.",
+    cut: {
+      line: "Fifteen thousand years ago, it is snowing",
+      call: "A wolf comes a little closer than its mother did",
+      title: "The First Dog",
     },
   },
 };

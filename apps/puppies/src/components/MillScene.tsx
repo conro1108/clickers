@@ -20,6 +20,7 @@ import { BridgeScene } from "../render/bridgeScene.js";
 import { ParkScene } from "../render/parkScene.js";
 import { WalkScene } from "../render/walkScene.js";
 import { PorchScene } from "../render/porchScene.js";
+import { SteppeScene } from "../render/steppeScene.js";
 
 export interface MillSceneHandle {
   whistle(at?: { x: number; y: number }): void;
@@ -44,6 +45,7 @@ const SCENES: Record<solo.World, new (canvas: HTMLCanvasElement) => SceneLike> =
   after: ParkScene,
   above: WalkScene,
   home: PorchScene,
+  wild: SteppeScene,
 };
 
 /** The canvas and its rAF loop. React only ever hands it a view. */

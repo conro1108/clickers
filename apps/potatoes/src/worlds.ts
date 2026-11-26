@@ -2,7 +2,9 @@
 //
 // The worlds are the potato's whole life, in order: the farm, the store, the factory, the road, the market,
 // the supermarket, the larder, the kitchen, the table, and the heap that goes back on the farm. Each gate is
-// the company buying the next link in the chain. Engine ids keep their old names (`inside` is the store).
+// the company buying the next link in the chain. Then the secret one, the New World (engine `wild`): no gate,
+// it opens on a hundred of everything, and it's the high Andean lake every potato came from, thousands of
+// years ago. Engine ids keep their old names (`inside` is the store, `wild` the New World).
 import { solo } from "@clickers/sim";
 
 export interface WorldCopy {
@@ -172,6 +174,20 @@ export const WORLD_COPY: Record<solo.World, WorldCopy> = {
       line: "Somebody scraped the plates",
       call: "It all goes on the heap, and the heap goes back on the field",
       title: "The Heap",
+    },
+  },
+  wild: {
+    door: "The New World",
+    held: "in the ground",
+    verb: "Gather",
+    kept: "grass",
+    shopSub: "A cold lake at the top of the world, where every potato started out as a bitter weed. Making food of it takes lifetimes, plural.",
+    culprit: "the sky",
+    threat: "a sky that turns",
+    cut: {
+      line: "Before the farm, before any of it",
+      call: "A cold lake under the mountains, and a weed with bitter roots",
+      title: "The New World",
     },
   },
 };

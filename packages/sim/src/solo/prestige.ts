@@ -12,7 +12,9 @@ export type PerkId =
   | "night_shift"
   | "core_tithe"
   | "dormancy"
-  | "ur_yield";
+  | "ur_yield"
+  | "old_line"
+  | "wild_yield";
 
 export interface Perk {
   id: PerkId;
@@ -21,7 +23,8 @@ export interface Perk {
   baseCost: number;
   growth: number;
   maxLevel: number;
-  afterFold?: boolean;
+  /** Hidden until some generation has reached this deep (an index into `WORLDS`). */
+  reached?: number;
 }
 
 // Priced against `heirloomsFor`: a run mints a few hundred, the table below the fold costs ~1,700 total.
@@ -70,23 +73,46 @@ const PERK_SHAPES: readonly Shape<Perk>[] = [
     baseCost: 40,
     growth: 1.4,
     maxLevel: 12,
-    afterFold: true,
+    reached: 1,
   },
   {
     id: "dormancy",
     baseCost: 60,
     growth: 1.4,
     maxLevel: 8,
-    afterFold: true,
+    reached: 1,
   },
   {
     id: "ur_yield",
     baseCost: 120,
     growth: 1.8,
     maxLevel: 4,
-    afterFold: true,
+    reached: 1,
+  },
+
+  // --- The deep end --- multiplicative, so a level is always worth a slice of the seeds it costs. Each
+  // costs `growth` times the last, which keeps the row in reach of a long line and out of reach of a short
+  // one for the whole of the long way.
+  {
+    id: "old_line",
+    baseCost: 1_000,
+    growth: 6,
+    maxLevel: 25,
+    // the void, where a line first needs seeds rather than a long run
+    reached: 5,
+  },
+  {
+    id: "wild_yield",
+    baseCost: 1e18,
+    growth: 4,
+    maxLevel: 25,
+    reached: 10,
   },
 ];
+
+/** What a level of each multiplies by. */
+export const OLD_LINE_FACTOR = 1.25;
+export const WILD_YIELD_FACTOR = 2;
 
 export const PERKS: readonly Perk[] = named(PERK_SHAPES, THEME.perks, "perk");
 

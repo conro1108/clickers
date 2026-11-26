@@ -207,6 +207,7 @@ const KINDS_BY_WORLD: Record<World, readonly WeatherKind[]> = {
   after: named(longKinds("after", 0.01, 7), THEME.weather, "weather"),
   above: named(longKinds("above", 0.02, 6), THEME.weather, "weather"),
   home: named(longKinds("home", 0.03, 5), THEME.weather, "weather"),
+  wild: named(longKinds("wild", 0.04, 4), THEME.weather, "weather"),
 };
 
 function kindsFor(f: SiteState): readonly WeatherKind[] {

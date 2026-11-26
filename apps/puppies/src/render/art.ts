@@ -2205,6 +2205,574 @@ export const GOOD_DOG: Art = {
 };
 const GOOD_DOG_4 = grown(GOOD_DOG, ["....y.y.y....", "...y..y..y..."], { y: "#fff4c0" });
 
+// --- Long ago: the steppe, fifteen thousand years back ---
+// Cold light and old colours: snow-blue, bone, hide, red ochre, and wolf-grey. Nothing in it is a dog
+// yet, except, by the top of the ladder, one of them.
+
+const WILD_K = "#2a2c3e";
+
+/** A bit of meat on a flake of flint, left at the edge of the camp. */
+export const FLINT_SCRAP: Art = {
+  rows: [
+    "....rRr....",
+    "...rRrrr...",
+    ".kfkrrrrfk.",
+    "kfFfffFfffk",
+    ".kffFfffkk.",
+    "..kkkkkk...",
+  ],
+  palette: { k: WILD_K, f: "#545868", F: "#a8b0c4", r: "#b0443a", R: "#e8806a" },
+};
+const FLINT_SCRAP_4 = grown(FLINT_SCRAP, ["b...b", ".bbb.", "b...b"], { b: "#f0e8d4" });
+
+/** A hand on the rock, red blown round it. The hand is the rock showing through. */
+export const OCHRE_HAND: Art = {
+  rows: [
+    "...ror...",
+    ".oor.rr..",
+    "or.r.r.o.",
+    ".o.r.r.o.",
+    "rr.....rr",
+    "r......rr",
+    ".r.....r.",
+    "orr...ro.",
+    ".oo...oo.",
+    "..orrro..",
+  ],
+  palette: { r: "#b8482a", o: "#d8784a" },
+};
+
+/** And beside it, lower down, a paw. */
+const OCHRE_PAW: Art = {
+  rows: [
+    "...ror........",
+    ".oor.rr.......",
+    "or.r.r.o......",
+    ".o.r.r.o......",
+    "rr.....rrrroo.",
+    "r......rrr.r.o",
+    ".r.....rr.rr.r",
+    "orr...roor..ro",
+    ".oo...ooor..ro",
+    "..orrro..rroo.",
+  ],
+  palette: OCHRE_HAND.palette,
+};
+/** And a smaller one, beside that. */
+const OCHRE_PAW_4: Art = {
+  rows: [
+    "...ror............",
+    ".oor.rr...........",
+    "or.r.r.o..........",
+    ".o.r.r.o..........",
+    "rr.....rrrroo.....",
+    "r......rrr.r.o.o..",
+    ".r.....rr.rr.r.r..",
+    "orr...roor..ror.ro",
+    ".oo...ooor..rorrr.",
+    "..orrro..rroo.o...",
+  ],
+  palette: OCHRE_HAND.palette,
+};
+
+const BONE = { k: WILD_K, b: "#e2d8bc", B: "#fff8e8", d: "#8a7c62", t: "#f4ecd8" };
+
+/** Mammoth bone, stacked like logs. The knobs make its skyline. */
+export const BONE_WINDBREAK: Art = {
+  rows: [
+    "....kk...kkk...kk....",
+    "...kBBkkkBBBkkkBbk...",
+    "....kbBBbbdbBBbbk....",
+    ".kkkbbdddbbbdddbdkkk.",
+    "kBBkkdBBBdddBBBdkkBbk",
+    ".kbBBbbdbBBbbdbBBbbk.",
+    "kbbdddbbbdddbbbdddbdk",
+    "kBBdddBBBdddBBBdddBbk",
+    ".kbBBbbdbBBbbdbBBbbk.",
+    "kbbdddbbbdddbbbdddbdk",
+    ".kkkkkkkkkkkkkkkkkkk.",
+  ],
+  palette: BONE,
+};
+
+/** Higher than a wolf. */
+const BONE_WINDBREAK_TALL: Art = {
+  rows: [
+    ".......kk...kkk...kk.",
+    "......kBBkkkBBBkkkBbk",
+    ".......kbBBbbdbBBbbk.",
+    "....kkkbbdddbbbdddbdk",
+    "...kBBkkdBBBdddBbddk.",
+    "....kbBBbbdbBBbbdddk.",
+    ".kkkbbdddbbbdddbdddk.",
+    "kBBkkdBBBdddBBBdddBbk",
+    ".kbBBbbdbBBbbdbBBbbk.",
+    "kbbdddbbbdddbbbdddbdk",
+    "kBBdddBBBdddBBBdddBbk",
+    ".kbBBbbdbBBbbdbBBbbk.",
+    "kbbdddbbbdddbbbdddbdk",
+    ".kkkkkkkkkkkkkkkkkkk.",
+  ],
+  palette: BONE,
+};
+
+/** Two tusks stood up at the ends, leaning in, so the wind goes over the top. */
+const BONE_WINDBREAK_4: Art = {
+  rows: [
+    "t...................t",
+    "t...................t",
+    ".t.................t.",
+    "..tt.............tt..",
+    ".......kk...kkk...kk.",
+    "......kBBkkkBBBkkkBbk",
+    ".......kbBBbbdbBBbbk.",
+    "....kkkbbdddbbbdddbdk",
+    "...kBBkkdBBBdddBbddk.",
+    "....kbBBbbdbBBbbdddk.",
+    ".kkkbbdddbbbdddbdddk.",
+    "kBBkkdBBBdddBBBdddBbk",
+    ".kbBBbbdbBBbbdbBBbbk.",
+    "kbbdddbbbdddbbbdddbdk",
+    "kBBdddBBBdddBBBdddBbk",
+    ".kbBBbbdbBBbbdbBBbbk.",
+    "kbbdddbbbdddbbbdddbdk",
+    ".kkkkkkkkkkkkkkkkkkk.",
+  ],
+  palette: BONE,
+};
+
+const HUT = {
+  k: WILD_K, h: "#8a5e3c", H: "#b88a58", e: "#6a4430", t: "#f4ecd8", n: "#3a2420", o: "#e07a3a", y: "#ffc060",
+  w: "#fff0b0", b: "#e2d8bc", B: "#fff8e8", d: "#a49474", s: "#f0f4fc",
+};
+
+/** Hides over mammoth bone, jaws round the bottom, two tusks for a door, and dinner on inside. */
+export const TUSK_HUT: Art = {
+  rows: [
+    "........kkkkk........",
+    "......kkssssskk......",
+    ".....khhsssshhhk.....",
+    "....khHhhhhehhhhk....",
+    "...khhhehhhHhhehhk...",
+    "..khhhHhhetttehhhhk..",
+    "..khhhhhtnnnthhHhhk..",
+    ".khhhehtnnnnnthhhhhk.",
+    ".khHhhhtooooothhHehk.",
+    "kbbdbbbtoyyyotbdbbbbk",
+    "kbdbBbbtoyyyotbBbdbbk",
+    "kbBbdbbtoywyotbbdbBbk",
+    "kdbbbdbtoyyyotdbbbdbk",
+    "kkkkkkkkkkkkkkkkkkkkk",
+  ],
+  palette: HUT,
+};
+
+/** Two more tusks, crossed over the roof: somebody lives here who matters. */
+const TUSK_HUT_4: Art = {
+  rows: [
+    "....t...........t....",
+    "....tt.........tt....",
+    ".....tt.......tt.....",
+    "......tt.....tt......",
+    ".......tkkkkkt.......",
+    "......kkssssskk......",
+    ".....khhsssshhhk.....",
+    "....khHhhhhehhhhk....",
+    "...khhhehhhHhhehhk...",
+    "..khhhHhhetttehhhhk..",
+    "..khhhhhtnnnthhHhhk..",
+    ".khhhehtnnnnnthhhhhk.",
+    ".khHhhhtooooothhHehk.",
+    "kbbdbbbtoyyyotbdbbbbk",
+    "kbdbBbbtoyyyotbBbdbbk",
+    "kbBbdbbtoywyotbbdbBbk",
+    "kdbbbdbtoyyyotdbbbdbk",
+    "kkkkkkkkkkkkkkkkkkkkk",
+  ],
+  palette: HUT,
+};
+
+const MAMMOTH_COAT = { k: WILD_K, h: "#6e4428", H: "#8e5a34", e: "#1a1010", t: "#f4ecd8" };
+
+/** Going past, slowly. */
+export const MAMMOTH: Art = {
+  rows: [
+    "..............kkkk.....",
+    "...........kkkhhhhk....",
+    ".........kkhhhhhhhhk...",
+    ".......kkhhhhhhhhhhhk..",
+    "....kkkhhhhhhhhhhehhk..",
+    "..kkhhhhhhhhhhhhhhhhk..",
+    ".khhhhhhhhHhhhHhhhhhk..",
+    "khHhhhHhHhhhHhHhhhhhk..",
+    "khhhHhHhhhHhHhhhHhhhk..",
+    "khHhHhhhHhHhhhHhHthhkt.",
+    "khHhhhHhHhhhHhHkkthhkt.",
+    "khhhHhHhhhHhHhhk.kttt..",
+    ".khhHhhkHHhhHhhHkkhhk..",
+    ".khhkhhkkkhhkhhk..khhk.",
+    "..kk.kk...kk.kk....kk..",
+  ],
+  palette: MAMMOTH_COAT,
+};
+
+/** With a calf at her side. */
+const MAMMOTH_4: Art = {
+  rows: [
+    ".................kkkk.....",
+    "..............kkkhhhhk....",
+    "............kkhhhhhhhhk...",
+    "..........kkhhhhhhhhhhhk..",
+    ".......kkkhhhhhhhhhhehhk..",
+    ".....kkkkkkkhhhhhhhhhhhk..",
+    "....kkkhhhhhkHhhhHhhhhhk..",
+    "...kkhhhhhehkhhHhHhhhhhk..",
+    ".kkhhhhhhhhhkHhHhhhHhhhk..",
+    "khHhHhhhHhhhkHhhhHhHthhkt.",
+    "khhhHhHhhhhhkhhHhHkkthhkt.",
+    "khHhhhHhHkhhkHhHhhk.kttt..",
+    "khhhhhhhhkhhkhhHhhHkkhhk..",
+    ".khhkkkhhkkkkhhkhhk..khhk.",
+    "..kk...kk....kk.kk....kk..",
+  ],
+  palette: MAMMOTH_COAT,
+};
+
+/** Feet and paws in the snow, going the same way. */
+export const SHARED_TRAIL: Art = {
+  rows: [
+    ".pp......q.q.",
+    ".pp.......q..",
+    ".pp..........",
+    ".....pp..q.q.",
+    ".....pp...q..",
+    ".....pp......",
+  ],
+  palette: { p: "#9aaad0", q: "#8494c0" },
+};
+const SHARED_TRAIL_4 = grown(SHARED_TRAIL, ["q.q.....q.q", ".q.......q."], {});
+
+const MOON = { m: "#f2ead0", M: "#fffaf0", c: "#d4c8a8" };
+
+/** The moon, waxing. Its four marks are its phases. */
+export const WOLF_MOON: Art = {
+  rows: [
+    ".......m.....",
+    "........MM...",
+    ".........mM..",
+    ".........mmM.",
+    ".........cmM.",
+    ".........mmmM",
+    ".........mmmM",
+    ".........mmmM",
+    ".........mcM.",
+    ".........mmM.",
+    ".........mM..",
+    "........MM...",
+    ".......m.....",
+  ],
+  palette: MOON,
+};
+const WOLF_MOON_QUARTER: Art = {
+  rows: [
+    "......mm.....",
+    "......mmMM...",
+    "......mmmmM..",
+    "......mmmmmM.",
+    "......mmmcmM.",
+    "......mmmmmmM",
+    "......mmmmmmM",
+    "......mmcmmmM",
+    "......mmmmcM.",
+    "......mmmmmM.",
+    "......cmmmM..",
+    "......mmMM...",
+    "......mm.....",
+  ],
+  palette: MOON,
+};
+const WOLF_MOON_GIBBOUS: Art = {
+  rows: [
+    "......mm.....",
+    ".....mmmMM...",
+    "....mmmmmmM..",
+    "....mmmmmmmM.",
+    "....cmmmmcmM.",
+    "...mmmmmmmmmM",
+    "...mmmmmmmmmM",
+    "...cmmmmcmmmM",
+    "....mcmmmmcM.",
+    "....mmmmmmmM.",
+    "....mmcmmmM..",
+    ".....mmmMM...",
+    "......mm.....",
+  ],
+  palette: MOON,
+};
+const WOLF_MOON_FULL: Art = {
+  rows: [
+    ".....mmm.....",
+    "...mmmmmMM...",
+    "..mmmmmmmmM..",
+    ".mmmmmmmmmmM.",
+    ".mmmcmmmmcmM.",
+    "mmmmmmmmmmmmM",
+    "mmmmmmmmmmmmM",
+    "mmmcmmmmcmmmM",
+    ".mmmmcmmmmcM.",
+    ".mmmmmmmmmmM.",
+    "..mmmmcmmmM..",
+    "...mmmmmMM...",
+    ".....mmm.....",
+  ],
+  palette: MOON,
+};
+
+const CAVE = {
+  w: "#eef2fa", S: "#8a92aa", s: "#6a7088", k: WILD_K, n: "#1c1820", L: "#7a4e34", r: "#c0502c", a: "#2a2020",
+  y: "#ffb04a", Y: "#fff0b0",
+};
+
+/** A mouth in the hill, a lamp inside, and the herd on the wall by the light of it. */
+export const PAINTED_CAVE: Art = {
+  rows: [
+    "......wwwwwwwwwww......",
+    "....wwwSssSsssSsswww...",
+    "..wwSssssssssssssssSww.",
+    ".wSsssssskkkkkksssssssw",
+    ".Sssssskknnnnnnkksssss.",
+    "Sssssskknnnnnnnnnksssss",
+    "SsssskLnnnnnnnnnnLkssss",
+    "SssskLLLLnnnnnnLLLLksss",
+    "SsskLLrrLLLnnLLLaaLLkss",
+    "SsskLrrrrLLLLLLaaaaLkss",
+    "SsskLrLLrLLLLLLaLLaLkSs",
+    "SsskLLLLLLLyyLLLLLLLkss",
+    "SssskLLLLLyyYyLLLLLkSss",
+    "SsssskkkkkkkkkkkkkkSsss",
+    "sssssssssssssssssssssss",
+  ],
+  palette: CAVE,
+};
+
+/** In the corner, very small, a wolf. */
+const PAINTED_CAVE_4: Art = {
+  rows: [
+    "........w..............",
+    ".......wSw.............",
+    "......wwwwwwwwwww......",
+    "....wwwSssSsssSsswww...",
+    "..wwSssssssssssssssSww.",
+    ".wSsssssskkkkkksssssssw",
+    ".Sssssskknnnnnnkksssss.",
+    "Sssssskknnnnnnnnnksssss",
+    "SsssskLnnnnnnnnnnLkssss",
+    "SssskLLLLnnnnnnLLLLksss",
+    "SsskLLrrLLLnnLLLLLaLkss",
+    "SsskLrrrrLLLaaaaaaaLkss",
+    "SsskLrLLrLLaLaLLLaLLkSs",
+    "SsskLLLLLLLyyLLLLLLLkss",
+    "SssskLLLLLyyYyLLLLLkSss",
+    "SsssskkkkkkkkkkkkkkSsss",
+    "sssssssssssssssssssssss",
+  ],
+  palette: CAVE,
+};
+
+const FURS = {
+  k: WILD_K, p: "#7a5a3e", P: "#a07c56", w: "#e8e0d0", f: "#c89070", e: "#2a1a12", r: "#b0443a",
+  g: "#8a8c98", G: "#b4b6c2", l: "#dcdce4", E: "#e8b84a",
+};
+
+/** Sat on a hide outside the hut, holding out a scrap. */
+export const GRANDMOTHER: Art = {
+  rows: [
+    "..kkkkk...",
+    ".kpppppk..",
+    "kpppwwwk..",
+    "kppwffek..",
+    "kppwfffk..",
+    ".kpwwwk...",
+    "kpPpppppkk",
+    "kppPpppfrr",
+    "kpPpppppk.",
+    "kppppPppk.",
+    "kwwwwwwwk.",
+    "kkkkkkkkk.",
+  ],
+  palette: FURS,
+};
+
+/** She knows its name. It's sat by her. */
+const GRANDMOTHER_4: Art = {
+  rows: [
+    "..kkkkk.........",
+    ".kpppppk........",
+    "kpppwwwk........",
+    "kppwffek........",
+    "kppwfffk...k.k..",
+    ".kpwwwk...kgkgk.",
+    "kpPpppppkkfgggk.",
+    "kppPpppppkfgEgkk",
+    "kpPppppppkkggllk",
+    "kppppPppkkgglkk.",
+    "kwwwwwwwkkgglk..",
+    "kkkkkkkkkkkkkk..",
+  ],
+  palette: FURS,
+};
+
+const WOLF_COAT = { k: WILD_K, g: "#8a8c98", G: "#b4b6c2", l: "#dcdce4", e: "#e8b84a", n: "#141418", p: "#8a8c98" };
+
+/** A wolf, lying by the hut, chin on its paws. */
+export const FIRST_WOLF: Art = {
+  rows: [
+    "..................",
+    "............k.k...",
+    "...........kgkgk..",
+    ".....kkkkkkkggggk.",
+    "kk..kGGgggggggegkk",
+    "kgk.kgggggggggglll",
+    ".kgkggggggggllllln",
+    "..kkkkkkkkkkkkkkk.",
+  ],
+  palette: WOLF_COAT,
+};
+
+/** The tail has started to curl, and there's white coming through. Wolves don't do that. */
+const FIRST_WOLF_CURL: Art = {
+  rows: [
+    "...kk.............",
+    "..kkGk......k.k...",
+    ".kGkkGk....kgkgk..",
+    ".kGkkGkkkkkkgpggk.",
+    "..kGGGgggppgggggek",
+    "...kgggggppgggllln",
+    "...kggggggggllllk.",
+    "...kkkkkkkkkkkkkk.",
+  ],
+  palette: { ...WOLF_COAT, g: "#9a948c", G: "#c0bab0", p: "#e8e4dc" },
+};
+
+/** Sat up, because somebody said its name: an ear down, a curled tail, brown eyes. A dog. */
+const FIRST_WOLF_CALLED: Art = {
+  rows: [
+    "........k.....",
+    ".......kgkkk..",
+    ".......kgpgGk.",
+    "......kgpgegk.",
+    "..kk..kggglln.",
+    ".kGGkkGgglkkk.",
+    ".kGkkGgggplk..",
+    ".kGGGggggplk..",
+    ".kkgggggggpk..",
+    "..kgggggk.lk..",
+    "..kGGGGGk.lk..",
+    "..kkkkkkkkkk..",
+  ],
+  palette: { ...WOLF_COAT, g: "#b08a5e", G: "#d0aa7c", p: "#f4ead8", l: "#f4ead8", e: "#4a2a1a" },
+};
+
+// The wolves: the pack, long ago, which is what the dogs you hold are here. Side-on, where the pack
+// everywhere else faces you, so it reads as a different animal. `p` is where a dog's patches would go:
+// the same grey on a wolf, white on the coat that has turned into a dog.
+const WOLF_TROT = [
+  ".............k.k..",
+  "............kgkgk.",
+  "...kkkkkkkkkggggk.",
+  "..kGGGGggggggggegk",
+  ".kgggggppggggpllln",
+  "kgkggggppgggpllkk.",
+  "kk.kgggglllggglk..",
+  "...d..g....d..g...",
+  "..d...g...d....g..",
+  "..k...k...k....k..",
+];
+const WOLF_RUN = [
+  "..................",
+  ".............k.k..",
+  "............kgkgk.",
+  "kkkkkkkkkkkkggggk.",
+  "kGGGGGgggggggggegk",
+  ".kggggppgggggpllln",
+  "..kgggppggggpllkk.",
+  "...kgglllggglk....",
+  "..dg.........dg...",
+  ".d.............dg.",
+  "k................k",
+];
+const WOLF_SIT = [
+  "......k.k...",
+  ".....kgkgk..",
+  ".....kgggk..",
+  "....kgggegk.",
+  "....kggglln.",
+  "...kGgglkkk.",
+  "..kGgggplk..",
+  ".kGggggplk..",
+  "kgggggggpk..",
+  "kgggggk.lk..",
+  "kGGGGGk.lk..",
+  "kkkkkkkkkk..",
+];
+const WOLF_LOAF = [
+  "............k.k...",
+  "...........kgkgk..",
+  "...........kggggk.",
+  ".....kkkkkkkgggegk",
+  "kk..kGGgggggggllln",
+  "kgk.kggpggggpkkkk.",
+  ".kgkgggpggggllllk.",
+  "..kkkkkkkkkkkkkkk.",
+];
+const WOLF_SLEEP = [
+  "..................",
+  "..................",
+  "..................",
+  ".....kkkkkkk..k.k.",
+  "kk..kGGggggggkgkgk",
+  "kgk.kggpgggggggkgk",
+  ".kgkgggpggggkllllk",
+  "..kkkkkkkkkkkkkkkk",
+];
+/** Small, and jumping at whatever you tapped. */
+const WOLF_PUP_ROWS = [
+  "......k.k..",
+  ".....kgkgk.",
+  "kkkkkkggek.",
+  "kGgggggglln",
+  ".kgggggkkk.",
+  ".kd.d.dk...",
+];
+const WOLF_TROT_B = [...WOLF_TROT.slice(0, 7), "....dg......dg....", "....dg......dg....", "....kk......kk...."];
+const WOLF_RUN_B = [...WOLF_RUN.slice(0, 8), ".....dgg..dg......", "......dg.dg.......", "......kk.kk......."];
+const WOLF_SIT_B = [...WOLF_SIT.slice(0, 9), "kgggggk.lk..", "kgggggGklk..", "kkkkkkkkkk.."];
+
+/** Grey, pale and dark wolves; and last, the coat a wolf has once it's a dog. */
+const WOLF_COATS: readonly Record<string, string>[] = [
+  { g: "#8a8c98", G: "#b4b6c2", l: "#dcdce4", d: "#5c5e6c" },
+  { g: "#c4c2c0", G: "#e4e2de", l: "#f4f2ee", d: "#8a8682" },
+  { g: "#5e5a62", G: "#7e7a84", l: "#b4b0b8", d: "#3a3840" },
+  { g: "#c08a50", G: "#dcae74", l: "#f4ead8", d: "#7a5430", p: "#f4ead8", e: "#4a2a1a" },
+];
+/** Which of `WOLF_COATS` is the dog. */
+export const DOG_COAT = WOLF_COATS.length - 1;
+
+function wolf(rows: readonly string[], coat: number, left: boolean): Art {
+  const c = WOLF_COATS[coat]!;
+  return { rows: left ? flip(rows) : [...rows], palette: { k: WILD_K, e: "#e8b84a", n: "#141418", p: c.g!, ...c } };
+}
+
+/** The same poses as `PACK_POSES`, indexed by `POSE`, for the wolves. `newborn` is a pup. */
+export const WOLF_POSES: readonly (readonly (readonly Art[])[])[] = WOLF_COATS.map((_, coat) =>
+  [false, true].map((left) =>
+    [WOLF_TROT, WOLF_TROT_B, WOLF_SIT, WOLF_SIT_B, WOLF_LOAF, WOLF_PUP_ROWS, WOLF_SLEEP, WOLF_RUN, WOLF_RUN_B].map((rows) => wolf(rows, coat, left)),
+  ),
+);
+
+/** A wolf pup, mid-leap: what a tap turns up, long ago. */
+export const WOLF_PUP: Art = wolf(WOLF_PUP_ROWS, 0, false);
+
 /** A hundred diggers in: two lamps and a gold hat. */
 const DIGGER_4: Art = {
   rows: [
@@ -2693,6 +3261,41 @@ export const PRODUCER_MARKS = {
     repaint(GOOD_DOG, { b: "#ecc488", p: "#ffd166" }),
     GOOD_DOG_4,
   ],
+  flint: [
+    FLINT_SCRAP,
+    repaint(FLINT_SCRAP, { f: "#626a80", F: "#d0d8ec" }),
+    repaint(FLINT_SCRAP, { r: "#c84a3a", R: "#ff9a80", F: "#e0e6f4" }),
+    FLINT_SCRAP_4,
+  ],
+  ochre: [OCHRE_HAND, repaint(OCHRE_HAND, { r: "#a83a24", o: "#c86040" }), OCHRE_PAW, OCHRE_PAW_4],
+  cairn: [BONE_WINDBREAK, repaint(BONE_WINDBREAK, { b: "#ece4cc", d: "#7a6c54" }), BONE_WINDBREAK_TALL, BONE_WINDBREAK_4],
+  tusk: [
+    TUSK_HUT,
+    repaint(TUSK_HUT, { h: "#9a6a40", H: "#c89a68" }),
+    repaint(TUSK_HUT, { h: "#9a6a40", H: "#c89a68", y: "#ffe080", o: "#ff9a4a" }),
+    TUSK_HUT_4,
+  ],
+  herd: [
+    MAMMOTH,
+    repaint(MAMMOTH, { h: "#7a4a2a", H: "#a06a3c" }),
+    repaint(MAMMOTH, { h: "#5e3a22", H: "#8a5a34", t: "#fffaf0" }),
+    MAMMOTH_4,
+  ],
+  trail: [SHARED_TRAIL, repaint(SHARED_TRAIL, { p: "#8898c4" }), repaint(SHARED_TRAIL, { p: "#7888b8", q: "#6878a8" }), SHARED_TRAIL_4],
+  moon: [WOLF_MOON, WOLF_MOON_QUARTER, WOLF_MOON_GIBBOUS, WOLF_MOON_FULL],
+  cave: [
+    PAINTED_CAVE,
+    repaint(PAINTED_CAVE, { y: "#ffd070", Y: "#ffffff", L: "#8a5a3c" }),
+    repaint(PAINTED_CAVE, { y: "#ffd070", Y: "#ffffff", L: "#8a5a3c", r: "#e06030", a: "#141010" }),
+    PAINTED_CAVE_4,
+  ],
+  ancestor: [
+    GRANDMOTHER,
+    repaint(GRANDMOTHER, { p: "#6a4a32", P: "#9a7450", w: "#f4f0e8" }),
+    repaint(GRANDMOTHER, { p: "#8a6444", P: "#c09a6c", w: "#ffffff" }),
+    GRANDMOTHER_4,
+  ],
+  eighth: [FIRST_WOLF, repaint(FIRST_WOLF, { g: "#9a948c", G: "#c0bab0" }), FIRST_WOLF_CURL, FIRST_WOLF_CALLED],
 } as const satisfies Record<string, readonly [Art, Art, Art, Art]>;
 
 export type MarkedProducerId = keyof typeof PRODUCER_MARKS;
@@ -2978,4 +3581,58 @@ export const CUT_FENCE: Art = {
     "kxdxdxdxdxdxdxdxdxdxdxdk",
   ],
   palette: { k: "#5b4f58", w: "#c4ccd2", x: "#8a949c", d: "#141224", n: "#0c0a1a", s: "#fff4c0" },
+};
+
+/** A wolf, head-on, in the snow. */
+export const CUT_WOLF: Art = {
+  rows: [
+    "s.kk................kk.s",
+    "..kgk..s...........kgk..",
+    "..kgik........s...kigk..",
+    ".kggiik..........kiiggk.",
+    ".kggiigk........kgiiggk.",
+    ".kgggiggkkkkkkkkggigggk.",
+    "kgggggggGGGggGGGgggggggk",
+    "kgggggggGGGllGGGgggggggk",
+    "kgggkkkkgGllllGgkkkkgggk",
+    "kggkeeeekgllllgkeeeekggk",
+    "kggkewnekgllllgkenwekggk",
+    "kGggkkkkggllllggkkkkggGk",
+    "kGGggggglllmmlllgggggGGk",
+    ".kGGgggglllmmlllggggGGk.",
+    ".kGGGgggllmmmmllgggGGGk.",
+    "..kGGGglllmnnmlllgGGGk..",
+    "...kGGGlllmnnmlllGGGk...",
+    "....kkGllmmmmmmllGkk....",
+    "......kkllllllllkk......",
+    "........kkkkkkkk..s.....",
+  ],
+  palette: { k: "#1e2032", g: "#8a8c9c", G: "#c8cad4", i: "#c8a0a8", l: "#e4e4ec", m: "#fafaff", e: "#f0b030", w: "#ffffff", n: "#141418", s: "#eef2fa" },
+};
+
+/** The same wolf, close to: brown eyes, and an ear that has given up. */
+export const CUT_WOLF_SOFT: Art = {
+  rows: [
+    "s.kk...................s",
+    "..kgk..s................",
+    "..kgik........s.........",
+    ".kggiik.............kkk.",
+    ".kggiigk...........kgggk",
+    ".kgggiggkkkkkkkkggkgiigk",
+    "kgggggggGGGggGGGgggggggk",
+    "kgggggggGGGllGGGgggggggk",
+    "kgggkkkkgGllllGgkkkkgggk",
+    "kggkbbbbkgllllgkbbbbkggk",
+    "kggkbwnbkgllllgkbnwbkggk",
+    "kGggkkkkggllllggkkkkggGk",
+    "kGGggggglllmmlllgggggGGk",
+    ".kGGgggglllmmlllggggGGk.",
+    ".kGGGgggllmmmmllgggGGGk.",
+    "..kGGGglllmnnmlllgGGGk..",
+    "...kGGGlllmnnmlllGGGk...",
+    "....kkGllmmmmmmllGkk....",
+    "......kkllllllllkk......",
+    "........kkkkkkkk..s.....",
+  ],
+  palette: { ...CUT_WOLF.palette, b: "#7a4a2a" },
 };

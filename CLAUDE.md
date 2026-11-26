@@ -26,6 +26,7 @@ the monorepo is that retuning a rung is one edit.
 | Seeded randomness | `packages/sim/src/rng.ts` |
 | Theme seam, `named()` | `packages/sim/src/theme.ts` (tests use `reference-theme.ts`) |
 | Worlds, their order, gates, rungs, lands, upgrades | `packages/sim/src/solo/content.ts` |
+| Which worlds the strip shows: circles, and what a line has seen | `CIRCLE_STARTS` in `content.ts`, `knownCircles` in `economy.ts` |
 | Rates, prices | `packages/sim/src/solo/economy.ts` |
 | Time, commands, whether a gate is pending (`advance`, `applySiteCommand`, `gatePending`) | `packages/sim/src/solo/site.ts`, types in `state.ts` |
 | Weather | `packages/sim/src/solo/weather.ts` |
@@ -38,10 +39,10 @@ the monorepo is that retuning a rung is one edit.
 | Game loop, autosave | `apps/<game>/src/useFarm.ts` / `useMill.ts` |
 | Shop, gate sale screen, upkeep, seeds | `components/FarmShop.tsx` / `MillShop.tsx` |
 | The outside world's picture | `render/farmScene.ts` / `millScene.ts` |
-| The other worlds' pictures | potatoes: `render/<place>Scene.ts` (store … heap). puppies: `insideScene.ts` (the tunnel), then `back`, `cut`, `fire`, `hill`, `bridge`, `park`, `walk`, `porch` |
+| The other worlds' pictures | potatoes: `render/<place>Scene.ts` (store … heap, then `andesScene.ts`, the New World). puppies: `insideScene.ts` (the tunnel), then `back`, `cut`, `fire`, `hill`, `bridge`, `park`, `walk`, `porch`, `steppe` (long ago) |
 | What the potato worlds share: the floor, the front-left pile, carriers | potatoes `render/longScene.ts` (puppies has its own for its last three) |
 | The people in the larder, kitchen and table, and how tall everything near them is | potatoes `render/figures.ts` (`ADULT`) |
-| The pack: the dogs you hold, drawn in every puppy world past the mill | puppies `render/pack.ts` |
+| The pack: the dogs you hold, drawn in every puppy world past the mill | puppies `render/pack.ts` (long ago they're wolves: `Wolves` in `steppeScene.ts`) |
 | Which engine world is which puppy place, and every per-world word | `apps/puppies/src/worlds.ts` |
 | Every world of a game side by side | `tools/sheet.mjs` |
 | Which engine world is which potato place, and every per-world word | `apps/potatoes/src/worlds.ts` |
@@ -56,7 +57,10 @@ it, and everything up to it is open and producing. Each world past the first
 opens with the gate upgrade `WORLD_GATE` names, bought at the bottom of the
 ladder before it. From the void on, each world's first rung is priced past
 what a run earns without enough seeds behind it, so which generation reaches
-which world is set by price alone (`tools/pace.mts`). Adding a world is engine content, a `worlds.ts` entry
+which world is set by price alone (`tools/pace.mts`). The wild is the exception:
+its gate is `secret` (free, never in the shop) and opens on the purchase that
+brings every earlier rung to a hundred; it starts a new circle, and each
+hand-down made from inside it (`returns`) makes its rungs stronger. Adding a world is engine content, a `worlds.ts` entry
 and a scene per app.
 
 ## Theming
@@ -77,6 +81,9 @@ agree only on the producer ids they switch on.
 
 ## Gotchas
 
+- The world strip shows only what `knownCircles` says the line has seen. Anything
+  a player sees that maps over `WORLDS` gives away how many worlds there are, and
+  that the wild exists.
 - The app shells are copies, not shared: `App.tsx`, the shop and the hooks
   exist once per game, so a behaviour fix there usually belongs in both.
 - `depth` (this run, back to 0 on a hand-down), `reached` (deepest any

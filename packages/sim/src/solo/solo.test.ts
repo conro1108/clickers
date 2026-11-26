@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ms, seconds } from "../numbers.js";
-import { MAX_CONDITION, MAX_MITIGATION, MIN_CONDITION, SOLO_PRODUCERS, WORLD_GATE, WORLDS, type World } from "./content.js";
+import { MAX_CONDITION, MAX_MITIGATION, MIN_CONDITION, SOLO_PRODUCERS, SOLO_UPGRADE_BY_ID, WORLD_GATE, WORLDS, type World } from "./content.js";
 import {
   brokenCount,
   currentRate,
@@ -133,11 +133,20 @@ describe("the worlds", () => {
       const rung = SOLO_PRODUCERS.find((p) => p.world === world)!;
       const buy = { type: "buy_producer", producer: rung.id, qty: 1 } as const;
       expect(applySiteCommand(site, buy, site.checkpointAt).ok).toBe(false);
-      // Ten of the last rung of the world you're in puts the gate on the shelf.
       const last = SOLO_PRODUCERS.filter((p) => p.world === site.world).at(-1)!;
-      site = { ...site, producers: { ...site.producers, [last.id]: 10 } };
-      expect(gatePending(site)).toBe(world);
-      site = mustApplySite(site, { type: "buy_upgrade", upgrade: WORLD_GATE[world as Exclude<World, "outside">] }, site.checkpointAt);
+      const gate = WORLD_GATE[world as Exclude<World, "outside">];
+      if (SOLO_UPGRADE_BY_ID[gate]!.secret) {
+        // No gate on the shelf: a hundred of every rung so far, and the last one bought walks you through.
+        const before = SOLO_PRODUCERS.filter((p) => WORLDS.indexOf(p.world) < WORLDS.indexOf(world));
+        site = { ...site, producers: { ...Object.fromEntries(before.map((p) => [p.id, 100])), [last.id]: 99 } };
+        expect(gatePending(site)).toBeNull();
+        site = mustApplySite(site, { type: "buy_producer", producer: last.id, qty: 1 }, site.checkpointAt);
+      } else {
+        // Ten of the last rung of the world you're in puts the gate on the shelf.
+        site = { ...site, producers: { ...site.producers, [last.id]: 10 } };
+        expect(gatePending(site)).toBe(world);
+        site = mustApplySite(site, { type: "buy_upgrade", upgrade: gate }, site.checkpointAt);
+      }
       expect(site.world).toBe(world);
       expect(applySiteCommand(site, buy, site.checkpointAt).ok).toBe(true);
     }

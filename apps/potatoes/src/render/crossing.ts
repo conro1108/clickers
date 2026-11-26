@@ -10,6 +10,7 @@ import type { solo } from "@clickers/sim";
 import {
   CUT_BASKET,
   CUT_DOOR,
+  CUT_FLOWER,
   CUT_LORRY,
   CUT_PACKET,
   CUT_PLATE,
@@ -43,6 +44,8 @@ export const SUBJECTS: Record<Exclude<solo.World, "outside">, Subject> = {
   after: { frames: [CUT_WINDOW], focus: { x: 16, y: 8 }, glow: "255, 224, 160", flash: "#fff4d8" },
   above: { frames: [CUT_PLATE], focus: { x: 16, y: 8 }, glow: "255, 240, 220", flash: "#fffaf0" },
   home: { frames: [CUT_SPROUT], focus: { x: 15, y: 11 }, glow: "255, 150, 74", flash: "#ffe8c0" },
+  // A new start, not the next stop: cold high light, and you go in through the flower the first potato came off.
+  wild: { frames: [CUT_FLOWER], focus: { x: 13, y: 13 }, glow: "190, 170, 255", flash: "#eef4ff" },
 };
 
 // Fractions of the cut. Kept in step with the `converge-*` keyframes in styles.css.

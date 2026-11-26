@@ -20,9 +20,10 @@ import {
   type SoloProducerId,
   type SoloUpgrade,
   type World,
+  CIRCLE_STARTS,
   WORLDS,
 } from "./content.js";
-import { MULT_PER_UNSPENT_HEIRLOOM, PERK_BY_ID } from "./prestige.js";
+import { MULT_PER_UNSPENT_HEIRLOOM, OLD_LINE_FACTOR, PERK_BY_ID, WILD_YIELD_FACTOR } from "./prestige.js";
 import type { SiteState } from "./state.js";
 
 function ownedUpgrades(f: SiteState): SoloUpgrade[] {
@@ -37,6 +38,12 @@ export function landLevel(f: SiteState, id: LandId): number {
   return f.land[id] ?? 0;
 }
 
+/** Where the last circle of worlds starts: its rungs grow with `returns` and the `wild_yield` perk. */
+const LAST_CIRCLE = WORLDS.indexOf(CIRCLE_STARTS.at(-1)!);
+
+/** What each hand-down from inside the last circle multiplies its rungs by. */
+export const RETURN_FACTOR = 4;
+
 export function globalMultiplier(f: SiteState): number {
   let m = 1;
   for (const u of ownedUpgrades(f)) {
@@ -50,7 +57,8 @@ function heirloomMultiplier(f: SiteState): number {
   return (
     (1 + MULT_PER_UNSPENT_HEIRLOOM * f.heirlooms) *
     (1 + 0.15 * perkLevel(f, "knack")) *
-    (1 + 0.4 * perkLevel(f, "core_tithe"))
+    (1 + 0.4 * perkLevel(f, "core_tithe")) *
+    OLD_LINE_FACTOR ** perkLevel(f, "old_line")
   );
 }
 
@@ -68,6 +76,9 @@ export function producerMultiplier(f: SiteState, id: SoloProducerId): number {
   }
   if (prod.generationScaled) m *= generationBonus(f);
   if (prod.world !== "outside") m *= 1 + perkLevel(f, "ur_yield");
+  if (WORLDS.indexOf(prod.world) >= LAST_CIRCLE) {
+    m *= WILD_YIELD_FACTOR ** perkLevel(f, "wild_yield") * RETURN_FACTOR ** f.returns;
+  }
   return m;
 }
 
@@ -190,6 +201,27 @@ export function openWorlds(f: SiteState): readonly World[] {
   return WORLDS.slice(0, f.depth + 1);
 }
 
+export interface KnownCircle {
+  /** The circle's worlds this line has been to, open this run or not, in order. */
+  worlds: readonly World[];
+  /** There's a world after these in the same circle nobody has reached yet. */
+  more: boolean;
+  /** Walked to the end, and there's a circle after it. */
+  done: boolean;
+}
+
+/** What a line knows of the worlds: the circles it has reached, and how far into each. */
+export function knownCircles(f: SiteState): KnownCircle[] {
+  const reach = Math.max(f.reached, f.depth);
+  const starts = CIRCLE_STARTS.map((w) => WORLDS.indexOf(w));
+  return starts.flatMap((start, c) => {
+    if (start > reach) return [];
+    const end = (starts[c + 1] ?? WORLDS.length) - 1;
+    const seen = Math.min(end, reach);
+    return [{ worlds: WORLDS.slice(start, seen + 1), more: seen < end, done: seen === end && starts[c + 1] !== undefined }];
+  });
+}
+
 export function isProducerAvailable(f: SiteState, id: SoloProducerId): boolean {
   return isWorldOpen(f, SOLO_PRODUCER_BY_ID[id].world);
 }
@@ -204,7 +236,7 @@ export function isLandMaxed(f: SiteState, id: LandId): boolean {
 }
 
 export function isPerkAvailable(f: SiteState, id: keyof typeof PERK_BY_ID): boolean {
-  return f.reached >= 1 || !PERK_BY_ID[id].afterFold;
+  return f.reached >= (PERK_BY_ID[id].reached ?? 0);
 }
 
 // --- Prices ---
@@ -259,8 +291,13 @@ export function affordableCount(f: SiteState, id: SoloProducerId, budget: Yield)
 }
 
 export function isUnlocked(f: SiteState, u: SoloUpgrade): boolean {
-  if (!u.requires) return true;
-  return (f.producers[u.requires.producer] ?? 0) >= u.requires.count;
+  if (u.requires && (f.producers[u.requires.producer] ?? 0) < u.requires.count) return false;
+  if (u.every) {
+    const before = WORLDS.indexOf(u.every.before);
+    const { count } = u.every;
+    if (SOLO_PRODUCERS.some((p) => WORLDS.indexOf(p.world) < before && (f.producers[p.id] ?? 0) < count)) return false;
+  }
+  return true;
 }
 
 /** A producer's `auto` upgrades its count has reached and the site doesn't hold yet, cheapest first. */

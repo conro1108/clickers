@@ -65,6 +65,7 @@ export function parseSite(raw: string): SiteState | null {
     world,
     heirlooms: Math.max(0, Math.floor(f.heirlooms ?? 0)),
     perks: remapKeys(f.perks),
+    returns: Math.max(0, Math.floor(Number.isFinite(f.returns) ? (f.returns as number) : 0)),
     lifetimeProduced: finite(f.lifetimeProduced),
     generation: Math.max(1, Math.floor(f.generation ?? 1)),
     runStartedAt: ms(f.runStartedAt ?? f.startedAt ?? f.checkpointAt),

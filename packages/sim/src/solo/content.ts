@@ -22,15 +22,22 @@ import { named, THEME, type Shape } from "../theme.js";
  * at the bottom of the ladder before it (see `WORLD_GATE`): a fresh ladder,
  * its own land, its own picture, and everything behind you keeps producing.
  * So do `void`, `end`, `after`, `above` and `home`, each first rung priced past what a
- * run can earn without the seeds of the generations before it — see `LONG_WAY`.
+ * run can earn without the seeds of the generations before it — see `LONG_WAY`. `wild` is the
+ * secret one: no gate in the shop, it opens itself on a hundred of every rung before it (`WILD`).
  */
-export type World = "outside" | "inside" | "beyond" | "deep" | "origin" | "void" | "end" | "after" | "above" | "home";
+export type World = "outside" | "inside" | "beyond" | "deep" | "origin" | "void" | "end" | "after" | "above" | "home" | "wild";
 
 /**
  * Every world in the order you reach them. `SiteState.depth` is an index into
  * this: everything up to and including it is open.
  */
-export const WORLDS: readonly World[] = ["outside", "inside", "beyond", "deep", "origin", "void", "end", "after", "above", "home"];
+export const WORLDS: readonly World[] = ["outside", "inside", "beyond", "deep", "origin", "void", "end", "after", "above", "home", "wild"];
+
+/**
+ * Where each circle of worlds begins. The first is the whole journey; a secret gate starts the next. A
+ * player is shown the circle they're in, never how long it is, and a circle walked to its end as finished.
+ */
+export const CIRCLE_STARTS: readonly World[] = ["outside", "wild"];
 
 /**
  * The upgrade that opens each world, bought in the world before it. Each is
@@ -47,6 +54,7 @@ export const WORLD_GATE: Record<Exclude<World, "outside">, string> = {
   after: "afterward",
   above: "upstairs",
   home: "homecoming",
+  wild: "everything",
 };
 
 export type SoloProducerId =
@@ -117,7 +125,17 @@ export type SoloProducerId =
   | "grace"
   | "feast"
   | "house"
-  | "whole";
+  | "whole"
+  | "flint"
+  | "ochre"
+  | "cairn"
+  | "tusk"
+  | "herd"
+  | "trail"
+  | "moon"
+  | "cave"
+  | "ancestor"
+  | "eighth";
 
 export interface SoloProducer {
   id: SoloProducerId;
@@ -212,6 +230,37 @@ function longRungs(world: LongWorld): Shape<SoloProducer>[] {
     ...(i === 2 && { calmPerUnit: 0.001 }),
     ...(i === 3 && { conditionScaled: true }),
     ...(i === 4 && { generationScaled: true }),
+  }));
+}
+
+/**
+ * The wild: ten rungs with no wall and no let-up. Each costs `step` times the one below for `rise` times
+ * the output, a payback a hundred times longer a rung. That's about what one hand-down from inside buys
+ * (`RETURN_FACTOR`, seeds, the wild's perk), so a line stands up one more rung per generation: ten of
+ * them to clear it. The first rung is small next to the site that opens the place, so standing it up
+ * doesn't flood the rest of the ladder the way the kitchen's does. `tools/pace.mts` measures it.
+ */
+const WILD = {
+  ids: ["flint", "ochre", "cairn", "tusk", "herd", "trail", "moon", "cave", "ancestor", "eighth"] as SoloProducerId[],
+  // about two days of the site that opens it, for about a twentieth of its output: a long payback on arrival
+  cost: 2e91,
+  rate: 6e49,
+  step: 300,
+  rise: 3,
+  growth: 1.3,
+};
+
+function wildRungs(): Shape<SoloProducer>[] {
+  const { ids, cost, rate, step, rise, growth } = WILD;
+  return ids.map((id, i) => ({
+    id,
+    world: "wild",
+    growth,
+    baseRate: rate * rise ** i,
+    baseCost: Y.of(cost * step ** i),
+    ...(i === 2 && { calmPerUnit: 0.001 }),
+    ...(i === 4 && { conditionScaled: true }),
+    ...(i === 6 && { generationScaled: true }),
   }));
 }
 
@@ -574,6 +623,7 @@ const SOLO_PRODUCER_SHAPES: readonly Shape<SoloProducer>[] = [
   ...longRungs("after"),
   ...longRungs("above"),
   ...longRungs("home"),
+  ...wildRungs(),
 ];
 
 export const SOLO_PRODUCERS: readonly SoloProducer[] = named(SOLO_PRODUCER_SHAPES, THEME.soloProducers, "producer");
@@ -618,6 +668,10 @@ export interface SoloUpgrade {
   requires?: { producer: SoloProducerId; count: number };
   /** Bought by itself, out of stock, by any purchase of its producer that finds it reached and affordable. */
   auto?: true;
+  /** Also hidden until the site owns this many of every rung in every world before `before`. */
+  every?: { count: number; before: World };
+  /** A gate the shop never shows: the purchase that unlocks it walks you through. */
+  secret?: true;
 }
 
 /**
@@ -686,9 +740,30 @@ function tierUpgrades(): SoloUpgrade[] {
       requires: { producer: prod.id, count: 100 },
       auto: true,
     });
+    for (const m of MILESTONES) {
+      out.push({
+        id: `${prod.id}_${m.at}`,
+        name: `${m.words} ${many}`,
+        blurb: m.blurb,
+        cost: fleetCost(prod.id, m.at, m.share),
+        effect: { kind: "global_mult", factor: m.factor },
+        requires: { producer: prod.id, count: m.at },
+        auto: true,
+      });
+    }
   }
   return out;
 }
+
+/**
+ * Past a hundred, a rung's own output stops mattering: five hundred of the bottom rung is a rounding error
+ * next to the deepest world. So the reward reaches the whole site. Every rung has both, they stack, and
+ * they're priced at a share of the fleet so the purchase that reaches the count usually pays for it.
+ */
+const MILESTONES = [
+  { at: 500, words: "Five Hundred", factor: 1.1, share: 0.25, blurb: "Everything produces 10% more." },
+  { at: 1000, words: "A Thousand", factor: 1.25, share: 0.25, blurb: "Everything produces 25% more." },
+] as const;
 
 const CLICK_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
   {
@@ -911,6 +986,17 @@ const GLOBAL_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
   ...longGlobals("after", "after_charter", "after_form"),
   ...longGlobals("above", "above_charter", "above_form"),
   ...longGlobals("home", "home_charter", "home_form"),
+  // The wild's gate is free and never on sale: it opens itself, see `secret`.
+  {
+    id: WORLD_GATE.wild,
+    cost: Y.zero,
+    effect: { kind: "global_mult", factor: 2 },
+    requires: { producer: LONG_WAY.home.ids[5]!, count: 100 },
+    every: { count: 100, before: "wild" },
+    secret: true,
+  },
+  { id: "wild_charter", cost: fleetCost(WILD.ids[2]!, 25, 5), effect: { kind: "global_mult", factor: 2 }, requires: { producer: WILD.ids[2]!, count: 25 } },
+  { id: "wild_form", cost: fleetCost(WILD.ids[9]!, 25), effect: { kind: "global_mult", factor: 2 }, requires: { producer: WILD.ids[9]!, count: 25 } },
 ];
 
 const GLOBAL_UPGRADES: SoloUpgrade[] = [...named(GLOBAL_UPGRADE_SHAPES, THEME.soloGlobalUpgrades, "upgrade")];
@@ -966,7 +1052,7 @@ export type LandId =
   | "end_lining"
   | "end_calm"
   | "end_reclaim"
-  | `${LongWorld}_${"beds" | "lining" | "calm" | "reclaim"}`;
+  | `${LongWorld | "wild"}_${"beds" | "lining" | "calm" | "reclaim"}`;
 
 export type LandRole =
   /** Cuts how many units a disaster knocks offline. */
@@ -999,8 +1085,9 @@ export interface Land {
 }
 
 /** The same four again, off the gate rather than the first rung, so they're cheap for whoever can just afford it. */
-function longLands(world: LongWorld): Shape<Land>[] {
-  const price = fleetCost(LONG_WAY[world].before, 10) / 10_000;
+function longLands(world: LongWorld | "wild"): Shape<Land>[] {
+  // The wild's gate is free, so its buildings are quoted off its first rung: a few minutes on arrival.
+  const price = world === "wild" ? WILD.cost / 500 : fleetCost(LONG_WAY[world].before, 10) / 10_000;
   return [
     { id: `${world}_beds`, role: "breakage", perLevel: 0.12, baseCost: Y.of(price * 0.67), growth: 2.5, world },
     { id: `${world}_lining`, role: "condition", perLevel: 0.12, baseCost: Y.of(price * 1.05), growth: 2.5, world },
@@ -1134,6 +1221,7 @@ const LAND_SHAPES: readonly Shape<Land>[] = [
   ...longLands("after"),
   ...longLands("above"),
   ...longLands("home"),
+  ...longLands("wild"),
 ];
 
 export const LANDS: readonly Land[] = named(LAND_SHAPES, THEME.lands, "land");
