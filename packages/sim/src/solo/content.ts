@@ -748,7 +748,6 @@ function tierUpgrades(): SoloUpgrade[] {
         cost: fleetCost(prod.id, m.at, m.share),
         effect: { kind: "global_mult", factor: m.factor },
         requires: { producer: prod.id, count: m.at },
-        auto: true,
       });
     }
   }
@@ -757,13 +756,16 @@ function tierUpgrades(): SoloUpgrade[] {
 
 /**
  * Past a hundred, a rung's own output stops mattering: five hundred of the bottom rung is a rounding error
- * next to the deepest world. So the reward reaches the whole site. Every rung has both, they stack, and
- * they're priced at a share of the fleet so the purchase that reaches the count usually pays for it.
+ * next to the deepest world. So the reward reaches the whole site. Every rung has both and they stack.
+ * Unlike the tier upgrades they don't buy themselves: they wait in the shop, priced at a share of the fleet.
  */
 const MILESTONES = [
   { at: 500, words: "Five Hundred", factor: 1.1, share: 0.25, blurb: "Everything produces 10% more." },
   { at: 1000, words: "A Thousand", factor: 1.25, share: 0.25, blurb: "Everything produces 25% more." },
 ] as const;
+
+/** The counts a milestone sits at, for anything that needs to tell one from a tier upgrade. */
+export const MILESTONE_COUNTS: readonly number[] = MILESTONES.map((m) => m.at);
 
 const CLICK_UPGRADE_SHAPES: Shape<SoloUpgrade>[] = [
   {

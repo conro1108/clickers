@@ -1,7 +1,7 @@
 // A headless player for tuning. Competent, not optimal.
 
 import { Y, ms, seconds, type Millis, type Yield, type Rate } from "../numbers.js";
-import { SOLO_PRODUCERS, SOLO_PRODUCER_BY_ID, SOLO_UPGRADES, WORLD_GATE, WORLDS, type SoloProducerId, type SoloUpgrade, type World } from "./content.js";
+import { MILESTONE_COUNTS, SOLO_PRODUCERS, SOLO_PRODUCER_BY_ID, SOLO_UPGRADES, WORLD_GATE, WORLDS, type SoloProducerId, type SoloUpgrade, type World } from "./content.js";
 import {
   brokenCount,
   currentRate,
@@ -298,10 +298,10 @@ export function simulateCadence(opts: {
 
 // --- The long game: how far a line gets, by how many seeds it arrives with ---
 
-/** Each rung's milestones: the auto upgrades that lift the whole site. */
+/** Each rung's milestones: the upgrades at 500 and 1000 that lift the whole site. */
 const LIFTS: Partial<Record<SoloProducerId, SoloUpgrade[]>> = {};
 for (const u of SOLO_UPGRADES) {
-  if (u.auto && u.effect.kind === "global_mult" && u.requires) (LIFTS[u.requires.producer] ??= []).push(u);
+  if (u.requires && MILESTONE_COUNTS.includes(u.requires.count)) (LIFTS[u.requires.producer] ??= []).push(u);
 }
 
 export interface PushResult {
