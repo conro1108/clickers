@@ -300,8 +300,12 @@ export function isUnlocked(f: SiteState, u: SoloUpgrade): boolean {
   return true;
 }
 
-/** A producer's `auto` upgrades its count has reached and the site doesn't hold yet, cheapest first. */
+/**
+ * A producer's `auto` upgrades its count has reached and the site doesn't hold yet, cheapest first. None in
+ * the first generation: until the first hand-down, every upgrade is a thing you choose to buy.
+ */
 export function autoUpgradesFor(f: SiteState, id: SoloProducerId): SoloUpgrade[] {
+  if (f.generation <= 1) return [];
   return SOLO_UPGRADES.filter((u) => u.auto && u.requires?.producer === id && !f.upgrades.includes(u.id) && isUnlocked(f, u));
 }
 

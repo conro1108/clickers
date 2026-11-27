@@ -666,7 +666,7 @@ export interface SoloUpgrade {
   effect: SoloUpgradeEffect;
   /** Hidden until the player owns this many of the producer. */
   requires?: { producer: SoloProducerId; count: number };
-  /** Bought by itself, out of stock, by any purchase of its producer that finds it reached and affordable. */
+  /** From the second generation, bought by itself, out of stock, by any purchase of its producer that finds it reached and affordable. */
   auto?: true;
   /** Also hidden until the site owns this many of every rung in every world before `before`. */
   every?: { count: number; before: World };
@@ -703,8 +703,9 @@ function fleetCost(id: SoloProducerId, count: number, share = 1): Yield {
  * spreading, so the reward is allowed to be loud — and it's the only upgrade in
  * the game that changes the silhouette of the thing rather than its paint.
  *
- * All three are priced against the fleet you must already own, and buy themselves: the purchase that
- * reaches the count pays for it if there's stock, and if not it waits in the shop.
+ * All three are priced against the fleet you must already own. After the first hand-down they buy
+ * themselves: the purchase that reaches the count pays for it if there's stock, and if not it waits in
+ * the shop. Before it, every upgrade waits in the shop.
  */
 function tierUpgrades(): SoloUpgrade[] {
   const out: SoloUpgrade[] = [];
